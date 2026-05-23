@@ -644,7 +644,7 @@ def _rsi(values: np.ndarray, period: int = 14) -> float | None:
 
 
 
-PIVOT_LENGTH = 20  # matches Pine Script pvtLength=20 exactly (left=20, right=20)
+PIVOT_LENGTH = 10  # default for cloud — use 20 in slider for exact Pine Script match
 
 
 def scan_symbol(symbol: str, df_1d: pd.DataFrame | None, df_4h: pd.DataFrame | None,
@@ -1357,150 +1357,217 @@ st.set_page_config(
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap');
 
   :root {
-    --bg:       #0D1117;
-    --bg2:      #161B22;
-    --bg3:      #21262D;
-    --border:   #30363D;
-    --text:     #E6EDF3;
-    --muted:    #8B949E;
-    --green:    #3FB950;
-    --red:      #F85149;
-    --blue:     #58A6FF;
-    --yellow:   #D29922;
-    --orange:   #FFA657;
-    --purple:   #BC8CFF;
-    --cyan:     #39D353;
-    --poc:      #FF3B3B;
-    --vah:      #2979FF;
-    --val:      #2979FF;
+    --bg:      #080C10;
+    --bg2:     #0D1219;
+    --bg3:     #141B24;
+    --bg4:     #1A2332;
+    --border:  #1E2D3D;
+    --border2: #2A3F54;
+    --text:    #CDD9E5;
+    --muted:   #6E8098;
+    --dim:     #3D5166;
+    --green:   #3FB950;
+    --red:     #F85149;
+    --blue:    #4DA6FF;
+    --orange:  #FFA657;
+    --purple:  #BC8CFF;
+    --yellow:  #E3B341;
+    --poc:     #FF4444;
+    --vah:     #4DA6FF;
   }
 
   html, body, [class*="css"] {
     background-color: var(--bg) !important;
     color: var(--text) !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 13px !important;
   }
-
-  .mono { font-family: 'Space Mono', monospace !important; }
 
   /* Sidebar */
   [data-testid="stSidebar"] {
     background: var(--bg2) !important;
-    border-right: 1px solid var(--border);
+    border-right: 1px solid var(--border) !important;
+  }
+  [data-testid="stSidebar"] * { font-family: 'JetBrains Mono', monospace !important; }
+
+  /* Slider */
+  [data-testid="stSlider"] .st-emotion-cache-1dp5vir,
+  [data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"] {
+    background: var(--blue) !important;
   }
 
-  /* Metric cards */
-  .metric-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin: 4px 0;
+  /* Metrics */
+  [data-testid="stMetric"] {
+    background: var(--bg2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    padding: 14px 18px !important;
   }
-
-  /* Signal badges */
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: 'Space Mono', monospace;
-    letter-spacing: 0.05em;
+  [data-testid="stMetricValue"] {
+    font-family: 'Syne', sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: var(--text) !important;
   }
-  .badge-long    { background: rgba(63,185,80,0.15);  color: #3FB950; border: 1px solid #3FB950; }
-  .badge-short   { background: rgba(248,81,73,0.15);  color: #F85149; border: 1px solid #F85149; }
-  .badge-rl      { background: rgba(88,166,255,0.15); color: #58A6FF; border: 1px solid #58A6FF; }
-  .badge-rs      { background: rgba(255,166,87,0.15); color: #FFA657; border: 1px solid #FFA657; }
-  .badge-neutral { background: rgba(139,148,158,0.15);color: #8B949E; border: 1px solid #8B949E; }
+  [data-testid="stMetricLabel"] { font-size: 9px !important; color: var(--muted) !important; letter-spacing: .1em !important; }
 
-  /* Score bar */
-  .score-bar {
-    height: 6px; border-radius: 3px;
-    background: linear-gradient(90deg, #FF3B3B, #FFD600, #3FB950);
-    margin-top: 4px;
-  }
-
-  /* VP level indicators */
-  .poc-pill  { color: #FF3B3B; font-family: 'Space Mono', monospace; font-size: 12px; }
-  .vah-pill  { color: #2979FF; font-family: 'Space Mono', monospace; font-size: 12px; }
-  .val-pill  { color: #2979FF; font-family: 'Space Mono', monospace; font-size: 12px; }
-
-  /* Table rows */
-  .signal-row {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 3px 0;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .signal-row:hover { border-color: var(--blue); background: var(--bg3); }
-  .signal-row-long  { border-left: 3px solid var(--green) !important; }
-  .signal-row-short { border-left: 3px solid var(--red) !important; }
-  .signal-row-rl    { border-left: 3px solid var(--blue) !important; }
-  .signal-row-rs    { border-left: 3px solid var(--orange) !important; }
-
-  /* Confluence items */
-  .conf-item {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--bg3); border-radius: 6px;
-    padding: 6px 10px; margin: 3px 0;
-    font-size: 13px;
-  }
-  .conf-alta   { border-left: 3px solid var(--green); }
-  .conf-media  { border-left: 3px solid var(--yellow); }
-  .conf-baja   { border-left: 3px solid var(--muted); }
-
-  /* Dividers */
-  hr { border-color: var(--border) !important; }
-
-  /* Header */
-  .main-header {
-    font-family: 'Space Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #58A6FF 0%, #BC8CFF 50%, #FF3B3B 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* Streamlit overrides */
+  /* Buttons */
   .stButton > button {
     background: var(--bg3) !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--border2) !important;
     color: var(--text) !important;
     border-radius: 8px !important;
-    font-family: 'Space Mono', monospace !important;
-    font-size: 12px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: .05em !important;
     transition: all 0.15s !important;
   }
   .stButton > button:hover {
     border-color: var(--blue) !important;
     color: var(--blue) !important;
+    background: rgba(77,166,255,.08) !important;
   }
 
-  [data-testid="stSelectbox"] > div { background: var(--bg2) !important; }
-  [data-testid="stMetricValue"] { font-family: 'Space Mono', monospace !important; font-size: 20px !important; }
-
-  .stSpinner > div { border-top-color: var(--blue) !important; }
-
-  /* Dialog / modal */
-  [data-testid="stModal"] { background: var(--bg2) !important; }
-
-  /* Tab styling */
+  /* Tabs */
+  .stTabs [data-baseweb="tab-list"] {
+    background: var(--bg2) !important;
+    border-bottom: 1px solid var(--border) !important;
+    gap: 0 !important;
+  }
   .stTabs [data-baseweb="tab"] {
-    font-family: 'Space Mono', monospace !important;
-    font-size: 12px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    color: var(--muted) !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 10px 20px !important;
+    border-bottom: 2px solid transparent !important;
+  }
+  .stTabs [aria-selected="true"] {
+    color: var(--blue) !important;
+    border-bottom-color: var(--blue) !important;
+    background: transparent !important;
+  }
+
+  /* Inputs */
+  [data-testid="stTextInput"] input {
+    background: var(--bg3) !important;
+    border: 1px solid var(--border2) !important;
+    color: var(--text) !important;
+    border-radius: 6px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+  }
+
+  /* Checkboxes */
+  [data-testid="stCheckbox"] label {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
     color: var(--muted) !important;
   }
-  .stTabs [aria-selected="true"] { color: var(--blue) !important; }
+
+  /* Dividers */
+  hr { border-color: var(--border) !important; margin: 12px 0 !important; }
+
+  /* Spinner */
+  .stSpinner > div { border-top-color: var(--blue) !important; }
+
+  /* Progress */
+  [data-testid="stProgressBar"] > div > div {
+    background: linear-gradient(90deg, var(--blue), var(--purple)) !important;
+  }
+
+  /* Warning / info boxes */
+  [data-testid="stAlert"] {
+    background: var(--bg3) !important;
+    border: 1px solid var(--border2) !important;
+    border-radius: 8px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 12px !important;
+  }
+
+  /* Main header gradient */
+  .vp-logo {
+    font-family: 'Syne', sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    letter-spacing: -.03em !important;
+    background: linear-gradient(135deg, #4DA6FF 0%, #BC8CFF 60%, #FF4444 100%);
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    line-height: 1 !important;
+  }
+  .vp-sub {
+    font-size: 9px !important;
+    color: var(--muted) !important;
+    letter-spacing: .12em !important;
+    margin-top: 3px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 10px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: .04em; white-space: nowrap;
+  }
+  .badge-long    { background: #3FB95018; color: #3FB950; border: 1px solid #3FB95040; }
+  .badge-short   { background: #F8514918; color: #F85149; border: 1px solid #F8514940; }
+  .badge-rl      { background: #4DA6FF18; color: #4DA6FF; border: 1px solid #4DA6FF40; }
+  .badge-rs      { background: #FFA65718; color: #FFA657; border: 1px solid #FFA65740; }
+  .badge-neutral { background: #6E809818; color: #6E8098; border: 1px solid #6E809840; }
+
+  /* VP pills */
+  .poc-pill { color: var(--poc);  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; }
+  .vah-pill { color: var(--vah);  font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .val-pill { color: var(--vah);  font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  /* Metric card */
+  .metric-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 16px 18px;
+    margin: 4px 0;
+  }
+
+  /* Confluence items */
+  .conf-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg4); border-radius: 6px;
+    padding: 7px 10px; margin: 3px 0;
+    font-size: 12px; border-left: 3px solid transparent;
+  }
+  .conf-alta  { border-left-color: var(--green); }
+  .conf-media { border-left-color: var(--yellow); }
+  .conf-baja  { border-left-color: var(--muted); }
+
+  /* Table header */
+  .tbl-header {
+    font-size: 9px; color: var(--dim);
+    letter-spacing: .12em; text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 8px 4px;
+  }
+  /* Table row left borders */
+  .row-long  { border-left: 3px solid var(--green) !important; padding-left: 6px; }
+  .row-short { border-left: 3px solid var(--red) !important;   padding-left: 6px; }
+  .row-rl    { border-left: 3px solid var(--blue) !important;  padding-left: 6px; }
+  .row-rs    { border-left: 3px solid var(--orange) !important;padding-left: 6px; }
+
+  /* Number cells */
+  .num { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .num-stop   { color: var(--orange); }
+  .num-target { color: var(--green); }
+  .num-rr     { color: var(--purple); }
+  .num-muted  { color: var(--muted); font-size: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1523,13 +1590,13 @@ if "last_scan_time" not in st.session_state:
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="main-header">VP Scanner</div>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#8B949E;font-size:12px;font-family:Space Mono,monospace;margin-top:-8px;">Volume Profile · Pivot Anchored</p>', unsafe_allow_html=True)
+    st.markdown('<div class="vp-logo">VP<br>Scanner</div>', unsafe_allow_html=True)
+    st.markdown('<div class="vp-sub">VOLUME PROFILE · PIVOT ANCHORED</div>', unsafe_allow_html=True)
     st.markdown("---")
 
     st.markdown("#### ⚙️ Configuración")
 
-    pivot_length = st.slider("Pivot Length", 5, 50, 20, help="Barras a cada lado para detectar pivotes. Valor 20 = réplica exacta del indicador original (pvtLength=20 en Pine Script).")
+    pivot_length = st.slider("Pivot Length", 5, 50, 10, help="Barras a cada lado para detectar pivotes. 10 = más señales, 20 = réplica exacta del indicador original.")
     n_rows = st.slider("Filas del perfil", 10, 50, 25)
     va_pct = st.slider("Value Area %", 50, 90, 68) / 100
     min_score = st.slider("Score mínimo para alertas", 0, 10, 3)
@@ -1565,8 +1632,8 @@ with st.sidebar:
 col_title, col_btn = st.columns([4, 1])
 
 with col_title:
-    st.markdown('<h2 style="font-family:Space Mono,monospace;color:#E6EDF3;margin:0;">🔬 Crypto Volume Profile Scanner</h2>', unsafe_allow_html=True)
-    st.markdown(f'<p style="color:#8B949E;font-size:13px;margin-top:4px;">Top {len(TOP_SYMBOLS)} cryptos · Binance · Timeframes 1D + 4H · Pivots anclados</p>', unsafe_allow_html=True)
+    st.markdown('<h2 style="font-family:Syne,sans-serif;font-weight:800;font-size:24px;color:#CDD9E5;margin:0;letter-spacing:-.02em;">🔬 Crypto Volume Profile Scanner</h2>', unsafe_allow_html=True)
+    st.markdown(f'<p style="color:#3D5166;font-size:10px;font-family:JetBrains Mono,monospace;margin-top:4px;letter-spacing:.06em;">TOP {len(TOP_SYMBOLS)} CRIPTOS · BINANCE · 1D + 4H · PIVOTS ANCLADOS · VELAS POR VOLUMEN</p>', unsafe_allow_html=True)
 
 with col_btn:
     scan_btn = st.button("▶ SCAN", use_container_width=True)
@@ -1613,24 +1680,26 @@ if auto_refresh and st.session_state.last_scan_time:
 # ── Main content ──────────────────────────────────────────────────────────────
 if st.session_state.scan_df is None:
     # ── Empty state ───────────────────────────────────────────────────────────
-    st.markdown("""
-    <div style="text-align:center;padding:80px 20px;color:#8B949E;">
-      <div style="font-size:64px;margin-bottom:16px;">🔬</div>
-      <div style="font-family:Space Mono,monospace;font-size:20px;color:#E6EDF3;margin-bottom:8px;">
-        VP Scanner listo
+    st.markdown("""<div style="text-align:center;padding:100px 20px;">
+      <div style="font-size:72px;margin-bottom:20px;opacity:.8;">🔬</div>
+      <div style="font-family:Syne,sans-serif;font-size:26px;font-weight:800;color:#CDD9E5;margin-bottom:12px;letter-spacing:-.02em;">VP Scanner listo</div>
+      <div style="font-size:13px;color:#3D5166;max-width:480px;margin:0 auto;line-height:1.8;font-family:JetBrains Mono,monospace;">
+        Pulsa <strong style="color:#4DA6FF;">▶ SCAN</strong> para analizar las top criptos.<br>
+        Volume Profile anclado a pivotes · PoC · VAH · VAL · Señales · Confluencias
       </div>
-      <div style="font-size:14px;max-width:500px;margin:0 auto;line-height:1.6;">
-        Pulsa <strong style="color:#58A6FF;">▶ SCAN</strong> para analizar las top criptos con Volume Profile anclado a pivotes.<br><br>
-        Replica exactamente el indicador Pine Script de DGT con cálculo de PoC, VAH, VAL, señales y confluencias.
+      <div style="margin-top:32px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+        <span style="background:#3FB95015;color:#3FB950;border:1px solid #3FB95030;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🟢 LONG</span>
+        <span style="background:#F8514915;color:#F85149;border:1px solid #F8514930;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🔴 SHORT</span>
+        <span style="background:#4DA6FF15;color:#4DA6FF;border:1px solid #4DA6FF30;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🔵 RANGE LONG</span>
+        <span style="background:#FFA65715;color:#FFA657;border:1px solid #FFA65730;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🟠 RANGE SHORT</span>
       </div>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 else:
     df = st.session_state.scan_df.copy()
 
     if df.empty or "signal" not in df.columns:
-        st.warning("El scan no produjo resultados. Inténtalo de nuevo.")
+        st.warning("⚠️ El scan no detectó señales con los filtros actuales. Prueba a bajar el Score mínimo a 0 o ampliar los filtros de señal.")
         st.stop()
 
     # ── Filter signals ────────────────────────────────────────────────────────
