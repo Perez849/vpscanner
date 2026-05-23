@@ -4,12 +4,10 @@
 
 import pandas as pd
 import numpy as np
-import requests as _requests
-from datetime import datetime, timezone, timedelta
+import yfinance as yf
+from datetime import datetime, timezone
 import time
 
-# Symbols — CoinGecko IDs mapped to display names
-# Format: (coingecko_id, display_symbol, vs_currency)
 TOP_SYMBOLS = [
     "BTC/USDT","ETH/USDT","BNB/USDT","SOL/USDT","XRP/USDT",
     "DOGE/USDT","ADA/USDT","AVAX/USDT","TRX/USDT","TON/USDT",
@@ -21,74 +19,61 @@ TOP_SYMBOLS = [
     "ICP/USDT","APT/USDT","EGLD/USDT","MATIC/USDT","SHIB/USDT",
 ]
 
-# CoinGecko ID mapping
-_CG_IDS = {
-    "BTC":"bitcoin","ETH":"ethereum","BNB":"binancecoin","SOL":"solana",
-    "XRP":"ripple","DOGE":"dogecoin","ADA":"cardano","AVAX":"avalanche-2",
-    "TRX":"tron","TON":"the-open-network","LINK":"chainlink","DOT":"polkadot",
-    "LTC":"litecoin","BCH":"bitcoin-cash","NEAR":"near","UNI":"uniswap",
-    "ARB":"arbitrum","OP":"optimism","ATOM":"cosmos","INJ":"injective-protocol",
-    "AAVE":"aave","STX":"blockstack","FIL":"filecoin","HBAR":"hedera-hashgraph",
-    "VET":"vechain","MKR":"maker","IMX":"immutable-x","GRT":"the-graph",
-    "XLM":"stellar","ALGO":"algorand","EOS":"eos","FTM":"fantom",
-    "SAND":"the-sandbox","MANA":"decentraland","AXS":"axie-infinity",
-    "ICP":"internet-computer","APT":"aptos","EGLD":"elrond-erd-2",
-    "MATIC":"matic-network","SHIB":"shiba-inu",
-}
-
-_TF_DAYS = {"1d": 365, "4h": 90}
-_TF_INTERVAL = {"1d": "daily", "4h": "hourly"}  # CoinGecko supports daily and hourly
-
 TIMEFRAMES = ["1d", "4h"]
+
+# Yahoo Finance ticker mapping: symbol → YF ticker
+# YF uses BASE-USD for crypto (BTC-USD, ETH-USD, etc.)
+_YF_MAP = {s.split("/")[0]: s.split("/")[0] + "-USD" for s in TOP_SYMBOLS}
+# Exceptions where YF uses a different ticker
+_YF_MAP.update({"BNB":"BNB-USD","SHIB":"SHIB-USD","MATIC":"MATIC-USD","FTM":"FTM-USD"})
+
+# YF interval/period mapping
+_YF_PARAMS = {
+    "1d": {"interval": "1d", "period": "2y"},
+    "4h": {"interval": "1h", "period": "60d"},   # YF doesn't have 4h; use 1h and resample
+}
 
 
 def fetch_ohlcv(symbol: str, timeframe: str, limit: int = 500) -> pd.DataFrame | None:
     """
-    Fetch OHLCV from CoinGecko free API — no API key needed, no geo restrictions.
-    Falls back gracefully on error.
+    Fetch OHLCV via yfinance — works from any server, no geo restrictions.
+    For 4H: downloads 1H data and resamples to 4H bars.
     """
     base = symbol.split("/")[0].upper()
-    cg_id = _CG_IDS.get(base)
-    if not cg_id:
-        return None
+    ticker = _YF_MAP.get(base, base + "-USD")
+    params = _YF_PARAMS.get(timeframe, _YF_PARAMS["1d"])
 
-    days = _TF_DAYS.get(timeframe, 365)
-    # CoinGecko /coins/{id}/ohlc — returns [timestamp, open, high, low, close]
-    # No volume in OHLC endpoint, use market_chart for volume
     try:
-        url = f"https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc"
-        params = {"vs_currency": "usd", "days": days}
-        r = _requests.get(url, params=params, timeout=15)
-        if r.status_code != 200:
+        raw = yf.download(
+            ticker,
+            interval=params["interval"],
+            period=params["period"],
+            progress=False,
+            auto_adjust=True,
+        )
+        if raw is None or len(raw) < 20:
             return None
-        data = r.json()
-        if not data or len(data) < 10:
-            return None
 
-        df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close"])
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
-        df = df.set_index("timestamp").sort_index().astype(float)
+        # Flatten multi-level columns if present
+        if isinstance(raw.columns, pd.MultiIndex):
+            raw.columns = raw.columns.get_level_values(0)
 
-        # CoinGecko OHLC doesn't have volume — fetch it separately and merge
-        url2 = f"https://api.coingecko.com/api/v3/coins/{cg_id}/market_chart"
-        params2 = {"vs_currency": "usd", "days": days, "interval": "daily" if timeframe=="1d" else "hourly"}
-        r2 = _requests.get(url2, params=params2, timeout=15)
-        if r2.status_code == 200:
-            mdata = r2.json()
-            if "total_volumes" in mdata and mdata["total_volumes"]:
-                vol_df = pd.DataFrame(mdata["total_volumes"], columns=["timestamp","volume"])
-                vol_df["timestamp"] = pd.to_datetime(vol_df["timestamp"], unit="ms", utc=True)
-                vol_df = vol_df.set_index("timestamp").sort_index()
-                # Resample volumes to match OHLC candles
-                df = df.join(vol_df, how="left")
-                df["volume"] = df["volume"].fillna(1.0)
-            else:
-                df["volume"] = 1.0
-        else:
-            df["volume"] = 1.0
+        df = raw[["Open", "High", "Low", "Close", "Volume"]].copy()
+        df.columns = ["open", "high", "low", "close", "volume"]
+        df.index = pd.to_datetime(df.index, utc=True)
+        df = df.sort_index().astype(float)
+        df = df[df["volume"] > 0].dropna()
 
-        # For 4h: CoinGecko OHLC with days≤90 returns 4h candles automatically
-        # For 1d: days>90 returns daily candles
+        # Resample 1H → 4H for the 4h timeframe
+        if timeframe == "4h":
+            df = df.resample("4h").agg({
+                "open":   "first",
+                "high":   "max",
+                "low":    "min",
+                "close":  "last",
+                "volume": "sum",
+            }).dropna()
+
         df = df.tail(limit)
         return df if len(df) >= 30 else None
 
@@ -678,7 +663,7 @@ def _rsi(values: np.ndarray, period: int = 14) -> float | None:
 
 
 
-PIVOT_LENGTH = 10  # default for cloud — use 20 in slider for exact Pine Script match
+PIVOT_LENGTH = 20  # matches Pine Script pvtLength=20 exactly
 
 
 def scan_symbol(symbol: str, df_1d: pd.DataFrame | None, df_4h: pd.DataFrame | None,
@@ -1652,7 +1637,7 @@ with st.sidebar:
 
     st.markdown("#### ⚙️ Configuración")
 
-    pivot_length = st.slider("Pivot Length", 5, 50, 10, help="Barras a cada lado para detectar pivotes. 10 = más señales, 20 = réplica exacta del indicador original.")
+    pivot_length = st.slider("Pivot Length", 5, 50, 20, help="Barras a cada lado. 20 = réplica exacta del indicador original (pvtLength=20 en Pine Script).")
     n_rows = st.slider("Filas del perfil", 10, 50, 25)
     va_pct = st.slider("Value Area %", 50, 90, 68) / 100
     min_score = st.slider("Score mínimo para alertas", 0, 10, 3)
