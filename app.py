@@ -1366,619 +1366,319 @@ Streamlit main application.
 import streamlit as st
 
 # ── Page config ───────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="VP Scanner",
-    page_icon="🔬",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+st.set_page_config(page_title="VP Scanner", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 
-# ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap');
-
-  :root {
-    --bg:      #080C10;
-    --bg2:     #0D1219;
-    --bg3:     #141B24;
-    --bg4:     #1A2332;
-    --border:  #1E2D3D;
-    --border2: #2A3F54;
-    --text:    #CDD9E5;
-    --muted:   #6E8098;
-    --dim:     #3D5166;
-    --green:   #3FB950;
-    --red:     #F85149;
-    --blue:    #4DA6FF;
-    --orange:  #FFA657;
-    --purple:  #BC8CFF;
-    --yellow:  #E3B341;
-    --poc:     #FF4444;
-    --vah:     #4DA6FF;
-  }
-
-  html, body, [class*="css"] {
-    background-color: var(--bg) !important;
-    color: var(--text) !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 13px !important;
-  }
-
-  /* Sidebar */
-  [data-testid="stSidebar"] {
-    background: var(--bg2) !important;
-    border-right: 1px solid var(--border) !important;
-  }
-  [data-testid="stSidebar"] * { font-family: 'JetBrains Mono', monospace !important; }
-
-  /* Slider */
-  [data-testid="stSlider"] .st-emotion-cache-1dp5vir,
-  [data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"] {
-    background: var(--blue) !important;
-  }
-
-  /* Metrics */
-  [data-testid="stMetric"] {
-    background: var(--bg2) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 10px !important;
-    padding: 14px 18px !important;
-  }
-  [data-testid="stMetricValue"] {
-    font-family: 'Syne', sans-serif !important;
-    font-size: 26px !important;
-    font-weight: 700 !important;
-    color: var(--text) !important;
-  }
-  [data-testid="stMetricLabel"] { font-size: 9px !important; color: var(--muted) !important; letter-spacing: .1em !important; }
-
-  /* Buttons */
-  .stButton > button {
-    background: var(--bg3) !important;
-    border: 1px solid var(--border2) !important;
-    color: var(--text) !important;
-    border-radius: 8px !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    letter-spacing: .05em !important;
-    transition: all 0.15s !important;
-  }
-  .stButton > button:hover {
-    border-color: var(--blue) !important;
-    color: var(--blue) !important;
-    background: rgba(77,166,255,.08) !important;
-  }
-
-  /* Tabs */
-  .stTabs [data-baseweb="tab-list"] {
-    background: var(--bg2) !important;
-    border-bottom: 1px solid var(--border) !important;
-    gap: 0 !important;
-  }
-  .stTabs [data-baseweb="tab"] {
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 11px !important;
-    color: var(--muted) !important;
-    background: transparent !important;
-    border-radius: 0 !important;
-    padding: 10px 20px !important;
-    border-bottom: 2px solid transparent !important;
-  }
-  .stTabs [aria-selected="true"] {
-    color: var(--blue) !important;
-    border-bottom-color: var(--blue) !important;
-    background: transparent !important;
-  }
-
-  /* Inputs */
-  [data-testid="stTextInput"] input {
-    background: var(--bg3) !important;
-    border: 1px solid var(--border2) !important;
-    color: var(--text) !important;
-    border-radius: 6px !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 11px !important;
-  }
-
-  /* Checkboxes */
-  [data-testid="stCheckbox"] label {
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 11px !important;
-    color: var(--muted) !important;
-  }
-
-  /* Dividers */
-  hr { border-color: var(--border) !important; margin: 12px 0 !important; }
-
-  /* Spinner */
-  .stSpinner > div { border-top-color: var(--blue) !important; }
-
-  /* Progress */
-  [data-testid="stProgressBar"] > div > div {
-    background: linear-gradient(90deg, var(--blue), var(--purple)) !important;
-  }
-
-  /* Warning / info boxes */
-  [data-testid="stAlert"] {
-    background: var(--bg3) !important;
-    border: 1px solid var(--border2) !important;
-    border-radius: 8px !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 12px !important;
-  }
-
-  /* Main header gradient */
-  .vp-logo {
-    font-family: 'Syne', sans-serif !important;
-    font-size: 26px !important;
-    font-weight: 800 !important;
-    letter-spacing: -.03em !important;
-    background: linear-gradient(135deg, #4DA6FF 0%, #BC8CFF 60%, #FF4444 100%);
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    line-height: 1 !important;
-  }
-  .vp-sub {
-    font-size: 9px !important;
-    color: var(--muted) !important;
-    letter-spacing: .12em !important;
-    margin-top: 3px !important;
-    font-family: 'JetBrains Mono', monospace !important;
-  }
-
-  /* Badges */
-  .badge {
-    display: inline-flex; align-items: center; gap: 3px;
-    padding: 3px 10px; border-radius: 20px;
-    font-size: 10px; font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: .04em; white-space: nowrap;
-  }
-  .badge-long    { background: #3FB95018; color: #3FB950; border: 1px solid #3FB95040; }
-  .badge-short   { background: #F8514918; color: #F85149; border: 1px solid #F8514940; }
-  .badge-rl      { background: #4DA6FF18; color: #4DA6FF; border: 1px solid #4DA6FF40; }
-  .badge-rs      { background: #FFA65718; color: #FFA657; border: 1px solid #FFA65740; }
-  .badge-neutral { background: #6E809818; color: #6E8098; border: 1px solid #6E809840; }
-
-  /* VP pills */
-  .poc-pill { color: var(--poc);  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; }
-  .vah-pill { color: var(--vah);  font-family: 'JetBrains Mono', monospace; font-size: 11px; }
-  .val-pill { color: var(--vah);  font-family: 'JetBrains Mono', monospace; font-size: 11px; }
-
-  /* Metric card */
-  .metric-card {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 11px;
-    padding: 16px 18px;
-    margin: 4px 0;
-  }
-
-  /* Confluence items */
-  .conf-item {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--bg4); border-radius: 6px;
-    padding: 7px 10px; margin: 3px 0;
-    font-size: 12px; border-left: 3px solid transparent;
-  }
-  .conf-alta  { border-left-color: var(--green); }
-  .conf-media { border-left-color: var(--yellow); }
-  .conf-baja  { border-left-color: var(--muted); }
-
-  /* Table header */
-  .tbl-header {
-    font-size: 9px; color: var(--dim);
-    letter-spacing: .12em; text-transform: uppercase;
-    font-family: 'JetBrains Mono', monospace;
-    padding: 8px 4px;
-  }
-  /* Table row left borders */
-  .row-long  { border-left: 3px solid var(--green) !important; padding-left: 6px; }
-  .row-short { border-left: 3px solid var(--red) !important;   padding-left: 6px; }
-  .row-rl    { border-left: 3px solid var(--blue) !important;  padding-left: 6px; }
-  .row-rs    { border-left: 3px solid var(--orange) !important;padding-left: 6px; }
-
-  /* Number cells */
-  .num { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-  .num-stop   { color: var(--orange); }
-  .num-target { color: var(--green); }
-  .num-rr     { color: var(--purple); }
-  .num-muted  { color: var(--muted); font-size: 10px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+html,body,[class*="css"]{font-family:'Inter',sans-serif!important;background:#F4F6FB!important;}
+[data-testid="stSidebar"]{background:#FFFFFF!important;border-right:1px solid #E4E7F0!important;}
+[data-testid="stSidebar"] *{font-family:'Inter',sans-serif!important;}
+.stSlider label,.stCheckbox label{font-size:12px!important;color:#6B7280!important;}
+[data-testid="stMetric"]{background:#FFFFFF!important;border:1px solid #E4E7F0!important;border-radius:10px!important;padding:12px 16px!important;}
+[data-testid="stMetricValue"]{font-family:'Space Grotesk',sans-serif!important;font-size:28px!important;font-weight:700!important;color:#0D1117!important;}
+[data-testid="stMetricLabel"]{font-size:10px!important;color:#9CA3AF!important;letter-spacing:.06em!important;}
+.stButton>button{background:#3B82F6!important;color:#fff!important;border:none!important;border-radius:8px!important;font-family:'Inter',sans-serif!important;font-size:12px!important;font-weight:600!important;padding:8px 20px!important;}
+.stButton>button:hover{background:#2563EB!important;}
+.stTabs [data-baseweb="tab-list"]{background:#F1F3F9!important;border-radius:8px!important;padding:3px!important;border:1px solid #E4E7F0!important;}
+.stTabs [data-baseweb="tab"]{border-radius:6px!important;font-family:'Inter',sans-serif!important;font-size:11px!important;font-weight:600!important;color:#6B7280!important;}
+.stTabs [aria-selected="true"]{background:#FFFFFF!important;color:#3B82F6!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important;}
+hr{border-color:#E4E7F0!important;}
+.stSpinner>div{border-top-color:#3B82F6!important;}
+[data-testid="stAlert"]{border-radius:8px!important;font-family:'Inter',sans-serif!important;font-size:12px!important;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap;}
+.bl{background:#ECFDF5;color:#065F46;}
+.bs{background:#FEF2F2;color:#991B1B;}
+.brl{background:#EFF6FF;color:#1E40AF;}
+.brs{background:#FFFBEB;color:#92400E;}
+.bn{background:#F3F4F6;color:#374151;}
+.conf-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;background:#F9FAFB;border:1px solid #E4E7F0;margin-bottom:4px;font-size:12px;border-left:3px solid transparent;}
+.conf-item.alta{border-left-color:#10B981;}
+.conf-item.media{border-left-color:#F59E0B;}
+.conf-item.baja{border-left-color:#D1D5DB;}
+.metric-card{background:#FFFFFF;border:1px solid #E4E7F0;border-radius:10px;padding:14px 16px;margin:2px 0;}
+.tbl-sym{font-size:13px;font-weight:700;color:#0D1117;font-family:'Space Grotesk',sans-serif;cursor:pointer;transition:color .12s;}
+.tbl-sym:hover{color:#3B82F6;}
+.logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#3B82F6;letter-spacing:-.02em;}
+.logo-sub{font-size:10px;color:#9CA3AF;letter-spacing:.08em;margin-top:2px;}
 </style>
 """, unsafe_allow_html=True)
 
+# ── Session state ──────────────────────────────────────────────────────────────
+if "scan_df"      not in st.session_state: st.session_state.scan_df      = None
+if "scan_results" not in st.session_state: st.session_state.scan_results = None
+if "selected_sym" not in st.session_state: st.session_state.selected_sym = None
+if "selected_tf"  not in st.session_state: st.session_state.selected_tf  = "1d"
+if "last_scan"    not in st.session_state: st.session_state.last_scan     = None
+if "auto_scanned" not in st.session_state: st.session_state.auto_scanned  = False
 
-# ── Imports after page config ──────────────────────────────────────────────────
-
-
-# ── Session state ─────────────────────────────────────────────────────────────
-
-# ── Demo data — carga instantánea sin necesidad de scan ───────────────────────
-_DEMO_ROWS = [
-    {"symbol":"BTC/USDT","tf":"1D","close":67842.0,"poc":65900.0,"vah":69200.0,"val":63100.0,"signal":"SHORT","signal_label":"SHORT → PoC","stop":69540.0,"target":65900.0,"target2":63100.0,"invalidation":71200.0,"rr":1.9,"score":8,"rsi":71.3,"vol_ratio":2.1,"scenario":"Precio sobre VAH. Sesgo bajista hacia el PoC."},
-    {"symbol":"ETH/USDT","tf":"1D","close":3452.0,"poc":3600.0,"vah":3780.0,"val":3310.0,"signal":"LONG","signal_label":"LONG → PoC","stop":3268.0,"target":3600.0,"target2":3780.0,"invalidation":3200.0,"rr":2.0,"score":7,"rsi":32.1,"vol_ratio":1.9,"scenario":"Precio bajo VAL. Sesgo alcista hacia el PoC."},
-    {"symbol":"ARB/USDT","tf":"1D","close":1.082,"poc":1.150,"vah":1.240,"val":1.020,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":0.997,"target":1.150,"target2":1.240,"invalidation":0.970,"rr":2.3,"score":9,"rsi":27.3,"vol_ratio":2.4,"scenario":"Dentro del VA bajo el PoC. Score máximo."},
-    {"symbol":"SOL/USDT","tf":"1D","close":158.4,"poc":162.0,"vah":171.5,"val":152.8,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":151.5,"target":162.0,"target2":171.5,"invalidation":149.8,"rr":1.8,"score":6,"rsi":51.2,"vol_ratio":1.1,"scenario":"Dentro del VA bajo el PoC. EMA21 convergiendo con PoC."},
-    {"symbol":"XRP/USDT","tf":"4H","close":0.5821,"poc":0.5950,"vah":0.6240,"val":0.5580,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":0.5515,"target":0.5950,"target2":0.6240,"invalidation":0.5450,"rr":2.0,"score":7,"rsi":38.4,"vol_ratio":2.1,"scenario":"4H dentro del VA bajo el PoC."},
-    {"symbol":"LINK/USDT","tf":"1D","close":14.82,"poc":15.40,"vah":16.30,"val":14.10,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":13.87,"target":15.40,"target2":16.30,"invalidation":13.50,"rr":1.9,"score":8,"rsi":29.7,"vol_ratio":1.9,"scenario":"Soporte firme en VAL. RSI sobrevendido y EMA50 confluente."},
-    {"symbol":"AVAX/USDT","tf":"1D","close":38.92,"poc":37.50,"vah":41.20,"val":34.80,"signal":"RANGE_SHORT","signal_label":"RANGE SHORT → VAL","stop":41.50,"target":37.50,"target2":34.80,"invalidation":42.40,"rr":1.5,"score":5,"rsi":65.8,"vol_ratio":0.9,"scenario":"Dentro del VA sobre el PoC."},
-    {"symbol":"INJ/USDT","tf":"1D","close":24.10,"poc":22.80,"vah":26.40,"val":21.20,"signal":"SHORT","signal_label":"SHORT → PoC","stop":26.90,"target":22.80,"target2":21.20,"invalidation":28.10,"rr":1.1,"score":4,"rsi":68.1,"vol_ratio":1.2,"scenario":"Precio sobre VAH. Señal SHORT moderada."},
-    {"symbol":"NEAR/USDT","tf":"4H","close":5.142,"poc":5.380,"vah":5.720,"val":5.010,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":4.968,"target":5.380,"target2":5.720,"invalidation":4.870,"rr":1.8,"score":7,"rsi":37.8,"vol_ratio":1.7,"scenario":"4H dentro del VA bajo el PoC."},
-    {"symbol":"DOT/USDT","tf":"4H","close":7.841,"poc":8.100,"vah":8.520,"val":7.680,"signal":"LONG","signal_label":"LONG → PoC","stop":7.534,"target":8.100,"target2":8.520,"invalidation":7.420,"rr":1.9,"score":6,"rsi":35.2,"vol_ratio":0.6,"scenario":"Precio bajo VAL en 4H."},
-    {"symbol":"ADA/USDT","tf":"1D","close":0.4410,"poc":0.4650,"vah":0.4980,"val":0.4200,"signal":"LONG","signal_label":"LONG → PoC","stop":0.4116,"target":0.4650,"target2":0.4980,"invalidation":0.4020,"rr":1.8,"score":6,"rsi":33.5,"vol_ratio":1.4,"scenario":"Precio bajo VAL. Sesgo alcista."},
-    {"symbol":"ATOM/USDT","tf":"1D","close":8.24,"poc":8.80,"vah":9.40,"val":7.90,"signal":"LONG","signal_label":"LONG → PoC","stop":7.832,"target":8.80,"target2":9.40,"invalidation":7.650,"rr":1.9,"score":5,"rsi":36.4,"vol_ratio":1.2,"scenario":"Precio bajo VAL."},
-]
-
-_DEMO_DF = pd.DataFrame(_DEMO_ROWS)
-
-if "scan_results" not in st.session_state:
-    st.session_state.scan_results = None
-if "scan_df" not in st.session_state:
-    st.session_state.scan_df = _DEMO_DF.copy()  # demo visible desde el inicio
-if "selected_symbol" not in st.session_state:
-    st.session_state.selected_symbol = None
-if "selected_tf" not in st.session_state:
-    st.session_state.selected_tf = "1d"
-if "last_scan_time" not in st.session_state:
-    st.session_state.last_scan_time = "Demo — pulsa SCAN para datos reales"
-if "is_demo" not in st.session_state:
-    st.session_state.is_demo = True
-
-
-
-# ── Sidebar ───────────────────────────────────────────────────────────────────
+# ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="vp-logo">VP<br>Scanner</div>', unsafe_allow_html=True)
-    st.markdown('<div class="vp-sub">VOLUME PROFILE · PIVOT ANCHORED</div>', unsafe_allow_html=True)
+    st.markdown('<div class="logo-text">VP · Scanner</div>', unsafe_allow_html=True)
+    st.markdown('<div class="logo-sub">PIVOT ANCHORED · YAHOO FINANCE</div>', unsafe_allow_html=True)
     st.markdown("---")
-
-    st.markdown("#### ⚙️ Configuración")
-
-    pivot_length = st.slider("Pivot Length", 5, 50, 20, help="Barras a cada lado. 20 = réplica exacta del indicador original (pvtLength=20 en Pine Script).")
-    n_rows = st.slider("Filas del perfil", 10, 50, 25)
-    va_pct = st.slider("Value Area %", 50, 90, 68) / 100
-    min_score = st.slider("Score mínimo para alertas", 0, 10, 3)
-
+    st.markdown("**⚙️ Configuración**")
+    pivot_length = st.slider("Pivot Length", 5, 50, 20)
+    n_rows       = st.slider("Filas del perfil", 10, 50, 25)
+    va_pct       = st.slider("Value Area %", 50, 90, 68) / 100
+    min_score    = st.slider("Score mínimo", 0, 10, 3)
     st.markdown("---")
-    st.markdown("#### 📡 Filtros de señal")
-    show_long    = st.checkbox("LONG",         True)
-    show_short   = st.checkbox("SHORT",        True)
-    show_rl      = st.checkbox("RANGE LONG",   True)
-    show_rs      = st.checkbox("RANGE SHORT",  True)
-    show_neutral = st.checkbox("NEUTRAL",      False)
-
+    st.markdown("**📡 Filtros**")
+    show_long  = st.checkbox("LONG",        True)
+    show_short = st.checkbox("SHORT",       True)
+    show_rl    = st.checkbox("RANGE LONG",  True)
+    show_rs    = st.checkbox("RANGE SHORT", True)
+    show_neut  = st.checkbox("NEUTRAL",     False)
     st.markdown("---")
-    st.markdown("#### 🔔 Telegram")
+    st.markdown("**🔔 Telegram**")
     tg_token = st.text_input("Bot Token", type="password",
-                              value=st.secrets.get("TG_BOT_TOKEN", os.getenv("TG_BOT_TOKEN", "")),
-                              help="Obtén un token en @BotFather")
+                              value=st.secrets.get("TG_BOT_TOKEN", os.getenv("TG_BOT_TOKEN", "")))
     tg_chat  = st.text_input("Chat ID",
-                              value=st.secrets.get("TG_CHAT_ID", os.getenv("TG_CHAT_ID", "")),
-                              help="Tu chat_id de Telegram")
-
+                              value=st.secrets.get("TG_CHAT_ID",   os.getenv("TG_CHAT_ID",   "")))
     st.markdown("---")
-    st.markdown("#### ⏱️ Auto-refresh")
-    auto_refresh = st.checkbox("Activar", False)
-    refresh_mins = st.selectbox("Intervalo", [15, 30, 60, 240], index=1,
-                                 format_func=lambda x: f"{x} min")
+    rescan_btn = st.button("🔄 Actualizar datos", use_container_width=True)
+    if st.session_state.last_scan:
+        st.caption(f"Última actualización: {st.session_state.last_scan}")
 
-    if st.session_state.last_scan_time:
-        st.caption(f"Último scan: {st.session_state.last_scan_time}")
-
-
-# ── Main layout ───────────────────────────────────────────────────────────────
-col_title, col_btn = st.columns([4, 1])
-
-with col_title:
-    st.markdown('<h2 style="font-family:Syne,sans-serif;font-weight:800;font-size:24px;color:#CDD9E5;margin:0;letter-spacing:-.02em;">🔬 Crypto Volume Profile Scanner</h2>', unsafe_allow_html=True)
-    st.markdown(f'<p style="color:#3D5166;font-size:10px;font-family:JetBrains Mono,monospace;margin-top:4px;letter-spacing:.06em;">TOP {len(TOP_SYMBOLS)} CRIPTOS · BINANCE · 1D + 4H · PIVOTS ANCLADOS · VELAS POR VOLUMEN</p>', unsafe_allow_html=True)
-
-with col_btn:
-    scan_btn = st.button("▶ SCAN", use_container_width=True)
-
-
-# ── Scan trigger ──────────────────────────────────────────────────────────────
-def do_scan():
-    progress = st.progress(0, text="Iniciando scan...")
-    def cb(i, total, sym):
-        pct = int(i / total * 100)
-        progress.progress(pct, text=f"Analizando {sym}... ({i+1}/{total})")
+# ── Helper: run scan ───────────────────────────────────────────────────────────
+def run_scan_now(show_progress=True):
+    if show_progress:
+        prog = st.progress(0, text="Cargando datos de Yahoo Finance...")
+        def cb(i, total, sym):
+            prog.progress(int(i/total*100), text=f"Analizando {sym}... ({i+1}/{total})")
+    else:
+        def cb(i, total, sym): pass
 
     results = run_full_scan(TOP_SYMBOLS, progress_cb=cb, pivot_length=pivot_length)
-    progress.progress(100, text="✅ Scan completado")
-    time.sleep(0.5)
-    progress.empty()
+
+    if show_progress:
+        prog.progress(100, text="✅ Completado")
+        time.sleep(0.3)
+        prog.empty()
 
     df_real = results_to_dataframe(results)
     if not df_real.empty and "signal" in df_real.columns:
         st.session_state.scan_results = results
-        st.session_state.scan_df = df_real
-        st.session_state.is_demo = False
-        st.session_state.last_scan_time = datetime.now(timezone.utc).strftime("%H:%M UTC")
-    else:
-        st.warning("⚠️ CoinGecko no devolvió datos suficientes. Puede ser por rate limit (máx ~10 llamadas/min). Espera 60 segundos e inténtalo de nuevo.")
-        return
+        st.session_state.scan_df      = df_real
+        st.session_state.auto_scanned = True
+        st.session_state.last_scan    = datetime.now(timezone.utc).strftime("%d/%m %H:%M UTC")
+        if tg_token and tg_chat:
+            sigs = []
+            if show_long:  sigs.append("LONG")
+            if show_short: sigs.append("SHORT")
+            if show_rl:    sigs.append("RANGE_LONG")
+            if show_rs:    sigs.append("RANGE_SHORT")
+            sent = dispatch_alerts(results, tg_token, tg_chat, min_score=min_score, signals_filter=sigs)
+            if sent: st.toast(f"📡 {sent} alertas enviadas", icon="✅")
 
-    if tg_token and tg_chat:
-        sigs = []
-        if show_long:  sigs.append("LONG")
-        if show_short: sigs.append("SHORT")
-        if show_rl:    sigs.append("RANGE_LONG")
-        if show_rs:    sigs.append("RANGE_SHORT")
-        sent = dispatch_alerts(results, tg_token, tg_chat, min_score=min_score, signals_filter=sigs)
-        if sent:
-            st.toast(f"📡 {sent} alertas enviadas a Telegram", icon="✅")
+# ── Auto-scan on first load ────────────────────────────────────────────────────
+if not st.session_state.auto_scanned:
+    run_scan_now(show_progress=True)
 
+if rescan_btn:
+    run_scan_now(show_progress=True)
+    st.rerun()
 
-if scan_btn:
-    do_scan()
+# ── Main ───────────────────────────────────────────────────────────────────────
+col_t, col_empty = st.columns([5, 1])
+with col_t:
+    st.markdown('<h2 style="font-family:Space Grotesk,sans-serif;font-weight:700;font-size:22px;color:#0D1117;margin:0">📊 Crypto Volume Profile Scanner</h2>', unsafe_allow_html=True)
+    st.markdown(f'<p style="font-size:11px;color:#9CA3AF;margin-top:4px;letter-spacing:.04em">TOP {len(TOP_SYMBOLS)} CRIPTOS · YAHOO FINANCE · 1D + 4H · PIVOTS ANCLADOS · RÉPLICA INDICADOR DGT</p>', unsafe_allow_html=True)
 
-if auto_refresh and not st.session_state.is_demo:
-    time.sleep(1); st.rerun()
-
-
-# ── Main content ──────────────────────────────────────────────────────────────
-df = st.session_state.scan_df.copy()
-
-# Demo banner
-if st.session_state.is_demo:
-    st.markdown("""<div style="background:rgba(77,166,255,.08);border:1px solid rgba(77,166,255,.25);border-radius:8px;padding:10px 16px;margin-bottom:8px;font-family:JetBrains Mono,monospace;font-size:11px;color:#4DA6FF;display:flex;align-items:center;gap:10px;">
-    <span style="font-size:16px;">🎭</span>
-    <span><strong>Modo demo</strong> — datos de ejemplo para mostrar el panel. Pulsa <strong>▶ SCAN</strong> para cargar datos reales de CoinGecko.</span>
-    </div>""", unsafe_allow_html=True)
-
-if df.empty or "signal" not in df.columns:
-    st.warning("⚠️ Sin señales. Baja el Score mínimo a 0 o amplía los filtros.")
+# ── Guard ──────────────────────────────────────────────────────────────────────
+if st.session_state.scan_df is None or st.session_state.scan_df.empty:
+    st.info("Cargando datos... si tarda más de 3 minutos pulsa 🔄 Actualizar datos en el sidebar.")
     st.stop()
 
-    # ── Filter signals ────────────────────────────────────────────────────────
-    allowed = []
-    if show_long:    allowed.append("LONG")
-    if show_short:   allowed.append("SHORT")
-    if show_rl:      allowed.append("RANGE_LONG")
-    if show_rs:      allowed.append("RANGE_SHORT")
-    if show_neutral: allowed.append("NEUTRAL")
-    df = df[df["signal"].isin(allowed)]
-    df = df[df["score"] >= min_score]
+df = st.session_state.scan_df.copy()
+if "signal" not in df.columns:
+    st.warning("Sin datos. Pulsa 🔄 Actualizar datos.")
+    st.stop()
 
-    # ── Summary metrics ───────────────────────────────────────────────────────
-    m1, m2, m3, m4, m5 = st.columns(5)
-    with m1:
-        st.metric("Total señales", len(df))
-    with m2:
-        st.metric("LONG", len(df[df["signal"] == "LONG"]),
-                  delta=None, delta_color="normal")
-    with m3:
-        st.metric("SHORT", len(df[df["signal"] == "SHORT"]))
-    with m4:
-        st.metric("RANGE", len(df[df["signal"].isin(["RANGE_LONG", "RANGE_SHORT"])]))
-    with m5:
-        st.metric("Score promedio", f"{df['score'].mean():.1f}/10" if len(df) else "—")
+# ── Filter ─────────────────────────────────────────────────────────────────────
+allowed = []
+if show_long:  allowed.append("LONG")
+if show_short: allowed.append("SHORT")
+if show_rl:    allowed.append("RANGE_LONG")
+if show_rs:    allowed.append("RANGE_SHORT")
+if show_neut:  allowed.append("NEUTRAL")
+df = df[df["signal"].isin(allowed) & (df["score"] >= min_score)]
 
-    st.markdown("---")
+# ── Metrics ────────────────────────────────────────────────────────────────────
+m1,m2,m3,m4,m5 = st.columns(5)
+m1.metric("Señales activas", len(df))
+m2.metric("Long",  len(df[df["signal"]=="LONG"]))
+m3.metric("Short", len(df[df["signal"]=="SHORT"]))
+m4.metric("Range", len(df[df["signal"].isin(["RANGE_LONG","RANGE_SHORT"])]))
+m5.metric("Score medio", f"{df['score'].mean():.1f}" if len(df) else "—")
 
-    # ── Tabs: 1D / 4H / Todas ─────────────────────────────────────────────────
-    tab1, tab2, tab3 = st.tabs(["📅 Diario (1D)", "⏱️ 4 Horas (4H)", "🔀 Todas"])
-
-    def render_table(df_tab: pd.DataFrame, tf_label: str):
-        if df_tab.empty:
-            st.info(f"Sin señales activas en {tf_label} con los filtros actuales.")
-            return
-
-        # Sort: score desc. Within same score, LONG/SHORT before range, then alphabetical
-        sig_order = {"LONG": 0, "SHORT": 1, "RANGE_LONG": 2, "RANGE_SHORT": 3, "NEUTRAL": 4}
-        df_tab = df_tab.copy()
-        df_tab["_sig_order"] = df_tab["signal"].map(sig_order).fillna(9)
-        df_tab = df_tab.sort_values(
-            ["score", "_sig_order", "symbol"],
-            ascending=[False, True, True]
-        )
-
-        # ── Column headers ────────────────────────────────────────────────────
-        hc = st.columns([1.2, 0.7, 1.0, 1.0, 1.0, 1.0, 1.5, 0.9, 0.9, 0.6, 0.5])
-        headers = ["SÍMBOLO", "TF", "PRECIO", "PoC", "VAH", "VAL", "SEÑAL", "STOP", "TARGET", "R:R", "SCORE"]
-        for h, col in zip(headers, hc):
-            col.markdown(f'<div style="font-family:Space Mono,monospace;font-size:10px;color:#8B949E;font-weight:700;letter-spacing:0.08em;">{h}</div>', unsafe_allow_html=True)
-
-        st.markdown('<hr style="margin:4px 0 8px 0;border-color:#30363D;">', unsafe_allow_html=True)
-
-        for _, row in df_tab.iterrows():
-            sig = row["signal"]
-            badge_cls = {
-                "LONG": "badge-long",
-                "SHORT": "badge-short",
-                "RANGE_LONG": "badge-rl",
-                "RANGE_SHORT": "badge-rs",
-            }.get(sig, "badge-neutral")
-
-            row_border = {
-                "LONG": "signal-row-long",
-                "SHORT": "signal-row-short",
-                "RANGE_LONG": "signal-row-rl",
-                "RANGE_SHORT": "signal-row-rs",
-            }.get(sig, "")
-
-            cols = st.columns([1.2, 0.7, 1.0, 1.0, 1.0, 1.0, 1.5, 0.9, 0.9, 0.6, 0.5])
-
-            with cols[0]:
-                if st.button(f"**{row['symbol']}**", key=f"btn_{row['symbol']}_{row['tf']}_{tf_label}",
-                             use_container_width=False):
-                    st.session_state.selected_symbol = row["symbol"]
-                    st.session_state.selected_tf = row["tf"].lower()
-
-            cols[1].markdown(f'<span class="mono" style="font-size:12px;color:#8B949E;">{row["tf"]}</span>', unsafe_allow_html=True)
-            close_val = row["close"]
-            close_str = f"{close_val:.4f}" if close_val is not None else "—"
-            cols[2].markdown(f'<span class="mono" style="font-size:13px;">{close_str}</span>', unsafe_allow_html=True)
-            cols[3].markdown(f'<span class="poc-pill">{row["poc"]:.4f}</span>', unsafe_allow_html=True)
-            cols[4].markdown(f'<span class="vah-pill">{row["vah"]:.4f}</span>', unsafe_allow_html=True)
-            cols[5].markdown(f'<span class="val-pill">{row["val"]:.4f}</span>', unsafe_allow_html=True)
-            cols[6].markdown(f'<span class="badge {badge_cls}">{row["signal_label"]}</span>', unsafe_allow_html=True)
-            cols[7].markdown(f'<span class="mono" style="font-size:12px;color:#FFA657;">{row["stop"] or "—"}</span>', unsafe_allow_html=True)
-            cols[8].markdown(f'<span class="mono" style="font-size:12px;color:#3FB950;">{row["target"] or "—"}</span>', unsafe_allow_html=True)
-            cols[9].markdown(f'<span class="mono" style="font-size:12px;color:#BC8CFF;">{row["rr"] or "—"}</span>', unsafe_allow_html=True)
-
-            # Score bar
-            score = int(row["score"])
-            score_color = "#F85149" if score < 4 else "#D29922" if score < 7 else "#3FB950"
-            cols[10].markdown(
-                f'<div style="font-family:Space Mono,monospace;font-size:11px;color:{score_color};font-weight:700;">{score}/10</div>'
-                f'<div style="height:4px;border-radius:2px;background:{score_color};width:{score*10}%;opacity:0.6;"></div>',
-                unsafe_allow_html=True
-            )
-
-    with tab1:
-        render_table(df[df["tf"] == "1D"], "1D")
-    with tab2:
-        render_table(df[df["tf"] == "4H"], "4H")
-    with tab3:
-        render_table(df, "Todas")
-
-
-    # ── Chart modal (dialog) ──────────────────────────────────────────────────
-    if st.session_state.selected_symbol:
-        sym = st.session_state.selected_symbol
-        tf  = st.session_state.selected_tf
-
-        st.markdown("---")
-        st.markdown(f'<h3 style="font-family:Space Mono,monospace;color:#E6EDF3;">📊 {sym} · {tf.upper()}</h3>', unsafe_allow_html=True)
-
-        close_btn = st.button("✕ Cerrar gráfico", key="close_chart")
-        if close_btn:
-            st.session_state.selected_symbol = None
-            st.rerun()
-
-        # Get data for selected symbol
-        result_match = next((r for r in st.session_state.scan_results if r["symbol"] == sym), None)
-
-        if result_match and tf in result_match and result_match[tf]:
-            tf_data = result_match[tf]
-            vp = tf_data["vp"]
-            signal = tf_data["signal"]
-            confluences = tf_data["confluences"]
-            segments = tf_data["segments"]
-            df_sym = tf_data["df"]
-
-            # ── Chart ─────────────────────────────────────────────────────────
-            fig = build_chart(df_sym, vp, signal, confluences, sym, tf, segments)
-            st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True, "displayModeBar": True})
-
-            # ── Two-column detail panel ────────────────────────────────────────
-            col_levels, col_conf = st.columns([1, 1])
-
-            with col_levels:
-                sig = signal["signal"]
-                badge_cls = {
-                    "LONG": "badge-long", "SHORT": "badge-short",
-                    "RANGE_LONG": "badge-rl", "RANGE_SHORT": "badge-rs",
-                }.get(sig, "badge-neutral")
-
-                # Candle type indicator
-                candle_map = {
-                    "verde_oscuro": ("🟩", "#006400", "Verde oscuro — compra institucional"),
-                    "rojo_oscuro":  ("🟥", "#910000", "Rojo oscuro — venta institucional"),
-                    "aqua":         ("🔵", "#7FFFD4", "Aqua — alcista sin convicción"),
-                    "ambar":        ("🟡", "#FF9800", "Ámbar — bajista sin convicción"),
-                    "verde_normal": ("🟢", "#26A69A", "Verde — volumen normal"),
-                    "rojo_normal":  ("🔴", "#EF5350", "Rojo — volumen normal"),
-                }
-                ct = confluences.get("candle_type", "verde_normal")
-                c_emoji, c_color, c_desc = candle_map.get(ct, ("⬜", "#8B949E", "—"))
-
-                st.markdown(f"""
-                <div class="metric-card">
-                  <div style="font-family:Space Mono,monospace;font-size:11px;color:#8B949E;margin-bottom:12px;letter-spacing:0.08em;">
-                    NIVELES DE OPERATIVA
-                  </div>
-                  <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-                    <span class="badge {badge_cls}" style="font-size:13px;">{signal['signal_label']}</span>
-                    <span style="font-size:18px;" title="{c_desc}">{c_emoji}</span>
-                    <span style="font-size:11px;color:{c_color};font-family:Space Mono,monospace;">{c_desc}</span>
-                  </div>
-                  <div style="font-size:13px;line-height:2;font-family:Space Mono,monospace;">
-                    <div><span style="color:#8B949E;">Precio   </span> <span style="color:#E6EDF3;">{result_match.get('close', '—'):.4f}</span></div>
-                    <div><span style="color:#FF3B3B;">PoC      </span> <span style="color:#E6EDF3;">{vp['poc_price']:.4f}</span></div>
-                    <div><span style="color:#2979FF;">VAH      </span> <span style="color:#E6EDF3;">{vp['vah_price']:.4f}</span></div>
-                    <div><span style="color:#2979FF;">VAL      </span> <span style="color:#E6EDF3;">{vp['val_price']:.4f}</span></div>
-                    <hr style="border-color:#30363D;margin:8px 0;">
-                    <div><span style="color:#FFA657;">Stop     </span> <span style="color:#E6EDF3;">{signal.get('stop', '—'):.4f if signal.get('stop') else '—'}</span></div>
-                    <div><span style="color:#3FB950;">Target 1 </span> <span style="color:#E6EDF3;">{signal.get('target', '—'):.4f if signal.get('target') else '—'}</span></div>
-                    <div><span style="color:#69F0AE;">Target 2 </span> <span style="color:#E6EDF3;">{signal.get('target2', '—'):.4f if signal.get('target2') else '—'}</span></div>
-                    <div><span style="color:#E040FB;">Invalidac.</span> <span style="color:#E6EDF3;">{signal.get('invalidation', '—'):.4f if signal.get('invalidation') else '—'}</span></div>
-                    <div><span style="color:#BC8CFF;">R : R    </span> <span style="color:#E6EDF3;">{"1 : " + str(signal.get("rr")) if signal.get("rr") else "—"}</span></div>
-                  </div>
-                  <div style="margin-top:12px;padding:10px;background:#0D1117;border-radius:6px;font-size:12px;color:#8B949E;line-height:1.6;">
-                    📋 {signal.get('scenario', '')}
-                  </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-                # Telegram manual send
-                if tg_token and tg_chat:
-                    if st.button(f"📡 Enviar alerta Telegram — {sym}", key=f"tg_{sym}_{tf}"):
-                        msg = format_signal_alert(sym, tf, signal, vp, result_match.get("close", 0))
-                        ok = send_telegram(msg, tg_token, tg_chat)
-                        if ok:
-                            st.success("✅ Alerta enviada")
-                        else:
-                            st.error("❌ Error al enviar. Revisa token y chat_id.")
-
-            with col_conf:
-                conf_items = confluences.get("items", [])
-                score = confluences.get("score", 0)
-                score_color = "#F85149" if score < 4 else "#D29922" if score < 7 else "#3FB950"
-
-                extra_stats = []
-                if confluences.get("rsi"):
-                    extra_stats.append(f"RSI: {confluences['rsi']}")
-                if confluences.get("ema21"):
-                    extra_stats.append(f"EMA21: {confluences['ema21']:.4f}")
-                if confluences.get("ema50"):
-                    extra_stats.append(f"EMA50: {confluences['ema50']:.4f}")
-                if confluences.get("vol_ratio"):
-                    extra_stats.append(f"Vol/SMA: ×{confluences['vol_ratio']}")
-
-                conf_html = "".join([
-                    f'<div class="conf-item conf-{c["strength"]}">'
-                    f'<span style="font-size:16px;">{c["icon"]}</span>'
-                    f'<span style="font-size:13px;">{c["label"]}</span>'
-                    f'</div>'
-                    for c in conf_items
-                ]) if conf_items else '<div style="color:#8B949E;font-size:13px;">Sin confluencias adicionales detectadas.</div>'
-
-                st.markdown(f"""
-                <div class="metric-card">
-                  <div style="font-family:Space Mono,monospace;font-size:11px;color:#8B949E;margin-bottom:12px;letter-spacing:0.08em;">
-                    PANEL DE CONFLUENCIAS
-                  </div>
-                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-                    <div style="font-family:Space Mono,monospace;font-size:32px;font-weight:700;color:{score_color};">{score}</div>
-                    <div>
-                      <div style="font-size:12px;color:#8B949E;">Score / 10</div>
-                      <div style="width:120px;height:6px;border-radius:3px;background:linear-gradient(90deg,#F85149,#D29922,#3FB950);margin-top:4px;position:relative;">
-                        <div style="position:absolute;top:-4px;left:{score*10}%;width:2px;height:14px;background:white;border-radius:2px;"></div>
-                      </div>
-                    </div>
-                  </div>
-                  {conf_html}
-                  <div style="margin-top:12px;padding:8px 10px;background:#0D1117;border-radius:6px;font-size:11px;color:#8B949E;font-family:Space Mono,monospace;">
-                    {"  ·  ".join(extra_stats)}
-                  </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-        else:
-            st.warning(f"No hay datos disponibles para {sym} en {tf.upper()}. Pulsa SCAN.")
-
-
-# ── Footer ─────────────────────────────────────────────────────────────────────
 st.markdown("---")
-st.markdown(
-    '<div style="text-align:center;color:#8B949E;font-size:11px;font-family:Space Mono,monospace;">'
-    'VP Scanner · Volume Profile Pivot Anchored · Replica exacta del indicador de DGT · Datos Binance vía CCXT'
-    '</div>',
-    unsafe_allow_html=True
-)
+
+# ── Tabs ───────────────────────────────────────────────────────────────────────
+tab1, tab2, tab3 = st.tabs(["Todas", "📅 Diario 1D", "⏱️ 4 Horas"])
+
+bcls = {"LONG":"bl","SHORT":"bs","RANGE_LONG":"brl","RANGE_SHORT":"brs"}
+blbl = {"LONG":"↑ Long → PoC","SHORT":"↓ Short → PoC","RANGE_LONG":"↔ Range Long","RANGE_SHORT":"↔ Range Short"}
+border_col = {"LONG":"#10B981","SHORT":"#EF4444","RANGE_LONG":"#3B82F6","RANGE_SHORT":"#F59E0B"}
+
+def render_table(dft, label):
+    if dft.empty:
+        st.info(f"Sin señales en {label}.")
+        return
+    sig_order = {"LONG":0,"SHORT":1,"RANGE_LONG":2,"RANGE_SHORT":3,"NEUTRAL":4}
+    dft = dft.copy()
+    dft["_o"] = dft["signal"].map(sig_order).fillna(9)
+    dft = dft.sort_values(["score","_o","symbol"], ascending=[False,True,True])
+
+    cols = st.columns([1.4,.5,1,1,1,1,1.6,1,1,.6,.6])
+    headers = ["SÍMBOLO","TF","PRECIO","PoC","VAH","VAL","SEÑAL","STOP","TARGET","R:R","SCORE"]
+    for c,h in zip(cols,headers):
+        c.markdown(f'<div style="font-size:9px;font-weight:600;color:#9CA3AF;letter-spacing:.1em;padding-bottom:4px">{h}</div>', unsafe_allow_html=True)
+
+    st.markdown('<hr style="margin:2px 0 6px">', unsafe_allow_html=True)
+
+    for _, row in dft.iterrows():
+        bc  = border_col.get(row["signal"],"#D1D5DB")
+        sc  = row["score"]
+        scc = "#10B981" if sc>=7 else "#F59E0B" if sc>=4 else "#EF4444"
+        cls = bcls.get(row["signal"],"bn")
+        lbl = blbl.get(row["signal"], row["signal"])
+        cv  = row["close"]
+        cs  = f"{cv:.4f}" if cv else "—"
+        cols = st.columns([1.4,.5,1,1,1,1,1.6,1,1,.6,.6])
+
+        if cols[0].button(row["symbol"], key=f"btn_{row['symbol']}_{row['tf']}_{label}",
+                          use_container_width=False):
+            st.session_state.selected_sym = row["symbol"]
+            st.session_state.selected_tf  = row["tf"].lower()
+
+        cols[1].markdown(f'<span style="font-size:9px;background:#F1F3F9;border:1px solid #E4E7F0;padding:2px 5px;border-radius:4px;color:#6B7280;font-weight:600">{row["tf"]}</span>', unsafe_allow_html=True)
+        cols[2].markdown(f'<span style="font-size:12px;font-family:Space Grotesk,sans-serif">{cs}</span>', unsafe_allow_html=True)
+        cols[3].markdown(f'<span style="font-size:12px;color:#EF4444;font-weight:600">{row["poc"]}</span>', unsafe_allow_html=True)
+        cols[4].markdown(f'<span style="font-size:12px;color:#3B82F6">{row["vah"]}</span>', unsafe_allow_html=True)
+        cols[5].markdown(f'<span style="font-size:12px;color:#3B82F6">{row["val"]}</span>', unsafe_allow_html=True)
+        cols[6].markdown(f'<span class="badge {cls}">{lbl}</span>', unsafe_allow_html=True)
+        cols[7].markdown(f'<span style="font-size:12px;color:#F59E0B;font-weight:500">{row["stop"] or "—"}</span>', unsafe_allow_html=True)
+        cols[8].markdown(f'<span style="font-size:12px;color:#10B981;font-weight:500">{row["target"] or "—"}</span>', unsafe_allow_html=True)
+        cols[9].markdown(f'<span style="font-size:12px;color:#8B5CF6;font-weight:500">{row["rr"] or "—"}</span>', unsafe_allow_html=True)
+        cols[10].markdown(
+            f'<div style="font-size:12px;font-weight:700;color:{scc}">{int(sc)}/10</div>'
+            f'<div style="height:3px;border-radius:2px;background:{scc};width:{int(sc)*10}%;opacity:.7;margin-top:2px"></div>',
+            unsafe_allow_html=True)
+
+with tab1: render_table(df, "Todas")
+with tab2: render_table(df[df["tf"]=="1D"], "1D")
+with tab3: render_table(df[df["tf"]=="4H"], "4H")
+
+# ── Chart detail ───────────────────────────────────────────────────────────────
+if st.session_state.selected_sym:
+    sym = st.session_state.selected_sym
+    tf  = st.session_state.selected_tf
+    st.markdown("---")
+    st.markdown(f'<h3 style="font-family:Space Grotesk,sans-serif;font-weight:700;color:#0D1117">📈 {sym} · {tf.upper()}</h3>', unsafe_allow_html=True)
+    if st.button("✕ Cerrar", key="close_chart"):
+        st.session_state.selected_sym = None
+        st.rerun()
+
+    rm = next((r for r in (st.session_state.scan_results or []) if r["symbol"] == sym), None)
+    if rm and tf in rm and rm[tf]:
+        td   = rm[tf]
+        vp   = td["vp"]
+        sig  = td["signal"]
+        conf = td["confluences"]
+        segs = td["segments"]
+
+        import plotly.graph_objects as go
+        fig = build_chart(td["df"], vp, sig, sym, tf, segs)
+        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom":True,"displayModeBar":True})
+
+        col_l, col_r = st.columns(2)
+        sig_name = sig["signal"]
+        is_long  = sig_name in ("LONG","RANGE_LONG")
+        cls = bcls.get(sig_name,"bn")
+        lbl = blbl.get(sig_name, sig_name)
+        tC  = "#10B981" if is_long else "#EF4444"
+        t2C = "#059669" if is_long else "#DC2626"
+
+        cmap = {
+            "verde_oscuro": ("#15803d","Verde oscuro — compra institucional"),
+            "rojo_oscuro":  ("#b91c1c","Rojo oscuro — venta institucional"),
+            "aqua":         ("#22d3ee","Aqua — alcista sin convicción"),
+            "ambar":        ("#f59e0b","Ámbar — bajista sin convicción"),
+            "verde_normal": ("#0d9488","Verde — volumen normal"),
+            "rojo_normal":  ("#ef4444","Rojo — volumen normal"),
+        }
+        ct = conf.get("candle_type","verde_normal")
+        cc, cd = cmap.get(ct, ("#6B7280","—"))
+        close_v = rm.get("close", 0) or 0
+
+        with col_l:
+            st.markdown(f"""
+            <div class="metric-card">
+              <div style="font-size:9px;font-weight:600;color:#9CA3AF;letter-spacing:.1em;margin-bottom:10px">NIVELES DE OPERATIVA</div>
+              <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px">
+                <span class="badge {cls}" style="font-size:12px">{lbl}</span>
+                <span style="font-size:11px;color:{cc}">{cd}</span>
+              </div>
+              <table style="width:100%;font-size:12px;border-collapse:collapse">
+                <tr><td style="color:#6B7280;padding:4px 0;border-bottom:1px solid #F3F4F6">Precio</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;font-weight:600">{close_v:.4f}</td></tr>
+                <tr><td style="color:#EF4444;padding:4px 0;border-bottom:1px solid #F3F4F6">PoC</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;color:#EF4444;font-weight:600">{vp['poc_price']:.4f}</td></tr>
+                <tr><td style="color:#3B82F6;padding:4px 0;border-bottom:1px solid #F3F4F6">VAH</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;color:#3B82F6">{vp['vah_price']:.4f}</td></tr>
+                <tr><td style="color:#3B82F6;padding:4px 0;border-bottom:1px solid #F3F4F6">VAL</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;color:#3B82F6">{vp['val_price']:.4f}</td></tr>
+                <tr style="background:#FFFBEB"><td style="color:#F59E0B;padding:4px 6px;font-weight:600">Stop</td><td style="text-align:right;padding:4px 6px;color:#F59E0B;font-weight:600">{sig.get('stop','—'):.4f if sig.get('stop') else '—'}</td></tr>
+                <tr><td style="color:{tC};padding:4px 0;border-bottom:1px solid #F3F4F6">Target 1</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;color:{tC};font-weight:600">{sig.get('target','—'):.4f if sig.get('target') else '—'}</td></tr>
+                <tr><td style="color:{t2C};padding:4px 0;border-bottom:1px solid #F3F4F6">Target 2</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;color:{t2C}">{sig.get('target2','—'):.4f if sig.get('target2') else '—'}</td></tr>
+                <tr><td style="color:#8B5CF6;padding:4px 0;border-bottom:1px solid #F3F4F6">Invalidación</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;color:#8B5CF6">{sig.get('invalidation','—'):.4f if sig.get('invalidation') else '—'}</td></tr>
+                <tr><td style="color:#8B5CF6;padding:4px 0;border-bottom:1px solid #F3F4F6">R : R</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6;color:#8B5CF6">{"1 : "+str(sig.get('rr')) if sig.get('rr') else '—'}</td></tr>
+                <tr><td style="color:#6B7280;padding:4px 0;border-bottom:1px solid #F3F4F6">RSI(14)</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6">{conf.get('rsi','—')}</td></tr>
+                <tr><td style="color:#6B7280;padding:4px 0;border-bottom:1px solid #F3F4F6">EMA21</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #F3F4F6">{f"{conf['ema21']:.4f}" if conf.get('ema21') else '—'}</td></tr>
+                <tr><td style="color:#6B7280;padding:4px 0">Vol/SMA89</td><td style="text-align:right;padding:4px 0">×{conf.get('vol_ratio','—')}</td></tr>
+              </table>
+              <div style="margin-top:10px;padding:10px;background:#F9FAFB;border-radius:8px;font-size:11px;color:#6B7280;line-height:1.7;border-left:3px solid #3B82F6">
+                {sig.get('scenario','')}
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+            if tg_token and tg_chat:
+                if st.button(f"📡 Alerta Telegram — {sym}", key=f"tg_{sym}_{tf}"):
+                    ok = send_telegram(format_signal_alert(sym, tf, sig, vp, close_v), tg_token, tg_chat)
+                    st.success("✅ Enviada") if ok else st.error("❌ Error")
+
+        with col_r:
+            items = conf.get("items", [])
+            sc    = conf.get("score", 0)
+            scc   = "#10B981" if sc>=7 else "#F59E0B" if sc>=4 else "#EF4444"
+            slbl  = "Alta calidad" if sc>=8 else "Sólida" if sc>=6 else "Moderada" if sc>=4 else "Débil"
+            ch = "".join([
+                f'<div class="conf-item {c["strength"]}">'
+                f'<span style="font-size:15px">{c["icon"]}</span>'
+                f'<span style="font-size:12px">{c["label"]}</span></div>'
+                for c in items
+            ]) if items else '<div style="color:#9CA3AF;font-size:12px;padding:8px">Sin confluencias detectadas.</div>'
+            extras = [x for x in [
+                f"RSI: {conf['rsi']}" if conf.get('rsi') else None,
+                f"EMA21: {conf['ema21']:.4f}" if conf.get('ema21') else None,
+                f"EMA50: {conf['ema50']:.4f}" if conf.get('ema50') else None,
+                f"Vol/SMA: ×{conf['vol_ratio']}" if conf.get('vol_ratio') else None,
+            ] if x]
+            st.markdown(f"""
+            <div class="metric-card">
+              <div style="font-size:9px;font-weight:600;color:#9CA3AF;letter-spacing:.1em;margin-bottom:12px">PANEL DE CONFLUENCIAS</div>
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                <div style="font-family:Space Grotesk,sans-serif;font-size:48px;font-weight:700;color:{scc};line-height:1">{sc}</div>
+                <div style="flex:1">
+                  <div style="font-size:10px;color:#9CA3AF">Score / 10</div>
+                  <div style="width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,#EF4444,#F59E0B,#10B981);margin:7px 0;position:relative">
+                    <div style="position:absolute;top:-4px;left:{sc*10}%;width:2px;height:14px;background:#0D1117;border-radius:2px"></div>
+                  </div>
+                  <div style="font-size:10px;color:#9CA3AF">{slbl}</div>
+                </div>
+              </div>
+              {ch}
+              <div style="margin-top:10px;padding:8px;background:#F9FAFB;border-radius:6px;font-size:11px;color:#9CA3AF">{"  ·  ".join(extras)}</div>
+            </div>""", unsafe_allow_html=True)
+    else:
+        st.warning(f"Sin datos para {sym} en {tf.upper()}. Actualiza el scan.")
+
+st.markdown("---")
+st.markdown('<div style="text-align:center;color:#9CA3AF;font-size:11px">VP Scanner · Volume Profile Pivot Anchored · Réplica del indicador © dgtrd · Datos vía Yahoo Finance</div>', unsafe_allow_html=True)
