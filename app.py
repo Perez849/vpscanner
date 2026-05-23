@@ -1,13 +1,6 @@
-# ═══════════════════════════════════════════════════════════════════════════════
 # VP Scanner · Volume Profile Pivot Anchored
-# Archivo único — listo para subir a GitHub online
-# Solo necesitas subir este archivo + requirements.txt
-# ═══════════════════════════════════════════════════════════════════════════════
-
-"""
-data/fetcher.py
-Fetches OHLCV data from Binance via CCXT for a list of crypto symbols.
-"""
+# github.com — archivo único
+# ─────────────────────────────────────────
 
 import ccxt
 import pandas as pd
@@ -68,16 +61,6 @@ def fetch_all(symbols: list[str] = TOP_SYMBOLS, timeframes: list[str] = TIMEFRAM
             time.sleep(0.05)  # respect rate limits
     return data
 
-
-"""
-engine/pivots.py
-Replicates ta.pivothigh / ta.pivotlow from Pine Script.
-A pivot high at index i requires: high[i] == max(high[i-length : i+length+1])
-Same logic for pivot low.
-"""
-
-import numpy as np
-import pandas as pd
 
 
 def pivot_high(high: np.ndarray, length: int) -> np.ndarray:
@@ -172,17 +155,6 @@ def get_pivot_segments(df: pd.DataFrame, length: int = 10) -> list[dict]:
 
     return segments
 
-
-"""
-engine/volume_profile.py
-Replicates the Pine Script Volume Profile logic exactly:
-- Divides price range into N rows
-- Distributes each bar's volume proportionally across price levels it spans
-- Calculates PoC, Value Area (VAH/VAL) using the exact Pine Script while-loop
-"""
-
-import numpy as np
-import pandas as pd
 
 
 def calculate_volume_profile(
@@ -305,15 +277,6 @@ def get_developing_profile(df: pd.DataFrame, last_pivot_idx: int, n_rows: int = 
     df_slice = df.iloc[last_pivot_idx:]
     return calculate_volume_profile(df_slice, n_rows, value_area_pct)
 
-
-"""
-engine/signals.py
-Generates trading signals, stop loss, target, and invalidation levels
-based on Volume Profile analysis (PoC, VAH, VAL) and price position.
-"""
-
-import numpy as np
-import pandas as pd
 
 
 # ─── Signal Classification ─────────────────────────────────────────────────────
@@ -680,16 +643,6 @@ def _rsi(values: np.ndarray, period: int = 14) -> float | None:
     return round(100 - 100 / (1 + rs), 1)
 
 
-"""
-engine/scanner.py
-Orchestrates: data fetch → pivots → volume profile → signals → confluences
-for all symbols and timeframes.
-"""
-
-import numpy as np
-import pandas as pd
-import time
-
 
 PIVOT_LENGTH = 20  # matches Pine Script pvtLength=20 exactly (left=20, right=20)
 
@@ -838,22 +791,6 @@ def results_to_dataframe(results: list[dict]) -> pd.DataFrame:
 
     return pd.DataFrame(rows)
 
-
-"""
-ui/chart.py
-Builds the interactive Plotly chart that replicates the Pine Script indicator:
-- Candlestick chart
-- Volume profile histogram (horizontal bars on the right)
-- PoC line (red)
-- VAH/VAL lines (blue)
-- Value Area fill
-- Pivot labels with % change
-- EMA21 / EMA50 overlays
-- Volume bars at bottom
-"""
-
-import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -1294,25 +1231,8 @@ def _add_pivot_labels(fig, df_disp, segments, x_vals, index):
             )
 
 
-def _ema(values: np.ndarray, period: int) -> np.ndarray:
-    result = np.full(len(values), np.nan)
-    if len(values) < period:
-        return result
-    k = 2 / (period + 1)
-    result[period - 1] = np.mean(values[:period])
-    for i in range(period, len(values)):
-        result[i] = values[i] * k + result[i - 1] * (1 - k)
-    return result
-
-
-"""
-alerts/telegram.py
-Sends Telegram alerts when actionable signals are detected.
-"""
-
 import requests
 import os
-from datetime import datetime, timezone
 
 
 def send_telegram(message: str, bot_token: str, chat_id: str) -> bool:
@@ -1419,18 +1339,12 @@ def dispatch_alerts(scan_results: list[dict], bot_token: str, chat_id: str,
                 sent += 1
     return sent
 
-
 """
 app.py — VP Scanner · Volume Profile Dashboard
 Streamlit main application.
 """
 
 import streamlit as st
-import pandas as pd
-import numpy as np
-import time
-import os
-from datetime import datetime, timezone
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -1631,10 +1545,10 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("#### 🔔 Telegram")
     tg_token = st.text_input("Bot Token", type="password",
-                              value=os.getenv("TG_BOT_TOKEN", ""),
+                              value=st.secrets.get("TG_BOT_TOKEN", os.getenv("TG_BOT_TOKEN", "")),
                               help="Obtén un token en @BotFather")
     tg_chat  = st.text_input("Chat ID",
-                              value=os.getenv("TG_CHAT_ID", ""),
+                              value=st.secrets.get("TG_CHAT_ID", os.getenv("TG_CHAT_ID", "")),
                               help="Tu chat_id de Telegram")
 
     st.markdown("---")
@@ -1714,6 +1628,10 @@ if st.session_state.scan_df is None:
 
 else:
     df = st.session_state.scan_df.copy()
+
+    if df.empty or "signal" not in df.columns:
+        st.warning("El scan no produjo resultados. Inténtalo de nuevo.")
+        st.stop()
 
     # ── Filter signals ────────────────────────────────────────────────────────
     allowed = []
