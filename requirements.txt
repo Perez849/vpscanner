@@ -1,6 +1,6 @@
-streamlit==1.35.0
-ccxt==4.3.50
-pandas==2.2.2
-numpy==1.26.4
-plotly==5.22.0
-requests==2.32.3
+streamlit
+ccxt
+pandas
+numpy
+plotly
+requests
