@@ -2,65 +2,99 @@
 # github.com — archivo único
 # ─────────────────────────────────────────
 
-import ccxt
 import pandas as pd
 import numpy as np
-from datetime import datetime, timezone
+import requests as _requests
+from datetime import datetime, timezone, timedelta
 import time
 
-# Top 40 liquid crypto symbols on Binance (USDT pairs)
+# Symbols — CoinGecko IDs mapped to display names
+# Format: (coingecko_id, display_symbol, vs_currency)
 TOP_SYMBOLS = [
-    "BTC/USDT", "ETH/USDT", "BNB/USDT", "SOL/USDT", "XRP/USDT",
-    "DOGE/USDT", "ADA/USDT", "AVAX/USDT", "SHIB/USDT", "TRX/USDT",
-    "TON/USDT", "LINK/USDT", "DOT/USDT", "MATIC/USDT", "LTC/USDT",
-    "BCH/USDT", "NEAR/USDT", "UNI/USDT", "ICP/USDT", "APT/USDT",
-    "FIL/USDT", "HBAR/USDT", "ARB/USDT", "VET/USDT", "OP/USDT",
-    "ATOM/USDT", "MKR/USDT", "INJ/USDT", "IMX/USDT", "GRT/USDT",
-    "AAVE/USDT", "STX/USDT", "SAND/USDT", "MANA/USDT", "AXS/USDT",
-    "EGLD/USDT", "XLM/USDT", "ALGO/USDT", "EOS/USDT", "FTM/USDT",
+    "BTC/USDT","ETH/USDT","BNB/USDT","SOL/USDT","XRP/USDT",
+    "DOGE/USDT","ADA/USDT","AVAX/USDT","TRX/USDT","TON/USDT",
+    "LINK/USDT","DOT/USDT","LTC/USDT","BCH/USDT","NEAR/USDT",
+    "UNI/USDT","ARB/USDT","OP/USDT","ATOM/USDT","INJ/USDT",
+    "AAVE/USDT","STX/USDT","FIL/USDT","HBAR/USDT","VET/USDT",
+    "MKR/USDT","IMX/USDT","GRT/USDT","XLM/USDT","ALGO/USDT",
+    "EOS/USDT","FTM/USDT","SAND/USDT","MANA/USDT","AXS/USDT",
+    "ICP/USDT","APT/USDT","EGLD/USDT","MATIC/USDT","SHIB/USDT",
 ]
 
-TIMEFRAMES = ["1d", "4h"]
+# CoinGecko ID mapping
+_CG_IDS = {
+    "BTC":"bitcoin","ETH":"ethereum","BNB":"binancecoin","SOL":"solana",
+    "XRP":"ripple","DOGE":"dogecoin","ADA":"cardano","AVAX":"avalanche-2",
+    "TRX":"tron","TON":"the-open-network","LINK":"chainlink","DOT":"polkadot",
+    "LTC":"litecoin","BCH":"bitcoin-cash","NEAR":"near","UNI":"uniswap",
+    "ARB":"arbitrum","OP":"optimism","ATOM":"cosmos","INJ":"injective-protocol",
+    "AAVE":"aave","STX":"blockstack","FIL":"filecoin","HBAR":"hedera-hashgraph",
+    "VET":"vechain","MKR":"maker","IMX":"immutable-x","GRT":"the-graph",
+    "XLM":"stellar","ALGO":"algorand","EOS":"eos","FTM":"fantom",
+    "SAND":"the-sandbox","MANA":"decentraland","AXS":"axie-infinity",
+    "ICP":"internet-computer","APT":"aptos","EGLD":"elrond-erd-2",
+    "MATIC":"matic-network","SHIB":"shiba-inu",
+}
 
-exchange = ccxt.binance({
-    "enableRateLimit": True,
-    "options": {"defaultType": "spot"},
-})
+_TF_DAYS = {"1d": 365, "4h": 90}
+_TF_INTERVAL = {"1d": "daily", "4h": "hourly"}  # CoinGecko supports daily and hourly
+
+TIMEFRAMES = ["1d", "4h"]
 
 
 def fetch_ohlcv(symbol: str, timeframe: str, limit: int = 500) -> pd.DataFrame | None:
     """
-    Fetch OHLCV candles for a symbol/timeframe.
-    Returns DataFrame with columns: timestamp, open, high, low, close, volume
+    Fetch OHLCV from CoinGecko free API — no API key needed, no geo restrictions.
+    Falls back gracefully on error.
     """
+    base = symbol.split("/")[0].upper()
+    cg_id = _CG_IDS.get(base)
+    if not cg_id:
+        return None
+
+    days = _TF_DAYS.get(timeframe, 365)
+    # CoinGecko /coins/{id}/ohlc — returns [timestamp, open, high, low, close]
+    # No volume in OHLC endpoint, use market_chart for volume
     try:
-        raw = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-        if not raw:
+        url = f"https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc"
+        params = {"vs_currency": "usd", "days": days}
+        r = _requests.get(url, params=params, timeout=15)
+        if r.status_code != 200:
             return None
-        df = pd.DataFrame(raw, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        data = r.json()
+        if not data or len(data) < 10:
+            return None
+
+        df = pd.DataFrame(data, columns=["timestamp", "open", "high", "low", "close"])
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
-        df = df.set_index("timestamp").sort_index()
-        df = df.astype(float)
-        return df
+        df = df.set_index("timestamp").sort_index().astype(float)
+
+        # CoinGecko OHLC doesn't have volume — fetch it separately and merge
+        url2 = f"https://api.coingecko.com/api/v3/coins/{cg_id}/market_chart"
+        params2 = {"vs_currency": "usd", "days": days, "interval": "daily" if timeframe=="1d" else "hourly"}
+        r2 = _requests.get(url2, params=params2, timeout=15)
+        if r2.status_code == 200:
+            mdata = r2.json()
+            if "total_volumes" in mdata and mdata["total_volumes"]:
+                vol_df = pd.DataFrame(mdata["total_volumes"], columns=["timestamp","volume"])
+                vol_df["timestamp"] = pd.to_datetime(vol_df["timestamp"], unit="ms", utc=True)
+                vol_df = vol_df.set_index("timestamp").sort_index()
+                # Resample volumes to match OHLC candles
+                df = df.join(vol_df, how="left")
+                df["volume"] = df["volume"].fillna(1.0)
+            else:
+                df["volume"] = 1.0
+        else:
+            df["volume"] = 1.0
+
+        # For 4h: CoinGecko OHLC with days≤90 returns 4h candles automatically
+        # For 1d: days>90 returns daily candles
+        df = df.tail(limit)
+        return df if len(df) >= 30 else None
+
     except Exception as e:
         print(f"[fetcher] Error {symbol} {timeframe}: {e}")
         return None
-
-
-def fetch_all(symbols: list[str] = TOP_SYMBOLS, timeframes: list[str] = TIMEFRAMES) -> dict:
-    """
-    Returns nested dict: data[symbol][timeframe] = DataFrame
-    """
-    data = {}
-    for symbol in symbols:
-        data[symbol] = {}
-        for tf in timeframes:
-            df = fetch_ohlcv(symbol, tf)
-            if df is not None and len(df) >= 60:
-                data[symbol][tf] = df
-            time.sleep(0.05)  # respect rate limits
-    return data
-
 
 
 def pivot_high(high: np.ndarray, length: int) -> np.ndarray:
@@ -1576,16 +1610,38 @@ st.markdown("""
 
 
 # ── Session state ─────────────────────────────────────────────────────────────
+
+# ── Demo data — carga instantánea sin necesidad de scan ───────────────────────
+_DEMO_ROWS = [
+    {"symbol":"BTC/USDT","tf":"1D","close":67842.0,"poc":65900.0,"vah":69200.0,"val":63100.0,"signal":"SHORT","signal_label":"SHORT → PoC","stop":69540.0,"target":65900.0,"target2":63100.0,"invalidation":71200.0,"rr":1.9,"score":8,"rsi":71.3,"vol_ratio":2.1,"scenario":"Precio sobre VAH. Sesgo bajista hacia el PoC."},
+    {"symbol":"ETH/USDT","tf":"1D","close":3452.0,"poc":3600.0,"vah":3780.0,"val":3310.0,"signal":"LONG","signal_label":"LONG → PoC","stop":3268.0,"target":3600.0,"target2":3780.0,"invalidation":3200.0,"rr":2.0,"score":7,"rsi":32.1,"vol_ratio":1.9,"scenario":"Precio bajo VAL. Sesgo alcista hacia el PoC."},
+    {"symbol":"ARB/USDT","tf":"1D","close":1.082,"poc":1.150,"vah":1.240,"val":1.020,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":0.997,"target":1.150,"target2":1.240,"invalidation":0.970,"rr":2.3,"score":9,"rsi":27.3,"vol_ratio":2.4,"scenario":"Dentro del VA bajo el PoC. Score máximo."},
+    {"symbol":"SOL/USDT","tf":"1D","close":158.4,"poc":162.0,"vah":171.5,"val":152.8,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":151.5,"target":162.0,"target2":171.5,"invalidation":149.8,"rr":1.8,"score":6,"rsi":51.2,"vol_ratio":1.1,"scenario":"Dentro del VA bajo el PoC. EMA21 convergiendo con PoC."},
+    {"symbol":"XRP/USDT","tf":"4H","close":0.5821,"poc":0.5950,"vah":0.6240,"val":0.5580,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":0.5515,"target":0.5950,"target2":0.6240,"invalidation":0.5450,"rr":2.0,"score":7,"rsi":38.4,"vol_ratio":2.1,"scenario":"4H dentro del VA bajo el PoC."},
+    {"symbol":"LINK/USDT","tf":"1D","close":14.82,"poc":15.40,"vah":16.30,"val":14.10,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":13.87,"target":15.40,"target2":16.30,"invalidation":13.50,"rr":1.9,"score":8,"rsi":29.7,"vol_ratio":1.9,"scenario":"Soporte firme en VAL. RSI sobrevendido y EMA50 confluente."},
+    {"symbol":"AVAX/USDT","tf":"1D","close":38.92,"poc":37.50,"vah":41.20,"val":34.80,"signal":"RANGE_SHORT","signal_label":"RANGE SHORT → VAL","stop":41.50,"target":37.50,"target2":34.80,"invalidation":42.40,"rr":1.5,"score":5,"rsi":65.8,"vol_ratio":0.9,"scenario":"Dentro del VA sobre el PoC."},
+    {"symbol":"INJ/USDT","tf":"1D","close":24.10,"poc":22.80,"vah":26.40,"val":21.20,"signal":"SHORT","signal_label":"SHORT → PoC","stop":26.90,"target":22.80,"target2":21.20,"invalidation":28.10,"rr":1.1,"score":4,"rsi":68.1,"vol_ratio":1.2,"scenario":"Precio sobre VAH. Señal SHORT moderada."},
+    {"symbol":"NEAR/USDT","tf":"4H","close":5.142,"poc":5.380,"vah":5.720,"val":5.010,"signal":"RANGE_LONG","signal_label":"RANGE LONG → VAH","stop":4.968,"target":5.380,"target2":5.720,"invalidation":4.870,"rr":1.8,"score":7,"rsi":37.8,"vol_ratio":1.7,"scenario":"4H dentro del VA bajo el PoC."},
+    {"symbol":"DOT/USDT","tf":"4H","close":7.841,"poc":8.100,"vah":8.520,"val":7.680,"signal":"LONG","signal_label":"LONG → PoC","stop":7.534,"target":8.100,"target2":8.520,"invalidation":7.420,"rr":1.9,"score":6,"rsi":35.2,"vol_ratio":0.6,"scenario":"Precio bajo VAL en 4H."},
+    {"symbol":"ADA/USDT","tf":"1D","close":0.4410,"poc":0.4650,"vah":0.4980,"val":0.4200,"signal":"LONG","signal_label":"LONG → PoC","stop":0.4116,"target":0.4650,"target2":0.4980,"invalidation":0.4020,"rr":1.8,"score":6,"rsi":33.5,"vol_ratio":1.4,"scenario":"Precio bajo VAL. Sesgo alcista."},
+    {"symbol":"ATOM/USDT","tf":"1D","close":8.24,"poc":8.80,"vah":9.40,"val":7.90,"signal":"LONG","signal_label":"LONG → PoC","stop":7.832,"target":8.80,"target2":9.40,"invalidation":7.650,"rr":1.9,"score":5,"rsi":36.4,"vol_ratio":1.2,"scenario":"Precio bajo VAL."},
+]
+
+_DEMO_DF = pd.DataFrame(_DEMO_ROWS)
+
 if "scan_results" not in st.session_state:
     st.session_state.scan_results = None
 if "scan_df" not in st.session_state:
-    st.session_state.scan_df = None
+    st.session_state.scan_df = _DEMO_DF.copy()  # demo visible desde el inicio
 if "selected_symbol" not in st.session_state:
     st.session_state.selected_symbol = None
 if "selected_tf" not in st.session_state:
     st.session_state.selected_tf = "1d"
 if "last_scan_time" not in st.session_state:
-    st.session_state.last_scan_time = None
+    st.session_state.last_scan_time = "Demo — pulsa SCAN para datos reales"
+if "is_demo" not in st.session_state:
+    st.session_state.is_demo = True
+
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -1651,11 +1707,16 @@ def do_scan():
     time.sleep(0.5)
     progress.empty()
 
-    st.session_state.scan_results = results
-    st.session_state.scan_df = results_to_dataframe(results)
-    st.session_state.last_scan_time = datetime.now(timezone.utc).strftime("%H:%M UTC")
+    df_real = results_to_dataframe(results)
+    if not df_real.empty and "signal" in df_real.columns:
+        st.session_state.scan_results = results
+        st.session_state.scan_df = df_real
+        st.session_state.is_demo = False
+        st.session_state.last_scan_time = datetime.now(timezone.utc).strftime("%H:%M UTC")
+    else:
+        st.warning("⚠️ CoinGecko no devolvió datos suficientes. Puede ser por rate limit (máx ~10 llamadas/min). Espera 60 segundos e inténtalo de nuevo.")
+        return
 
-    # Send Telegram alerts
     if tg_token and tg_chat:
         sigs = []
         if show_long:  sigs.append("LONG")
@@ -1670,37 +1731,23 @@ def do_scan():
 if scan_btn:
     do_scan()
 
-# Auto-refresh
-if auto_refresh and st.session_state.last_scan_time:
-    # Simple check — reruns every refresh_mins minutes
-    time.sleep(1)
-    st.rerun()
+if auto_refresh and not st.session_state.is_demo:
+    time.sleep(1); st.rerun()
 
 
 # ── Main content ──────────────────────────────────────────────────────────────
-if st.session_state.scan_df is None:
-    # ── Empty state ───────────────────────────────────────────────────────────
-    st.markdown("""<div style="text-align:center;padding:100px 20px;">
-      <div style="font-size:72px;margin-bottom:20px;opacity:.8;">🔬</div>
-      <div style="font-family:Syne,sans-serif;font-size:26px;font-weight:800;color:#CDD9E5;margin-bottom:12px;letter-spacing:-.02em;">VP Scanner listo</div>
-      <div style="font-size:13px;color:#3D5166;max-width:480px;margin:0 auto;line-height:1.8;font-family:JetBrains Mono,monospace;">
-        Pulsa <strong style="color:#4DA6FF;">▶ SCAN</strong> para analizar las top criptos.<br>
-        Volume Profile anclado a pivotes · PoC · VAH · VAL · Señales · Confluencias
-      </div>
-      <div style="margin-top:32px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-        <span style="background:#3FB95015;color:#3FB950;border:1px solid #3FB95030;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🟢 LONG</span>
-        <span style="background:#F8514915;color:#F85149;border:1px solid #F8514930;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🔴 SHORT</span>
-        <span style="background:#4DA6FF15;color:#4DA6FF;border:1px solid #4DA6FF30;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🔵 RANGE LONG</span>
-        <span style="background:#FFA65715;color:#FFA657;border:1px solid #FFA65730;padding:4px 14px;border-radius:20px;font-size:10px;font-family:JetBrains Mono,monospace;">🟠 RANGE SHORT</span>
-      </div>
+df = st.session_state.scan_df.copy()
+
+# Demo banner
+if st.session_state.is_demo:
+    st.markdown("""<div style="background:rgba(77,166,255,.08);border:1px solid rgba(77,166,255,.25);border-radius:8px;padding:10px 16px;margin-bottom:8px;font-family:JetBrains Mono,monospace;font-size:11px;color:#4DA6FF;display:flex;align-items:center;gap:10px;">
+    <span style="font-size:16px;">🎭</span>
+    <span><strong>Modo demo</strong> — datos de ejemplo para mostrar el panel. Pulsa <strong>▶ SCAN</strong> para cargar datos reales de CoinGecko.</span>
     </div>""", unsafe_allow_html=True)
 
-else:
-    df = st.session_state.scan_df.copy()
-
-    if df.empty or "signal" not in df.columns:
-        st.warning("⚠️ El scan no detectó señales con los filtros actuales. Prueba a bajar el Score mínimo a 0 o ampliar los filtros de señal.")
-        st.stop()
+if df.empty or "signal" not in df.columns:
+    st.warning("⚠️ Sin señales. Baja el Score mínimo a 0 o amplía los filtros.")
+    st.stop()
 
     # ── Filter signals ────────────────────────────────────────────────────────
     allowed = []
