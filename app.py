@@ -1401,6 +1401,16 @@ hr{border-color:#E4E7F0!important;}
 .tbl-sym:hover{color:#3B82F6;}
 .logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#3B82F6;letter-spacing:-.02em;}
 .logo-sub{font-size:10px;color:#9CA3AF;letter-spacing:.08em;margin-top:2px;}
+/* Hide Streamlit chrome */
+header[data-testid="stHeader"]{display:none!important;}
+#MainMenu{display:none!important;}
+footer{display:none!important;}
+.block-container{padding-top:1.5rem!important;}
+/* Hide the ugly app.py docstring title */
+[data-testid="stAppViewBlockContainer"] > div:first-child p{display:none!important;}
+/* Make symbol buttons invisible — just the text matters */
+.stButton>button{background:transparent!important;border:none!important;color:#3B82F6!important;font-family:'Space Grotesk',sans-serif!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:left!important;box-shadow:none!important;}
+.stButton>button:hover{color:#2563EB!important;background:transparent!important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1547,8 +1557,14 @@ def render_table(dft, label):
         cs  = f"{cv:.4f}" if cv else "—"
         cols = st.columns([1.4,.5,1,1,1,1,1.6,1,1,.6,.6])
 
-        if cols[0].button(row["symbol"], key=f"btn_{row['symbol']}_{row['tf']}_{label}",
-                          use_container_width=False):
+        # Clickable symbol as styled text button
+        sym_key = f"sym_{row['symbol']}_{row['tf']}_{label}"
+        cols[0].markdown(
+            f'<div class="tbl-sym" onclick="void(0)" style="font-size:13px;font-weight:700;color:#3B82F6;font-family:Space Grotesk,sans-serif;cursor:pointer">'
+            f'{row["symbol"]}</div>',
+            unsafe_allow_html=True)
+        # Use invisible button to capture click
+        if cols[0].button("", key=sym_key, help=f"Ver gráfico de {row['symbol']}"):
             st.session_state.selected_sym = row["symbol"]
             st.session_state.selected_tf  = row["tf"].lower()
 
