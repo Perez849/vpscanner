@@ -1674,30 +1674,52 @@ function bootstrapIC(trades, B) {
   };
 }
 
-function permutationWR(trades, B) {
-  // Test de permutación: ¿es el WR real mejor que el azar?
-  B = B || 2000;
+function binomialWRTest(trades) {
+  // Test exacto binomial: ¿es el WR significativamente mayor que 50%?
+  // H0: p = 0.5 (moneda justa). H1: p > 0.5 (one-tailed)
+  // P(X >= wins | n, p=0.5) usando distribución binomial exacta
+  // Funciona bien con n >= 5, es exacto (no asume normalidad)
   const n = trades.length;
   if (n < 5) return null;
-  const wins = trades.filter(t=>t.outcome==='win').length;
-  const wrObs = wins / n;
-  // Bajo H0: barajar outcomes aleatoriamente
-  const outcomes = trades.map(t=>t.outcome==='win'?1:0);
-  let extreme = 0;
-  for (let b = 0; b < B; b++) {
-    // Fisher-Yates shuffle
-    const o = outcomes.slice();
-    for (let i = n-1; i > 0; i--) {
-      const j = Math.floor(Math.random()*(i+1));
-      [o[i],o[j]] = [o[j],o[i]];
-    }
-    // WR aleatorio
-    const wrRand = o.reduce((a,v)=>a+v,0)/n;
-    if (wrRand >= wrObs) extreme++;
+  const wins = trades.filter(t => t.outcome === 'win').length;
+  const wr = wins / n;
+
+  // P(X >= wins) = Σ C(n,k) * 0.5^n para k=wins..n
+  function binom(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    k = Math.min(k, n-k);
+    let c = 1;
+    for (let i = 0; i < k; i++) c = c * (n-i) / (i+1);
+    return c;
   }
+  let pval = 0;
+  const p05n = Math.pow(0.5, n);
+  for (let k = wins; k <= n; k++) pval += binom(n, k) * p05n;
+  pval = Math.min(1, +pval.toFixed(4));
+
+  // También calculamos si el WR es significativamente distinto de la tasa base
+  // del sistema (que puede no ser 50% — depende del R:R)
+  // Si R:R = 2, el break-even WR es 33%. Si R:R = 1, es 50%.
+  const avgRR = trades.reduce((a,t) => a+t.rr, 0) / n;
+  const breakEvenWR = avgRR > 0 ? 1/(1+avgRR) : 0.5;
+  let pvalVsBreakeven = 0;
+  if (Math.abs(breakEvenWR - 0.5) > 0.01) {
+    // P(X >= wins | n, p=breakEvenWR) — test contra break-even real
+    for (let k = wins; k <= n; k++) {
+      pvalVsBreakeven += binom(n,k) * Math.pow(breakEvenWR,k) * Math.pow(1-breakEvenWR,n-k);
+    }
+    pvalVsBreakeven = Math.min(1, +pvalVsBreakeven.toFixed(4));
+  } else {
+    pvalVsBreakeven = pval;
+  }
+
   return {
-    pval: +(extreme/B).toFixed(3),
-    significant: (extreme/B) < 0.10, // p < 0.10 con muestras pequeñas
+    wins, n, wr: +wr.toFixed(3),
+    pvalVs50:        pval,
+    pvalVsBreakeven: pvalVsBreakeven,
+    breakEvenWR:     +breakEvenWR.toFixed(2),
+    significant:     pvalVsBreakeven < 0.10,
   };
 }
 
@@ -1717,7 +1739,7 @@ function calcICFull(bt) {
 
 function calcWRPermutation(bt) {
   if (!bt?.list || bt.list.length < 5) return null;
-  return permutationWR(bt.list, 1500);
+  return binomialWRTest(bt.list);
 }
 
 function calcKelly(bt) {
@@ -2057,8 +2079,14 @@ function renderICKellyVerdict(bt) {
       parts.push('Kelly=' + kFull.kelly + ' → sin edge estadístico');
   }
 
-  if (wrPerm)
-    parts.push('WR permutation p=' + wrPerm.pval + (wrPerm.significant ? ' → <strong style="color:var(--emerald)">WR significativo (p&lt;0.10)</strong>' : ' → WR no distinguible del azar'));
+  if (wrPerm) {
+    const beWR = (wrPerm.breakEvenWR*100).toFixed(0);
+    const actualWR = (wrPerm.wr*100).toFixed(0);
+    if (wrPerm.significant)
+      parts.push('WR=' + actualWR + '% (break-even=' + beWR + '%) p=' + wrPerm.pvalVsBreakeven + ' → <strong style="color:var(--emerald)">WR significativo (test binomial exacto)</strong>');
+    else
+      parts.push('WR=' + actualWR + '% (break-even=' + beWR + '%) p=' + wrPerm.pvalVsBreakeven + ' → WR no significativo con n=' + wrPerm.n + ' ops');
+  }
 
   return parts.join('<br>') || '—';
 }
