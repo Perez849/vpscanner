@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VP Scanner · Live</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0A0C10;
+  --ink2: #13161E;
+  --ink3: #1C2030;
+  --rule: #252A38;
+  --rule2: #323848;
+  --text: #E2E8F8;
+  --sub: #7B85A0;
+  --dim: #3D4560;
+
+  --emerald: #00C896;
+  --ember: #FF4D6A;
+  --sapphire: #4B8EFF;
+  --amber: #FFB547;
+  --violet: #A78BFA;
+  --cyan: #22D3EE;
+
+  --poc: #FF4D6A;
+  --vah: #4B8EFF;
+
+  --f-display: 'Fraunces', serif;
+  --f-mono: 'DM Mono', monospace;
+  --f-body: 'DM Sans', sans-serif;
+
+  --r: 8px;
+  --r-lg: 14px;
+}
+
+html { font-size: 13px; height: 100%; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--f-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Ambient background ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 10%, rgba(75,142,255,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 85% 90%, rgba(0,200,150,.05) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255,77,106,.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* ── Layout ── */
+.shell { display: flex; height: 100vh; position: relative; z-index: 1; }
+
+/* ── Sidebar ── */
+.sb {
+  width: 230px; flex-shrink: 0;
+  background: rgba(19,22,30,.95);
+  border-right: 1px solid var(--rule);
+  backdrop-filter: blur(20px);
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+}
+.sb::-webkit-scrollbar { width: 2px; }
+.sb::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 2px; }
+
+.sb-head {
+  padding: 22px 18px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.wordmark {
+  font-family: var(--f-display);
+  font-size: 26px; font-weight: 600;
+  letter-spacing: -.04em; line-height: 1;
+  background: linear-gradient(135deg, #fff 0%, var(--sub) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.wordmark em {
+  font-style: italic; font-weight: 300;
+  background: linear-gradient(135deg, var(--emerald), var(--sapphire));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.tagline {
+  font-family: var(--f-mono); font-size: 9px;
+  color: var(--dim); letter-spacing: .18em;
+  text-transform: uppercase; margin-top: 5px;
+}
+
+.sb-section { padding: 14px 18px; border-bottom: 1px solid var(--rule); }
+.sb-label {
+  font-family: var(--f-mono); font-size: 9px;
+  color: var(--dim); letter-spacing: .18em;
+  text-transform: uppercase; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.sb-label::before {
+  content: ''; width: 14px; height: 1px;
+  background: var(--rule2); flex-shrink: 0;
+}
+
+.sl-wrap { margin-bottom: 10px; }
+.sl-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.sl-name { font-size: 11px; color: var(--sub); }
+.sl-val { font-family: var(--f-mono); font-size: 11px; color: var(--sapphire); font-weight: 500; }
+input[type=range] {
+  width: 100%; height: 2px; accent-color: var(--sapphire);
+  cursor: pointer; background: var(--rule);
+  border-radius: 2px; outline: none; border: none;
+}
+
+.cb-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: var(--r);
+  cursor: pointer; transition: background .12s;
+  font-size: 11px; color: var(--sub);
+  margin-bottom: 3px;
+}
+.cb-row:hover { background: var(--ink3); }
+.cb-row input { accent-color: var(--sapphire); cursor: pointer; }
+.sig-pip { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.tg-field {
+  width: 100%;
+  background: var(--ink3); border: 1px solid var(--rule2);
+  color: var(--sub); padding: 7px 10px;
+  border-radius: var(--r); font-family: var(--f-mono);
+  font-size: 10px; margin-bottom: 5px;
+  transition: border-color .15s;
+}
+.tg-field:focus { outline: none; border-color: var(--sapphire); color: var(--text); }
+
+.live-indicator {
+  margin: 14px 18px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: rgba(0,200,150,.07);
+  border: 1px solid rgba(0,200,150,.2); border-radius: var(--r);
+  font-size: 10px; color: var(--emerald); font-family: var(--f-mono);
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--emerald); flex-shrink: 0;
+  animation: livepulse 2s ease infinite;
+  box-shadow: 0 0 0 0 rgba(0,200,150,.4);
+}
+@keyframes livepulse {
+  0% { box-shadow: 0 0 0 0 rgba(0,200,150,.5); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ── Main ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(10,12,16,.8); backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-left h1 {
+  font-family: var(--f-display);
+  font-size: 18px; font-weight: 600; letter-spacing: -.02em;
+}
+.topbar-left h1 span { font-style: italic; font-weight: 300; color: var(--sub); }
+.topbar-meta {
+  font-family: var(--f-mono); font-size: 9px;
+  color: var(--dim); margin-top: 3px; letter-spacing: .08em;
+}
+
+.tf-pills {
+  display: flex; gap: 3px;
+  background: var(--ink3); padding: 3px; border-radius: 10px;
+  border: 1px solid var(--rule);
+}
+.tf-pill {
+  padding: 5px 14px; border-radius: 7px;
+  font-family: var(--f-mono); font-size: 10px; font-weight: 500;
+  cursor: pointer; color: var(--sub); border: none; background: none;
+  transition: all .15s; letter-spacing: .06em;
+}
+.tf-pill.on {
+  background: var(--sapphire); color: #fff;
+  box-shadow: 0 2px 8px rgba(75,142,255,.3);
+}
+
+.content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.content::-webkit-scrollbar { width: 3px; }
+.content::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 2px; }
+
+/* ── Loading ── */
+.loader {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 60vh; gap: 20px;
+}
+.loader-ring {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 2px solid var(--rule2);
+  border-top-color: var(--sapphire);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text {
+  font-family: var(--f-mono); font-size: 11px;
+  color: var(--sub); letter-spacing: .1em;
+}
+.loader-sym {
+  font-family: var(--f-mono); font-size: 10px;
+  color: var(--dim); margin-top: 4px;
+}
+
+/* ── Metrics ── */
+.metrics {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  margin-bottom: 18px;
+}
+.mc {
+  background: var(--ink2); border: 1px solid var(--rule);
+  border-radius: var(--r-lg); padding: 14px 16px;
+  position: relative; overflow: hidden;
+  transition: border-color .15s, transform .15s;
+}
+.mc:hover { border-color: var(--rule2); transform: translateY(-1px); }
+.mc::after {
+  content: ''; position: absolute;
+  bottom: 0; left: 0; right: 0; height: 2px;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+.mc.m1::after { background: linear-gradient(90deg, var(--sapphire), #7BB3FF); }
+.mc.m2::after { background: linear-gradient(90deg, var(--emerald), #7FECCD); }
+.mc.m3::after { background: linear-gradient(90deg, var(--ember), #FF8FA0); }
+.mc.m4::after { background: linear-gradient(90deg, var(--amber), #FFD47F); }
+.mc.m5::after { background: linear-gradient(90deg, var(--violet), #C4B5FD); }
+.mc-val {
+  font-family: var(--f-display); font-size: 32px; font-weight: 600;
+  line-height: 1; letter-spacing: -.03em;
+}
+.mc-lbl {
+  font-family: var(--f-mono); font-size: 9px; color: var(--dim);
+  letter-spacing: .14em; text-transform: uppercase; margin-top: 6px;
+}
+
+/* ── Table ── */
+.tbl-wrap {
+  background: var(--ink2); border: 1px solid var(--rule);
+  border-radius: var(--r-lg); overflow: hidden;
+  box-shadow: 0 4px 32px rgba(0,0,0,.3);
+}
+.tbl-head {
+  display: grid;
+  grid-template-columns: 114px 40px 80px 76px 76px 76px 140px 86px 86px 50px 64px 54px 66px 58px;
+  padding: 10px 16px;
+  background: rgba(28,32,48,.8);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--f-mono); font-size: 9px;
+  color: var(--dim); letter-spacing: .14em; text-transform: uppercase;
+}
+.sh {
+  cursor: pointer; user-select: none;
+  transition: color .15s;
+}
+.sh:hover { color: var(--sapphire); }
+.trow {
+  display: grid;
+  grid-template-columns: 114px 40px 80px 76px 76px 76px 140px 86px 86px 50px 64px 54px 66px 58px;
+  padding: 11px 16px; border-bottom: 1px solid var(--rule);
+  align-items: center; cursor: pointer;
+  transition: background .1s;
+  position: relative;
+  animation: rowslide .4s ease both;
+}
+@keyframes rowslide {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+.trow:last-child { border: none; }
+.trow:hover { background: rgba(75,142,255,.04); }
+.trow::before {
+  content: ''; position: absolute;
+  left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 0 3px 3px 0;
+}
+.trow.sl::before { background: var(--emerald); }
+.trow.ss::before { background: var(--ember); }
+.trow.srl::before { background: var(--sapphire); }
+.trow.srs::before { background: var(--amber); }
+
+.sym-cell {
+  font-family: var(--f-display); font-size: 13px; font-weight: 600;
+  color: var(--text); cursor: pointer; letter-spacing: -.01em;
+  transition: color .12s; background: none; border: none;
+  text-align: left; padding: 0;
+}
+.sym-cell:hover { color: var(--sapphire); }
+
+.tf-chip {
+  font-family: var(--f-mono); font-size: 9px; font-weight: 500;
+  color: var(--dim); background: var(--ink3);
+  padding: 2px 5px; border-radius: 4px;
+  border: 1px solid var(--rule); letter-spacing: .04em;
+}
+.n { font-family: var(--f-mono); font-size: 11px; }
+.n-poc { color: var(--ember); font-weight: 500; }
+.n-vah { color: var(--sapphire); }
+.n-stop { color: var(--amber); }
+.n-tgt { color: var(--emerald); }
+.n-rr { color: var(--violet); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 9px; border-radius: 20px;
+  font-family: var(--f-mono); font-size: 9px; font-weight: 500;
+  letter-spacing: .04em; white-space: nowrap;
+}
+.b-l  { background: rgba(0,200,150,.1);  color: var(--emerald); border: 1px solid rgba(0,200,150,.2); }
+.b-s  { background: rgba(255,77,106,.1); color: var(--ember);   border: 1px solid rgba(255,77,106,.2); }
+.b-rl { background: rgba(75,142,255,.1); color: var(--sapphire);border: 1px solid rgba(75,142,255,.2); }
+.b-rs { background: rgba(255,181,71,.1); color: var(--amber);   border: 1px solid rgba(255,181,71,.2); }
+.b-n  { background: rgba(123,133,160,.1);color: var(--sub);     border: 1px solid rgba(123,133,160,.2); }
+
+.sc-wrap { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+.sc-n { font-family: var(--f-mono); font-size: 11px; font-weight: 500; }
+.sc-b { height: 2px; border-radius: 1px; margin-top: 1px; }
+
+.empty-state {
+  padding: 60px 20px; text-align: center;
+  color: var(--dim); font-family: var(--f-mono); font-size: 11px;
+  letter-spacing: .08em;
+}
+
+/* ── Modal ── */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(10px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.overlay.open { display: flex; animation: fadein .2s ease; }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--ink2); border: 1px solid var(--rule2);
+  border-radius: 18px; width: 100%; max-width: 1060px;
+  max-height: 92vh; overflow-y: auto;
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(75,142,255,.08);
+  animation: modalup .25s cubic-bezier(.34,1.56,.64,1) both;
+}
+.modal::-webkit-scrollbar { width: 3px; }
+.modal::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 2px; }
+@keyframes modalup {
+  from { opacity: 0; transform: scale(.93) translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--rule);
+  position: sticky; top: 0; background: var(--ink2); z-index: 10;
+  backdrop-filter: blur(20px);
+}
+.modal-sym {
+  font-family: var(--f-display); font-size: 22px; font-weight: 600;
+  letter-spacing: -.02em;
+}
+.modal-meta { font-family: var(--f-mono); font-size: 10px; color: var(--dim); margin-top: 3px; }
+.close-btn {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--ink3); border: 1px solid var(--rule2);
+  color: var(--sub); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; font-family: sans-serif;
+}
+.close-btn:hover { background: rgba(255,77,106,.12); color: var(--ember); border-color: rgba(255,77,106,.3); }
+
+.modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Chart ── */
+.chart-wrap {
+  position: relative; height: 340px;
+  background: var(--ink); border-radius: 12px;
+  overflow: hidden; border: 1px solid var(--rule);
+}
+canvas { width: 100% !important; height: 100% !important; }
+.vp-col {
+  position: absolute; top: 0; right: 0; bottom: 36px; width: 92px;
+  display: flex; flex-direction: column; padding: 5px 3px; gap: 1px;
+  pointer-events: none;
+}
+.vp-row { display: flex; align-items: center; flex: 1; }
+.vp-fill { height: 74%; border-radius: 2px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.c-leg {
+  position: absolute; bottom: 7px; left: 10px;
+  display: flex; gap: 12px; font-family: var(--f-mono);
+  font-size: 9px; color: var(--dim);
+}
+.cl { display: flex; align-items: center; gap: 4px; }
+.cl-sq { width: 8px; height: 8px; border-radius: 2px; }
+
+/* ── Detail panels ── */
+.detail-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.panel {
+  background: var(--ink3); border: 1px solid var(--rule);
+  border-radius: 14px; padding: 18px;
+}
+.panel-hdr {
+  font-family: var(--f-mono); font-size: 9px; color: var(--dim);
+  letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-hdr::after {
+  content: ''; flex: 1; height: 1px; background: var(--rule);
+}
+
+.candle-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: var(--ink2);
+  border: 1px solid var(--rule2); border-radius: 9px; margin-bottom: 12px;
+}
+.candle-sq { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+.lv-table { width: 100%; }
+.lv-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; border-bottom: 1px solid rgba(37,42,56,.6);
+}
+.lv-row:last-child { border: none; }
+.lv-lbl { font-family: var(--f-mono); font-size: 10px; color: var(--sub); }
+.lv-val { font-family: var(--f-mono); font-size: 11px; font-weight: 500; }
+.lv-stop {
+  background: rgba(255,181,71,.07); border-radius: 6px;
+  padding: 5px 8px; margin: 3px 0; border: none;
+}
+
+.scenario {
+  margin-top: 12px; padding: 11px 14px;
+  background: var(--ink2); border-radius: 9px;
+  font-size: 11px; color: var(--sub); line-height: 1.75;
+  border-left: 3px solid var(--sapphire);
+}
+
+.tg-send {
+  width: 100%; margin-top: 12px; padding: 9px;
+  border-radius: 8px; background: transparent;
+  border: 1px solid rgba(34,211,238,.3); color: var(--cyan);
+  font-family: var(--f-mono); font-size: 10px; font-weight: 500;
+  cursor: pointer; transition: all .15s; letter-spacing: .06em;
+}
+.tg-send:hover { background: rgba(34,211,238,.08); }
+
+.bt-panel {
+  background: var(--ink3); border: 1px solid var(--rule);
+  border-radius: 14px; padding: 18px;
+  grid-column: 1 / -1;  /* full width below detail panels */
+}
+.bt-stat {
+  display: inline-flex; flex-direction: column; align-items: center;
+  padding: 10px 20px; background: var(--ink2);
+  border: 1px solid var(--rule); border-radius: 10px;
+  margin-right: 10px; margin-bottom: 8px;
+}
+.bt-stat-val { font-family: var(--f-display); font-size: 24px; font-weight: 600; line-height: 1; }
+.bt-stat-lbl { font-family: var(--f-mono); font-size: 9px; color: var(--dim); letter-spacing: .12em; margin-top: 4px; }
+.bt-trade {
+  display: grid; grid-template-columns: 70px 90px 90px 90px 50px 60px;
+  gap: 4px; padding: 5px 8px; border-radius: 6px;
+  font-family: var(--f-mono); font-size: 10px;
+  margin-bottom: 3px; background: var(--ink2);
+  border-left: 3px solid var(--rule);
+}
+.bt-trade.win  { border-left-color: var(--emerald); }
+.bt-trade.loss { border-left-color: var(--ember); }
+
+/* ── Score ── */
+.score-big {
+  font-family: var(--f-display); font-size: 52px; font-weight: 700;
+  line-height: 1; letter-spacing: -.04em;
+}
+.score-track {
+  width: 100%; height: 5px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--ember), var(--amber), var(--emerald));
+  position: relative; margin: 8px 0;
+}
+.score-pin {
+  position: absolute; top: -5px; height: 15px; width: 2px;
+  background: white; border-radius: 2px; transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(255,255,255,.5);
+  transition: left .5s cubic-bezier(.34,1.56,.64,1);
+}
+.score-lbl { font-family: var(--f-mono); font-size: 10px; color: var(--sub); }
+
+.conf-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 11px; border-radius: 8px;
+  background: var(--ink2); border: 1px solid var(--rule);
+  margin-bottom: 5px; font-size: 11px; color: var(--text);
+  border-left: 3px solid var(--rule);
+  transition: border-color .15s;
+}
+.conf-item.alta  { border-left-color: var(--emerald); }
+.conf-item.media { border-left-color: var(--amber); }
+.conf-item.baja  { border-left-color: var(--dim); }
+.conf-ico { font-size: 15px; flex-shrink: 0; }
+
+/* ── Error banner ── */
+.err-banner {
+  padding: 12px 16px; background: rgba(255,77,106,.08);
+  border: 1px solid rgba(255,77,106,.2); border-radius: 9px;
+  font-family: var(--f-mono); font-size: 11px; color: var(--ember);
+  margin-bottom: 16px;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sb">
+  <div class="sb-head">
+    <div class="wordmark">VP <em>Scanner</em></div>
+    <div class="tagline">Volume Profile · Pivot Anchored</div>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Algoritmo</div>
+    <div class="sl-wrap">
+      <div class="sl-top"><span class="sl-name">Pivot Length</span><span class="sl-val" id="vpl">20</span></div>
+      <input type="range" min="5" max="50" value="20" oninput="document.getElementById('vpl').textContent=this.value">
+    </div>
+    <div class="sl-wrap">
+      <div class="sl-top"><span class="sl-name">Filas VP</span><span class="sl-val" id="vrows">25</span></div>
+      <input type="range" min="10" max="50" value="25" oninput="document.getElementById('vrows').textContent=this.value">
+    </div>
+    <div class="sl-wrap">
+      <div class="sl-top"><span class="sl-name">Value Area</span><span class="sl-val" id="vva">68%</span></div>
+      <input type="range" min="50" max="90" value="68" oninput="document.getElementById('vva').textContent=this.value+'%'">
+    </div>
+    <div class="sl-wrap" style="margin-bottom:0">
+      <div class="sl-top"><span class="sl-name">Score mín.</span><span class="sl-val" id="vsc">3</span></div>
+      <input type="range" min="0" max="10" value="3" oninput="document.getElementById('vsc').textContent=this.value;applyFilters()">
+    </div>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Señales</div>
+    <label class="cb-row"><input type="checkbox" checked id="fl"><span class="sig-pip" style="background:var(--emerald)"></span>Long</label>
+    <label class="cb-row"><input type="checkbox" checked id="fs"><span class="sig-pip" style="background:var(--ember)"></span>Short</label>
+    <label class="cb-row"><input type="checkbox" checked id="frl"><span class="sig-pip" style="background:var(--sapphire)"></span>Range Long</label>
+    <label class="cb-row"><input type="checkbox" checked id="frs"><span class="sig-pip" style="background:var(--amber)"></span>Range Short</label>
+    <label class="cb-row"><input type="checkbox" id="fn"><span class="sig-pip" style="background:var(--dim)"></span>Neutral</label>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Telegram</div>
+    <input class="tg-field" type="password" placeholder="Bot Token" id="tg-token">
+    <input class="tg-field" type="text" placeholder="Chat ID" id="tg-chat">
+  </div>
+
+  <div class="live-indicator">
+    <div class="live-dot"></div>
+    <span id="live-txt">Conectando... (Binance / OKX / Bybit)</span>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Crypto Volume Profile <span>Scanner</span></h1>
+      <div class="topbar-meta" id="top-meta">Binance · 1D + 4H · Pivots anclados · Réplica exacta del indicador DGT</div>
+    </div>
+    <div class="tf-pills">
+      <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
+      <button class="tf-pill" onclick="setTF('1D',this)">1D</button>
+      <button class="tf-pill" onclick="setTF('4H',this)">4H</button>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <div class="loader" id="loader">
+      <div class="loader-ring"></div>
+      <div>
+        <div class="loader-text">CARGANDO DATOS</div>
+        <div class="loader-sym" id="loader-sym">Conectando con Binance...</div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+  <div class="modal-hdr">
+    <div>
+      <div class="modal-sym" id="m-sym"></div>
+      <div class="modal-meta" id="m-meta"></div>
+    </div>
+    <button class="close-btn" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="chart-wrap">
+      <canvas id="chart" role="img" aria-label="Gráfico de precio con Volume Profile"></canvas>
+      
+      <div class="c-leg">
+        <div class="cl"><div class="cl-sq" style="background:#15803d"></div>Alto vol alcista</div>
+        <div class="cl"><div class="cl-sq" style="background:#991b1b"></div>Alto vol bajista</div>
+        <div class="cl"><div class="cl-sq" style="background:#22d3ee"></div>Bajo vol alcista</div>
+        <div class="cl"><div class="cl-sq" style="background:#f59e0b"></div>Bajo vol bajista</div>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="panel">
+        <div class="panel-hdr">Niveles de operativa</div>
+        <div id="m-candle"></div>
+        <div id="m-badge" style="margin-bottom:12px"></div>
+        <div id="m-levels"></div>
+        <div class="scenario" id="m-scenario"></div>
+        <button class="tg-send" onclick="sendTelegram()">📡 Enviar alerta Telegram</button>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr">Confluencias</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div class="score-big" id="m-score-big"></div>
+          <div style="flex:1">
+            <div style="font-family:var(--f-mono);font-size:10px;color:var(--sub)">Score / 10</div>
+            <div class="score-track"><div class="score-pin" id="m-pin" style="left:50%"></div></div>
+            <div class="score-lbl" id="m-score-lbl"></div>
+          </div>
+        </div>
+        <div id="m-confs"></div>
+      </div>
+    </div>
+    <div class="bt-panel" id="m-bt">
+      <div class="panel-hdr">Backtest histórico</div>
+      <div id="m-bt-body" style="color:var(--dim);font-family:var(--f-mono);font-size:11px">Calculando...</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ════════════════════════════════════════════════════════════
+const SYMBOLS = [
+  'BTC','ETH','BNB','SOL','XRP','DOGE','ADA','AVAX','TRX',
+  'LINK','DOT','LTC','BCH','NEAR','UNI','ARB','OP','ATOM',
+  'INJ','AAVE','FIL','HBAR','VET','MKR','GRT','XLM','ALGO',
+  'EOS','SAND','MANA','AXS','ICP','APT','MATIC','SHIB'
+];
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let allResults = [];
+let activeTF = 'ALL';
+let activeModal = null;
+let chartInst = null;
+
+// ════════════════════════════════════════════════════════════
+// MULTI-SOURCE FETCH — tries Binance, OKX, Bybit in order
+// All have CORS headers and work from browser
+// ════════════════════════════════════════════════════════════
+
+function makeAbortSignal(ms = 2500) {
+  const c = new AbortController();
+  setTimeout(function () {
+    c.abort();
+  }, ms);
+  return c.signal;
+}
+
+// Interval mapping per exchange
+const INTERVALS = {
+  '1d': { binance:'1d',  okx:'1D',   bybit:'D',  htx:'1day'  },
+  '4h': { binance:'4h',  okx:'4H',   bybit:'240',htx:'60min' },
+};
+
+async function fetchBinance(sym, interval, limit) {
+  const url = 'https://api.binance.com/api/v3/klines?symbol=' + sym + 'USDT&interval=' + interval + '&limit=' + limit;
+  const r = await fetch(url, { signal: makeAbortSignal(8000) });
+  if (!r.ok) throw new Error('Binance ' + r.status);
+  const data = await r.json();
+  return data.map(function(d) {
+    return { ts: d[0], open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[5]) };
+  });
+}
+
+async function fetchOKX(sym, interval, limit) {
+  const bar = INTERVALS[interval] ? INTERVALS[interval].okx : '1D';
+  const url = 'https://www.okx.com/api/v5/market/candles?instId=' + sym + '-USDT&bar=' + bar + '&limit=' + limit;
+  const r = await fetch(url, { signal: makeAbortSignal(8000) });
+  if (!r.ok) throw new Error('OKX ' + r.status);
+  const data = await r.json();
+  if (!data.data || !data.data.length) throw new Error('OKX empty');
+  // OKX: [ts, open, high, low, close, vol, volCcy] — ts in ms, sorted newest first
+  return data.data.reverse().map(function(d) {
+    return { ts: parseInt(d[0]), open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[5]) };
+  });
+}
+
+async function fetchBybit(sym, interval, limit) {
+  const bar = INTERVALS[interval] ? INTERVALS[interval].bybit : 'D';
+  const url = 'https://api.bybit.com/v5/market/kline?category=spot&symbol=' + sym + 'USDT&interval=' + bar + '&limit=' + limit;
+  const r = await fetch(url, { signal: makeAbortSignal(8000) });
+  if (!r.ok) throw new Error('Bybit ' + r.status);
+  const data = await r.json();
+  if (!data.result || !data.result.list) throw new Error('Bybit empty');
+  // Bybit: [[startTime, open, high, low, close, volume, turnover]] newest first
+  return data.result.list.reverse().map(function(d) {
+    return { ts: parseInt(d[0]), open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[5]) };
+  });
+}
+
+async function fetchOHLCV(sym, interval, limit) {
+  limit = limit || 500;
+  const fetchers = [
+    { name: 'OKX', fn: function() { return fetchOKX(sym, interval, limit); } },
+    { name: 'Bybit', fn: function() { return fetchBybit(sym, interval, limit); } },
+  ];
+
+  for (let i = 0; i < fetchers.length; i++) {
+    try {
+      const data = await fetchers[i].fn();
+      if (data && data.length >= 10) {
+        if (i > 0) console.log(sym + ' via ' + fetchers[i].name);
+        return data;
+      }
+    } catch(e) {
+      console.warn(sym + ' ' + fetchers[i].name + ' failed: ' + e.message);
+    }
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════
+// PIVOT DETECTION — replica Pine Script ta.pivothigh/pivotlow
+// ════════════════════════════════════════════════════════════
+function pivotHigh(highs, len) {
+  const n = highs.length, res = new Array(n).fill(null);
+  for (let i = len; i < n - len; i++) {
+    let isPivot = true;
+    for (let j = i - len; j <= i + len; j++) {
+      if (j !== i && highs[j] >= highs[i]) { isPivot = false; break; }
+    }
+    if (isPivot) res[i] = highs[i];
+  }
+  return res;
+}
+
+function pivotLow(lows, len) {
+  const n = lows.length, res = new Array(n).fill(null);
+  for (let i = len; i < n - len; i++) {
+    let isPivot = true;
+    for (let j = i - len; j <= i + len; j++) {
+      if (j !== i && lows[j] <= lows[i]) { isPivot = false; break; }
+    }
+    if (isPivot) res[i] = lows[i];
+  }
+  return res;
+}
+
+function getPivotSegments(df, len) {
+  const highs = df.map(b => b.high), lows = df.map(b => b.low);
+  const ph = pivotHigh(highs, len), pl = pivotLow(lows, len);
+  const pivots = [];
+  for (let i = 0; i < df.length; i++) {
+    if (ph[i] !== null) pivots.push({i, type:'H', price: ph[i]});
+    if (pl[i] !== null) pivots.push({i, type:'L', price: pl[i]});
+  }
+  pivots.sort((a,b) => a.i - b.i);
+  const segs = [];
+  for (let k = 1; k < pivots.length; k++) {
+    const p0 = pivots[k-1], p1 = pivots[k];
+    if (p1.i - p0.i < 3) continue;
+    segs.push({
+      startI: p0.i, endI: p1.i,
+      pivotType: p1.type, pivotPrice: p1.price,
+      prevPrice: p0.price,
+      slice: df.slice(p0.i, p1.i + 1)
+    });
+  }
+  return segs;
+}
+
+// ════════════════════════════════════════════════════════════
+// VOLUME PROFILE — replica exacta algoritmo Pine Script
+// ════════════════════════════════════════════════════════════
+function calcVP(bars, nRows = 25, vaPct = 0.68) {
+  if (!bars || bars.length < 3) return null;
+  const ph = Math.max.apply(null, bars.map(b => b.high));
+  const pl = Math.min.apply(null, bars.map(b => b.low));
+  if (ph <= pl) return null;
+  const step = (ph - pl) / nRows;
+  if (step <= 0) return null;
+
+  const vols = new Float64Array(nRows);
+  let totalVol = 0;
+
+  for (const bar of bars) {
+    const bv = bar.volume > 0 ? bar.volume : 0;
+    const bh = bar.high, bl = bar.low;
+    const br = bh - bl;
+    totalVol += bv;
+    for (let lvl = 0; lvl < nRows; lvl++) {
+      const ll = pl + lvl * step, lh = ll + step;
+      if (bh >= ll && bl < lh) {
+        const prop = br === 0 ? 1 : Math.max(0, Math.min(bh,lh) - Math.max(bl,ll)) / br;
+        vols[lvl] += bv * prop;
+      }
+    }
+  }
+
+  // Find PoC
+  let poc = 0;
+  for (let i = 1; i < nRows; i++) if (vols[i] > vols[poc]) poc = i;
+
+  // Value Area — Pine Script while-loop replica
+  const vaTarget = totalVol * vaPct;
+  let va = vols[poc], la = poc, lb = poc;
+  while (va < vaTarget) {
+    if (lb === 0 && la === nRows - 1) break;
+    const vaUp = la < nRows-1 ? vols[la+1] : 0;
+    const vaDn = lb > 0 ? vols[lb-1] : 0;
+    if (vaUp === 0 && vaDn === 0) break;
+    if (vaUp >= vaDn) { va += vaUp; la++; }
+    else { va += vaDn; lb--; }
+  }
+
+  return {
+    pocPrice: pl + (poc + .5) * step,
+    vahPrice: pl + (la + 1.0) * step,
+    valPrice: pl + (lb + 0.0) * step,
+    pocLevel: poc, vahLevel: la, valLevel: lb,
+    priceHigh: ph, priceLow: pl, priceStep: step,
+    volByLevel: vols, totalVol, nRows
+  };
+}
+
+// ════════════════════════════════════════════════════════════
+// SIGNAL CLASSIFICATION — improved
+// ════════════════════════════════════════════════════════════
+function classifySignal(close, vp, df) {
+  const { pocPrice:poc, vahPrice:vah, valPrice:val,
+          priceHigh:ph, priceLow:pl, priceStep:step } = vp;
+
+  // Minimum developing profile bars — VP with <15 bars is statistically unreliable
+  if (df && df.length < 15) {
+    return {signal:'NEUTRAL', label:'Perfil insuficiente', stop:null, target:null,
+            target2:null, invalidation:null, rr:null,
+            scenario:'Perfil en desarrollo con menos de 15 barras. VP estadísticamente infiable — esperar más datos.'};
+  }
+
+  const buf  = step * 0.5;
+  const vaW  = vah - val;
+
+  // Trend context: 200-bar slope to avoid counter-trend entries
+  // Positive = uptrend, Negative = downtrend
+  let trendBias = 0;
+  if (df && df.length >= 50) {
+    const closes = df.map(b => b.close);
+    const e200 = calcEMA(closes, Math.min(200, closes.length));
+    const ema200 = e200[e200.length-1];
+    if (!isNaN(ema200)) trendBias = close > ema200 ? 1 : -1;
+  }
+
+  const inVA = val <= close && close <= vah;
+  let sig = {
+    signal:'NEUTRAL', label:'En PoC — esperar', stop:null, target:null,
+    target2:null, invalidation:null, rr:null, trendBias,
+    scenario:'Precio en el PoC. Esperar ruptura del Value Area con volumen.'
+  };
+
+  if (close > vah + buf) {
+    // SHORT: stop above VAH, min 1.5% of price
+    const rawStop = vah + vaW * .25;
+    const minStop = close * 1.015;
+    const stop = Math.max(rawStop, minStop);
+    sig = {...sig, signal:'SHORT', label:'Short → PoC',
+      stop, target: poc, target2: val, invalidation: ph + step * 2,
+      scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
+  } else if (close < val - buf) {
+    const rawStop = val - vaW * .25;
+    const minStop = close * 0.985;
+    const stop = Math.min(rawStop, minStop);
+    sig = {...sig, signal:'LONG', label:'Long → PoC',
+      stop, target: poc, target2: vah, invalidation: pl - step * 2,
+      scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA). Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
+  } else if (inVA && close < poc) {
+    const rawStop = val - vaW * 0.15;
+    const minStop = close * 0.985;
+    const stop = Math.min(rawStop, minStop);
+    sig = {...sig, signal:'RANGE_LONG', label:'Range Long → VAH',
+      stop, target: poc, target2: vah, invalidation: pl - step,
+      scenario:'Dentro del VA bajo el PoC. Stop bajo el VAL. LVN entre precio y PoC acelera el movimiento.'};
+  } else if (inVA && close > poc) {
+    const rawStop = vah + vaW * 0.15;
+    const minStop = close * 1.015;
+    const stop = Math.max(rawStop, minStop);
+    sig = {...sig, signal:'RANGE_SHORT', label:'Range Short → VAL',
+      stop, target: poc, target2: val, invalidation: ph + step,
+      scenario:'Dentro del VA sobre el PoC. Stop sobre el VAH. Confirmar con volumen decreciente.'};
+  }
+
+  // Final hierarchy check
+  if (sig.stop && sig.target) {
+    const risk   = Math.abs(close - sig.stop);
+    const reward = Math.abs(sig.target - close);
+    sig.rr = risk > 0 ? +(reward / risk).toFixed(2) : null;
+  }
+  return sig;
+}
+
+// ════════════════════════════════════════════════════════════
+// BACKTEST — walk-forward sin look-ahead bias
+// Simula cada señal histórica y verifica si T1 o Stop se tocó
+// ════════════════════════════════════════════════════════════
+function runBacktest(df, segs, pivLen, nRows, vaPct) {
+  const trades = [];
+  const testSegs = segs.slice(0, -1);
+  const empty = {
+    total:0, wins:0, losses:0, wr:null, avgRR:null, avgPnl:null, totalPnl:null,
+    expectancy:null, t2HitRate:null, avgBarsToRes:null, maxDrawdownWin:null,
+    scoreCorrPct:null, scoreCorrLabel:'—', hiScoreWR:null, loScoreWR:null,
+    byScore:{}, bySig:{}, recentWR:null, oldWR:null, byScore:{}, list:[]
+  };
+  if (testSegs.length < 3) return empty;
+
+  for (const seg of testSegs) {
+    const vp = calcVP(seg.slice, nRows, vaPct);
+    if (!vp) continue;
+    const entryI = seg.endI + 1;
+    if (entryI >= df.length) continue;
+    const entryClose = df[entryI].close;
+    // Use full history up to entry for correct EMA200 trend calculation
+    const dfUpToEntry = df.slice(0, entryI + 1);
+    const sig = classifySignal(entryClose, vp, dfUpToEntry);
+    if (sig.signal === 'NEUTRAL' || !sig.stop || !sig.target) continue;
+    const rr = parseFloat(sig.rr);
+    if (!rr || rr < 0.5 || rr > 6) continue;
+    if (Math.abs(sig.target - entryClose) / entryClose < 0.01) continue;
+
+    const conf  = calcConfluences(dfUpToEntry, vp, entryClose, sig);
+    const score = conf.score;
+    const isLong = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
+
+    // Forward scan: find T1, T2, stop, bars to resolution, max drawdown in winner
+    let outcome = 'timeout', exitPrice = null;
+    let t2Hit = false, barsToRes = 0;
+    let worstInWin = 0;  // max adverse excursion before hitting T1
+
+    for (let fi = 1; fi <= 60 && entryI+fi < df.length; fi++) {
+      const bar = df[entryI + fi];
+      barsToRes = fi;
+
+      // Track worst drawdown while trade is open
+      if (isLong) {
+        const drawdown = (entryClose - bar.low) / entryClose * 100;
+        if (drawdown > worstInWin) worstInWin = drawdown;
+        if (bar.low  <= sig.stop)   { outcome='loss'; exitPrice=sig.stop;   break; }
+        if (bar.high >= sig.target) { outcome='win';  exitPrice=sig.target;
+          // After T1 hit, check if T2 is reached in subsequent 30 bars
+          if (sig.target2) {
+            for (let fi2 = fi+1; fi2 <= fi+30 && entryI+fi2 < df.length; fi2++) {
+              const bar2 = df[entryI + fi2];
+              if (isLong && bar2.high >= sig.target2) { t2Hit = true; break; }
+              if (!isLong && bar2.low <= sig.target2) { t2Hit = true; break; }
+              // Stop out before T2
+              if (isLong && bar2.low <= sig.stop)  break;
+              if (!isLong && bar2.high >= sig.stop) break;
+            }
+          }
+          break;
+        }
+      } else {
+        const drawdown = (bar.high - entryClose) / entryClose * 100;
+        if (drawdown > worstInWin) worstInWin = drawdown;
+        if (bar.high >= sig.stop)   { outcome='loss'; exitPrice=sig.stop;   break; }
+        if (bar.low  <= sig.target) { outcome='win';  exitPrice=sig.target;
+          if (sig.target2) {
+            for (let fi2 = fi+1; fi2 <= fi+30 && entryI+fi2 < df.length; fi2++) {
+              const bar2 = df[entryI + fi2];
+              if (!isLong && bar2.low <= sig.target2) { t2Hit = true; break; }
+              if (!isLong && bar2.high >= sig.stop)   break;
+            }
+          }
+          break;
+        }
+      }
+    }
+    if (outcome === 'timeout') continue;
+
+    const pnlPct = exitPrice
+      ? +(isLong
+          ? (exitPrice-entryClose)/entryClose*100
+          : (entryClose-exitPrice)/entryClose*100).toFixed(2)
+      : 0;
+
+    // PnL if 50% closed at T1, 50% at T2 (or stop)
+    let pnl50_50 = pnlPct; // default: same as closing all at T1/stop
+    if (outcome === 'win' && sig.target2) {
+      const t1Pnl = pnlPct;
+      let t2Pnl = 0;
+      if (t2Hit) {
+        t2Pnl = +(isLong
+          ? (sig.target2 - entryClose) / entryClose * 100
+          : (entryClose - sig.target2) / entryClose * 100).toFixed(2);
+      } else {
+        // If T2 not hit, assume closed at stop (worst case for 50%)
+        t2Pnl = +(isLong
+          ? (sig.stop - entryClose) / entryClose * 100
+          : (entryClose - sig.stop) / entryClose * 100).toFixed(2);
+      }
+      pnl50_50 = +((t1Pnl * 0.5 + t2Pnl * 0.5)).toFixed(2);
+    }
+
+    trades.push({
+      signal:sig.signal, entry:entryClose, stop:sig.stop,
+      target:sig.target, target2:sig.target2, exitPrice,
+      rr, score, outcome, pnlPct, pnl50_50, t2Hit,
+      barsToRes: outcome !== 'timeout' ? barsToRes : null,
+      maxDrawdown: outcome === 'win' ? +worstInWin.toFixed(2) : null,
+      date: new Date(df[entryI].ts).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'}),
+      ts: df[entryI].ts
+    });
+  }
+
+  const total = trades.length;
+  if (total === 0) return empty;
+
+  const wins    = trades.filter(t=>t.outcome==='win').length;
+  const losses  = trades.filter(t=>t.outcome==='loss').length;
+  const wr      = Math.round(wins/total*100);
+  const avgRR   = +(trades.reduce((a,t)=>a+t.rr,0)/total).toFixed(2);
+  const avgPnl  = +(trades.reduce((a,t)=>a+t.pnlPct,0)/total).toFixed(2);
+  const totalPnl= +(trades.reduce((a,t)=>a+t.pnlPct,0)).toFixed(2);
+  const expectancy = +((wr/100*avgRR-(1-wr/100))).toFixed(2);
+
+  // T2 hit rate: of wins, how many also reached T2?
+  const winsWithT2 = trades.filter(t=>t.outcome==='win' && t.target2!==null);
+  const t2Hits     = winsWithT2.filter(t=>t.t2Hit).length;
+  const t2HitRate  = winsWithT2.length >= 2 ? Math.round(t2Hits/winsWithT2.length*100) : null;
+
+  // 50/50 strategy total PnL vs close-all-at-T1
+  const avgPnl5050 = +(trades.reduce((a,t)=>a+t.pnl50_50,0)/total).toFixed(2);
+  const totalPnl5050 = +(trades.reduce((a,t)=>a+t.pnl50_50,0)).toFixed(2);
+
+  // Average bars to resolution
+  const resolved = trades.filter(t=>t.barsToRes!==null);
+  const avgBarsToRes = resolved.length > 0
+    ? Math.round(resolved.reduce((a,t)=>a+t.barsToRes,0)/resolved.length)
+    : null;
+
+  // Max drawdown in winning trades (how much did price retrace before hitting T1)
+  const winDrawdowns = trades.filter(t=>t.outcome==='win' && t.maxDrawdown!==null);
+  const avgDrawdownWin = winDrawdowns.length > 0
+    ? +(winDrawdowns.reduce((a,t)=>a+t.maxDrawdown,0)/winDrawdowns.length).toFixed(1)
+    : null;
+
+  // Score correlation
+  const hiScore = trades.filter(t=>t.score>=6);
+  const loScore = trades.filter(t=>t.score<6);
+  const hiWR = hiScore.length>=2 ? Math.round(hiScore.filter(t=>t.outcome==='win').length/hiScore.length*100) : null;
+  const loWR = loScore.length>=2 ? Math.round(loScore.filter(t=>t.outcome==='win').length/loScore.length*100) : null;
+  let scoreCorrPct=null, scoreCorrLabel='—';
+  if (hiWR!==null&&loWR!==null) {
+    scoreCorrPct=hiWR-loWR;
+    if (scoreCorrPct>=20)       scoreCorrLabel = '+'+scoreCorrPct+'pp OK';
+    else if (scoreCorrPct>=8)   scoreCorrLabel = '+'+scoreCorrPct+'pp ~';
+    else if (scoreCorrPct>=-5)  scoreCorrLabel = scoreCorrPct+'pp ?';
+    else                        scoreCorrLabel = scoreCorrPct+'pp X';
+  } else if (hiWR!==null) { scoreCorrLabel = hiWR+'% hi'; }
+
+  // WR by score bucket
+  const byScore={};
+  for (const t of trades) {
+    const b=Math.floor(t.score/2)*2;
+    if (!byScore[b]) byScore[b]={wins:0,total:0,pnl:0};
+    byScore[b].total++; if (t.outcome==='win') byScore[b].wins++; byScore[b].pnl+=t.pnlPct;
+  }
+
+  // WR by signal type
+  const bySig={};
+  for (const t of trades) {
+    if (!bySig[t.signal]) bySig[t.signal]={wins:0,total:0,pnl:0};
+    bySig[t.signal].total++; if (t.outcome==='win') bySig[t.signal].wins++; bySig[t.signal].pnl+=t.pnlPct;
+  }
+
+  // Temporal consistency: recent half vs older half
+  const mid = Math.floor(trades.length/2);
+  const oldTrades    = trades.slice(0, mid);
+  const recentTrades = trades.slice(mid);
+  const oldWR    = oldTrades.length>0 ? Math.round(oldTrades.filter(t=>t.outcome==='win').length/oldTrades.length*100) : null;
+  const recentWR = recentTrades.length>0 ? Math.round(recentTrades.filter(t=>t.outcome==='win').length/recentTrades.length*100) : null;
+
+  return {
+    total, wins, losses, wr, avgRR, avgPnl, totalPnl, expectancy,
+    t2HitRate, avgPnl5050, totalPnl5050,
+    avgBarsToRes, avgDrawdownWin,
+    hiScoreWR:hiWR, loScoreWR:loWR, scoreCorrPct, scoreCorrLabel, byScore,
+    bySig, oldWR, recentWR,
+    list: trades.slice(-12)
+  };
+}
+
+
+
+// ════════════════════════════════════════════════════════════
+// CONFLUENCES
+// ════════════════════════════════════════════════════════════
+function calcEMA(values, period) {
+  const res = new Array(values.length).fill(NaN);
+  if (values.length < period) return res;
+  const k = 2 / (period + 1);
+  let sum = 0;
+  for (let i = 0; i < period; i++) sum += values[i];
+  res[period-1] = sum / period;
+  for (let i = period; i < values.length; i++)
+    res[i] = values[i] * k + res[i-1] * (1-k);
+  return res;
+}
+
+function calcRSI(values, period=14) {
+  if (values.length < period + 1) return null;
+  const slice = values.slice(-Math.min(values.length, period+20));
+  const diffs = slice.slice(1).map((v,i) => v - slice[i]);
+  const gains = diffs.map(d => d > 0 ? d : 0);
+  const losses = diffs.map(d => d < 0 ? -d : 0);
+  let ag = gains.slice(0,period).reduce((a,b) => a+b) / period;
+  let al = losses.slice(0,period).reduce((a,b) => a+b) / period;
+  for (let i = period; i < diffs.length; i++) {
+    ag = (ag * (period-1) + gains[i]) / period;
+    al = (al * (period-1) + losses[i]) / period;
+  }
+  if (al === 0) return 100;
+  return +(100 - 100 / (1 + ag/al)).toFixed(1);
+}
+
+function calcConfluences(df, vp, close, sig) {
+  const closes = df.map(b => b.close);
+  const vols   = df.map(b => b.volume);
+  const n = closes.length;
+  const {pocPrice:poc, vahPrice:vah, valPrice:val} = vp;
+  const items = [], result = {score:0, items, candle:'verde_normal', volRatio:1};
+
+  if (n < 30) return result;
+
+  const longBias  = close <= poc;
+  const shortBias = close >= poc;
+  const trendBias = sig?.trendBias || 0;
+
+  // Trend alignment bonus/penalty
+  if (trendBias !== 0) {
+    if ((longBias && trendBias > 0) || (shortBias && trendBias < 0)) {
+      items.push({icon:'✅', label:`Señal alineada con tendencia EMA200 — mayor fiabilidad`, str:'alta'});
+      result.score += 1;
+    } else if ((longBias && trendBias < 0) || (shortBias && trendBias > 0)) {
+      items.push({icon:'⚠️', label:`Contra tendencia EMA200 — fiabilidad reducida`, str:'baja'});
+      result.score -= 1;
+    }
+  }
+
+  // EMA21 / EMA50
+  const e21a = calcEMA(closes, 21), e50a = calcEMA(closes, 50);
+  const e21 = isNaN(e21a[n-1]) ? null : e21a[n-1];
+  const e50 = isNaN(e50a[n-1]) ? null : e50a[n-1];
+  result.ema21 = e21; result.ema50 = e50;
+
+  if (e21 !== null) {
+    if (Math.abs(e21 - poc) / poc < .015) {
+      items.push({icon:'🎯', label:'EMA21 ≈ PoC — confluencia estructural', str:'alta'}); result.score += 2;
+    } else if (close < e21 && longBias) {
+      items.push({icon:'📉', label:'Precio bajo EMA21 — momentum bajista agotado', str:'media'}); result.score += 1;
+    } else if (close > e21 && shortBias) {
+      items.push({icon:'📈', label:'Precio sobre EMA21 — momentum alcista agotado', str:'media'}); result.score += 1;
+    }
+  }
+  if (e50 !== null) {
+    if (Math.abs(e50 - val) / val < .015 || Math.abs(e50 - vah) / vah < .015) {
+      items.push({icon:'🎯', label:'EMA50 ≈ VAH/VAL — soporte/resistencia dinámico', str:'alta'}); result.score += 2;
+    } else if (e21 !== null && e21 > e50 && longBias) {
+      items.push({icon:'🟢', label:'EMA21 > EMA50 — tendencia alcista confirmada', str:'media'}); result.score += 1;
+    } else if (e21 !== null && e21 < e50 && shortBias) {
+      items.push({icon:'🔻', label:'EMA21 < EMA50 — tendencia bajista confirmada', str:'media'}); result.score += 1;
+    }
+  }
+
+  // RSI
+  const rsi = calcRSI(closes);
+  result.rsi = rsi;
+  if (rsi !== null) {
+    if (rsi < 38 && longBias) {  // slightly relaxed from 35
+      items.push({icon:'🔥', label:`RSI sobrevendido (${rsi}) — agotamiento bajista`, str:'alta'}); result.score += 2;
+    } else if (rsi > 62 && shortBias) {  // slightly relaxed from 65
+      items.push({icon:'❄️', label:`RSI sobrecomprado (${rsi}) — agotamiento alcista`, str:'alta'}); result.score += 2;
+    } else if (rsi < 45 && longBias) {  // momentum turning
+      items.push({icon:'📊', label:`RSI bajando (${rsi}) — momentum negativo`, str:'media'}); result.score += 1;
+    } else if (rsi > 55 && shortBias) {
+      items.push({icon:'📊', label:`RSI subiendo (${rsi}) — momentum positivo`, str:'media'}); result.score += 1;
+    } else if (rsi < 38 && shortBias) {
+      items.push({icon:'⚠️', label:`RSI sobrevendido (${rsi}) — contradice sesgo SHORT`, str:'baja'});
+    } else if (rsi > 62 && longBias) {
+      items.push({icon:'⚠️', label:`RSI sobrecomprado (${rsi}) — contradice sesgo LONG`, str:'baja'});
+    }
+  }
+
+  // Volume candle type
+  const smaVol = vols.slice(-89).reduce((a,b) => a+b, 0) / Math.min(vols.length, 89);
+  const lv = vols[n-1], lo = df[n-1].open, lc = df[n-1].close;
+  const bull = lc >= lo;
+  const vr = smaVol > 0 ? +(lv / smaVol).toFixed(2) : 1;
+  result.volRatio = vr;
+
+  if (vr > 1.5) {   // relaxed from 1.618
+    if (bull && !shortBias) {
+      items.push({icon:'💥', label:`Vela verde oscuro — compra institucional (×${vr} SMA)`, str:'alta'}); result.score += 2;
+      result.candle = 'verde_oscuro';
+    } else if (!bull && !longBias) {
+      items.push({icon:'💥', label:`Vela rojo oscuro — venta institucional (×${vr} SMA)`, str:'alta'}); result.score += 2;
+      result.candle = 'rojo_oscuro';
+    } else if (bull && shortBias) {
+      items.push({icon:'⚠️', label:`Verde oscuro contradice sesgo SHORT (×${vr} SMA)`, str:'baja'});
+      result.candle = 'verde_oscuro';
+    } else {
+      items.push({icon:'⚠️', label:`Rojo oscuro contradice sesgo LONG (×${vr} SMA)`, str:'baja'});
+      result.candle = 'rojo_oscuro';
+    }
+  } else if (vr < 0.7) {   // relaxed from 0.618
+    result.candle = bull ? 'aqua' : 'ambar';
+    const lbl = bull ? 'Vela aqua — alcista sin convicción' : 'Vela ámbar — agotamiento vendedor';
+    items.push({icon:'🌫️', label:`${lbl} (×${vr} SMA)`, str: bull ? 'baja' : 'media'});
+    if (!bull && longBias) result.score += 1;
+  } else {
+    result.candle = bull ? 'verde_normal' : 'rojo_normal';
+    items.push({icon:'📊', label:`Vela ${bull?'alcista':'bajista'} de volumen normal (×${vr} SMA)`, str:'baja'});
+  }
+
+  // PoC distance
+  const dp = Math.abs(close - poc) / poc * 100;
+  if (dp < 1.5) {
+    items.push({icon:'🧲', label:`Precio muy cerca del PoC (${dp.toFixed(1)}%) — imán activo`, str:'alta'}); result.score += 2;
+  } else if (dp > 8) {
+    items.push({icon:'↔️', label:`Precio lejos del PoC (${dp.toFixed(1)}%) — recorrido amplio`, str:'baja'});
+  }
+
+  // VA width
+  const vaw = (vah - val) / poc * 100;
+  if (vaw < 5) { items.push({icon:'🗜️', label:`VA estrecho (${vaw.toFixed(1)}%) — consolidación previa`, str:'media'}); result.score += 1; }
+
+  result.score = Math.min(result.score, 10);
+  return result;
+}
+
+// ════════════════════════════════════════════════════════════
+// SCAN ENGINE
+// ════════════════════════════════════════════════════════════
+async function scanSymbol(sym) {
+  const pivLen = parseInt(document.querySelector('input[oninput*="vpl"]')?.value || 20);
+  const nRows  = parseInt(document.querySelector('input[oninput*="vrows"]')?.value || 25);
+  const vaPct  = parseInt(document.querySelector('input[oninput*="vva"]')?.value || 68) / 100;
+
+  const result = {sym, tf1d: null, tf4h: null};
+
+  var _tfs = [['tf1d','1d',60],['tf4h','4h',60]];
+  for (var _tfi=0; _tfi<_tfs.length; _tfi++) { var tfKey=_tfs[_tfi][0], interval=_tfs[_tfi][1], minBars=_tfs[_tfi][2];
+    const df = await fetchOHLCV(sym, interval, 500);
+    if (!df || df.length < minBars) continue;
+
+    const segs = getPivotSegments(df, pivLen);
+    if (!segs.length) continue;
+
+    const last     = segs[segs.length - 1];
+    const devSlice = df.slice(last.endI);
+    const vp = devSlice.length >= 15
+      ? calcVP(devSlice, nRows, vaPct)
+      : calcVP(last.slice, nRows, vaPct);
+    if (!vp) continue;
+
+    const close = df[df.length - 1].close;
+    const sig   = classifySignal(close, vp, devSlice);
+    const conf  = calcConfluences(df, vp, close, sig);
+    const bt    = runBacktest(df, segs, pivLen, nRows, vaPct);
+
+    result[tfKey] = {df, vp, sig, conf, close, segs, bt};
+  }
+
+  return result;
+}
+
+// ════════════════════════════════════════════════════════════
+// MAIN SCAN LOOP
+// ════════════════════════════════════════════════════════════
+async function runScan() {
+  const loader = document.getElementById('loader');
+  const liveTxt = document.getElementById('live-txt');
+
+  loader.style.display = 'flex';
+  liveTxt.textContent = 'Escaneando mercado...';
+
+  allResults = [];
+
+  try {
+
+    const promises = SYMBOLS.map(async (sym) => {
+      try {
+        return await scanSymbol(sym);
+      } catch (e) {
+        console.error(sym, e);
+        return null;
+      }
+    });
+
+    const scanned = await Promise.all(promises);
+
+    const rows = [];
+
+    scanned.forEach((res) => {
+      if (!res) return;
+
+      [
+        ['1D', 'tf1d'],
+        ['4H', 'tf4h']
+      ].forEach(([tf, key]) => {
+
+        const td = res[key];
+        if (!td) return;
+
+        rows.push({
+          sym: res.sym + '/USDT',
+
+          tf,
+
+          close: td.close,
+
+          poc: td.vp.pocPrice,
+          vah: td.vp.vahPrice,
+          val: td.vp.valPrice,
+
+          sig: td.sig.signal,
+          label: td.sig.label,
+
+          stop: td.sig.stop,
+          t1: td.sig.target,
+          t2: td.sig.target2,
+
+          rr: td.sig.rr,
+
+          score: td.conf.score,
+
+          bt: td.bt,
+
+          _td: td,
+          _res: res
+        });
+
+      });
+    });
+
+    allResults = rows;
+
+    loader.style.display = 'none';
+
+    if (!rows.length) {
+      document.getElementById('content').innerHTML = `
+        <div class="empty-state">
+          No se pudieron cargar datos de mercado.
+        </div>
+      `;
+      return;
+    }
+
+    renderPanel();
+
+    liveTxt.textContent =
+      rows.length + ' señales activas';
+
+  } catch (err) {
+
+    console.error(err);
+
+    loader.style.display = 'none';
+
+    document.getElementById('content').innerHTML = `
+      <div class="err-banner">
+        Error cargando mercado: ${err.message}
+      </div>
+    `;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════════════════
+function openModal(symFull, tf) {
+  const row = allResults.find(r => r.sym === symFull && r.tf === tf);
+  if (!row) return;
+  activeModal = row;
+  const td = row._td;
+  const {vp, sig, conf, close} = td;
+  const isL = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
+  const tC  = isL ? 'var(--emerald)' : 'var(--ember)';
+  const t2C = isL ? '#34d399' : '#f87171';
+
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('m-sym').textContent  = `${symFull} · ${tf}`;
+  document.getElementById('m-meta').textContent =
+    const od = calcOpScore(row);
+  document.getElementById('m-meta').textContent =
+    'Volume Profile Pivot Anchored · ' + new Date().toLocaleString('es-ES') +
+    ' · Score ' + conf.score + '/10 · OP ' + od.op + '/100 · IC ' + (od.ic ?? '—') + ' · Kelly ' + (od.kelly ?? '—');
+
+  // Candle pill
+  const candleMap = {
+    verde_oscuro: ['#15803d','Verde oscuro — compra institucional'],
+    rojo_oscuro:  ['#991b1b','Rojo oscuro — venta institucional'],
+    aqua:         ['#22d3ee','Aqua — alcista sin convicción'],
+    ambar:        ['#f59e0b','Ámbar — agotamiento vendedor'],
+    verde_normal: ['#0d9488','Verde — volumen normal'],
+    rojo_normal:  ['#ef4444','Rojo — volumen normal'],
+  };
+  const [cc, cd] = candleMap[conf.candle] || ['#6B7280','—'];
+  document.getElementById('m-candle').innerHTML =
+    `<div class="candle-pill"><div class="candle-sq" style="background:${cc};width:11px;height:11px;border-radius:3px;flex-shrink:0"></div>`+
+    `<span style="font-size:11px;color:${cc}">${cd}</span></div>`;
+
+  document.getElementById('m-badge').innerHTML =
+    `<span class="badge ${bCls(sig.signal)}" style="font-size:12px">${sigTxt(sig.signal)}</span>`;
+
+  document.getElementById('m-levels').innerHTML = `
+    <div class="lv-table">
+      <div class="lv-row"><span class="lv-lbl">Precio</span><span class="lv-val">${f(close)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--ember)">PoC</span><span class="lv-val" style="color:var(--ember)">${f(vp.pocPrice)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--sapphire)">VAH</span><span class="lv-val" style="color:var(--sapphire)">${f(vp.vahPrice)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--sapphire)">VAL</span><span class="lv-val" style="color:var(--sapphire)">${f(vp.valPrice)}</span></div>
+      <div class="lv-row lv-stop"><span class="lv-lbl" style="color:var(--amber)">◆ Stop</span><span class="lv-val" style="color:var(--amber)">${f(sig.stop)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:${tC}">Target 1</span><span class="lv-val" style="color:${tC}">${f(sig.target)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:${t2C}">Target 2</span><span class="lv-val" style="color:${t2C}">${f(sig.target2)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--violet)">Invalidación</span><span class="lv-val" style="color:var(--violet)">${f(sig.invalidation)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--violet)">R : R</span><span class="lv-val" style="color:var(--violet)">${sig.rr ? '1:'+sig.rr : '—'}</span></div>
+      <div class="lv-row"><span class="lv-lbl">RSI(14)</span><span class="lv-val">${conf.rsi ?? '—'}</span></div>
+      <div class="lv-row"><span class="lv-lbl">EMA21</span><span class="lv-val">${f(conf.ema21)}</span></div>
+      <div class="lv-row"><span class="lv-lbl">EMA50</span><span class="lv-val">${f(conf.ema50)}</span></div>
+      <div class="lv-row"><span class="lv-lbl">Vol / SMA89</span><span class="lv-val">×${conf.volRatio}</span></div>
+    </div>`;
+
+  document.getElementById('m-scenario').textContent = sig.scenario;
+
+  const sc = conf.score, scc = scC(sc);
+  const slbl = sc>=8?'Setup de primer nivel':sc>=6?'Alta calidad':sc>=4?'Señal sólida':'Señal débil';
+  document.getElementById('m-score-big').textContent = sc;
+  document.getElementById('m-score-big').style.color = scc;
+  document.getElementById('m-pin').style.left = `${sc*10}%`;
+  document.getElementById('m-score-lbl').textContent = slbl;
+  document.getElementById('m-confs').innerHTML =
+    conf.items.map(c => `<div class="conf-item ${c.str}"><span class="conf-ico">${c.icon}</span><span>${c.label}</span></div>`).join('');
+
+  setTimeout(() => { buildChart(td); renderBacktest(td.bt); }, 30);
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function renderBtStat(val, lbl, color) {
+  return '<div class="bt-stat"><div class="bt-stat-val" style="color:' + color + '">' + val + '</div><div class="bt-stat-lbl">' + lbl + '</div></div>';
+}
+
+function renderICKellyStats(bt) {
+  const ic = calcIC(bt);
+  const kelly = calcKelly(bt);
+  if (ic === null && kelly === null) return '';
+  const icC = ic > 0.3 ? 'var(--emerald)' : ic > 0.1 ? 'var(--cyan)' : ic > 0 ? 'var(--amber)' : 'var(--ember)';
+  const kC  = kelly > 0.2 ? 'var(--emerald)' : kelly > 0 ? 'var(--cyan)' : 'var(--ember)';
+  let html = '';
+  if (ic !== null) html += '<div class="bt-stat" title="IC Spearman: correlacion score-resultado. >0.1=util, >0.3=bueno"><div class="bt-stat-val" style="color:' + icC + '">' + (ic>0?'+':'') + ic + '</div><div class="bt-stat-lbl">IC</div></div>';
+  if (kelly !== null) html += '<div class="bt-stat" title="Kelly f*: edge estadistico. >0=ventaja. Half-Kelly para sizing"><div class="bt-stat-val" style="color:' + kC + '">' + (kelly>0?'+':'') + kelly + '</div><div class="bt-stat-lbl">KELLY</div></div>';
+  return html;
+}
+
+function renderICKellyVerdict(bt) {
+  const ic = calcIC(bt);
+  const kelly = calcKelly(bt);
+  const icTxt = ic !== null
+    ? ic > 0.3  ? 'IC ' + ic + ' (score muy predictivo aqui)'
+    : ic > 0.1  ? 'IC ' + ic + ' (score moderadamente predictivo)'
+    : ic > 0    ? 'IC ' + ic + ' (score debilmente predictivo)'
+    : 'IC ' + ic + ' (score no predice resultados aqui)'
+    : 'IC sin datos';
+  const kTxt = kelly !== null
+    ? kelly > 0.2 ? 'Kelly ' + kelly + ' (edge solido — half-Kelly: ' + (kelly/2*100).toFixed(0) + '% del capital)'
+    : kelly > 0   ? 'Kelly ' + kelly + ' (edge pequeno — posicion reducida)'
+    : 'Kelly ' + kelly + ' (sin edge — no operar con tamano normal)'
+    : 'Kelly sin datos';
+  return icTxt + ' · ' + kTxt;
+}
+
+function renderBacktest(bt) {
+  const el = document.getElementById('m-bt-body');
+  if (!bt || bt.total < 3) {
+    el.innerHTML = '<span style="color:var(--dim);font-family:var(--f-mono);font-size:11px">Datos insuficientes (mín. 3 ops). Pocos pivotes en el histórico disponible.</span>';
+    return;
+  }
+
+  const wrC  = bt.wr>=60?'var(--emerald)':bt.wr>=45?'var(--amber)':'var(--ember)';
+  const pnlC = bt.avgPnl>0?'var(--emerald)':'var(--ember)';
+  const expC = bt.expectancy>0?'var(--emerald)':'var(--ember)';
+  const totC = bt.totalPnl>0?'var(--emerald)':'var(--ember)';
+  const p55C = bt.avgPnl5050>0?'var(--emerald)':'var(--ember)';
+
+  // T2 recommendation
+  const t2Rec = bt.t2HitRate !== null
+    ? bt.t2HitRate >= 60
+      ? `✅ Sí — T2 se alcanza el <strong>${bt.t2HitRate}%</strong> de las veces. Muy recomendable mantener 50% hasta T2.`
+      : bt.t2HitRate >= 35
+      ? `⚡ Con cautela — T2 se alcanza el <strong>${bt.t2HitRate}%</strong> de las veces. 50/50 puede funcionar.`
+      : `❌ No — T2 solo se alcanza el <strong>${bt.t2HitRate}%</strong> de las veces. Mejor cerrar todo en T1.`
+    : '— Sin datos suficientes de T2';
+
+  // 50/50 vs all-in-T1 comparison
+  const stratComp = bt.avgPnl5050 !== null
+    ? bt.avgPnl5050 > bt.avgPnl
+      ? `Estrategia 50/50 es <strong style="color:var(--emerald)">mejor</strong>: ${bt.avgPnl5050>0?'+':''}${bt.avgPnl5050}% medio vs ${bt.avgPnl>0?'+':''}${bt.avgPnl}% cerrando todo en T1.`
+      : `Estrategia 50/50 es <strong style="color:var(--ember)">peor</strong>: ${bt.avgPnl5050>0?'+':''}${bt.avgPnl5050}% medio vs ${bt.avgPnl>0?'+':''}${bt.avgPnl}% cerrando todo en T1. Con T2 bajo, mejor cerrar todo en T1.`
+    : '';
+
+  // Temporal consistency
+  const tempC = bt.recentWR !== null && bt.oldWR !== null
+    ? bt.recentWR - bt.oldWR
+    : null;
+  const tempTxt = tempC !== null
+    ? tempC >= 5
+      ? `✅ Mejorando: WR reciente <strong style="color:var(--emerald)">${bt.recentWR}%</strong> vs histórico ${bt.oldWR}%`
+      : tempC <= -10
+      ? `❌ Deteriorando: WR reciente <strong style="color:var(--ember)">${bt.recentWR}%</strong> vs histórico ${bt.oldWR}%. El sistema puede estar perdiendo eficacia.`
+      : `⚡ Estable: WR reciente ${bt.recentWR}% vs histórico ${bt.oldWR}%`
+    : '—';
+
+  const verdict = bt.expectancy > 0.3 && bt.wr >= 50
+    ? '✅ Sistema con esperanza positiva — históricamente rentable en este activo.'
+    : bt.expectancy > 0 && bt.wr >= 45
+    ? '⚡ Sistema marginalmente positivo — operar con confluencias adicionales.'
+    : bt.wr < 40
+    ? '❌ Win rate bajo — este activo ha respondido mal al sistema en el pasado.'
+    : '⚠️ Rendimiento mixto — no hay evidencia clara de ventaja estadística.';
+
+  // By signal type breakdown
+  const bySigHtml = Object.entries(bt.bySig||{})
+    .filter(([,v])=>v.total>=2)
+    .sort(([,a],[,b])=>b.total-a.total)
+    .map(([sig,v]) => {
+      const swr = Math.round(v.wins/v.total*100);
+      const swrC = swr>=60?'var(--emerald)':swr>=45?'var(--amber)':'var(--ember)';
+      const spnl = +(v.pnl/v.total).toFixed(1);
+      const spnlC = spnl>0?'var(--emerald)':'var(--ember)';
+      const sLabel = sig.replace('RANGE_','R.');
+      const sColor = sig.includes('LONG')?'var(--emerald)':sig.includes('SHORT')?'var(--ember)':'var(--amber)';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--ink2);border-radius:6px;margin-bottom:3px;font-family:var(--f-mono);font-size:10px">'
+        + '<span style="color:' + sColor + ';width:60px;font-weight:600">' + sLabel + '</span>'
+        + '<span style="color:var(--dim);width:24px">' + v.total + 'op</span>'
+        + '<div style="flex:1;height:14px;background:var(--ink);border-radius:2px;overflow:hidden;position:relative">'
+        + '<div style="height:100%;width:' + swr + '%;background:' + swrC + ';opacity:.7"></div>'
+        + '<span style="position:absolute;left:5px;top:50%;transform:translateY(-50%);font-size:9px;color:white;font-weight:700">' + swr + '% WR</span>'
+        + '</div>'
+        + '<span style="color:' + spnlC + ';width:44px;text-align:right;font-weight:600">' + (spnl>0?'+':'') + spnl + '%</span>'
+        + '</div>';
+    }).join('');
+
+  // Score correlation bars
+  const byScoreHtml = Object.entries(bt.byScore||{})
+    .sort(([a],[b])=>a-b).filter(([,v])=>v.total>=1)
+    .map(([bucket,data]) => {
+      const bwr = Math.round(data.wins/data.total*100);
+      const bC  = bwr>=60?'var(--emerald)':bwr>=45?'var(--amber)':'var(--ember)';
+      const bPnl = +(data.pnl/data.total).toFixed(1);
+      const bPC  = bPnl>0?'var(--emerald)':'var(--ember)';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+        + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);width:32px;text-align:right">' + bucket + '-' + (+bucket+2) + '</div>'
+        + '<div style="flex:1;height:16px;background:var(--ink);border-radius:2px;overflow:hidden;position:relative">'
+        + '<div style="height:100%;width:' + bwr + '%;background:' + bC + ';opacity:.7;border-radius:2px"></div>'
+        + '<span style="position:absolute;left:5px;top:50%;transform:translateY(-50%);font-size:9px;color:white;font-weight:700">' + bwr + '%</span>'
+        + '</div>'
+        + '<div style="font-family:var(--f-mono);font-size:9px;color:' + bPC + ';width:40px">' + (bPnl>0?'+':'') + bPnl + '%</div>'
+        + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);width:22px">' + data.total + 'op</div>'
+        + '</div>';
+    }).join('');
+
+  const corrC = (bt.scoreCorrPct||0)>=20?'var(--emerald)':(bt.scoreCorrPct||0)>=8?'var(--cyan)':(bt.scoreCorrPct||0)>=-5?'var(--amber)':'var(--ember)';
+
+  // Trades table
+  // Build trades table using string concatenation (no nested backticks)
+  function renderTradeRow(t) {
+    const pC   = t.pnlPct>0  ? 'var(--emerald)' : 'var(--ember)';
+    const p5C  = t.pnl50_50>0? 'var(--emerald)' : 'var(--ember)';
+    const scC2 = t.score>=6  ? 'var(--emerald)' : t.score>=4 ? 'var(--amber)' : 'var(--ember)';
+    const winC = t.outcome==='win' ? 'var(--emerald)' : 'var(--ember)';
+    const t2Txt= t.outcome==='win' && t.target2
+      ? (t.t2Hit ? '✅ ' + f(t.target2,4) : '❌ no') : '—';
+    return '<div style="display:grid;grid-template-columns:64px 44px 80px 80px 78px 42px 50px 52px 60px;gap:3px;padding:6px 8px;border-radius:6px;background:var(--ink2);border-left:3px solid ' + winC + ';margin-bottom:3px;font-family:var(--f-mono);font-size:10px;align-items:center">'
+      + '<span style="color:var(--sub)">' + t.date + '</span>'
+      + '<span style="color:' + scC2 + ';font-weight:700">' + t.score + '</span>'
+      + '<span>' + f(t.entry,4) + '</span>'
+      + '<span style="color:var(--poc)">' + f(t.target,4) + '</span>'
+      + '<span style="color:' + winC + ';font-weight:600">' + (t.exitPrice ? f(t.exitPrice,4) : '—') + '</span>'
+      + '<span style="color:var(--violet)">1:' + t.rr + '</span>'
+      + '<span style="color:' + pC + ';font-weight:700">' + (t.pnlPct>0?'+':'') + t.pnlPct + '%</span>'
+      + '<span style="color:' + p5C + ';font-size:9px">' + (t.pnl50_50>0?'+':'') + t.pnl50_50 + '%</span>'
+      + '<span style="font-size:9px;color:' + (t.t2Hit?'var(--emerald)':'var(--dim)') + '">' + t2Txt + '</span>'
+      + '</div>';
+  }
+
+  let tradesHtml = '';
+  if (bt.list && bt.list.length) {
+    tradesHtml = '<div style="margin-top:4px">'
+      + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:6px;text-transform:uppercase">Últimas ' + bt.list.length + ' ops · WIN=alcanzó T1(PoC) · LOSS=tocó stop</div>'
+      + '<div style="display:grid;grid-template-columns:64px 44px 80px 80px 78px 42px 50px 52px 60px;gap:3px;padding:4px 8px;font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px">'
+      + '<span>Fecha</span><span>Sc</span><span>Entrada</span><span>T1/PoC</span><span>Salida</span><span>R:R</span><span>PnL%</span><span>50/50</span><span>T2✓</span>'
+      + '</div>'
+      + bt.list.slice().reverse().map(renderTradeRow).join('')
+      + '<div style="margin-top:6px;padding:7px 10px;background:var(--ink2);border-radius:7px;font-size:10px;color:var(--dim);font-family:var(--f-mono);line-height:1.7">'
+      + 'Columna 50/50 = PnL si cierras 50% en T1 y 50% corre hasta T2 (o stop). '
+      + 'T2✓ = precio llegó a VAH/VAL tras pasar PoC. '
+      + 'Max retroceso en ganadores: ' + (bt.avgDrawdownWin ?? '—') + '% · '
+      + 'Resolución media: ' + (bt.avgBarsToRes ?? '—') + ' barras'
+      + '</div>'
+      + '</div>';
+  }
+
+  el.innerHTML = `
+    <!-- Main stats -->
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${wrC}">${bt.wr}%</div><div class="bt-stat-lbl">WIN RATE</div></div>
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${pnlC}">${bt.avgPnl>0?'+':''}${bt.avgPnl}%</div><div class="bt-stat-lbl">PnL/OP (T1)</div></div>
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${p55C}">${bt.avgPnl5050>0?'+':''}${bt.avgPnl5050}%</div><div class="bt-stat-lbl">PnL/OP (50/50)</div></div>
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${totC}">${bt.totalPnl>0?'+':''}${bt.totalPnl}%</div><div class="bt-stat-lbl">PnL TOTAL</div></div>
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${expC}">${bt.expectancy>0?'+':''}${bt.expectancy}</div><div class="bt-stat-lbl">ESPERANZA</div></div>
+      <div class="bt-stat"><div class="bt-stat-val">${bt.total}</div><div class="bt-stat-lbl">OPS</div></div>
+      <div class="bt-stat"><div class="bt-stat-val"><span style="color:var(--emerald)">${bt.wins}W</span>/<span style="color:var(--ember)">${bt.losses}L</span></div><div class="bt-stat-lbl">W/L</div></div>
+      <div class="bt-stat"><div class="bt-stat-val">1:${bt.avgRR}</div><div class="bt-stat-lbl">R:R MEDIO</div></div>
+      ${renderICKellyStats(bt)}
+      ${bt.t2HitRate!==null ? renderBtStat(bt.t2HitRate+'%', 'HIT T2', bt.t2HitRate>=60?'var(--emerald)':bt.t2HitRate>=35?'var(--amber)':'var(--ember)') : ''}
+      ${bt.avgBarsToRes!==null ? renderBtStat(bt.avgBarsToRes, 'BARRAS/OP', 'var(--text)') : ''}
+      ${bt.avgDrawdownWin!==null ? renderBtStat(bt.avgDrawdownWin+'%', 'MAX RETR. WIN', 'var(--amber)') : ''}
+    </div>
+
+    <!-- Verdict -->
+    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;font-size:12px;color:var(--sub);border-left:3px solid ${expC};line-height:1.7;margin-bottom:10px">
+      ${verdict}<br>
+      <span style="font-size:10px;color:var(--dim)">
+        PnL/op: <strong style="color:${pnlC}">${bt.avgPnl>0?'+':''}${bt.avgPnl}%</strong> ·
+        Acumulado: <strong style="color:${totC}">${bt.totalPnl>0?'+':''}${bt.totalPnl}%</strong> ·
+        R:R medio: <strong style="color:var(--violet)">1:${bt.avgRR}</strong>
+      </span><br>
+      <span style="font-size:10px;color:var(--dim)">
+        ${renderICKellyVerdict(bt)}
+      </span>
+    </div>
+
+    <!-- T2 recommendation -->
+    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;border-left:3px solid ${bt.t2HitRate>=60?'var(--emerald)':bt.t2HitRate>=35?'var(--amber)':'var(--ember)'};margin-bottom:10px">
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase">¿Mantener hasta T2?</div>
+      <div style="font-size:11px;color:var(--sub);line-height:1.6">${t2Rec}</div>
+      ${stratComp ? '<div style="font-size:10px;color:var(--dim);margin-top:4px">'+stratComp+'</div>' : ''}
+    </div>
+
+    <!-- Temporal consistency -->
+    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;border-left:3px solid ${tempC>=5?'var(--emerald)':tempC<=-10?'var(--ember)':'var(--amber)'};margin-bottom:10px">
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase">Consistencia temporal</div>
+      <div style="font-size:11px;color:var(--sub)">${tempTxt}</div>
+    </div>
+
+    <!-- By signal type -->
+    ${bySigHtml?`<div style="margin-bottom:10px">
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:6px;text-transform:uppercase">WR y PnL por tipo de señal</div>
+      ${bySigHtml}
+    </div>`:''}
+
+    <!-- Score correlation -->
+    ${byScoreHtml?`<div style="margin-bottom:10px;padding:10px 12px;background:var(--ink2);border-radius:9px;border-left:3px solid ${corrC}">
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:6px;text-transform:uppercase">¿Predice el score el resultado?</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:8px">
+        ${(bt.scoreCorrPct||0)>=20?`✅ Muy predictivo (+${bt.scoreCorrPct}pp): score≥6 gana ${bt.hiScoreWR}% vs score<6 gana ${bt.loScoreWR}%.`
+          :(bt.scoreCorrPct||0)>=8?`⚡ Cierta capacidad predictiva (+${bt.scoreCorrPct}pp). Alta calidad: ${bt.hiScoreWR}% vs baja: ${bt.loScoreWR}%.`
+          :(bt.scoreCorrPct||0)>=-5?`⚠️ Score apenas discrimina (${bt.scoreCorrPct||0}pp). Usar filtros adicionales.`
+          :`❌ Score no predice bien aquí (${bt.scoreCorrPct||0}pp).`}
+      </div>
+      ${byScoreHtml}
+    </div>`:''}
+
+    ${tradesHtml}`;
+}
+
+// ════════════════════════════════════════════════════════════
+// CHART
+// ════════════════════════════════════════════════════════════
+function buildChart(td) {
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  const {df, vp, sig, segs} = td;
+  const bars = df.slice(-80);
+  const isL  = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
+
+  // Y axis range — fit to visible bars with 5% padding
+  const visibleHigh = Math.max.apply(null, bars.map(b => b.high));
+  const visibleLow  = Math.min.apply(null, bars.map(b => b.low));
+  const pad = (visibleHigh - visibleLow) * 0.05;
+  const yMin = visibleLow  - pad;
+  const yMax = visibleHigh + pad;
+
+  // SMA volume for candle coloring
+  const smaVol = df.slice(-89).reduce((a,b) => a+b.volume, 0) / Math.min(df.length, 89);
+
+  function cc(bar) {
+    const bull = bar.close >= bar.open;
+    const vr   = bar.volume / smaVol;
+    if (vr > 1.618) return bull ? '#15803d' : '#991b1b';
+    if (vr < 0.618) return bull ? '#22d3ee' : '#f59e0b';
+    return bull ? '#0d9488' : '#ef4444';
+  }
+  const colors = bars.map(cc);
+  const labels = bars.map(b => {
+    const d = new Date(b.ts);
+    return d.toLocaleDateString('es-ES', {day:'2-digit', month:'short'});
+  });
+
+  // Find bar index offset (df.length - 80)
+  const barOffset = df.length - bars.length;
+
+  chartInst = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [
+      { data: bars.map(b => [b.low, b.high]), backgroundColor: colors, barPercentage: .15, categoryPercentage: 1 },
+      { data: bars.map(b => [Math.min(b.open,b.close), Math.max(b.open,b.close)+Math.abs(b.open-b.close)*.001+b.close*.00005]),
+        backgroundColor: colors, barPercentage: .6, categoryPercentage: 1 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor:'#1C2030', borderColor:'#323848', borderWidth:1,
+          titleColor:'#E2E8F8', bodyColor:'#7B85A0',
+          titleFont:{family:'DM Mono'}, bodyFont:{family:'DM Mono', size:10} }
+      },
+      scales: {
+        x: { grid:{color:'#1C2030'}, ticks:{color:'#3D4560', font:{family:'DM Mono',size:8}, maxTicksLimit:10} },
+        y: {
+          position:'right', grid:{color:'#1C2030'},
+          ticks:{color:'#7B85A0', font:{family:'DM Mono',size:9}},
+          min: yMin, max: yMax  // ← fix: fit to actual price range
+        }
+      },
+      animation: { duration: 280 }
+    },
+    plugins: [{
+      id: 'levels',
+      afterDraw(chart) {
+        const {ctx, chartArea:{left,right,top,bottom}, scales:{y,x}} = chart;
+        const labelRight = right - 90; // lines stop here; VP bars draw right-to-left from right edge
+
+        // ── Historical VP PoC lines (one per segment visible in chart) ──
+        if (segs && segs.length > 1) {
+          const nRows = parseInt(document.querySelector('input[oninput*="vrows"]')?.value || 25);
+          const vaPct = parseInt(document.querySelector('input[oninput*="vva"]')?.value || 68) / 100;
+
+          segs.slice(-6).forEach((seg, si) => {
+            const segVP = calcVP(seg.slice, nRows, vaPct);
+            if (!segVP) return;
+            // X range for this segment
+            const xStart = Math.max(0, seg.startI - barOffset);
+            const xEnd   = Math.min(bars.length - 1, seg.endI - barOffset);
+            if (xEnd < 0 || xStart >= bars.length) return;
+
+            const x0 = x.getPixelForValue(xStart);
+            const x1 = x.getPixelForValue(xEnd);
+            const yPoc = y.getPixelForValue(segVP.pocPrice);
+            const yVah = y.getPixelForValue(segVP.vahPrice);
+            const yVal = y.getPixelForValue(segVP.valPrice);
+
+            // VA shaded area for this segment
+            if (yPoc > top && yPoc < bottom) {
+              ctx.save();
+              ctx.fillStyle = 'rgba(255,77,106,.04)';
+              ctx.fillRect(Math.max(left,x0), Math.max(top,yVah), Math.min(labelRight,x1)-Math.max(left,x0), Math.min(bottom,yVal)-Math.max(top,yVah));
+              ctx.restore();
+            }
+
+            // PoC line for this segment (dashed, dimmer)
+            if (yPoc > top && yPoc < bottom) {
+              ctx.save();
+              ctx.setLineDash([3,4]);
+              ctx.strokeStyle = 'rgba(255,77,106,.35)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(Math.max(left,x0), yPoc);
+              ctx.lineTo(Math.min(labelRight,x1), yPoc);
+              ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.restore();
+            }
+          });
+        }
+
+        // ── VP Histogram — drawn on canvas using real Y coordinates ──
+        // Each level bar starts at y.getPixelForValue(levelBottom) and
+        // extends leftward from the right edge of the chart area.
+        const vpBarMaxW = 80; // max bar width in pixels
+        const vpX = right - 2; // right anchor (inside chart, before Y axis)
+        const {nRows: vpN, priceLow: vpPl, priceStep: vpStep,
+               pocLevel: vpPoc, vahLevel: vpVah, valLevel: vpVal,
+               volByLevel: vpVols} = vp;
+        const vpMaxVol = Math.max.apply(null, Array.from(vpVols));
+
+        if (vpMaxVol > 0) {
+          for (let lvl = 0; lvl < vpN; lvl++) {
+            const levelBottom = vpPl + lvl * vpStep;
+            const levelTop    = vpPl + (lvl + 1) * vpStep;
+            const yBottom = y.getPixelForValue(levelBottom);
+            const yTop    = y.getPixelForValue(levelTop);
+            // Skip levels outside visible range
+            if (yBottom < top || yTop > bottom) continue;
+
+            const barW   = Math.max(1, (vpVols[lvl] / vpMaxVol) * vpBarMaxW);
+            const isPoc  = lvl === vpPoc;
+            const inVA   = lvl >= Math.min(vpVal, vpVah) && lvl <= Math.max(vpVal, vpVah);
+
+            ctx.save();
+            ctx.fillStyle = isPoc
+              ? 'rgba(255,77,106,.85)'
+              : inVA
+              ? 'rgba(255,181,71,.55)'
+              : 'rgba(75,142,255,.22)';
+            ctx.fillRect(
+              vpX - barW,
+              Math.min(yBottom, yTop),
+              barW,
+              Math.abs(yBottom - yTop) || 1
+            );
+            ctx.restore();
+          }
+        }
+
+        // ── Current developing profile levels ──
+        const usedY = [];
+        const LABEL_H = 14;
+
+        const draw = (price, color, dash, lbl) => {
+          if (!price) return;
+          const yp = y.getPixelForValue(price);
+          if (yp < top || yp > bottom) return;
+
+          ctx.save();
+          ctx.setLineDash(dash);
+          ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.globalAlpha = .9;
+          ctx.beginPath(); ctx.moveTo(left, yp); ctx.lineTo(labelRight, yp); ctx.stroke();
+          ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+          // Stagger label to avoid overlap
+          let labelY = yp - 4;
+          for (const used of usedY) {
+            if (Math.abs(labelY - used) < LABEL_H) labelY = used - LABEL_H;
+          }
+          usedY.push(labelY);
+
+          ctx.font = 'bold 9px DM Mono';
+          const tw = ctx.measureText(lbl).width;
+          const px = labelRight - tw - 6;
+          ctx.fillStyle = 'rgba(10,12,16,.9)';
+          ctx.beginPath();
+          ctx.rect(px-3, labelY-9, tw+8, 12);
+          ctx.fill();
+          ctx.fillStyle = color;
+          ctx.fillText(lbl, px, labelY);
+          ctx.restore();
+        };
+
+        // VA fill for current profile
+        const y1 = y.getPixelForValue(vp.vahPrice), y2 = y.getPixelForValue(vp.valPrice);
+        if (y1 < bottom && y2 > top) {
+          ctx.save(); ctx.fillStyle = 'rgba(75,142,255,.06)';
+          ctx.fillRect(left, Math.max(top,y1), labelRight-left, Math.min(bottom,y2)-Math.max(top,y1));
+          ctx.restore();
+        }
+
+        draw(vp.pocPrice, '#FF4D6A', [],    `PoC  ${f(vp.pocPrice,4)}`);
+        draw(vp.vahPrice, '#4B8EFF', [5,3], `VAH  ${f(vp.vahPrice,4)}`);
+        draw(vp.valPrice, '#4B8EFF', [5,3], `VAL  ${f(vp.valPrice,4)}`);
+        draw(sig.stop,    '#FFB547', [3,3], `STOP ${f(sig.stop,4)}`);
+        draw(sig.target,  isL?'#00C896':'#FF4D6A', [3,3], `T1   ${f(sig.target,4)}`);
+        draw(sig.target2, isL?'#34d399':'#f87171', [2,4], `T2   ${f(sig.target2,4)}`);
+        draw(sig.invalidation, '#A78BFA', [2,4], `INV  ${f(sig.invalidation,4)}`);
+      }
+    }]
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// TELEGRAM
+// ════════════════════════════════════════════════════════════
+async function sendTelegram() {
+  if (!activeModal) return;
+  const token = document.getElementById('tg-token').value.trim();
+  const chatId = document.getElementById('tg-chat').value.trim();
+  if (!token || !chatId) { alert('Introduce el Bot Token y Chat ID en el sidebar'); return; }
+
+  const {sym, tf, _td} = activeModal;
+  const {vp, sig, conf, close} = _td;
+  const isL = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
+  const em = {LONG:'🟢',SHORT:'🔴',RANGE_LONG:'🔵',RANGE_SHORT:'🟠',NEUTRAL:'⚪'}[sig.signal] || '⚪';
+  const msg = `${em} <b>VP Scanner — ${sym}</b> [${tf}]\n📅 ${new Date().toLocaleString('es-ES')}\n\n<b>Señal:</b> ${sig.label}\n<b>Precio:</b> ${f(close)}\n\n📊 PoC: ${f(vp.pocPrice)}  VAH: ${f(vp.vahPrice)}  VAL: ${f(vp.valPrice)}\n\n🎯 Stop: ${f(sig.stop)}  T1: ${f(sig.target)}  T2: ${f(sig.target2)}\n   Inv: ${f(sig.invalidation)}  R:R: ${sig.rr?'1:'+sig.rr:'—'}  Score: ${conf.score}/10\n\n📋 <i>${sig.scenario}</i>`;
+
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({chat_id: chatId, text: msg, parse_mode:'HTML', disable_web_page_preview: true})
+    });
+    const d = await r.json();
+    alert(d.ok ? '✅ Alerta enviada correctamente' : '❌ Error: ' + (d.description || 'Token o Chat ID incorrecto'));
+  } catch { alert('❌ Error de red al enviar la alerta'); }
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+['fl','fs','frl','frs','fn'].forEach(id =>
+  document.getElementById(id)?.addEventListener('change', applyFilters)
+);
+
+
+// Start scan
+runScan().catch(function(err) {
+  console.error('runScan failed:', err);
+  var c = document.getElementById('content');
+  if (c) c.innerHTML = '<div style="padding:24px;color:#FF4D6A;font-size:13px;font-family:monospace"><b>Error: ' + (err ? err.message : 'unknown') + '</b></div>';
+});
+</script>
+</body>
+</html>
