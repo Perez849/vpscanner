@@ -798,6 +798,14 @@ function urlGate(sym, interval, limit) {
   const bar = interval === '4h' ? '4h' : '1d';
   return 'https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair='+sym+'_USDT&interval='+bar+'&limit='+Math.min(limit,1000);
 }
+function parseCryptoCompare(data) {
+  // { Data: { Data: [{time_sec, open, high, low, close, volumefrom(base)}] } }
+  const arr = data?.Data?.Data;
+  if (!Array.isArray(arr) || arr.length < 5) throw new Error('CC vacío');
+  return arr.filter(d => d.close > 0)
+    .map(d => ({ ts: d.time*1000, open: d.open, high: d.high, low: d.low, close: d.close, volume: d.volumefrom }));
+}
+
 function urlCryptoCompare(sym, interval, limit) {
   const endpoint = interval === '4h' ? 'histohour' : 'histoday';
   const agg      = interval === '4h' ? 4 : 1;
