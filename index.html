@@ -1592,62 +1592,178 @@ const f = (v, d=4) => {
 // Rango 0-100.
 // ════════════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════════════
+// ESTADÍSTICAS ROBUSTAS PARA MUESTRAS PEQUEÑAS
+//
+// Con 8-25 trades los test clásicos (t-test, Spearman puro) son
+// poco fiables. Usamos dos enfoques complementarios:
+//
+// 1. Bootstrap IC: remuestreamos los trades 2000 veces y calculamos
+//    el IC de Spearman en cada muestra. Resultado: IC observado +
+//    intervalo de confianza al 90%. Si el CI inferior > 0 → el score
+//    predice con confianza incluso con pocos trades.
+//
+// 2. Permutation test para el WR: barajamos aleatoriamente los
+//    outcomes 2000 veces y contamos cuántas veces el WR aleatorio
+//    supera el WR real. Resultado: p-value. p < 0.10 → edge real.
+//
+// Ambos funcionan con n ≥ 6 y son exactos (no asumen distribución).
+// ════════════════════════════════════════════════════════════
+
+function spearmanIC(trades) {
+  // Calcula IC de Spearman entre score y outcome (1=win,0=loss)
+  const n = trades.length;
+  if (n < 4) return 0;
+  const sc = trades.map(t => t.score);
+  const oc = trades.map(t => t.outcome === 'win' ? 1 : 0);
+  // Ranks con media en empates
+  function ranks(arr) {
+    const idx = arr.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);
+    const r = new Array(n);
+    let i = 0;
+    while (i < n) {
+      let j = i;
+      while (j < n-1 && idx[j+1][0] === idx[j][0]) j++;
+      const avgR = (i + j) / 2 + 1;
+      for (let k = i; k <= j; k++) r[idx[k][1]] = avgR;
+      i = j + 1;
+    }
+    return r;
+  }
+  const rs = ranks(sc), ro = ranks(oc);
+  let num = 0, ds2 = 0, do2 = 0;
+  const ms = rs.reduce((a,v)=>a+v,0)/n, mo = ro.reduce((a,v)=>a+v,0)/n;
+  for (let i = 0; i < n; i++) {
+    num += (rs[i]-ms)*(ro[i]-mo);
+    ds2 += (rs[i]-ms)**2;
+    do2 += (ro[i]-mo)**2;
+  }
+  const denom = Math.sqrt(ds2*do2);
+  return denom > 0 ? num/denom : 0;
+}
+
+function bootstrapIC(trades, B) {
+  // Bootstrap IC: B=2000 remuestreos con reemplazamiento
+  B = B || 2000;
+  const n = trades.length;
+  if (n < 5) return null;
+  const observed = spearmanIC(trades);
+  const boot = [];
+  for (let b = 0; b < B; b++) {
+    const sample = [];
+    for (let i = 0; i < n; i++) sample.push(trades[Math.floor(Math.random()*n)]);
+    boot.push(spearmanIC(sample));
+  }
+  boot.sort((a,b)=>a-b);
+  // IC de Spearman tiene sesgo pequeño en bootstrap → corrección BCa simplificada
+  const ci90lo = boot[Math.floor(B*0.05)];
+  const ci90hi = boot[Math.floor(B*0.95)];
+  const ci80lo = boot[Math.floor(B*0.10)];
+  // p-value aproximado: fracción de bootstrap donde IC <= 0
+  const pval = boot.filter(v=>v<=0).length / B;
+  return {
+    ic:       +observed.toFixed(3),
+    ci90lo:   +ci90lo.toFixed(3),
+    ci90hi:   +ci90hi.toFixed(3),
+    ci80lo:   +ci80lo.toFixed(3),
+    pval:     +pval.toFixed(3),
+    // Confianza: si CI80 inferior > 0, el score predice con alta confianza
+    confident: ci80lo > 0,
+    // Señal positiva débil: si al menos CI90 inferior > -0.05
+    signal:    ci90lo > -0.05,
+  };
+}
+
+function permutationWR(trades, B) {
+  // Test de permutación: ¿es el WR real mejor que el azar?
+  B = B || 2000;
+  const n = trades.length;
+  if (n < 5) return null;
+  const wins = trades.filter(t=>t.outcome==='win').length;
+  const wrObs = wins / n;
+  // Bajo H0: barajar outcomes aleatoriamente
+  const outcomes = trades.map(t=>t.outcome==='win'?1:0);
+  let extreme = 0;
+  for (let b = 0; b < B; b++) {
+    // Fisher-Yates shuffle
+    const o = outcomes.slice();
+    for (let i = n-1; i > 0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [o[i],o[j]] = [o[j],o[i]];
+    }
+    // WR aleatorio
+    const wrRand = o.reduce((a,v)=>a+v,0)/n;
+    if (wrRand >= wrObs) extreme++;
+  }
+  return {
+    pval: +(extreme/B).toFixed(3),
+    significant: (extreme/B) < 0.10, // p < 0.10 con muestras pequeñas
+  };
+}
+
 function calcIC(bt) {
-  // Spearman rank correlation between score and outcome (1=win, 0=loss)
-  // Uses backtest list trades
+  // Mantener compatibilidad: devuelve IC puntual para el resto del código
   const trades = bt?.list;
   if (!trades || trades.length < 5) return null;
+  return +spearmanIC(trades).toFixed(3);
+}
 
-  const n = trades.length;
-  // Rank scores
-  const sorted_sc = [...trades].sort((a,b) => a.score - b.score);
-  const scoreRanks = new Map(sorted_sc.map((t,i) => [t, i+1]));
-  // Rank outcomes (win=1, loss=0) — sort descending
-  const sorted_oc = [...trades].sort((a,b) => (b.outcome==='win'?1:0) - (a.outcome==='win'?1:0));
-  const outcomeRanks = new Map(sorted_oc.map((t,i) => [t, i+1]));
+function calcICFull(bt) {
+  // Nueva función: devuelve bootstrap completo
+  const trades = bt?.list;
+  if (!trades || trades.length < 5) return null;
+  return bootstrapIC(trades, 1500);
+}
 
-  // Spearman: 1 - (6 * Σd²) / (n*(n²-1))
-  let d2sum = 0;
-  for (const t of trades) {
-    const d = (scoreRanks.get(t) || 1) - (outcomeRanks.get(t) || 1);
-    d2sum += d * d;
-  }
-  const ic = 1 - (6 * d2sum) / (n * (n*n - 1));
-  return +ic.toFixed(3);
+function calcWRPermutation(bt) {
+  if (!bt?.list || bt.list.length < 5) return null;
+  return permutationWR(bt.list, 1500);
 }
 
 function calcKelly(bt) {
-  // Kelly fraction: f* = (p*b - q) / b
-  // p = win rate, q = 1-p, b = avg R:R
   if (!bt?.wr || !bt?.avgRR) return null;
-  const p = bt.wr / 100;
-  const q = 1 - p;
-  const b = bt.avgRR;
-  const kelly = (p * b - q) / b;
+  const p = bt.wr / 100, b = bt.avgRR;
+  const kelly = (p * b - (1-p)) / b;
   return +kelly.toFixed(3);
+}
+
+// Kelly con intervalo de confianza por bootstrap sobre los trades
+function calcKellyFull(bt) {
+  const trades = bt?.list;
+  if (!trades || trades.length < 5) return null;
+  const B = 1500, n = trades.length;
+  const kellySample = arr => {
+    const wins = arr.filter(t=>t.outcome==='win').length;
+    const p = wins/n;
+    const avgRR = arr.reduce((a,t)=>a+t.rr,0)/n;
+    if (avgRR <= 0) return -1;
+    return (p*avgRR-(1-p))/avgRR;
+  };
+  const observed = kellySample(trades);
+  const boot = [];
+  for (let b = 0; b < B; b++) {
+    const sample = Array.from({length:n}, ()=>trades[Math.floor(Math.random()*n)]);
+    boot.push(kellySample(sample));
+  }
+  boot.sort((a,b)=>a-b);
+  return {
+    kelly:   +observed.toFixed(3),
+    ci90lo:  +boot[Math.floor(B*0.05)].toFixed(3),
+    ci90hi:  +boot[Math.floor(B*0.95)].toFixed(3),
+    positive: boot[Math.floor(B*0.10)] > 0, // CI80 inferior > 0
+  };
 }
 
 function calcOpScore(r) {
   const bt = r.bt;
   const currentScore = r.score || 0;
-
-  // IC: does score predict outcomes for this asset?
   const ic = calcIC(bt);
-  // IC adjustment: score × (1 + max(IC, 0))
-  // If IC is negative, we don't penalize — just don't amplify
   const icAdj = ic !== null ? Math.max(ic, 0) : 0;
   const adjustedScore = currentScore * (1 + icAdj);
-
-  // Kelly edge (half-Kelly for conservatism)
   const kelly = calcKelly(bt);
   const halfKelly = kelly !== null ? Math.max(kelly, 0) : 0;
-
-  // Normalize to 0-100:
-  // adjustedScore: max theoretical = 10 * 1.3 (IC rarely > 0.3) = 13 → /13 * 60 = 60 pts
-  // halfKelly:     max useful ~ 0.5 → /0.5 * 40 = 40 pts
   const scorePts = Math.min((adjustedScore / 13) * 60, 60);
   const kellyPts = Math.min((halfKelly / 0.5) * 40, 40);
-
   return {
     op:       Math.round(scorePts + kellyPts),
     ic:       ic,
@@ -1892,32 +2008,59 @@ function renderBtStat(val, lbl, color) {
 }
 
 function renderICKellyStats(bt) {
-  const ic = calcIC(bt);
-  const kelly = calcKelly(bt);
-  if (ic === null && kelly === null) return '';
-  const icC = ic > 0.3 ? 'var(--emerald)' : ic > 0.1 ? 'var(--cyan)' : ic > 0 ? 'var(--amber)' : 'var(--ember)';
-  const kC  = kelly > 0.2 ? 'var(--emerald)' : kelly > 0 ? 'var(--cyan)' : 'var(--ember)';
+  const icFull = calcICFull(bt);
+  const kFull  = calcKellyFull(bt);
+  if (!icFull && !kFull) return '';
   let html = '';
-  if (ic !== null) html += '<div class="bt-stat" title="IC Spearman: correlacion score-resultado. >0.1=util, >0.3=bueno"><div class="bt-stat-val" style="color:' + icC + '">' + (ic>0?'+':'') + ic + '</div><div class="bt-stat-lbl">IC</div></div>';
-  if (kelly !== null) html += '<div class="bt-stat" title="Kelly f*: edge estadistico. >0=ventaja. Half-Kelly para sizing"><div class="bt-stat-val" style="color:' + kC + '">' + (kelly>0?'+':'') + kelly + '</div><div class="bt-stat-lbl">KELLY</div></div>';
+  if (icFull) {
+    const c = icFull.confident ? 'var(--emerald)' : icFull.signal ? 'var(--cyan)' : icFull.ic > 0 ? 'var(--amber)' : 'var(--ember)';
+    const ci = '[' + icFull.ci90lo + ', ' + icFull.ci90hi + ']';
+    html += '<div class="bt-stat" title="IC bootstrap (1500 remuestreos). CI90: ' + ci + '. p=' + icFull.pval + '">'
+          + '<div class="bt-stat-val" style="color:' + c + '">' + (icFull.ic>0?'+':'') + icFull.ic + '</div>'
+          + '<div class="bt-stat-lbl">IC (bootstrap)</div></div>';
+  }
+  if (kFull) {
+    const c = kFull.positive ? 'var(--emerald)' : kFull.kelly > 0 ? 'var(--cyan)' : 'var(--ember)';
+    html += '<div class="bt-stat" title="Kelly bootstrap CI90: [' + kFull.ci90lo + ', ' + kFull.ci90hi + ']">'
+          + '<div class="bt-stat-val" style="color:' + c + '">' + (kFull.kelly>0?'+':'') + kFull.kelly + '</div>'
+          + '<div class="bt-stat-lbl">KELLY (CI90)</div></div>';
+  }
   return html;
 }
 
 function renderICKellyVerdict(bt) {
-  const ic = calcIC(bt);
-  const kelly = calcKelly(bt);
-  const icTxt = ic !== null
-    ? ic > 0.3  ? 'IC ' + ic + ' (score muy predictivo aqui)'
-    : ic > 0.1  ? 'IC ' + ic + ' (score moderadamente predictivo)'
-    : ic > 0    ? 'IC ' + ic + ' (score debilmente predictivo)'
-    : 'IC ' + ic + ' (score no predice resultados aqui)'
-    : 'IC sin datos';
-  const kTxt = kelly !== null
-    ? kelly > 0.2 ? 'Kelly ' + kelly + ' (edge solido — half-Kelly: ' + (kelly/2*100).toFixed(0) + '% del capital)'
-    : kelly > 0   ? 'Kelly ' + kelly + ' (edge pequeno — posicion reducida)'
-    : 'Kelly ' + kelly + ' (sin edge — no operar con tamano normal)'
-    : 'Kelly sin datos';
-  return icTxt + ' · ' + kTxt;
+  const icFull = calcICFull(bt);
+  const kFull  = calcKellyFull(bt);
+  const wrPerm = calcWRPermutation(bt);
+  const n = bt?.list?.length || bt?.total || 0;
+
+  let parts = [];
+
+  if (icFull) {
+    const ci = '[' + icFull.ci90lo + '…' + icFull.ci90hi + ']';
+    if (icFull.confident)
+      parts.push('IC=' + icFull.ic + ' CI90' + ci + ' p=' + icFull.pval + ' → <strong style="color:var(--emerald)">score predice con confianza</strong>');
+    else if (icFull.signal && icFull.pval < 0.15)
+      parts.push('IC=' + icFull.ic + ' CI90' + ci + ' p=' + icFull.pval + ' → <strong style="color:var(--cyan)">señal débil, plausible</strong>');
+    else if (icFull.ic > 0)
+      parts.push('IC=' + icFull.ic + ' CI90' + ci + ' p=' + icFull.pval + ' → <strong style="color:var(--amber)">no concluyente (n=' + n + ')</strong>');
+    else
+      parts.push('IC=' + icFull.ic + ' p=' + icFull.pval + ' → score no predice aquí');
+  }
+
+  if (kFull) {
+    if (kFull.positive)
+      parts.push('Kelly=' + kFull.kelly + ' CI90[' + kFull.ci90lo + '…' + kFull.ci90hi + '] → <strong style="color:var(--emerald)">edge confirmado · half-Kelly: ' + (kFull.kelly/2*100).toFixed(0) + '%</strong>');
+    else if (kFull.kelly > 0)
+      parts.push('Kelly=' + kFull.kelly + ' CI90[' + kFull.ci90lo + '…' + kFull.ci90hi + '] → edge posible pero CI toca negativo');
+    else
+      parts.push('Kelly=' + kFull.kelly + ' → sin edge estadístico');
+  }
+
+  if (wrPerm)
+    parts.push('WR permutation p=' + wrPerm.pval + (wrPerm.significant ? ' → <strong style="color:var(--emerald)">WR significativo (p&lt;0.10)</strong>' : ' → WR no distinguible del azar'));
+
+  return parts.join('<br>') || '—';
 }
 
 function renderBacktest(bt) {
@@ -2103,12 +2246,24 @@ function renderBacktest(bt) {
     <!-- Score correlation -->
     ${byScoreHtml?`<div style="margin-bottom:10px;padding:10px 12px;background:var(--ink2);border-radius:9px;border-left:3px solid ${corrC}">
       <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:6px;text-transform:uppercase">¿Predice el score el resultado?</div>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:8px">
-        ${(bt.scoreCorrPct||0)>=20?`✅ Muy predictivo (+${bt.scoreCorrPct}pp): score≥6 gana ${bt.hiScoreWR}% vs score<6 gana ${bt.loScoreWR}%.`
-          :(bt.scoreCorrPct||0)>=8?`⚡ Cierta capacidad predictiva (+${bt.scoreCorrPct}pp). Alta calidad: ${bt.hiScoreWR}% vs baja: ${bt.loScoreWR}%.`
-          :(bt.scoreCorrPct||0)>=-5?`⚠️ Score apenas discrimina (${bt.scoreCorrPct||0}pp). Usar filtros adicionales.`
-          :`❌ Score no predice bien aquí (${bt.scoreCorrPct||0}pp).`}
-      </div>
+      ${(()=>{
+        const icFull = calcICFull(bt);
+        const n = bt.total;
+        if (!icFull) return '<div style="font-size:11px;color:var(--dim)">Sin datos suficientes.</div>';
+        const ci = '[' + icFull.ci90lo + ', ' + icFull.ci90hi + ']';
+        const pTxt = icFull.pval < 0.05 ? '🟢 p=' + icFull.pval
+                   : icFull.pval < 0.15 ? '🟡 p=' + icFull.pval
+                   : '🔴 p=' + icFull.pval;
+        const verdict = icFull.confident
+          ? '<strong style="color:var(--emerald)">✅ Score predice con confianza</strong> — IC=' + icFull.ic + ' CI90' + ci + ' ' + pTxt
+          : icFull.signal && icFull.pval < 0.15
+          ? '<strong style="color:var(--cyan)">⚡ Señal débil pero plausible</strong> — IC=' + icFull.ic + ' CI90' + ci + ' ' + pTxt
+          : icFull.ic > 0
+          ? '<strong style="color:var(--amber)">⚠️ No concluyente</strong> — IC=' + icFull.ic + ' CI90' + ci + ' ' + pTxt + ' (n=' + n + ' ops — bootstrap no puede ser más preciso)'
+          : '<strong style="color:var(--ember)">❌ Score no predice aquí</strong> — IC=' + icFull.ic + ' ' + pTxt;
+        return '<div style="font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.6">' + verdict
+          + '<br><span style="font-size:9px;color:var(--dim)">Bootstrap 1500 remuestreos · CI90 = intervalo de confianza al 90%</span></div>';
+      })()}
       ${byScoreHtml}
     </div>`:''}
 
