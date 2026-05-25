@@ -589,7 +589,7 @@ canvas { width: 100% !important; height: 100% !important; }
       <div class="loader-ring"></div>
       <div>
         <div class="loader-text">CARGANDO DATOS</div>
-        <div class="loader-sym" id="loader-sym">Conectando con Binance...</div>
+        <div class="loader-sym" id="loader-sym">Probando Binance · Gate.io · Bybit...</div>
       </div>
     </div>
   </div>
@@ -669,13 +669,17 @@ let activeModal = null;
 let chartInst = null;
 
 // ════════════════════════════════════════════════════════════
-// MULTI-SOURCE FETCH — Binance direct → OKX direct → Bybit direct
-//                       → Binance via corsproxy.io → Bybit via corsproxy.io
+// MULTI-SOURCE FETCH
 //
-// Binance/OKX/Bybit permiten CORS en sus APIs públicas de mercado,
-// pero a veces bloquean por geolocalización o rate-limit.
-// El proxy CORS (corsproxy.io) actúa como relay cuando falla la
-// conexión directa — necesario en GitHub Pages y algunos ISPs EU.
+// Estrategia: para cada símbolo lanzamos en paralelo las 3 mejores
+// fuentes (Binance directo, Gate.io directo, Bybit directo) con un
+// timeout corto (5 s). Gana la primera que responde con datos válidos.
+// Si todas fallan (geobloqueo EU, CORS, etc.) caemos en una segunda
+// ronda con proxy CORS (corsproxy.io) sobre Binance + Bybit.
+//
+// Esto elimina los ~27 s de espera secuencial anterior:
+//   - si Binance responde → ~500 ms
+//   - si todas directas fallan → proxy tarda ~2-4 s extra (no 27 s)
 // ════════════════════════════════════════════════════════════
 
 function makeAbortSignal(ms) {
@@ -684,111 +688,112 @@ function makeAbortSignal(ms) {
   return c.signal;
 }
 
-// Interval mapping per exchange
 const INTERVALS = {
-  '1d': { binance:'1d',  okx:'1D',   bybit:'D'   },
-  '4h': { binance:'4h',  okx:'4H',   bybit:'240' },
+  '1d': { binance:'1d', okx:'1D', bybit:'D'   },
+  '4h': { binance:'4h', okx:'4H', bybit:'240' },
 };
 
-// CORS proxy prefix — usado como último recurso
 const PROXY = 'https://corsproxy.io/?url=';
 
-async function fetchURL(url, timeout) {
-  const r = await fetch(url, { signal: makeAbortSignal(timeout || 9000) });
+// Fetch + parse JSON con timeout
+async function fetchJSON(url, ms) {
+  const r = await fetch(url, { signal: makeAbortSignal(ms) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
 
-// ── Binance direct ──
-async function fetchBinance(sym, interval, limit) {
-  const url = 'https://api.binance.com/api/v3/klines?symbol=' + sym + 'USDT&interval=' + interval + '&limit=' + limit;
-  const data = await fetchURL(url, 9000);
-  if (!Array.isArray(data) || !data.length) throw new Error('Binance empty');
-  return data.map(function(d) {
-    return { ts: d[0], open: +d[1], high: +d[2], low: +d[3], close: +d[4], volume: +d[5] };
-  });
+// Parsers por exchange
+function parseBinance(data) {
+  if (!Array.isArray(data) || data.length < 10) throw new Error('Binance vacío');
+  return data.map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
+}
+function parseOKX(data) {
+  if (!data.data || data.data.length < 10) throw new Error('OKX vacío');
+  return data.data.slice().reverse().map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
+}
+function parseBybit(data) {
+  if (!data.result?.list || data.result.list.length < 10) throw new Error('Bybit vacío');
+  return data.result.list.slice().reverse().map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
+}
+function parseGate(data) {
+  if (!Array.isArray(data) || data.length < 10) throw new Error('Gate vacío');
+  // [ts_sec, vol, close, high, low, open, ...]
+  return data.map(d => ({ ts:+d[0]*1000, open:+d[5], high:+d[3], low:+d[4], close:+d[2], volume:+d[1] }));
 }
 
-// ── Binance vía proxy CORS (GitHub Pages fallback) ──
-async function fetchBinanceProxy(sym, interval, limit) {
-  const target = encodeURIComponent('https://api.binance.com/api/v3/klines?symbol=' + sym + 'USDT&interval=' + interval + '&limit=' + limit);
-  const data = await fetchURL(PROXY + target, 12000);
-  if (!Array.isArray(data) || !data.length) throw new Error('BinanceProxy empty');
-  return data.map(function(d) {
-    return { ts: d[0], open: +d[1], high: +d[2], low: +d[3], close: +d[4], volume: +d[5] };
-  });
+// Builders de URL
+function urlBinance(sym, interval, limit) {
+  return 'https://api.binance.com/api/v3/klines?symbol='+sym+'USDT&interval='+interval+'&limit='+limit;
 }
-
-// ── OKX direct ──
-async function fetchOKX(sym, interval, limit) {
-  const bar = (INTERVALS[interval] || INTERVALS['1d']).okx;
-  const url = 'https://www.okx.com/api/v5/market/candles?instId=' + sym + '-USDT&bar=' + bar + '&limit=' + limit;
-  const data = await fetchURL(url, 9000);
-  if (!data.data || !data.data.length) throw new Error('OKX empty');
-  // OKX: [ts,open,high,low,close,vol,volCcy] newest-first → reverse
-  return data.data.reverse().map(function(d) {
-    return { ts: +d[0], open: +d[1], high: +d[2], low: +d[3], close: +d[4], volume: +d[5] };
-  });
+function urlOKX(sym, interval, limit) {
+  const bar = (INTERVALS[interval]||INTERVALS['1d']).okx;
+  return 'https://www.okx.com/api/v5/market/candles?instId='+sym+'-USDT&bar='+bar+'&limit='+limit;
 }
-
-// ── Bybit direct ──
-async function fetchBybit(sym, interval, limit) {
-  const bar = (INTERVALS[interval] || INTERVALS['1d']).bybit;
-  const url = 'https://api.bybit.com/v5/market/kline?category=spot&symbol=' + sym + 'USDT&interval=' + bar + '&limit=' + limit;
-  const data = await fetchURL(url, 9000);
-  if (!data.result || !data.result.list || !data.result.list.length) throw new Error('Bybit empty');
-  // Bybit: newest-first → reverse
-  return data.result.list.reverse().map(function(d) {
-    return { ts: +d[0], open: +d[1], high: +d[2], low: +d[3], close: +d[4], volume: +d[5] };
-  });
+function urlBybit(sym, interval, limit) {
+  const bar = (INTERVALS[interval]||INTERVALS['1d']).bybit;
+  return 'https://api.bybit.com/v5/market/kline?category=spot&symbol='+sym+'USDT&interval='+bar+'&limit='+limit;
 }
-
-// ── Bybit vía proxy CORS ──
-async function fetchBybitProxy(sym, interval, limit) {
-  const bar = (INTERVALS[interval] || INTERVALS['1d']).bybit;
-  const target = encodeURIComponent('https://api.bybit.com/v5/market/kline?category=spot&symbol=' + sym + 'USDT&interval=' + bar + '&limit=' + limit);
-  const data = await fetchURL(PROXY + target, 12000);
-  if (!data.result || !data.result.list || !data.result.list.length) throw new Error('BybitProxy empty');
-  return data.result.list.reverse().map(function(d) {
-    return { ts: +d[0], open: +d[1], high: +d[2], low: +d[3], close: +d[4], volume: +d[5] };
-  });
-}
-
-// ── Gate.io direct (sin restricciones CORS, buen fallback global) ──
-async function fetchGate(sym, interval, limit) {
+function urlGate(sym, interval, limit) {
   const bar = interval === '4h' ? '4h' : '1d';
-  const url = 'https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=' + sym + '_USDT&interval=' + bar + '&limit=' + limit;
-  const data = await fetchURL(url, 9000);
-  if (!Array.isArray(data) || !data.length) throw new Error('Gate empty');
-  // Gate: [ts_sec, vol, close, high, low, open, ...] oldest-first
-  return data.map(function(d) {
-    return { ts: +d[0]*1000, open: +d[5], high: +d[3], low: +d[4], close: +d[2], volume: +d[1] };
+  return 'https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair='+sym+'_USDT&interval='+bar+'&limit='+limit;
+}
+
+// Intenta una URL y devuelve datos parseados o lanza error
+async function tryFetch(url, parser, ms) {
+  const raw = await fetchJSON(url, ms);
+  return parser(raw);
+}
+
+// ── race: lanza promesas en paralelo, devuelve la primera que cumple el predicado ──
+function raceValid(promises) {
+  return new Promise(function(resolve, reject) {
+    let pending = promises.length;
+    if (pending === 0) { reject(new Error('Sin candidatos')); return; }
+    promises.forEach(function(p) {
+      Promise.resolve(p).then(function(data) {
+        if (data && data.length >= 10) resolve(data);
+        else { pending--; if (pending === 0) reject(new Error('Todos vacíos')); }
+      }).catch(function() {
+        pending--; if (pending === 0) reject(new Error('Todos fallaron'));
+      });
+    });
   });
 }
+
+// Caché para no repetir peticiones fallidas al proxy en cada símbolo
+let _proxyWorked = null; // null=desconocido, true/false
 
 async function fetchOHLCV(sym, interval, limit) {
   limit = limit || 500;
-  const fetchers = [
-    { name: 'Binance',      fn: function() { return fetchBinance(sym, interval, limit); } },
-    { name: 'OKX',          fn: function() { return fetchOKX(sym, interval, limit); } },
-    { name: 'Bybit',        fn: function() { return fetchBybit(sym, interval, limit); } },
-    { name: 'Gate.io',      fn: function() { return fetchGate(sym, interval, limit); } },
-    { name: 'Binance(px)',  fn: function() { return fetchBinanceProxy(sym, interval, limit); } },
-    { name: 'Bybit(px)',    fn: function() { return fetchBybitProxy(sym, interval, limit); } },
-  ];
 
-  for (let i = 0; i < fetchers.length; i++) {
-    try {
-      const data = await fetchers[i].fn();
-      if (data && data.length >= 10) {
-        if (i > 0) console.log(sym + ' [' + interval + '] via ' + fetchers[i].name);
-        return data;
-      }
-    } catch(e) {
-      console.warn(sym + ' ' + fetchers[i].name + ' failed: ' + e.message);
-    }
+  // ── Ronda 1: directo en paralelo (5 s timeout) ──
+  const round1 = [
+    tryFetch(urlBinance(sym, interval, limit), parseBinance, 5000),
+    tryFetch(urlGate(sym,    interval, limit), parseGate,    5000),
+    tryFetch(urlBybit(sym,   interval, limit), parseBybit,   5000),
+    tryFetch(urlOKX(sym,     interval, limit), parseOKX,     5000),
+  ];
+  try {
+    const data = await raceValid(round1);
+    return data;
+  } catch(e) {
+    console.warn(sym + ' [' + interval + '] round1 failed — trying proxy');
   }
-  return null;
+
+  // ── Ronda 2: proxy CORS (10 s timeout) ──
+  const round2 = [
+    tryFetch(PROXY + encodeURIComponent(urlBinance(sym, interval, limit)), parseBinance, 10000),
+    tryFetch(PROXY + encodeURIComponent(urlBybit(sym,   interval, limit)), parseBybit,   10000),
+  ];
+  try {
+    const data = await raceValid(round2);
+    _proxyWorked = true;
+    console.log(sym + ' [' + interval + '] via proxy');
+    return data;
+  } catch(e) {
+    console.error(sym + ' [' + interval + '] ALL failed');
+    return null;
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1395,8 +1400,8 @@ async function runScan() {
         `Cargando... ${i+1}/${SYMBOLS.length} (${pct}%) · Binance · 1D + 4H`;
     }
 
-    // Binance has no meaningful rate limit for klines — tiny pause to avoid hammering
-    if (i < SYMBOLS.length - 1) await sleep(120);
+    // Tiny pause para no saturar — con parallel fetch ya no necesitamos más
+    if (i < SYMBOLS.length - 1) await sleep(60);
   }
 
   allResults = rows;
