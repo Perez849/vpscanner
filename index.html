@@ -695,44 +695,98 @@ const INTERVALS = {
 
 const PROXY = 'https://corsproxy.io/?url=';
 
-// ── Límites reales por exchange ──
-// Binance: 1000 max, Bybit: 1000 max, OKX: 300 max, Gate: 1000 max
-// Para el backtest necesitamos ≥500 barras → pedimos 1000 siempre y recortamos
-
 async function fetchJSON(url, ms) {
   const r = await fetch(url, { signal: makeAbortSignal(ms) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
 
-// ── Parsers ──
+// ════════════════════════════════════════════════════════════
+// PARSERS — auditados contra documentación oficial de cada exchange
+// Todos normalizan a { ts(ms), open, high, low, close, volume(base) }
+// ════════════════════════════════════════════════════════════
+
 function parseBinance(data) {
-  if (!Array.isArray(data) || data.length < 10) throw new Error('Binance vacío');
+  // [open_time_ms, open, high, low, close, base_vol, close_time, quote_vol, ...]
+  if (!Array.isArray(data) || data.length < 5) throw new Error('Binance vacío');
   return data.map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
 }
+
 function parseOKX(data) {
-  if (!data.data || data.data.length < 10) throw new Error('OKX vacío');
-  return data.data.slice().reverse().map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
-}
-function parseBybit(data) {
-  if (!data.result?.list || data.result.list.length < 10) throw new Error('Bybit vacío');
-  return data.result.list.slice().reverse().map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
-}
-function parseGate(data) {
-  if (!Array.isArray(data) || data.length < 10) throw new Error('Gate vacío');
-  return data.map(d => ({ ts:+d[0]*1000, open:+d[5], high:+d[3], low:+d[4], close:+d[2], volume:+d[1] }));
+  // newest-first: [ts_ms, open, high, low, close, base_vol, quote_vol, ...]
+  if (!data.data || data.data.length < 5) throw new Error('OKX vacío');
+  return data.data.slice().reverse()
+    .map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
 }
 
-// ── URL builders — siempre pedimos 1000 (máximo real de cada exchange) ──
+function parseBybit(data) {
+  // newest-first: [startTime_ms, open, high, low, close, base_vol, turnover]
+  if (!data.result?.list || data.result.list.length < 5) throw new Error('Bybit vacío');
+  return data.result.list.slice().reverse()
+    .map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
+}
+
+function parseGate(data) {
+  // oldest-first: [t_sec, quote_vol, close, high, low, open]
+  // NOTE: d[1] es volumen en USDT (quote), no base. Para VP usamos quote_vol / close ≈ base_vol
+  if (!Array.isArray(data) || data.length < 5) throw new Error('Gate vacío');
+  return data.map(d => {
+    const close = +d[2], quoteVol = +d[1];
+    return { ts:+d[0]*1000, open:+d[5], high:+d[3], low:+d[4], close, volume: close > 0 ? quoteVol/close : 0 };
+  });
+}
+
+function parseKraken(data) {
+  // oldest-first: [time_sec, open, high, low, close, vwap, base_vol, count]
+  if (data.error && data.error.length) throw new Error('Kraken: ' + data.error[0]);
+  const key = Object.keys(data.result || {}).find(k => k !== 'last');
+  if (!key) throw new Error('Kraken sin key');
+  const arr = data.result[key];
+  if (!Array.isArray(arr) || arr.length < 5) throw new Error('Kraken vacío');
+  return arr.map(d => ({ ts:+d[0]*1000, open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[6] }));
+}
+
+function parseCoinbase(data) {
+  // newest-first: [time_sec, low, high, open, close, base_vol]
+  if (!Array.isArray(data) || data.length < 5) throw new Error('Coinbase vacío');
+  return data.slice().reverse()
+    .map(d => ({ ts:+d[0]*1000, open:+d[3], high:+d[2], low:+d[1], close:+d[4], volume:+d[5] }));
+}
+
+function parseYahoo(data) {
+  const result = data?.chart?.result?.[0];
+  if (!result) throw new Error('Yahoo sin result');
+  const ts = result.timestamp;
+  const q  = result.indicators?.quote?.[0];
+  if (!ts || !q || ts.length < 5) throw new Error('Yahoo vacío');
+  const bars = [];
+  for (let i = 0; i < ts.length; i++) {
+    const o = q.open[i], h = q.high[i], l = q.low[i], c = q.close[i], v = q.volume[i];
+    if (o == null || h == null || l == null || c == null || c === 0) continue;
+    bars.push({ ts: ts[i]*1000, open:+o, high:+h, low:+l, close:+c, volume:+(v||0) });
+  }
+  if (bars.length < 5) throw new Error('Yahoo insuficiente');
+  return bars;
+}
+
+// Yahoo solo para 1D — historia completa (BTC desde 2014), CORS ok desde EU
+// Para 4H NO usamos Yahoo: resampling 1h→4h no replica exactamente TradingView
+function urlYahoo(sym, interval) {
+  if (interval !== '1d') return null; // solo 1D
+  return 'https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'-USD?interval=1d&range=max&includePrePost=false';
+}
+
+// ════════════════════════════════════════════════════════════
+// URL BUILDERS
+// ════════════════════════════════════════════════════════════
+
 function urlBinance(sym, interval, limit) {
-  // Binance.com + Binance.us como alias — mismo formato, .us acepta desde EU
   return 'https://api.binance.com/api/v3/klines?symbol='+sym+'USDT&interval='+interval+'&limit='+Math.min(limit,1000);
 }
 function urlBinanceUS(sym, interval, limit) {
   return 'https://api.binance.us/api/v3/klines?symbol='+sym+'USDT&interval='+interval+'&limit='+Math.min(limit,1000);
 }
-function urlOKX(sym, interval, limit) {
-  // OKX max 300 por llamada — pedimos 300, suficiente para señal actual aunque no ideal para BT
+function urlOKX(sym, interval) {
   const bar = (INTERVALS[interval]||INTERVALS['1d']).okx;
   return 'https://www.okx.com/api/v5/market/candles?instId='+sym+'-USDT&bar='+bar+'&limit=300';
 }
@@ -742,111 +796,136 @@ function urlBybit(sym, interval, limit) {
 }
 function urlGate(sym, interval, limit) {
   const bar = interval === '4h' ? '4h' : '1d';
-  // Gate max 1000 por llamada
   return 'https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair='+sym+'_USDT&interval='+bar+'&limit='+Math.min(limit,1000);
 }
+function urlCryptoCompare(sym, interval, limit) {
+  const endpoint = interval === '4h' ? 'histohour' : 'histoday';
+  const agg      = interval === '4h' ? 4 : 1;
+  return 'https://min-api.cryptocompare.com/data/v2/'+endpoint+'?fsym='+sym+'&tsym=USDT&aggregate='+agg+'&limit='+Math.min(limit,2000);
+}
+// Kraken: pares especiales, 720 velas/llamada
+const KRAKEN_SYM = {
+  BTC:'XBTUSD', ETH:'ETHUSD', LTC:'LTCUSD', XRP:'XRPUSD',
+  ADA:'ADAUSD', DOT:'DOTUSD', LINK:'LINKUSD', SOL:'SOLUSD',
+  ATOM:'ATOMUSD', UNI:'UNIUSD', ALGO:'ALGOUSD', BCH:'BCHUSD',
+  AVAX:'AVAXUSD', NEAR:'NEARUSD', AAVE:'AAVEUSD',
+};
+function urlKraken(sym, interval) {
+  const pair = KRAKEN_SYM[sym];
+  if (!pair) return null;
+  const gran = interval === '4h' ? 240 : 1440;
+  return 'https://api.kraken.com/0/public/OHLC?pair='+pair+'&interval='+gran;
+}
+// Coinbase Exchange: 300 velas/llamada, sin restricciones geo
+const COINBASE_SYMS = new Set(['BTC','ETH','SOL','ADA','LTC','BCH','LINK','DOT','ATOM','UNI','ALGO','XLM','XRP','AVAX','NEAR','AAVE','MATIC','DOGE']);
+function urlCoinbase(sym, interval) {
+  if (!COINBASE_SYMS.has(sym)) return null;
+  const gran = interval === '4h' ? 14400 : 86400;
+  return 'https://api.exchange.coinbase.com/products/'+sym+'-USD/candles?granularity='+gran+'&limit=300';
+}
+
+// ════════════════════════════════════════════════════════════
+// FETCH ENGINE
+// ════════════════════════════════════════════════════════════
 
 async function tryFetch(url, parser, ms) {
+  if (!url) throw new Error('URL nula');
   const raw = await fetchJSON(url, ms);
   return parser(raw);
 }
 
-// ── race: devuelve la primera promesa que resuelve con ≥ minLen barras ──
+// Devuelve la primera promesa con ≥ minLen velas válidas
 function raceValid(promises, minLen) {
-  minLen = minLen || 10;
+  minLen = minLen || 5;
   return new Promise(function(resolve, reject) {
     let pending = promises.length;
-    if (pending === 0) { reject(new Error('Sin candidatos')); return; }
+    if (!pending) { reject(new Error('Sin candidatos')); return; }
     let resolved = false;
     promises.forEach(function(p) {
       Promise.resolve(p).then(function(data) {
         if (!resolved && data && data.length >= minLen) {
-          resolved = true;
-          resolve(data);
-        } else {
-          pending--;
-          if (pending === 0 && !resolved) reject(new Error('Todos vacíos o insuficientes'));
+          resolved = true; resolve(data);
+        } else if (!resolved) {
+          if (--pending === 0) reject(new Error('Todos insuficientes'));
         }
       }).catch(function() {
-        pending--;
-        if (pending === 0 && !resolved) reject(new Error('Todos fallaron'));
+        if (!resolved && --pending === 0) reject(new Error('Todos fallaron'));
       });
     });
   });
 }
 
-// ── Gate.io paginado: concatena hasta `target` barras haciendo múltiples llamadas ──
-async function fetchGatePaginated(sym, interval, target) {
-  const bar = interval === '4h' ? '4h' : '1d';
-  const pageSize = 1000;
-  const msPerBar = interval === '4h' ? 4*3600*1000 : 86400*1000;
-  let all = [];
-  let from = null; // timestamp de inicio en segundos
+// dedup + sort por timestamp ascendente
+function mergeSort(arr) {
+  const seen = new Set();
+  return arr.filter(b => { if (seen.has(b.ts)) return false; seen.add(b.ts); return true; })
+            .sort((a, b) => a.ts - b.ts);
+}
 
-  for (let page = 0; page < 3 && all.length < target; page++) {
-    let url = 'https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair='+sym+'_USDT&interval='+bar+'&limit='+pageSize;
-    if (from !== null) url += '&from=' + from;
-    try {
-      const raw = await fetchJSON(url, 8000);
-      if (!Array.isArray(raw) || raw.length === 0) break;
-      const parsed = raw.map(d => ({ ts:+d[0]*1000, open:+d[5], high:+d[3], low:+d[4], close:+d[2], volume:+d[1] }));
-      // Gate devuelve oldest-first; para siguiente página pedimos desde antes del primer ts
-      from = Math.floor(parsed[0].ts/1000) - pageSize * Math.floor(msPerBar/1000);
-      all = parsed.concat(all); // prepend older data
-      if (raw.length < pageSize) break; // no hay más historia
-    } catch(e) { break; }
-  }
-  if (all.length < 10) throw new Error('Gate paginado vacío');
-  return all;
+// Amplía hacia atrás con Bybit paginando desde el ts más antiguo
+async function extendBybit(sym, interval, existing) {
+  if (!existing || !existing.length) return existing;
+  const bar = (INTERVALS[interval]||INTERVALS['1d']).bybit;
+  const url = 'https://api.bybit.com/v5/market/kline?category=spot&symbol='+sym+'USDT&interval='+bar+'&limit=1000&end='+(existing[0].ts - 1);
+  try {
+    const extra = await tryFetch(url, parseBybit, 8000);
+    if (extra && extra.length > 10) return mergeSort(extra.concat(existing));
+  } catch(e) { /* silencioso */ }
+  return existing;
 }
 
 async function fetchOHLCV(sym, interval, limit) {
   limit = limit || 1000;
+  const T = 7000;
 
-  // ── Ronda 1: Binance.com + Binance.us + Bybit + Gate en paralelo (6s) ──
-  // Binance.us acepta desde EU/ES sin geobloqueo para los pares principales
+  // ── Ronda 1: 8 fuentes en paralelo ──
+  // CryptoCompare y Kraken/Coinbase no tienen geobloqueo — garantizan BTC/ETH
+  const krakenUrl   = urlKraken(sym, interval);
+  const coinbaseUrl = urlCoinbase(sym, interval);
+  const yahooUrl    = urlYahoo(sym, interval); // null si interval=4h
   const round1 = [
-    tryFetch(urlBinance(sym,   interval, limit), parseBinance, 6000),
-    tryFetch(urlBinanceUS(sym, interval, limit), parseBinance, 6000),
-    tryFetch(urlBybit(sym,     interval, limit), parseBybit,   6000),
-    tryFetch(urlGate(sym,      interval, limit), parseGate,    6000),
+    yahooUrl ? tryFetch(yahooUrl, parseYahoo, T) : Promise.reject('Yahoo solo 1D'),
+    tryFetch(urlCryptoCompare(sym, interval, limit), parseCryptoCompare, T),
+    tryFetch(urlBinance(sym,   interval, limit),     parseBinance,        T),
+    tryFetch(urlBinanceUS(sym, interval, limit),     parseBinance,        T),
+    tryFetch(urlBybit(sym,     interval, limit),     parseBybit,          T),
+    tryFetch(urlGate(sym,      interval, limit),     parseGate,           T),
+    krakenUrl   ? tryFetch(krakenUrl,   parseKraken,   T) : Promise.reject('no kraken'),
+    coinbaseUrl ? tryFetch(coinbaseUrl, parseCoinbase, T) : Promise.reject('no coinbase'),
+    tryFetch(urlOKX(sym, interval, limit), parseOKX, T),
   ];
+
+  let data = null;
   try {
-    // Exigimos mínimo 200 barras para que el backtest tenga sentido
-    const data = await raceValid(round1, 200);
-    return data;
+    data = await raceValid(round1, 50);
   } catch(e) {
-    console.warn(sym + ' [' + interval + '] round1 <200 bars or failed — trying OKX + paginated Gate + proxy');
+    console.warn(sym + ' [' + interval + '] ronda1 falló → proxy');
   }
 
-  // ── Ronda 1b: OKX directo (300 barras — suficiente para señal, no ideal BT) ──
-  // y Gate paginado para historia larga
-  const round1b = [
-    tryFetch(urlOKX(sym, interval, limit), parseOKX, 6000),
-    fetchGatePaginated(sym, interval, limit),
-  ];
-  try {
-    const data = await raceValid(round1b, 50);
-    console.log(sym + ' [' + interval + '] via OKX/GatePaged');
-    return data;
-  } catch(e) {
-    console.warn(sym + ' [' + interval + '] round1b failed — proxy');
+  // ── Ronda 2: proxy CORS (último recurso) ──
+  if (!data) {
+    const round2 = [
+      tryFetch(PROXY + encodeURIComponent(urlBinance(sym,   interval, limit)), parseBinance, 14000),
+      tryFetch(PROXY + encodeURIComponent(urlBinanceUS(sym, interval, limit)), parseBinance, 14000),
+      tryFetch(PROXY + encodeURIComponent(urlBybit(sym,     interval, limit)), parseBybit,   14000),
+      tryFetch(PROXY + encodeURIComponent(urlCryptoCompare(sym, interval, limit)), parseCryptoCompare, 14000),
+    ];
+    try {
+      data = await raceValid(round2, 50);
+      console.log(sym + ' [' + interval + '] vía proxy');
+    } catch(e) {
+      console.error(sym + ' [' + interval + '] SIN DATOS');
+      return null;
+    }
   }
 
-  // ── Ronda 2: proxy CORS sobre Binance + Bybit (12s) ──
-  const round2 = [
-    tryFetch(PROXY + encodeURIComponent(urlBinance(sym,   interval, limit)), parseBinance, 12000),
-    tryFetch(PROXY + encodeURIComponent(urlBinanceUS(sym, interval, limit)), parseBinance, 12000),
-    tryFetch(PROXY + encodeURIComponent(urlBybit(sym,     interval, limit)), parseBybit,   12000),
-  ];
-  try {
-    const data = await raceValid(round2, 50);
-    console.log(sym + ' [' + interval + '] via PROXY');
-    return data;
-  } catch(e) {
-    console.error(sym + ' [' + interval + '] ALL SOURCES FAILED');
-    return null;
+  // ── Extensión de histórico: si <700 velas, añade página anterior con Bybit ──
+  if (data && data.length < 700) {
+    data = await extendBybit(sym, interval, data);
   }
+
+  if (data) console.log(sym + ' [' + interval + '] ' + data.length + ' velas (' + new Date(data[0].ts).toLocaleDateString('es') + ' → hoy)');
+  return data;
 }
 
 // ════════════════════════════════════════════════════════════
