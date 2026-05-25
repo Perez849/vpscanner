@@ -1140,8 +1140,8 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     const sig = classifySignal(entryClose, vp, dfUpToEntry);
     if (sig.signal === 'NEUTRAL' || !sig.stop || !sig.target) continue;
     const rr = parseFloat(sig.rr);
-    if (!rr || rr < 0.5 || rr > 6) continue;
-    if (Math.abs(sig.target - entryClose) / entryClose < 0.01) continue;
+    if (!rr || rr < 0.3 || rr > 15) continue;
+    if (Math.abs(sig.target - entryClose) / entryClose < 0.005) continue;
 
     const conf  = calcConfluences(dfUpToEntry, vp, entryClose, sig);
     const score = conf.score;
@@ -1513,6 +1513,14 @@ async function runScan() {
     var _tfs2=[['1D','tf1d'],['4H','tf4h']];
     for (var _ti2=0;_ti2<_tfs2.length;_ti2++) { var tf=_tfs2[_ti2][0], key=_tfs2[_ti2][1];
       const td = res[key];
+      // Debug log para BTC y ETH — visible en consola
+      if (sym === 'BTC' || sym === 'ETH') {
+        if (!td) {
+          console.warn('[SCAN] ' + sym + ' ' + tf + ': sin datos (fetchOHLCV devolvió null o pocas barras)');
+        } else {
+          console.log('[SCAN] ' + sym + ' ' + tf + ': ' + (res[key]?.df?.length||0) + ' velas | sig=' + td.sig.signal + ' | score=' + td.conf.score + ' | rr=' + td.sig.rr + ' | t1=' + td.sig.target?.toFixed(2) + ' | close=' + td.close?.toFixed(2));
+        }
+      }
       if (!td) continue;
       rows.push({
         sym:`${sym}/USDT`, tf, close: td.close,
@@ -1672,13 +1680,14 @@ function getFiltered() {
     if (r.sig==='RANGE_LONG' && !frl) return false;
     if (r.sig==='RANGE_SHORT' && !frs) return false;
     if (r.sig==='NEUTRAL' && !fn) return false;
-    // Filter out signals where target distance is < 1% (not worth trading)
+    // Filter out signals where target distance is < 0.5% (demasiado cerca — no vale la pena)
+    // Nota: para BTC/ETH con precios altos el 1% era demasiado estricto
     if (r.t1 && r.close) {
       const targetDist = Math.abs(r.t1 - r.close) / r.close;
-      if (targetDist < 0.01) return false;
+      if (targetDist < 0.005) return false;
     }
-    // Filter out R:R < 0.5 or > 6 (unrealistic)
-    if (r.rr && (parseFloat(r.rr) < 0.5 || parseFloat(r.rr) > 6)) return false;
+    // R:R fuera de rango razonable — ampliamos máximo a 15 (BTC puede tener R:R altos)
+    if (r.rr && (parseFloat(r.rr) < 0.3 || parseFloat(r.rr) > 15)) return false;
     return true;
   });
 
