@@ -1681,8 +1681,7 @@ function openModal(symFull, tf) {
 
   document.getElementById('overlay').classList.add('open');
   document.getElementById('m-sym').textContent  = `${symFull} · ${tf}`;
-  document.getElementById('m-meta').textContent =
-    const od = calcOpScore(row);
+  const od = calcOpScore(row);
   document.getElementById('m-meta').textContent =
     'Volume Profile Pivot Anchored · ' + new Date().toLocaleString('es-ES') +
     ' · Score ' + conf.score + '/10 · OP ' + od.op + '/100 · IC ' + (od.ic ?? '—') + ' · Kelly ' + (od.kelly ?? '—');
