@@ -220,8 +220,143 @@ input[type=range] {
   color: var(--dim); margin-top: 4px;
 }
 
-/* ── Metrics ── */
-.metrics {
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE — sidebar colapsable, tabla → cards
+   ════════════════════════════════════════════════════════════ */
+
+/* Botón hamburguesa — solo móvil */
+.sb-toggle {
+  display: none;
+  position: fixed; bottom: 20px; right: 20px; z-index: 200;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--sapphire); border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(75,142,255,.4);
+  align-items: center; justify-content: center;
+  font-size: 18px; color: #fff;
+  transition: transform .2s;
+}
+.sb-toggle:active { transform: scale(.93); }
+
+@media (max-width: 768px) {
+
+  /* Mostrar botón hamburguesa */
+  .sb-toggle { display: flex; }
+
+  /* Sidebar: oculto por defecto, slide-in desde la izquierda */
+  .sb {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 150;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: 4px 0 32px rgba(0,0,0,.5);
+  }
+  .sb.open { transform: translateX(0); }
+
+  /* Overlay oscuro detrás del sidebar */
+  .sb-backdrop {
+    display: none;
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(2px);
+  }
+  .sb-backdrop.open { display: block; }
+
+  /* Main ocupa todo el ancho */
+  .main { width: 100%; overflow-x: hidden; }
+
+  /* Topbar compacto */
+  .topbar { padding: 10px 14px; }
+  .topbar-left h1 { font-size: 15px; }
+  .topbar-meta { display: none; }
+  .tf-pill { padding: 5px 10px; font-size: 9px; }
+
+  /* Content padding reducido */
+  .content { padding: 12px; }
+
+  /* Metrics: 2 columnas en móvil */
+  .metrics { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .mc { padding: 10px 12px; }
+  .mc-val { font-size: 24px; }
+  .mc:nth-child(5) { grid-column: span 2; } /* último centrado */
+
+  /* Tabla: ocultar versión desktop */
+  .tbl-wrap .tbl-head { display: none; }
+  .trow {
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--rule);
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+  /* Borde de señal a la izquierda */
+  .trow.sl  { border-left-color: var(--emerald); }
+  .trow.ss  { border-left-color: var(--ember); }
+  .trow.srl { border-left-color: var(--sapphire); }
+  .trow.srs { border-left-color: var(--amber); }
+  .trow::before { display: none; } /* quitar barra original */
+
+  /* Fila 1: símbolo + señal + precio */
+  .trow-mobile-top {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  /* Fila 2: stats compactos */
+  .trow-mobile-stats {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    font-family: var(--f-mono); font-size: 10px; color: var(--sub);
+  }
+  .trow-mobile-stats span { white-space: nowrap; }
+  .trow-mobile-stats b { color: var(--text); }
+
+  /* Ocultar columnas que no caben — mostrar solo las importantes */
+  .trow > *:not(.trow-mobile-top):not(.trow-mobile-stats) {
+    display: none !important;
+  }
+
+  /* Modal full-screen en móvil */
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .modal-body {
+    flex-direction: column !important;
+    gap: 12px;
+  }
+  .chart-wrap {
+    width: 100% !important;
+    height: 220px !important;
+    min-height: 220px !important;
+    flex-shrink: 0;
+  }
+  .detail-row {
+    flex-direction: column !important;
+    gap: 12px;
+  }
+  .panel { min-width: 0 !important; width: 100% !important; }
+  .modal-hdr { padding: 12px 14px !important; }
+  .modal-sym { font-size: 16px !important; }
+
+  /* Backtest stats: 2 columnas */
+  .bt-stats { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Texto más pequeño en stats */
+  .bt-stat-val { font-size: 18px !important; }
+}
+
+@media (max-width: 400px) {
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .mc-val { font-size: 20px; }
+  .tf-pill { padding: 4px 8px; }
+}
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
   margin-bottom: 18px;
 }
@@ -521,6 +656,8 @@ canvas { width: 100% !important; height: 100% !important; }
 </head>
 <body>
 <div class="shell">
+<div class="sb-backdrop" id="sb-backdrop" onclick="closeSidebar()"></div>
+<button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" aria-label="Menú">⚙️</button>
 
 <!-- ── SIDEBAR ── -->
 <aside class="sb">
@@ -1921,6 +2058,19 @@ function renderPanel() {
 
       html += `
       <div class="trow ${rowCls(r.sig)}" style="animation-delay:${i*.03}s" onclick="openModal('${r.sym}','${r.tf}')">
+        ${isMobile() ? `
+        <div class="trow-mobile-top">
+          <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')" style="font-size:15px">${r.sym}</button>
+          <span class="badge ${bCls(r.sig)}" style="font-size:9px">${sigTxt(r.sig)}</span>
+          <span style="font-family:var(--f-mono);font-size:12px;margin-left:auto">${f(r.close)}</span>
+        </div>
+        <div class="trow-mobile-stats">
+          <span>TF <b>${r.tf}</b></span>
+          <span>Score <b style="color:${scc}">${sc}/10</b></span>
+          <span>R:R <b>${r.rr?'1:'+r.rr:'—'}</b></span>
+          <span>WR <b style="color:${wrC}">${wrTxt}</b></span>
+          <span>OP <b style="color:${opc}">${op}</b></span>
+        </div>` : `
         <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')">${r.sym}</button>
         <span class="tf-chip">${r.tf}</span>
         <span class="n">${f(r.close)}</span>
@@ -1933,8 +2083,8 @@ function renderPanel() {
         <span class="n n-rr">${r.rr ? '1:'+r.rr : '—'}</span>
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${scc}">${sc}<span style="font-size:9px;color:var(--dim)">/10</span></span>
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${wrC};border-left:1px solid var(--rule);padding-left:8px">${wrTxt}</span>
-        <span style="font-family:var(--f-mono);font-size:10px;font-weight:600;color:${fiabC}" title="FIAB: diferencia de WR entre señales score≥6 vs <6">${fiabTxt}</span>
-        <span style="font-family:var(--f-mono);font-size:12px;font-weight:800;color:${opc}" title="OP=${op} | Score×(1+IC): ${opData.adjScore} | IC: ${opData.ic??'—'} | Kelly: ${opData.kelly??'—'}">${op}</span>
+        <span style="font-family:var(--f-mono);font-size:10px;font-weight:600;color:${fiabC}" title="FIAB">${fiabTxt}</span>
+        <span style="font-family:var(--f-mono);font-size:12px;font-weight:800;color:${opc}" title="OP=${op}">${op}</span>`}
       </div>`;
     });
   }
@@ -2534,6 +2684,41 @@ async function sendTelegram() {
   document.getElementById(id)?.addEventListener('change', applyFilters)
 );
 
+
+// ── Sidebar mobile toggle ──
+function toggleSidebar() {
+  const sb = document.querySelector('.sb');
+  const bd = document.getElementById('sb-backdrop');
+  sb.classList.toggle('open');
+  bd.classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelector('.sb').classList.remove('open');
+  document.getElementById('sb-backdrop').classList.remove('open');
+}
+// Cerrar sidebar al rotar pantalla
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) closeSidebar();
+});
+
+// ── Mobile card renderer para filas de tabla ──
+function isMobile() { return window.innerWidth <= 768; }
+
+function renderMobileRow(r, sigLabel, sigClass, priceStr, scoreStr, rrStr, pnlStr, wrStr) {
+  return `
+    <div class="trow-mobile-top">
+      <span class="sym-cell" style="font-size:15px">${r.sym}</span>
+      <span class="sig-badge ${sigClass}" style="font-size:9px;padding:2px 7px">${sigLabel}</span>
+      <span style="font-family:var(--f-mono);font-size:12px;margin-left:auto">${priceStr}</span>
+    </div>
+    <div class="trow-mobile-stats">
+      <span>TF <b>${r.tf}</b></span>
+      <span>Score <b style="color:${r.score>=7?'var(--emerald)':r.score>=4?'var(--amber)':'var(--ember)'}">${scoreStr}</b></span>
+      <span>R:R <b>${rrStr}</b></span>
+      <span>PnL/op <b style="color:${parseFloat(pnlStr)>=0?'var(--emerald)':'var(--ember)'}">${pnlStr}</b></span>
+      <span>WR <b>${wrStr}</b></span>
+    </div>`;
+}
 
 // Start scan
 runScan().catch(function(err) {
