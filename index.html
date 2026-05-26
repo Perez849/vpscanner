@@ -1371,10 +1371,19 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
   const wins    = trades.filter(t=>t.outcome==='win').length;
   const losses  = trades.filter(t=>t.outcome==='loss').length;
   const wr      = Math.round(wins/total*100);
-  const avgRR   = +(trades.reduce((a,t)=>a+t.rr,0)/total).toFixed(2);
+  const avgRR   = +(trades.reduce((a,t)=>a+t.rr,0)/total).toFixed(2);  // R:R señalado (para referencia)
   const avgPnl  = +(trades.reduce((a,t)=>a+t.pnlPct,0)/total).toFixed(2);
   const totalPnl= +(trades.reduce((a,t)=>a+t.pnlPct,0)).toFixed(2);
-  const expectancy = +((wr/100*avgRR-(1-wr/100))).toFixed(2);
+
+  // R:R realizado: ganancia media de wins / pérdida media de losses (valores absolutos)
+  const winTrades  = trades.filter(t=>t.outcome==='win');
+  const lossTrades = trades.filter(t=>t.outcome==='loss');
+  const avgWinPnl  = winTrades.length  ? +(winTrades.reduce((a,t)=>a+t.pnlPct,0)/winTrades.length).toFixed(2)   : 0;
+  const avgLossPnl = lossTrades.length ? +(Math.abs(lossTrades.reduce((a,t)=>a+t.pnlPct,0)/lossTrades.length)).toFixed(2) : 1;
+  const realizedRR = lossTrades.length && avgLossPnl > 0 ? +(avgWinPnl / avgLossPnl).toFixed(2) : null;
+
+  // Expectancy usando PnL real (no asume pérdida = 1R exacto)
+  const expectancy = +avgPnl.toFixed(2);  // ya es el PnL medio por operación en %
 
   // T2 hit rate: of wins, how many also reached T2?
   const winsWithT2 = trades.filter(t=>t.outcome==='win' && t.target2!==null);
@@ -1434,12 +1443,13 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
   const recentWR = recentTrades.length>0 ? Math.round(recentTrades.filter(t=>t.outcome==='win').length/recentTrades.length*100) : null;
 
   return {
-    total, wins, losses, wr, avgRR, avgPnl, totalPnl, expectancy,
+    total, wins, losses, wr, avgRR, realizedRR, avgWinPnl, avgLossPnl,
+    avgPnl, totalPnl, expectancy,
     t2HitRate, avgPnl5050, totalPnl5050,
     avgBarsToRes, avgDrawdownWin,
     hiScoreWR:hiWR, loScoreWR:loWR, scoreCorrPct, scoreCorrLabel, byScore,
     bySig, oldWR, recentWR,
-    list: trades.slice(-12)
+    list: trades  // todos los trades, no solo los últimos 12
   };
 }
 
@@ -1587,7 +1597,7 @@ function calcConfluences(df, vp, close, sig) {
   const vaw = (vah - val) / poc * 100;
   if (vaw < 5) { items.push({icon:'🗜️', label:`VA estrecho (${vaw.toFixed(1)}%) — consolidación previa`, str:'media'}); result.score += 1; }
 
-  result.score = Math.min(result.score, 10);
+  result.score = Math.max(0, Math.min(result.score, 10));
   return result;
 }
 
@@ -1748,14 +1758,16 @@ const f = (v, d=4) => {
 // ════════════════════════════════════════════════════════════
 
 function spearmanIC(trades) {
-  // Calcula IC de Spearman entre score y outcome (1=win,0=loss)
+  // Correlación de Spearman entre score y PnL (continuo, no binario win/loss)
+  // Usar PnL es más informativo que win/loss — un score 8 debería predecir
+  // no solo si gana sino cuánto gana
   const n = trades.length;
   if (n < 4) return 0;
   const sc = trades.map(t => t.score);
-  const oc = trades.map(t => t.outcome === 'win' ? 1 : 0);
-  // Ranks con media en empates
+  const oc = trades.map(t => t.pnlPct);  // PnL continuo, no binario
+
   function ranks(arr) {
-    const idx = arr.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);
+    const idx = arr.map((v,i) => [v,i]).sort((a,b) => a[0]-b[0]);
     const r = new Array(n);
     let i = 0;
     while (i < n) {
@@ -1767,16 +1779,18 @@ function spearmanIC(trades) {
     }
     return r;
   }
+
   const rs = ranks(sc), ro = ranks(oc);
+  const ms = rs.reduce((a,v) => a+v, 0) / n;
+  const mo = ro.reduce((a,v) => a+v, 0) / n;
   let num = 0, ds2 = 0, do2 = 0;
-  const ms = rs.reduce((a,v)=>a+v,0)/n, mo = ro.reduce((a,v)=>a+v,0)/n;
   for (let i = 0; i < n; i++) {
-    num += (rs[i]-ms)*(ro[i]-mo);
-    ds2 += (rs[i]-ms)**2;
-    do2 += (ro[i]-mo)**2;
+    num += (rs[i]-ms) * (ro[i]-mo);
+    ds2 += (rs[i]-ms) ** 2;
+    do2 += (ro[i]-mo) ** 2;
   }
-  const denom = Math.sqrt(ds2*do2);
-  return denom > 0 ? num/denom : 0;
+  const denom = Math.sqrt(ds2 * do2);
+  return denom > 0 ? num / denom : 0;
 }
 
 function bootstrapIC(trades, B) {
@@ -1812,16 +1826,26 @@ function bootstrapIC(trades, B) {
 }
 
 function binomialWRTest(trades) {
-  // Test exacto binomial: ¿es el WR significativamente mayor que 50%?
-  // H0: p = 0.5 (moneda justa). H1: p > 0.5 (one-tailed)
-  // P(X >= wins | n, p=0.5) usando distribución binomial exacta
-  // Funciona bien con n >= 5, es exacto (no asume normalidad)
   const n = trades.length;
   if (n < 5) return null;
   const wins = trades.filter(t => t.outcome === 'win').length;
   const wr = wins / n;
 
-  // P(X >= wins) = Σ C(n,k) * 0.5^n para k=wins..n
+  // Usar R:R realizado para el break-even — más preciso que el señalado
+  const wArr = trades.filter(t => t.outcome === 'win');
+  const lArr = trades.filter(t => t.outcome === 'loss');
+  let breakEvenWR = 0.5;
+  if (wArr.length && lArr.length) {
+    const avgW = wArr.reduce((a,t) => a + t.pnlPct, 0) / wArr.length;
+    const avgL = Math.abs(lArr.reduce((a,t) => a + t.pnlPct, 0) / lArr.length);
+    const realRR = avgL > 0 ? avgW / avgL : 1;
+    breakEvenWR = realRR > 0 ? 1 / (1 + realRR) : 0.5;
+  } else {
+    // Fallback a R:R señalado si no hay suficientes de cada tipo
+    const avgRR = trades.reduce((a,t) => a + t.rr, 0) / n;
+    breakEvenWR = avgRR > 0 ? 1 / (1 + avgRR) : 0.5;
+  }
+
   function binom(n, k) {
     if (k < 0 || k > n) return 0;
     if (k === 0 || k === n) return 1;
@@ -1830,33 +1854,28 @@ function binomialWRTest(trades) {
     for (let i = 0; i < k; i++) c = c * (n-i) / (i+1);
     return c;
   }
-  let pval = 0;
-  const p05n = Math.pow(0.5, n);
-  for (let k = wins; k <= n; k++) pval += binom(n, k) * p05n;
-  pval = Math.min(1, +pval.toFixed(4));
 
-  // También calculamos si el WR es significativamente distinto de la tasa base
-  // del sistema (que puede no ser 50% — depende del R:R)
-  // Si R:R = 2, el break-even WR es 33%. Si R:R = 1, es 50%.
-  const avgRR = trades.reduce((a,t) => a+t.rr, 0) / n;
-  const breakEvenWR = avgRR > 0 ? 1/(1+avgRR) : 0.5;
   let pvalVsBreakeven = 0;
-  if (Math.abs(breakEvenWR - 0.5) > 0.01) {
-    // P(X >= wins | n, p=breakEvenWR) — test contra break-even real
-    for (let k = wins; k <= n; k++) {
-      pvalVsBreakeven += binom(n,k) * Math.pow(breakEvenWR,k) * Math.pow(1-breakEvenWR,n-k);
-    }
-    pvalVsBreakeven = Math.min(1, +pvalVsBreakeven.toFixed(4));
-  } else {
-    pvalVsBreakeven = pval;
+  for (let k = wins; k <= n; k++) {
+    pvalVsBreakeven += binom(n,k) * Math.pow(breakEvenWR,k) * Math.pow(1-breakEvenWR,n-k);
   }
+  pvalVsBreakeven = Math.min(1, +pvalVsBreakeven.toFixed(4));
+
+  // PnL medio por mitad alta/baja de score
+  const sorted = trades.slice().sort((a,b) => a.score - b.score);
+  const q = Math.floor(n/2);
+  const loHalf = sorted.slice(0, q);
+  const hiHalf = sorted.slice(n-q);
+  const avgPnlLo = loHalf.length ? +(loHalf.reduce((a,t)=>a+t.pnlPct,0)/loHalf.length).toFixed(2) : null;
+  const avgPnlHi = hiHalf.length ? +(hiHalf.reduce((a,t)=>a+t.pnlPct,0)/hiHalf.length).toFixed(2) : null;
 
   return {
     wins, n, wr: +wr.toFixed(3),
-    pvalVs50:        pval,
-    pvalVsBreakeven: pvalVsBreakeven,
-    breakEvenWR:     +breakEvenWR.toFixed(2),
-    significant:     pvalVsBreakeven < 0.10,
+    pvalVsBreakeven,
+    breakEvenWR: +breakEvenWR.toFixed(2),
+    significant: pvalVsBreakeven < 0.10,
+    avgPnlLo, avgPnlHi,
+    pnlEdge: (avgPnlHi !== null && avgPnlLo !== null) ? +(avgPnlHi - avgPnlLo).toFixed(2) : null,
   };
 }
 
@@ -1867,36 +1886,40 @@ function calcIC(bt) {
   return +spearmanIC(trades).toFixed(3);
 }
 
+// Cache para evitar recalcular bootstrap (1500 iter) en cada re-render del panel
+// Key: bt.total + bt.wr + bt.avgPnl — suficiente para detectar si los datos cambiaron
+const _statsCache = new Map();
+function btCacheKey(bt) {
+  return bt ? (bt.total + '|' + bt.wr + '|' + bt.avgPnl + '|' + bt.totalPnl) : 'null';
+}
+
 function calcICFull(bt) {
-  // Nueva función: devuelve bootstrap completo
   const trades = bt?.list;
   if (!trades || trades.length < 5) return null;
-  return bootstrapIC(trades, 1500);
+  const key = 'ic|' + btCacheKey(bt);
+  if (_statsCache.has(key)) return _statsCache.get(key);
+  const result = bootstrapIC(trades, 1500);
+  _statsCache.set(key, result);
+  return result;
 }
 
-function calcWRPermutation(bt) {
-  if (!bt?.list || bt.list.length < 5) return null;
-  return binomialWRTest(bt.list);
-}
-
-function calcKelly(bt) {
-  if (!bt?.wr || !bt?.avgRR) return null;
-  const p = bt.wr / 100, b = bt.avgRR;
-  const kelly = (p * b - (1-p)) / b;
-  return +kelly.toFixed(3);
-}
-
-// Kelly con intervalo de confianza por bootstrap sobre los trades
 function calcKellyFull(bt) {
   const trades = bt?.list;
   if (!trades || trades.length < 5) return null;
+  const key = 'kf|' + btCacheKey(bt);
+  if (_statsCache.has(key)) return _statsCache.get(key);
   const B = 1500, n = trades.length;
   const kellySample = arr => {
-    const wins = arr.filter(t=>t.outcome==='win').length;
-    const p = wins/n;
-    const avgRR = arr.reduce((a,t)=>a+t.rr,0)/n;
-    if (avgRR <= 0) return -1;
-    return (p*avgRR-(1-p))/avgRR;
+    const m = arr.length;
+    const wArr = arr.filter(t => t.outcome === 'win');
+    const lArr = arr.filter(t => t.outcome === 'loss');
+    if (!wArr.length || !lArr.length) return wArr.length === m ? 1 : -1;
+    const p = wArr.length / m;
+    const avgW = wArr.reduce((a,t) => a + t.pnlPct, 0) / wArr.length;
+    const avgL = Math.abs(lArr.reduce((a,t) => a + t.pnlPct, 0) / lArr.length);
+    if (avgL <= 0) return -1;
+    const b = avgW / avgL;
+    return (p * b - (1-p)) / b;
   };
   const observed = kellySample(trades);
   const boot = [];
@@ -1905,27 +1928,55 @@ function calcKellyFull(bt) {
     boot.push(kellySample(sample));
   }
   boot.sort((a,b)=>a-b);
-  return {
+  const result = {
     kelly:   +observed.toFixed(3),
     ci90lo:  +boot[Math.floor(B*0.05)].toFixed(3),
     ci90hi:  +boot[Math.floor(B*0.95)].toFixed(3),
-    positive: boot[Math.floor(B*0.10)] > 0, // CI80 inferior > 0
+    positive: boot[Math.floor(B*0.10)] > 0,
   };
+  _statsCache.set(key, result);
+  return result;
+}
+
+function calcWRPermutation(bt) {
+  if (!bt?.list || bt.list.length < 5) return null;
+  const key = 'wr|' + btCacheKey(bt);
+  if (_statsCache.has(key)) return _statsCache.get(key);
+  const result = binomialWRTest(bt.list);
+  _statsCache.set(key, result);
+  return result;
+}
+
+function calcKelly(bt) {
+  if (!bt?.wr) return null;
+  const b = bt.realizedRR ?? bt.avgRR;
+  if (!b || b <= 0) return null;
+  const p = bt.wr / 100;
+  const kelly = (p * b - (1-p)) / b;
+  return +kelly.toFixed(3);
 }
 
 function calcOpScore(r) {
   const bt = r.bt;
   const currentScore = r.score || 0;
-  const ic = calcIC(bt);
-  const icAdj = ic !== null ? Math.max(ic, 0) : 0;
+
+  // IC: solo amplificar el score si el bootstrap confirma que predice
+  // (CI80 inferior > 0 — no basta con IC puntual positivo)
+  const icFull = calcICFull(bt);
+  const icAdj = icFull?.confident ? Math.max(icFull.ic, 0)    // CI80 positivo → amplificar
+              : icFull?.signal    ? Math.max(icFull.ic, 0)*0.5 // CI90 débil → amplificar a medias
+              : 0;                                              // no confirmado → no amplificar
   const adjustedScore = currentScore * (1 + icAdj);
+
+  // Kelly usando R:R realizado
   const kelly = calcKelly(bt);
   const halfKelly = kelly !== null ? Math.max(kelly, 0) : 0;
+
   const scorePts = Math.min((adjustedScore / 13) * 60, 60);
   const kellyPts = Math.min((halfKelly / 0.5) * 40, 40);
   return {
     op:       Math.round(scorePts + kellyPts),
-    ic:       ic,
+    ic:       icFull?.ic ?? null,
     kelly:    kelly,
     adjScore: +adjustedScore.toFixed(2),
   };
@@ -2232,10 +2283,17 @@ function renderICKellyVerdict(bt) {
   if (wrPerm) {
     const beWR = (wrPerm.breakEvenWR*100).toFixed(0);
     const actualWR = (wrPerm.wr*100).toFixed(0);
+    // Mostrar pnlEdge como indicador de si el score discrimina
+    if (wrPerm.pnlEdge !== null) {
+      const edgeSign = wrPerm.pnlEdge > 0 ? '+' : '';
+      const edgeColor = wrPerm.pnlEdge > 1 ? 'var(--emerald)' : wrPerm.pnlEdge > 0 ? 'var(--cyan)' : 'var(--ember)';
+      parts.push('Score PnL edge: mitad alta <b style="color:' + edgeColor + '">' + edgeSign + wrPerm.avgPnlHi + '%</b> vs mitad baja <b>' + wrPerm.avgPnlLo + '%</b> por op ('
+        + (wrPerm.pnlEdge > 1 ? '✅ score discrimina' : wrPerm.pnlEdge > 0 ? '⚡ leve ventaja' : '⚠️ score no discrimina aquí') + ')');
+    }
     if (wrPerm.significant)
-      parts.push('WR=' + actualWR + '% (break-even=' + beWR + '%) p=' + wrPerm.pvalVsBreakeven + ' → <strong style="color:var(--emerald)">WR significativo (test binomial exacto)</strong>');
+      parts.push('WR=' + actualWR + '% vs break-even=' + beWR + '% → <strong style="color:var(--emerald)">sistema con edge (p=' + wrPerm.pvalVsBreakeven + ')</strong>');
     else
-      parts.push('WR=' + actualWR + '% (break-even=' + beWR + '%) p=' + wrPerm.pvalVsBreakeven + ' → WR no significativo con n=' + wrPerm.n + ' ops');
+      parts.push('WR=' + actualWR + '% vs break-even=' + beWR + '% → p=' + wrPerm.pvalVsBreakeven + ' (n=' + wrPerm.n + ' ops)');
   }
 
   return parts.join('<br>') || '—';
@@ -2282,9 +2340,9 @@ function renderBacktest(bt) {
       : `⚡ Estable: WR reciente ${bt.recentWR}% vs histórico ${bt.oldWR}%`
     : '—';
 
-  const verdict = bt.expectancy > 0.3 && bt.wr >= 50
+  const verdict = bt.avgPnl > 0.5 && bt.wr >= 50
     ? '✅ Sistema con esperanza positiva — históricamente rentable en este activo.'
-    : bt.expectancy > 0 && bt.wr >= 45
+    : bt.avgPnl > 0 && bt.wr >= 45
     ? '⚡ Sistema marginalmente positivo — operar con confluencias adicionales.'
     : bt.wr < 40
     ? '❌ Win rate bajo — este activo ha respondido mal al sistema en el pasado.'
@@ -2331,7 +2389,11 @@ function renderBacktest(bt) {
         + '</div>';
     }).join('');
 
-  const corrC = (bt.scoreCorrPct||0)>=20?'var(--emerald)':(bt.scoreCorrPct||0)>=8?'var(--cyan)':(bt.scoreCorrPct||0)>=-5?'var(--amber)':'var(--ember)';
+  const icForColor = calcICFull(bt);
+  const corrC = icForColor?.confident ? 'var(--emerald)'
+              : icForColor?.signal    ? 'var(--cyan)'
+              : (icForColor?.ic ?? 0) > 0 ? 'var(--amber)'
+              : 'var(--ember)';
 
   // Trades table
   // Build trades table using string concatenation (no nested backticks)
@@ -2358,7 +2420,7 @@ function renderBacktest(bt) {
   let tradesHtml = '';
   if (bt.list && bt.list.length) {
     tradesHtml = '<div style="margin-top:4px">'
-      + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:6px;text-transform:uppercase">Últimas ' + bt.list.length + ' ops · WIN=alcanzó T1(PoC) · LOSS=tocó stop</div>'
+      + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:6px;text-transform:uppercase">' + bt.list.length + ' operaciones históricas · WIN=alcanzó T1(PoC) · LOSS=tocó stop</div>'
       + '<div style="display:grid;grid-template-columns:64px 44px 80px 80px 78px 42px 50px 52px 60px;gap:3px;padding:4px 8px;font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px">'
       + '<span>Fecha</span><span>Sc</span><span>Entrada</span><span>T1/PoC</span><span>Salida</span><span>R:R</span><span>PnL%</span><span>50/50</span><span>T2✓</span>'
       + '</div>'
@@ -2379,10 +2441,10 @@ function renderBacktest(bt) {
       <div class="bt-stat"><div class="bt-stat-val" style="color:${pnlC}">${bt.avgPnl>0?'+':''}${bt.avgPnl}%</div><div class="bt-stat-lbl">PnL/OP (T1)</div></div>
       <div class="bt-stat"><div class="bt-stat-val" style="color:${p55C}">${bt.avgPnl5050>0?'+':''}${bt.avgPnl5050}%</div><div class="bt-stat-lbl">PnL/OP (50/50)</div></div>
       <div class="bt-stat"><div class="bt-stat-val" style="color:${totC}">${bt.totalPnl>0?'+':''}${bt.totalPnl}%</div><div class="bt-stat-lbl">PnL TOTAL</div></div>
-      <div class="bt-stat"><div class="bt-stat-val" style="color:${expC}">${bt.expectancy>0?'+':''}${bt.expectancy}</div><div class="bt-stat-lbl">ESPERANZA</div></div>
       <div class="bt-stat"><div class="bt-stat-val">${bt.total}</div><div class="bt-stat-lbl">OPS</div></div>
       <div class="bt-stat"><div class="bt-stat-val"><span style="color:var(--emerald)">${bt.wins}W</span>/<span style="color:var(--ember)">${bt.losses}L</span></div><div class="bt-stat-lbl">W/L</div></div>
-      <div class="bt-stat"><div class="bt-stat-val">1:${bt.avgRR}</div><div class="bt-stat-lbl">R:R MEDIO</div></div>
+      <div class="bt-stat"><div class="bt-stat-val">1:${bt.avgRR}</div><div class="bt-stat-lbl">R:R SEÑALADO</div></div>
+      ${bt.realizedRR !== null ? renderBtStat('1:'+bt.realizedRR, 'R:R REALIZADO', bt.realizedRR>=1?'var(--emerald)':'var(--amber)') : ''}
       ${renderICKellyStats(bt)}
       ${bt.t2HitRate!==null ? renderBtStat(bt.t2HitRate+'%', 'HIT T2', bt.t2HitRate>=60?'var(--emerald)':bt.t2HitRate>=35?'var(--amber)':'var(--ember)') : ''}
       ${bt.avgBarsToRes!==null ? renderBtStat(bt.avgBarsToRes, 'BARRAS/OP', 'var(--text)') : ''}
@@ -2703,22 +2765,6 @@ window.addEventListener('resize', () => {
 
 // ── Mobile card renderer para filas de tabla ──
 function isMobile() { return window.innerWidth <= 768; }
-
-function renderMobileRow(r, sigLabel, sigClass, priceStr, scoreStr, rrStr, pnlStr, wrStr) {
-  return `
-    <div class="trow-mobile-top">
-      <span class="sym-cell" style="font-size:15px">${r.sym}</span>
-      <span class="sig-badge ${sigClass}" style="font-size:9px;padding:2px 7px">${sigLabel}</span>
-      <span style="font-family:var(--f-mono);font-size:12px;margin-left:auto">${priceStr}</span>
-    </div>
-    <div class="trow-mobile-stats">
-      <span>TF <b>${r.tf}</b></span>
-      <span>Score <b style="color:${r.score>=7?'var(--emerald)':r.score>=4?'var(--amber)':'var(--ember)'}">${scoreStr}</b></span>
-      <span>R:R <b>${rrStr}</b></span>
-      <span>PnL/op <b style="color:${parseFloat(pnlStr)>=0?'var(--emerald)':'var(--ember)'}">${pnlStr}</b></span>
-      <span>WR <b>${wrStr}</b></span>
-    </div>`;
-}
 
 // Start scan
 runScan().catch(function(err) {
