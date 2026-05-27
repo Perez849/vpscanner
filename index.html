@@ -1713,7 +1713,8 @@ async function scanSymbol(sym) {
     const conf  = calcConfluences(df, vp, close, sig);
     const bt    = runBacktest(df, segs, pivLen, nRows, vaPct);
 
-    result[tfKey] = { df, vp, sig, conf, close, segs, bt, devSlice };
+    result[tfKey] = { df, vp, sig, conf, close, segs, bt, devSlice,
+                      signalStartTs: devSlice[0]?.ts ?? df[last.endI]?.ts ?? Date.now() };
   }
 
   return result;
@@ -1750,47 +1751,54 @@ function trackerSave(data) {
   try { localStorage.setItem(TRACKER_KEY, JSON.stringify(data)); } catch(e) {}
 }
 
-function trackerAlertId(sym, tf, entryTs) {
-  // ID único: sym + tf + timestamp de detección (redondeado a hora para evitar duplicados)
-  const roundedTs = Math.floor(entryTs / 3600000) * 3600000;
-  return sym.replace('/','_') + '_' + tf + '_' + roundedTs;
+function trackerAlertId(sym, tf, signalStartTs) {
+  // ID basado en el inicio real del perfil VP — único por señal real
+  // Si el mismo perfil genera la misma señal en varios scans, el ID es idéntico
+  return sym.replace('/','_') + '_' + tf + '_' + signalStartTs;
 }
 
 function trackerAddAlert(row) {
   const data = trackerLoad();
-  const id = trackerAlertId(row.sym, row.tf, Date.now());
-  if (data[id]) return; // ya existe
+  const signalStartTs = row.signalStartTs || Date.now();
+  const id = trackerAlertId(row.sym, row.tf, signalStartTs);
+
+  // Si ya existe esta señal, actualizar niveles si ha cambiado la señal (sig distinto)
+  // pero NO recrear — los niveles de la primera detección son los correctos
+  if (data[id]) return;
 
   const msPerBar = row.tf === '4H' ? 4*3600*1000 : 86400*1000;
   data[id] = {
     id,
-    sym:       row.sym,
-    tf:        row.tf,
-    sig:       row.sig,
-    entry:     row.close,      // precio de entrada congelado
-    stop:      row.stop,       // stop congelado
-    t1:        row.t1,         // target 1 congelado
-    t2:        row.t2 || null, // target 2 congelado
-    poc:       row.poc,
-    vah:       row.vah,
-    val:       row.val,
-    score:     row.score,
-    rr:        row.rr,
-    detectedAt:    Date.now(),
-    expiresAt:     Date.now() + TRACKER_EXPIRY_BARS * msPerBar,
-    status:        'active',
-    highAfterEntry: row.close, // para tracking del mejor precio
+    sym:          row.sym,
+    tf:           row.tf,
+    sig:          row.sig,
+    entry:        row.close,
+    stop:         row.stop,
+    t1:           row.t1,
+    t2:           row.t2 || null,
+    poc:          row.poc,
+    vah:          row.vah,
+    val:          row.val,
+    score:        row.score,
+    rr:           row.rr,
+    signalStartTs,             // cuando empezó el perfil VP (fecha real de la señal)
+    detectedAt:   Date.now(),  // cuando el scanner la vio por primera vez
+    expiresAt:    signalStartTs + TRACKER_EXPIRY_BARS * msPerBar,
+    status:       'active',
+    highAfterEntry: row.close,
     lowAfterEntry:  row.close,
-    closedAt:      null,
-    closedPrice:   null,
-    pnlPct:        null,
+    closedAt:     null,
+    closedPrice:  null,
+    pnlPct:       null,
   };
   trackerSave(data);
   trackerUpdateBadge();
 }
 
-function trackerUpdateWithPrice(sym, tf, currentPrice, currentHigh, currentLow) {
-  // Llamado en cada scan con el precio actual — actualiza alertas activas
+function trackerUpdateWithPrice(sym, tf, df) {
+  // df = array completo de velas OHLCV descargadas
+  // Solo miramos velas con ts > signalStartTs para evitar cierres instantáneos
+  if (!df || !df.length) return;
   const data = trackerLoad();
   let changed = false;
 
@@ -1801,68 +1809,64 @@ function trackerUpdateWithPrice(sym, tf, currentPrice, currentHigh, currentLow) 
 
     const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
 
-    // Actualizar extremos desde la entrada
-    if (currentHigh > a.highAfterEntry) { a.highAfterEntry = currentHigh; changed = true; }
-    if (currentLow  < a.lowAfterEntry)  { a.lowAfterEntry  = currentLow;  changed = true; }
+    // Solo barras posteriores al inicio del perfil de la señal
+    const relevantBars = df.filter(b => b.ts > a.signalStartTs);
+    if (!relevantBars.length) continue;
 
-    // Expiración
-    if (Date.now() > a.expiresAt) {
+    // Actualizar extremos
+    const maxH = Math.max(...relevantBars.map(b => b.high));
+    const minL = Math.min(...relevantBars.map(b => b.low));
+    if (maxH > a.highAfterEntry) { a.highAfterEntry = maxH; changed = true; }
+    if (minL < a.lowAfterEntry)  { a.lowAfterEntry  = minL; changed = true; }
+
+    // Expiración por tiempo
+    const lastBar = relevantBars[relevantBars.length - 1];
+    if (lastBar.ts > a.expiresAt) {
       a.status = 'expired';
-      a.closedAt = Date.now();
-      a.closedPrice = currentPrice;
-      a.pnlPct = +((currentPrice - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+      a.closedAt = lastBar.ts;
+      a.closedPrice = lastBar.close;
+      a.pnlPct = +((lastBar.close - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
       changed = true;
       continue;
     }
 
-    // Comprobar stop (usando low para longs, high para shorts — peor caso intradía)
-    const stopHit = isLong
-      ? currentLow <= a.stop
-      : currentHigh >= a.stop;
+    // Comprobar barra a barra en orden cronológico para resolución correcta
+    // (stop y T1 en la misma barra → T1 gana, asumiendo movimiento favorable primero)
+    let resolved = false;
+    for (const bar of relevantBars) {
+      const stopHit = isLong ? bar.low  <= a.stop   : bar.high >= a.stop;
+      const t1Hit   = isLong ? bar.high >= a.t1     : bar.low  <= a.t1;
+      const t2Hit   = a.t2 && (isLong ? bar.high >= a.t2 : bar.low <= a.t2);
 
-    // Comprobar T2 primero (mejor resultado)
-    const t2Hit = a.t2 && (isLong
-      ? currentHigh >= a.t2
-      : currentLow  <= a.t2);
-
-    // Comprobar T1
-    const t1Hit = isLong
-      ? currentHigh >= a.t1
-      : currentLow  <= a.t1;
-
-    if (t2Hit) {
-      a.status = 'hit_t2';
-      a.closedAt = Date.now();
-      a.closedPrice = a.t2;
-      a.pnlPct = +((a.t2 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
-      changed = true;
-    } else if (stopHit && t1Hit) {
-      // Tocó stop y T1 en la misma barra — gana T1 (asumimos movimiento favorable primero)
-      a.status = 'hit_t1';
-      a.closedAt = Date.now();
-      a.closedPrice = a.t1;
-      a.pnlPct = +((a.t1 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
-      changed = true;
-    } else if (stopHit) {
-      a.status = 'stopped';
-      a.closedAt = Date.now();
-      a.closedPrice = a.stop;
-      a.pnlPct = +((a.stop - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
-      changed = true;
-    } else if (t1Hit) {
-      a.status = 'hit_t1';
-      a.closedAt = Date.now();
-      a.closedPrice = a.t1;
-      a.pnlPct = +((a.t1 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
-      changed = true;
+      if (t2Hit) {
+        a.status = 'hit_t2'; a.closedAt = bar.ts; a.closedPrice = a.t2;
+        a.pnlPct = +((a.t2 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved = true; changed = true; break;
+      }
+      if (t1Hit && stopHit) {
+        // Misma barra — asumimos T1 primero (movimiento favorable)
+        a.status = 'hit_t1'; a.closedAt = bar.ts; a.closedPrice = a.t1;
+        a.pnlPct = +((a.t1 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved = true; changed = true; break;
+      }
+      if (t1Hit) {
+        a.status = 'hit_t1'; a.closedAt = bar.ts; a.closedPrice = a.t1;
+        a.pnlPct = +((a.t1 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved = true; changed = true; break;
+      }
+      if (stopHit) {
+        a.status = 'stopped'; a.closedAt = bar.ts; a.closedPrice = a.stop;
+        a.pnlPct = +((a.stop - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved = true; changed = true; break;
+      }
     }
+    if (!resolved) { /* sigue activa */ }
   }
 
   if (changed) { trackerSave(data); trackerUpdateBadge(); }
 }
 
 function trackerPinRow(btn, sym, tf) {
-  // Look up current row data from allResults — avoids serializing in onclick attribute
   const row = allResults.find(r => r.sym === sym && r.tf === tf);
   if (!row) return;
   trackerAddAlert({
@@ -1870,7 +1874,8 @@ function trackerPinRow(btn, sym, tf) {
     close: row.close, sig: row.sig,
     stop: row.stop, t1: row.t1, t2: row.t2 || null,
     poc: row.poc, vah: row.vah, val: row.val,
-    score: row.score, rr: row.rr
+    score: row.score, rr: row.rr,
+    signalStartTs: row._td?.signalStartTs || Date.now()
   });
   btn.textContent = '✅';
   setTimeout(() => { btn.textContent = '📌'; }, 1500);
@@ -1964,8 +1969,8 @@ function trackerRender() {
     const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
     const isActive = a.status === 'active';
     const pnlColor = (a.pnlPct || 0) >= 0 ? 'var(--emerald)' : 'var(--ember)';
-    const detDate = new Date(a.detectedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    const closDate = a.closedAt ? new Date(a.closedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : null;
+    const detDate  = new Date(a.signalStartTs || a.detectedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',year:'2-digit'});
+    const closDate = a.closedAt ? new Date(a.closedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',year:'2-digit'}) : null;
     const expiryPct = isActive ? Math.min(100, Math.round((Date.now() - a.detectedAt) / (a.expiresAt - a.detectedAt) * 100)) : 100;
 
     html += `<div style="background:var(--ink2);border:1px solid ${isActive?'var(--sapphire)':'var(--rule)'};border-radius:12px;padding:14px 16px;margin-bottom:10px;opacity:${isActive?1:0.7}">
@@ -2036,14 +2041,13 @@ async function runScan() {
           close: td.close, sig: td.sig.signal,
           stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
           poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
-          score: td.conf.score, rr: td.sig.rr
+          score: td.conf.score, rr: td.sig.rr,
+          signalStartTs: td.signalStartTs  // fecha real de inicio del perfil
         });
       }
 
-      // ── TRACKER: actualizar alertas activas con precio actual ──
-      const df = td.df;
-      const lastBar = df[df.length - 1];
-      trackerUpdateWithPrice(sym+'/USDT', tf, td.close, lastBar.high, lastBar.low);
+      // ── TRACKER: actualizar alertas activas con historial completo ──
+      trackerUpdateWithPrice(sym+'/USDT', tf, td.df);
       rows.push({
         sym:`${sym}/USDT`, tf, close: td.close,
         poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
@@ -2348,29 +2352,93 @@ function calcKelly(bt) {
   return +kelly.toFixed(3);
 }
 
-function calcOpScore(r) {
+// ════════════════════════════════════════════════════════════
+// IOA — Índice de Oportunidad Ajustado (0-100)
+//
+// IOA = Kelly_realizado × confianza_estadistica × (1 + IC_confirmado) × 100
+//
+// ≥65 → Edge fuerte  |  45-65 → Moderado  |  25-45 → Débil  |  <25 → Sin evidencia
+// ════════════════════════════════════════════════════════════
+function calcIOA(r) {
   const bt = r.bt;
-  const currentScore = r.score || 0;
+  if (!bt || bt.total < 3) {
+    return { ioa:0, kelly:null, confianza:0, icAdj:0, detalle:'Sin histórico' };
+  }
 
-  // IC: solo amplificar el score si el bootstrap confirma que predice
-  // (CI80 inferior > 0 — no basta con IC puntual positivo)
+  // 1. Kelly realizado (cap 1.0 — Kelly > 1 no es realista con muestras pequeñas)
+  const kFull = calcKellyFull(bt);
+  const kelly = kFull?.kelly ?? calcKelly(bt) ?? 0;
+  if (kelly <= 0) {
+    return { ioa:0, kelly, confianza:0, icAdj:0, detalle:'Kelly negativo — sin edge' };
+  }
+
+  // 2. Confianza estadística: muestra + CI bootstrap
+  const n = bt.total;
+  const sampleConf = Math.min(n / 25, 1);
+  let ciConf = 0.2; // mínimo cuando no hay bootstrap
+  if (kFull) {
+    const ciWidth = kFull.ci90hi - kFull.ci90lo;
+    ciConf = Math.max(0, Math.min(1, 1 - ciWidth * 0.8));
+    if (kFull.ci90lo < 0) ciConf *= 0.5;
+  }
+  const confianza = +(sampleConf * 0.6 + ciConf * 0.4).toFixed(3);
+
+  // 3. Amplificador IC — solo si bootstrap lo confirma
   const icFull = calcICFull(bt);
-  const icAdj = icFull?.confident ? Math.max(icFull.ic, 0)    // CI80 positivo → amplificar
-              : icFull?.signal    ? Math.max(icFull.ic, 0)*0.5 // CI90 débil → amplificar a medias
-              : 0;                                              // no confirmado → no amplificar
-  const adjustedScore = currentScore * (1 + icAdj);
+  let icAdj = 0;
+  if (icFull?.confident) {
+    icAdj = Math.min(Math.max(icFull.ic, 0) * 0.5, 0.3);
+  } else if (icFull?.signal && icFull.pval < 0.15) {
+    icAdj = Math.min(Math.max(icFull.ic, 0) * 0.2, 0.1);
+  }
 
-  // Kelly usando R:R realizado
-  const kelly = calcKelly(bt);
-  const halfKelly = kelly !== null ? Math.max(kelly, 0) : 0;
+  // 4. Bonus de consistencia temporal: ¿el WR reciente supera al histórico?
+  // recentWR vs oldWR — si mejora, el sistema funciona mejor ahora
+  let consistencyBonus = 0;
+  if (bt.recentWR !== null && bt.oldWR !== null) {
+    const diff = bt.recentWR - bt.oldWR;
+    if (diff >= 10)      consistencyBonus =  0.10; // WR acelerando — fuerte bonus
+    else if (diff >= 0)  consistencyBonus =  0.05; // estable o mejorando — leve bonus
+    else if (diff >= -10) consistencyBonus = 0;    // deteriorándose ligeramente — neutro
+    else                  consistencyBonus = -0.10; // deteriorándose fuerte — penalizar
+  }
 
-  const scorePts = Math.min((adjustedScore / 13) * 60, 60);
-  const kellyPts = Math.min((halfKelly / 0.5) * 40, 40);
+  // 5. Penalización por drawdown: trades ganadores con mucho retroceso antes de T1
+  // son menos operables en la práctica (stop psicológico)
+  let drawdownPenalty = 0;
+  if (bt.avgDrawdownWin !== null && bt.avgDrawdownWin !== undefined) {
+    if      (bt.avgDrawdownWin > 8)  drawdownPenalty = 0.15; // >8% drawdown antes de ganar = muy difícil aguantar
+    else if (bt.avgDrawdownWin > 4)  drawdownPenalty = 0.07;
+    else if (bt.avgDrawdownWin > 2)  drawdownPenalty = 0.03;
+  }
+
+  // IOA final: Kelly × confianza × (1 + IC) × (1 + consistencia - drawdown) × 100
+  const adjustmentFactor = 1 + consistencyBonus - drawdownPenalty;
+  const ioa = Math.round(
+    Math.min(kelly, 1.0) * confianza * (1 + icAdj) * Math.max(adjustmentFactor, 0.5) * 100
+  );
+
   return {
-    op:       Math.round(scorePts + kellyPts),
+    ioa:             Math.max(0, Math.min(100, ioa)),
+    kelly:           +kelly.toFixed(3),
+    confianza:       +confianza.toFixed(3),
+    icAdj:           +icAdj.toFixed(3),
+    consistencyBonus:+consistencyBonus.toFixed(2),
+    drawdownPenalty: +drawdownPenalty.toFixed(2),
+    detalle: `Kelly=${kelly.toFixed(2)} × conf=${confianza.toFixed(2)} × IC+1=${(1+icAdj).toFixed(2)} × adj=${adjustmentFactor.toFixed(2)} = ${ioa}`,
+  };
+}
+
+function calcOpScore(r) {
+  const result = calcIOA(r);
+  const icFull = calcICFull(r.bt);
+  return {
+    op:       result.ioa,
     ic:       icFull?.ic ?? null,
-    kelly:    kelly,
-    adjScore: +adjustedScore.toFixed(2),
+    kelly:    result.kelly,
+    adjScore: r.score * (1 + result.icAdj),
+    ioa:      result.ioa,
+    detalle:  result.detalle,
   };
 }
 
@@ -2432,6 +2500,178 @@ function setSort(col) {
   if (allResults.length) renderPanel();
 }
 
+function renderTop3(data) {
+  if (!data || data.length < 2) return '';
+
+  // Deduplicar por símbolo base: si BTC 1D y BTC 4H ambos califican,
+  // solo el de mayor IOA entra en Top 3 para forzar diversificación
+  const seenSyms = new Set();
+  const ranked = data
+    .map(r => ({ r, ioa: calcIOA(r) }))
+    .filter(x => x.ioa.ioa > 0 && x.r.bt?.total >= 3)
+    .sort((a, b) => b.ioa.ioa - a.ioa.ioa)
+    .filter(x => {
+      const base = x.r.sym.replace('/USDT','');
+      if (seenSyms.has(base)) return false;
+      seenSyms.add(base);
+      return true;
+    });
+
+  if (!ranked.length) return '';
+
+  const top3  = ranked.slice(0, 3);
+  const allN  = data.length; // TODAS las señales, no solo las con IOA>0
+
+  // ── Estadísticas históricas: Top 3 vs todos ──────────────
+  // Filtra trades del mismo tipo de señal que la alerta actual
+  // para que la comparativa sea homogénea
+  function poolStats(items) {
+    const trades = items.flatMap(x => {
+      const list = x.r.bt?.list || [];
+      // Solo trades del mismo tipo de señal que la alerta actual
+      return list.filter(t => t.signal === x.r.sig);
+    });
+    if (!trades.length) return null;
+    const wins   = trades.filter(t => t.outcome === 'win').length;
+    const wr     = Math.round(wins / trades.length * 100);
+    const avgPnl = +(trades.reduce((a,t) => a+t.pnlPct, 0) / trades.length).toFixed(2);
+    const totPnl = +(trades.reduce((a,t) => a+t.pnlPct, 0)).toFixed(1);
+    const wArr   = trades.filter(t => t.outcome === 'win');
+    const lArr   = trades.filter(t => t.outcome === 'loss');
+    const avgW   = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
+    const avgL   = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
+    const realRR = avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
+    const p = wr/100, b = realRR ?? 1;
+    const kelly = b > 0 ? +((p*b-(1-p))/b).toFixed(3) : null;
+    return { n:trades.length, wins, wr, avgPnl, totPnl, realRR, kelly };
+  }
+
+  // "Todas" = mismas señales del universo actual filtrado con IOA>0
+  const allItems = data
+    .filter(r => r.bt?.total >= 3)
+    .map(r => ({ r, ioa: calcIOA(r) }))
+    .filter(x => x.ioa.ioa > 0);
+
+  const statsTop3 = poolStats(top3);
+  const statsAll  = poolStats(allItems);
+
+  const medals = ['🥇','🥈','🥉'];
+  const sigColor = s => ({ LONG:'var(--emerald)', SHORT:'var(--ember)',
+    RANGE_LONG:'var(--sapphire)', RANGE_SHORT:'var(--amber)' }[s] || 'var(--dim)');
+  const sigShort = s => ({ LONG:'L↑', SHORT:'S↓', RANGE_LONG:'RL↑', RANGE_SHORT:'RS↓' }[s] || s);
+  const deltaColor = (a, b) => a >= b ? 'var(--emerald)' : 'var(--ember)';
+  const sign = v => v >= 0 ? '+' : '';
+
+  let html = `<div style="background:var(--ink2);border:1px solid var(--rule2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
+    <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:12px;text-transform:uppercase">⭐ Top 3 por IOA — Mejores oportunidades ahora</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px">`;
+
+  top3.forEach(({ r, ioa }, i) => {
+    const ioaC      = ioa.ioa >= 65 ? 'var(--emerald)' : ioa.ioa >= 45 ? 'var(--cyan)' : 'var(--amber)';
+    const wr        = r.bt?.wr ?? '—';
+    const rr        = r.rr ? '1:'+r.rr : '—';
+    const wrC       = typeof wr === 'number' ? (wr >= 60 ? 'var(--emerald)' : wr >= 45 ? 'var(--amber)' : 'var(--ember)') : 'var(--dim)';
+    const ioaLabel  = ioa.ioa >= 65 ? 'Edge fuerte' : ioa.ioa >= 45 ? 'Edge moderado' : 'Edge débil';
+    const borderC   = i === 0 ? 'var(--emerald)' : 'var(--rule2)';
+    const dw        = r.bt?.avgDrawdownWin;
+    const dwTxt     = dw !== null && dw !== undefined ? dw+'%' : '—';
+    const dwC       = dw > 5 ? 'var(--ember)' : dw > 2 ? 'var(--amber)' : 'var(--emerald)';
+    const rWR       = r.bt?.recentWR, oWR = r.bt?.oldWR;
+    const trendTxt  = rWR !== null && oWR !== null
+      ? (rWR > oWR ? `↑ tendencia +${rWR-oWR}pp` : rWR < oWR ? `↓ deterioro ${rWR-oWR}pp` : '→ estable')
+      : '';
+    const trendC    = rWR > oWR ? 'var(--emerald)' : rWR < oWR ? 'var(--ember)' : 'var(--dim)';
+
+    html += `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:9px;padding:11px 13px;cursor:pointer;border:1px solid ${borderC}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+        <span style="font-size:14px">${medals[i]}</span>
+        <span style="font-family:var(--f-display);font-size:13px;font-weight:700">${r.sym.replace('/USDT','')}</span>
+        <span style="font-family:var(--f-mono);font-size:8px;background:var(--ink2);padding:1px 5px;border-radius:4px">${r.tf}</span>
+        <span style="font-family:var(--f-mono);font-size:8px;color:${sigColor(r.sig)};font-weight:700;margin-left:auto">${sigShort(r.sig)}</span>
+      </div>
+      <div style="font-family:var(--f-mono);font-size:22px;font-weight:800;color:${ioaC};line-height:1">${ioa.ioa}</div>
+      <div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-bottom:6px">${ioaLabel}</div>
+      <div style="display:flex;gap:8px;font-family:var(--f-mono);font-size:9px">
+        <span>WR <b style="color:${wrC}">${wr}%</b></span>
+        <span>R:R <b>${rr}</b></span>
+        <span>K <b style="color:var(--cyan)">${ioa.kelly ?? '—'}</b></span>
+      </div>
+      <div style="display:flex;gap:8px;font-family:var(--f-mono);font-size:8px;margin-top:4px">
+        <span style="color:var(--dim)">DD <b style="color:${dwC}">${dwTxt}</b></span>
+        ${trendTxt ? `<span style="color:${trendC}">${trendTxt}</span>` : ''}
+      </div>
+      <div style="margin-top:5px;font-family:var(--f-mono);font-size:8px;color:var(--dim)">conf ${(ioa.confianza*100).toFixed(0)}% · score ${r.score}/10 · ${r.bt?.total ?? 0} ops</div>
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  // ── Tabla comparativa histórica ───────────────────────────
+  if (statsTop3 && statsAll && statsTop3.n > 0 && statsAll.n > 0) {
+    const dWR    = statsTop3.wr    - statsAll.wr;
+    const dPnl   = +(statsTop3.avgPnl - statsAll.avgPnl).toFixed(2);
+    const dRR    = (statsTop3.realRR != null && statsAll.realRR != null)
+                   ? +(statsTop3.realRR - statsAll.realRR).toFixed(2) : null;
+    const dKelly = (statsTop3.kelly != null && statsAll.kelly != null)
+                   ? +(statsTop3.kelly - statsAll.kelly).toFixed(3) : null;
+
+    html += `<div style="border-top:1px solid var(--rule);padding-top:12px;margin-top:4px">
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:8px;text-transform:uppercase">
+        📊 Si hubieras operado solo las Top 3 históricamente
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:4px 12px;font-family:var(--f-mono);font-size:10px;align-items:center">
+        <div style="color:var(--dim);font-size:9px"></div>
+        <div style="color:var(--dim);font-size:9px;text-align:right">TOP 3</div>
+        <div style="color:var(--dim);font-size:9px;text-align:right">TODAS (${allN})</div>
+        <div style="color:var(--dim);font-size:9px;text-align:right">DELTA</div>
+
+        <div style="color:var(--sub)">Win Rate</div>
+        <div style="text-align:right;color:${statsTop3.wr>=60?'var(--emerald)':'var(--amber)'};font-weight:700">${statsTop3.wr}%</div>
+        <div style="text-align:right;color:var(--sub)">${statsAll.wr}%</div>
+        <div style="text-align:right;font-weight:700;color:${deltaColor(dWR,0)}">${sign(dWR)}${dWR}pp</div>
+
+        <div style="color:var(--sub)">PnL medio/op</div>
+        <div style="text-align:right;color:${statsTop3.avgPnl>=0?'var(--emerald)':'var(--ember)'};font-weight:700">${sign(statsTop3.avgPnl)}${statsTop3.avgPnl}%</div>
+        <div style="text-align:right;color:var(--sub)">${sign(statsAll.avgPnl)}${statsAll.avgPnl}%</div>
+        <div style="text-align:right;font-weight:700;color:${deltaColor(dPnl,0)}">${sign(dPnl)}${dPnl.toFixed(2)}pp</div>
+
+        <div style="color:var(--sub)">PnL acumulado</div>
+        <div style="text-align:right;color:${statsTop3.totPnl>=0?'var(--emerald)':'var(--ember)'};font-weight:700">${sign(statsTop3.totPnl)}${statsTop3.totPnl}%</div>
+        <div style="text-align:right;color:var(--sub)">${sign(statsAll.totPnl)}${statsAll.totPnl}%</div>
+        <div style="text-align:right;font-weight:700;color:${deltaColor(statsTop3.totPnl,statsAll.totPnl)}">
+          ${statsTop3.totPnl >= statsAll.totPnl ? '✅' : '⚠️'}
+        </div>
+
+        ${statsTop3.realRR && statsAll.realRR ? `
+        <div style="color:var(--sub)">R:R realizado</div>
+        <div style="text-align:right;font-weight:700">1:${statsTop3.realRR}</div>
+        <div style="text-align:right;color:var(--sub)">1:${statsAll.realRR}</div>
+        <div style="text-align:right;font-weight:700;color:${deltaColor(dRR,0)}">${sign(dRR)}${dRR?.toFixed(2)}</div>` : ''}
+
+        ${statsTop3.kelly && statsAll.kelly ? `
+        <div style="color:var(--sub)">Kelly</div>
+        <div style="text-align:right;color:var(--cyan);font-weight:700">${statsTop3.kelly}</div>
+        <div style="text-align:right;color:var(--sub)">${statsAll.kelly}</div>
+        <div style="text-align:right;font-weight:700;color:${deltaColor(dKelly,0)}">${sign(dKelly)}${dKelly?.toFixed(3)}</div>` : ''}
+
+        <div style="color:var(--sub)">Nº operaciones</div>
+        <div style="text-align:right;color:var(--sub)">${statsTop3.n}</div>
+        <div style="text-align:right;color:var(--sub)">${statsAll.n}</div>
+        <div style="text-align:right;color:var(--dim)">—</div>
+      </div>
+
+      <div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-top:8px;line-height:1.5">
+        Comparativa sobre trades históricos reales (solo señales del mismo tipo). "Todas" = ${allItems.length} señales con IOA>0 de ${allN} totales.
+        El delta mide la ventaja de filtrar por IOA. ${dWR > 5 ? '✅ Filtrar por IOA mejora el WR.' : dWR > 0 ? '⚡ Leve mejora al filtrar por IOA.' : '⚠️ Filtrar por IOA no mejora el WR en este momento.'}
+      </div>
+    </div>`;
+  }
+
+  html += `<div style="font-family:var(--f-mono);font-size:8px;color:var(--rule2);margin-top:8px">IOA = Kelly realizado × confianza estadística × amplificador IC</div></div>`;
+  return html;
+}
+
 function renderPanel() {
   const content = document.getElementById('content');
 
@@ -2458,6 +2698,7 @@ function renderPanel() {
 
   let html = `
   <div id="err-area"></div>
+  ${renderTop3(data)}
   <div class="metrics">
     <div class="mc m1"><div class="mc-val">${total}</div><div class="mc-lbl">Señales activas</div></div>
     <div class="mc m2"><div class="mc-val" style="color:var(--emerald)">${longs}</div><div class="mc-lbl">Long</div></div>
