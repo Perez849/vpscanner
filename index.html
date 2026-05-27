@@ -1262,15 +1262,22 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     total:0, wins:0, losses:0, wr:null, avgRR:null, avgPnl:null, totalPnl:null,
     expectancy:null, t2HitRate:null, avgBarsToRes:null, maxDrawdownWin:null,
     scoreCorrPct:null, scoreCorrLabel:'—', hiScoreWR:null, loScoreWR:null,
-    byScore:{}, bySig:{}, recentWR:null, oldWR:null, byScore:{}, list:[]
+    byScore:{}, bySig:{}, recentWR:null, oldWR:null, list:[], allScores:[]
   };
   if (testSegs.length < 3) return empty;
 
+  const _allScores = []; // scores de todos los setups para calcular percentil
+
   for (const seg of testSegs) {
-    const vp = calcVP(seg.slice, nRows, vaPct);
-    if (!vp) continue;
     const entryI = seg.endI + 1;
     if (entryI >= df.length) continue;
+
+    // VP calculado sobre las barras desde el inicio del segmento hasta ANTES de la entrada
+    // — excluimos df[entryI] para evitar look-ahead bias (no conocemos el cierre al inicio de esa barra)
+    const vpSlice = df.slice(seg.startI, entryI);
+    const vp = calcVP(vpSlice, nRows, vaPct);
+    if (!vp) continue;
+
     const entryClose = df[entryI].close;
     // Use full history up to entry for correct EMA200 trend calculation
     const dfUpToEntry = df.slice(0, entryI + 1);
@@ -1282,6 +1289,7 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
 
     const conf  = calcConfluences(dfUpToEntry, vp, entryClose, sig);
     const score = conf.score;
+    _allScores.push(score); // capturar score de todos los setups, no solo los que resuelven
     const isLong = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
 
     // Forward scan: find T1, T2, stop, bars to resolution, max drawdown in winner
@@ -1303,11 +1311,8 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
           if (sig.target2) {
             for (let fi2 = fi+1; fi2 <= fi+30 && entryI+fi2 < df.length; fi2++) {
               const bar2 = df[entryI + fi2];
-              if (isLong && bar2.high >= sig.target2) { t2Hit = true; break; }
-              if (!isLong && bar2.low <= sig.target2) { t2Hit = true; break; }
-              // Stop out before T2
-              if (isLong && bar2.low <= sig.stop)  break;
-              if (!isLong && bar2.high >= sig.stop) break;
+              if (bar2.high >= sig.target2) { t2Hit = true; break; }
+              if (bar2.low  <= sig.stop)    break; // stop antes de T2
             }
           }
           break;
@@ -1449,7 +1454,8 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     avgBarsToRes, avgDrawdownWin,
     hiScoreWR:hiWR, loScoreWR:loWR, scoreCorrPct, scoreCorrLabel, byScore,
     bySig, oldWR, recentWR,
-    list: trades  // todos los trades, no solo los últimos 12
+    list: trades,        // todos los trades
+    allScores: _allScores // distribución completa de scores para percentil
   };
 }
 
@@ -1486,207 +1492,196 @@ function calcRSI(values, period=14) {
   return +(100 - 100 / (1 + ag/al)).toFixed(1);
 }
 
+// ════════════════════════════════════════════════════════════
+// CONFLUENCES v5 — 3 componentes nativos del VP
+//
+// Todos calculables con exactamente los mismos datos en backtest
+// y en tiempo real. Sin dependencias externas, sin MTF, sin historia.
+//
+// 1. Volumen en el nivel de entrada (0-4)
+//    ¿Cuánto volumen histórico tiene el VAL/VAH donde entramos?
+//    Más volumen = zona más relevante = rebote más probable.
+//
+// 2. Calidad de la entrada (0-3)
+//    ¿Qué tan cerca está el precio del nivel óptimo?
+//    Proporcional a la distancia dentro del VA.
+//
+// 3. Forma del perfil (0-3)
+//    ¿El VP tiene forma D (equilibrado) o P/b (sesgado)?
+//    Un perfil D rebota bien en ambos extremos.
+//    Un perfil P/b tiene sesgo — penaliza la señal contraria al sesgo.
+//
+// Score 0-10. Idéntico en backtest y en tiempo real. Sin arbitrariedad.
+// ════════════════════════════════════════════════════════════
 function calcConfluences(df, vp, close, sig) {
   const closes = df.map(b => b.close);
-  const highs  = df.map(b => b.high);
-  const lows   = df.map(b => b.low);
   const vols   = df.map(b => b.volume);
   const n = closes.length;
-  const {pocPrice:poc, vahPrice:vah, valPrice:val} = vp;
-  const items = [], result = {score:0, items, candle:'verde_normal', volRatio:1};
+  const { pocPrice:poc, vahPrice:vah, valPrice:val,
+          pocLevel, vahLevel, valLevel,
+          volByLevel, totalVol, nRows, priceStep:step, priceLow:pl } = vp;
+  const vaW = vah - val;
+  const items = [], result = { score:0, items, candle:'verde_normal', volRatio:1 };
 
-  if (n < 30) return result;
+  if (n < 30 || !volByLevel || totalVol <= 0 || vaW <= 0) return result;
 
   const isLong  = sig?.signal === 'LONG'  || sig?.signal === 'RANGE_LONG';
   const isShort = sig?.signal === 'SHORT' || sig?.signal === 'RANGE_SHORT';
-  const longBias  = close <= poc;
-  const shortBias = close >= poc;
-  const trendBias = sig?.trendBias || 0;
-  const vaW = vah - val;
+  if (!isLong && !isShort) return result;
 
-  // ── 1. TENDENCIA (EMA200) — más granular ──────────────────
-  // No solo alineado/contra, sino distancia al EMA como % de precio
-  const e200a = calcEMA(closes, Math.min(200, n));
-  const ema200 = isNaN(e200a[n-1]) ? null : e200a[n-1];
-  result.ema200 = ema200;
-  if (ema200 !== null) {
-    const distPct = (close - ema200) / ema200 * 100;
-    if (isLong && distPct < -3) {
-      // Precio claramente bajo EMA200, rebote largo tiene más recorrido
-      items.push({icon:'✅', label:`Precio ${distPct.toFixed(1)}% bajo EMA200 — zona de valor a largo plazo`, str:'alta'});
-      result.score += 2;
-    } else if (isLong && distPct >= -3 && distPct < 3) {
-      // En torno a EMA200 — soporte dinámico relevante
-      items.push({icon:'🎯', label:`Precio en EMA200 (${distPct.toFixed(1)}%) — soporte dinámico clave`, str:'alta'});
-      result.score += 2;
-    } else if (isLong && distPct >= 3) {
-      // Long lejos por encima de EMA200 — menos margen de seguridad
-      items.push({icon:'⚠️', label:`Long ${distPct.toFixed(1)}% sobre EMA200 — sin colchón de tendencia`, str:'baja'});
-      result.score -= 1;
-    } else if (isShort && distPct > 3) {
-      items.push({icon:'✅', label:`Precio ${distPct.toFixed(1)}% sobre EMA200 — zona sobreextendida`, str:'alta'});
-      result.score += 2;
-    } else if (isShort && distPct >= -3 && distPct <= 3) {
-      items.push({icon:'🎯', label:`Precio en EMA200 (${distPct.toFixed(1)}%) — resistencia dinámica clave`, str:'alta'});
-      result.score += 2;
-    } else if (isShort && distPct < -3) {
-      items.push({icon:'⚠️', label:`Short ${distPct.toFixed(1)}% bajo EMA200 — contra tendencia`, str:'baja'});
-      result.score -= 1;
-    }
+  // ── 1. VOLUMEN EN EL NIVEL DE ENTRADA (0-4) ──────────────
+  // El VAL (para long) o VAH (para short) tiene un nivel en el VP.
+  // Su volumen como % del total dice cuánto "peso" tiene esa zona.
+  // Más volumen = más órdenes históricas ahí = rebote más probable.
+  //
+  // Para LONG usamos el nivel del VAL (valLevel).
+  // Para SHORT usamos el nivel del VAH (vahLevel).
+  // Para RANGE usamos el nivel más cercano al precio actual.
+
+  // Precio actual mapeado a nivel del VP
+  const closeLvl = Math.max(0, Math.min(nRows - 1,
+    Math.floor((close - pl) / step)
+  ));
+
+  // Nivel de entrada: para LONG = valLevel, SHORT = vahLevel
+  // Para RANGE: el nivel del precio actual (ya estamos dentro del VA)
+  const entryLvl = isLong
+    ? (sig.signal === 'RANGE_LONG'  ? closeLvl : valLevel)
+    : (sig.signal === 'RANGE_SHORT' ? closeLvl : vahLevel);
+
+  // Volumen en una banda de ±1 nivel alrededor del nivel de entrada
+  // (para no depender de un solo nivel que puede ser ruidoso)
+  const lo = Math.max(0,       entryLvl - 1);
+  const hi = Math.min(nRows-1, entryLvl + 1);
+  let entryVol = 0;
+  for (let i = lo; i <= hi; i++) entryVol += volByLevel[i];
+  const entryVolPct = entryVol / totalVol * 100;
+
+  // Scoring: >12% = zona muy relevante, >7% = buena, >3% = media, <3% = débil
+  if (entryVolPct >= 12) {
+    items.push({ icon:'🏋️', label:`Zona de ${entryVolPct.toFixed(1)}% del volumen total — zona de alta relevancia`, str:'alta' });
+    result.score += 4;
+  } else if (entryVolPct >= 7) {
+    items.push({ icon:'✅', label:`Zona de ${entryVolPct.toFixed(1)}% del volumen total — zona relevante`, str:'alta' });
+    result.score += 3;
+  } else if (entryVolPct >= 3) {
+    items.push({ icon:'📊', label:`Zona de ${entryVolPct.toFixed(1)}% del volumen total — relevancia moderada`, str:'media' });
+    result.score += 1;
+  } else {
+    items.push({ icon:'⚠️', label:`Zona de ${entryVolPct.toFixed(1)}% del volumen total — zona de poco volumen, nivel débil`, str:'baja' });
+    // No penaliza, pero tampoco suma — el nivel simplemente no tiene memoria
   }
 
-  // ── 2. EMA21 / EMA50 — confluencia con niveles VP ─────────
-  const e21a = calcEMA(closes, 21), e50a = calcEMA(closes, 50);
-  const e21 = isNaN(e21a[n-1]) ? null : e21a[n-1];
-  const e50 = isNaN(e50a[n-1]) ? null : e50a[n-1];
-  result.ema21 = e21; result.ema50 = e50;
+  // ── 2. CALIDAD DE LA ENTRADA (0-3) ───────────────────────
+  // ¿Qué tan cerca está el precio del VAL (long) o VAH (short)?
+  // Medido como % del precio actual — independiente del ancho del VA.
+  // 0% = exactamente en el nivel. Más % = precio más extendido.
+  //
+  // Usamos % del precio (no fracción del VA) para que el score sea
+  // comparable entre activos con VAs de distinto ancho.
 
-  if (e21 !== null && e50 !== null) {
-    // Cruce EMA21/50 reciente (últimas 3 barras) — señal fresca
-    const crossedUp   = e21a[n-1] > e50a[n-1] && e21a[n-4] <= e50a[n-4];
-    const crossedDown = e21a[n-1] < e50a[n-1] && e21a[n-4] >= e50a[n-4];
-    if (crossedUp && isLong) {
-      items.push({icon:'🚀', label:'Cruce alcista EMA21/50 reciente — momentum confirmado', str:'alta'}); result.score += 2;
-    } else if (crossedDown && isShort) {
-      items.push({icon:'🔻', label:'Cruce bajista EMA21/50 reciente — momentum confirmado', str:'alta'}); result.score += 2;
-    } else if (e21 > e50 && isLong) {
-      items.push({icon:'🟢', label:'EMA21 > EMA50 — tendencia alcista', str:'media'}); result.score += 1;
-    } else if (e21 < e50 && isShort) {
-      items.push({icon:'🔴', label:'EMA21 < EMA50 — tendencia bajista', str:'media'}); result.score += 1;
-    } else if (e21 < e50 && isLong) {
-      items.push({icon:'⚠️', label:'EMA21 < EMA50 — momentum bajista en long', str:'baja'}); result.score -= 1;
-    } else if (e21 > e50 && isShort) {
-      items.push({icon:'⚠️', label:'EMA21 > EMA50 — momentum alcista en short', str:'baja'}); result.score -= 1;
-    }
+  const entryLevel  = isLong ? val : vah;
+  const distPct     = Math.abs(close - entryLevel) / close * 100;
+  const distLabel   = isLong ? 'VAL' : 'VAH';
 
-    // EMA21 o EMA50 coincidiendo con un nivel VP clave (tolerancia 2%)
-    const keyLevels = [poc, vah, val];
-    for (const ema of [e21, e50]) {
-      const eName = ema === e21 ? 'EMA21' : 'EMA50';
-      for (const lvl of keyLevels) {
-        const lName = lvl === poc ? 'PoC' : lvl === vah ? 'VAH' : 'VAL';
-        if (Math.abs(ema - lvl) / lvl < 0.02) {
-          items.push({icon:'🎯', label:`${eName} ≈ ${lName} (${((ema-lvl)/lvl*100).toFixed(1)}%) — confluencia estructural`, str:'alta'});
-          result.score += 2;
-          break;
-        }
-      }
-    }
+  // Umbrales en % del precio:
+  // <0.5%  → prácticamente en el nivel (entrada óptima)
+  // <2%    → cerca del nivel (entrada válida)
+  // <5%    → algo extendido (entrada aceptable)
+  // ≥5%    → demasiado extendido (el nivel puede no actuar ya)
+  if (distPct < 0.5) {
+    items.push({ icon:'🎯', label:`Precio en el ${distLabel} (${distPct.toFixed(2)}% distancia) — entrada óptima`, str:'alta' });
+    result.score += 3;
+  } else if (distPct < 2.0) {
+    items.push({ icon:'✅', label:`Precio cerca del ${distLabel} (${distPct.toFixed(1)}%) — entrada válida`, str:'media' });
+    result.score += 2;
+  } else if (distPct < 5.0) {
+    items.push({ icon:'📊', label:`Precio a ${distPct.toFixed(1)}% del ${distLabel} — algo extendido`, str:'baja' });
+    result.score += 1;
+  } else {
+    items.push({ icon:'⚠️', label:`Precio a ${distPct.toFixed(1)}% del ${distLabel} — muy extendido desde el nivel`, str:'baja' });
+    // No suma — demasiado lejos del nivel
   }
 
-  // ── 3. RSI — más granular con zonas intermedias ───────────
-  const rsi = calcRSI(closes);
-  result.rsi = rsi;
-  if (rsi !== null) {
-    if      (rsi < 30 && isLong)  { items.push({icon:'🔥', label:`RSI extremo (${rsi}) — capitulación vendedora`, str:'alta'}); result.score += 3; }
-    else if (rsi < 38 && isLong)  { items.push({icon:'🔥', label:`RSI sobrevendido (${rsi}) — agotamiento bajista`, str:'alta'}); result.score += 2; }
-    else if (rsi < 45 && isLong)  { items.push({icon:'📊', label:`RSI bajo (${rsi}) — presión vendedora cediendo`, str:'media'}); result.score += 1; }
-    else if (rsi > 70 && isShort) { items.push({icon:'❄️', label:`RSI extremo (${rsi}) — euforia compradora`, str:'alta'}); result.score += 3; }
-    else if (rsi > 62 && isShort) { items.push({icon:'❄️', label:`RSI sobrecomprado (${rsi}) — agotamiento alcista`, str:'alta'}); result.score += 2; }
-    else if (rsi > 55 && isShort) { items.push({icon:'📊', label:`RSI alto (${rsi}) — presión compradora cediendo`, str:'media'}); result.score += 1; }
-    else if (rsi > 60 && isLong)  { items.push({icon:'⚠️', label:`RSI alto (${rsi}) — contradice sesgo LONG`, str:'baja'}); result.score -= 1; }
-    else if (rsi < 40 && isShort) { items.push({icon:'⚠️', label:`RSI bajo (${rsi}) — contradice sesgo SHORT`, str:'baja'}); result.score -= 1; }
+  // ── 3. FORMA DEL PERFIL (0-3, penaliza sesgo contrario) ──
+  // El "centro de masa" del volumen dentro del VA indica la forma:
+  //
+  //   Perfil D (equilibrado): POC en el centro del VA (40-60%)
+  //     → El mercado está en equilibrio. Los rebotes en VAL y VAH
+  //       son igualmente probables. Mejor para cualquier señal.
+  //
+  //   Perfil P (volumen arriba): POC en la mitad superior (>60%)
+  //     → El mercado tuvo sesgo alcista. Un short desde VAH va
+  //       contra esa memoria. Un long desde VAL tiene más respaldo.
+  //
+  //   Perfil b (volumen abajo): POC en la mitad inferior (<40%)
+  //     → El mercado tuvo sesgo bajista. Un long desde VAL va
+  //       contra esa memoria. Un short desde VAH tiene más respaldo.
+
+  // Posición del POC dentro del VA: 0 = en el VAL, 1 = en el VAH
+  // Clampear pocLevel al rango [valLevel, vahLevel] — puede estar fuera
+  // si el mayor volumen está en los extremos del perfil, fuera del VA
+  const pocLvlClamped = Math.max(valLevel, Math.min(vahLevel, pocLevel));
+  const pocInVA = vahLevel > valLevel
+    ? (pocLvlClamped - valLevel) / (vahLevel - valLevel)
+    : 0.5;
+
+  const isD = pocInVA >= 0.35 && pocInVA <= 0.65;
+  const isP = pocInVA > 0.65;  // volumen concentrado arriba
+  const isB = pocInVA < 0.35;  // volumen concentrado abajo (perfil "b")
+
+  const isLongPure  = sig?.signal === 'LONG';
+  const isShortPure = sig?.signal === 'SHORT';
+  const isRange     = sig?.signal === 'RANGE_LONG' || sig?.signal === 'RANGE_SHORT';
+
+  if (isD) {
+    items.push({ icon:'⚖️', label:`Perfil D (equilibrado, PoC al ${(pocInVA*100).toFixed(0)}% del VA) — rebotes fiables en ambos extremos`, str:'alta' });
+    result.score += 3;
+  } else if (isP && isLongPure) {
+    // Precio fuera del VA por abajo + POC arriba → memoria alcista respalda el rebote
+    items.push({ icon:'📐', label:`Perfil P (PoC al ${(pocInVA*100).toFixed(0)}% del VA) — sesgo alcista previo, long respaldado`, str:'alta' });
+    result.score += 2;
+  } else if (isB && isShortPure) {
+    // Precio fuera del VA por arriba + POC abajo → memoria bajista respalda el rebote
+    items.push({ icon:'📐', label:`Perfil b (PoC al ${(pocInVA*100).toFixed(0)}% del VA) — sesgo bajista previo, short respaldado`, str:'alta' });
+    result.score += 2;
+  } else if (isP && isShortPure) {
+    items.push({ icon:'⚠️', label:`Perfil P (PoC al ${(pocInVA*100).toFixed(0)}% del VA) — sesgo alcista, short va contra la memoria del perfil`, str:'baja' });
+    result.score -= 1;
+  } else if (isB && isLongPure) {
+    items.push({ icon:'⚠️', label:`Perfil b (PoC al ${(pocInVA*100).toFixed(0)}% del VA) — sesgo bajista, long va contra la memoria del perfil`, str:'baja' });
+    result.score -= 1;
+  } else if (isRange && (isP || isB)) {
+    // Para RANGE el precio ya está dentro del VA — el sesgo del perfil indica
+    // que el precio puede continuar en esa dirección en vez de rebotar al otro extremo
+    const sesgo = isP ? 'alcista (perfil P)' : 'bajista (perfil b)';
+    const dir   = isP ? 'arriba' : 'abajo';
+    items.push({ icon:'📊', label:`Perfil sesgado ${sesgo} — precio puede continuar hacia ${dir} en vez de rebotar`, str:'baja' });
+    // No penaliza fuerte — el precio está dentro del VA y puede ir en cualquier dirección
+    // pero advertimos del sesgo
   }
 
-  // ── 4. VOLUMEN — calidad de la vela actual ────────────────
+  // ── Vela actual — informativo, no afecta score ────────────
   const smaVol = vols.slice(-89).reduce((a,b) => a+b, 0) / Math.min(vols.length, 89);
-  const lv = vols[n-1], lo = df[n-1].open, lc = df[n-1].close;
-  const bull = lc >= lo;
+  const lv = vols[n-1], openPrice = df[n-1].open, lc = df[n-1].close;
+  const bull = lc >= openPrice;
   const vr = smaVol > 0 ? +(lv / smaVol).toFixed(2) : 1;
   result.volRatio = vr;
+  result.candle = vr > 1.5 ? (bull ? 'verde_oscuro' : 'rojo_oscuro')
+                : vr < 0.6 ? (bull ? 'aqua'         : 'ambar')
+                :              (bull ? 'verde_normal'  : 'rojo_normal');
 
-  if (vr > 2.0 && bull && isLong) {
-    items.push({icon:'💥', label:`Volumen excepcional alcista ×${vr} — absorción institucional`, str:'alta'}); result.score += 3;
-    result.candle = 'verde_oscuro';
-  } else if (vr > 2.0 && !bull && isShort) {
-    items.push({icon:'💥', label:`Volumen excepcional bajista ×${vr} — distribución institucional`, str:'alta'}); result.score += 3;
-    result.candle = 'rojo_oscuro';
-  } else if (vr > 1.5 && bull && isLong) {
-    items.push({icon:'📈', label:`Vela alcista con volumen elevado ×${vr}`, str:'alta'}); result.score += 2;
-    result.candle = 'verde_oscuro';
-  } else if (vr > 1.5 && !bull && isShort) {
-    items.push({icon:'📉', label:`Vela bajista con volumen elevado ×${vr}`, str:'alta'}); result.score += 2;
-    result.candle = 'rojo_oscuro';
-  } else if (vr > 1.5 && bull && isShort) {
-    items.push({icon:'⚠️', label:`Vela alcista fuerte ×${vr} — contradice SHORT`, str:'baja'}); result.score -= 1;
-    result.candle = 'verde_oscuro';
-  } else if (vr > 1.5 && !bull && isLong) {
-    items.push({icon:'⚠️', label:`Vela bajista fuerte ×${vr} — contradice LONG`, str:'baja'}); result.score -= 1;
-    result.candle = 'rojo_oscuro';
-  } else if (vr < 0.6) {
-    result.candle = bull ? 'aqua' : 'ambar';
-    items.push({icon:'🌫️', label:`Volumen muy bajo ×${vr} — sin convicción`, str:'baja'});
-    result.score -= 1;
-  } else {
-    result.candle = bull ? 'verde_normal' : 'rojo_normal';
-    items.push({icon:'📊', label:`Vela de volumen normal ×${vr}`, str:'baja'});
-  }
-
-  // ── 5. POSICIÓN EN EL VALUE AREA — distancia al nivel clave ─
-  // Cuanto más cerca del VAL (para long) o VAH (para short), mejor
-  if (isLong) {
-    const distToVal = Math.abs(close - val) / vaW * 100; // % dentro del VA
-    if (distToVal < 10) {
-      items.push({icon:'🎯', label:`Precio en VAL (${distToVal.toFixed(0)}% del VA) — zona de máxima probabilidad`, str:'alta'}); result.score += 2;
-    } else if (distToVal < 25) {
-      items.push({icon:'✅', label:`Precio cerca del VAL (${distToVal.toFixed(0)}% del VA)`, str:'media'}); result.score += 1;
-    }
-  } else if (isShort) {
-    const distToVah = Math.abs(close - vah) / vaW * 100;
-    if (distToVah < 10) {
-      items.push({icon:'🎯', label:`Precio en VAH (${distToVah.toFixed(0)}% del VA) — zona de máxima probabilidad`, str:'alta'}); result.score += 2;
-    } else if (distToVah < 25) {
-      items.push({icon:'✅', label:`Precio cerca del VAH (${distToVah.toFixed(0)}% del VA)`, str:'media'}); result.score += 1;
-    }
-  }
-
-  // ── 6. ATR — calidad del stop (riesgo ajustado a volatilidad) ─
-  // Si el stop es menor que 1 ATR, es demasiado ajustado → ruido
-  // Si el stop es mayor que 3 ATR, es demasiado amplio → poco R:R real
-  if (sig?.stop && n >= 14) {
-    const atrPeriod = 14;
-    const trues = [];
-    for (let i = n-atrPeriod; i < n; i++) {
-      const tr = Math.max(
-        highs[i] - lows[i],
-        Math.abs(highs[i] - closes[i-1]),
-        Math.abs(lows[i]  - closes[i-1])
-      );
-      trues.push(tr);
-    }
-    const atr = trues.reduce((a,b) => a+b, 0) / atrPeriod;
-    const stopDist = Math.abs(close - sig.stop);
-    const atrRatio = atr > 0 ? +(stopDist / atr).toFixed(1) : null;
-    result.atrRatio = atrRatio;
-    if (atrRatio !== null) {
-      if (atrRatio >= 0.8 && atrRatio <= 2.0) {
-        items.push({icon:'✅', label:`Stop en zona óptima: ${atrRatio}×ATR — ni demasiado ajustado ni amplio`, str:'media'});
-        result.score += 1;
-      } else if (atrRatio < 0.8) {
-        items.push({icon:'⚠️', label:`Stop muy ajustado (${atrRatio}×ATR) — alto riesgo de stop-hunt`, str:'baja'});
-        result.score -= 1;
-      } else if (atrRatio > 3.0) {
-        items.push({icon:'⚠️', label:`Stop muy amplio (${atrRatio}×ATR) — R:R real penalizado`, str:'baja'});
-        result.score -= 1;
-      }
-    }
-  }
-
-  // ── 7. VA WIDTH — contexto de consolidación ───────────────
-  const vaw_pct = vaW / poc * 100;
-  if (vaw_pct < 4) {
-    items.push({icon:'🗜️', label:`VA muy estrecho (${vaw_pct.toFixed(1)}%) — consolidación fuerte, ruptura explosiva probable`, str:'alta'}); result.score += 2;
-  } else if (vaw_pct < 8) {
-    items.push({icon:'📐', label:`VA normal (${vaw_pct.toFixed(1)}%) — perfil equilibrado`, str:'baja'});
-  } else {
-    items.push({icon:'↔️', label:`VA ancho (${vaw_pct.toFixed(1)}%) — distribución amplia, menos predictivo`, str:'baja'});
-    result.score -= 1;
-  }
+  // EMA/RSI — solo para display en panel de niveles, no afectan score
+  const e21a = calcEMA(closes, 21), e50a = calcEMA(closes, 50);
+  result.ema21  = isNaN(e21a[n-1]) ? null : e21a[n-1];
+  result.ema50  = isNaN(e50a[n-1]) ? null : e50a[n-1];
+  const e200a   = calcEMA(closes, Math.min(200, n));
+  result.ema200 = isNaN(e200a[n-1]) ? null : e200a[n-1];
+  result.rsi    = calcRSI(closes);
 
   result.score = Math.max(0, Math.min(result.score, 10));
   return result;
 }
-
 // ════════════════════════════════════════════════════════════
 // SCAN ENGINE
 // ════════════════════════════════════════════════════════════
@@ -1695,12 +1690,12 @@ async function scanSymbol(sym) {
   const nRows  = parseInt(document.querySelector('input[oninput*="vrows"]')?.value || 25);
   const vaPct  = parseInt(document.querySelector('input[oninput*="vva"]')?.value || 68) / 100;
 
-  const result = {sym, tf1d: null, tf4h: null};
+  const result = { sym, tf1d: null, tf4h: null };
 
-  var _tfs = [['tf1d','1d',60],['tf4h','4h',60]];
-  for (var _tfi=0; _tfi<_tfs.length; _tfi++) { var tfKey=_tfs[_tfi][0], interval=_tfs[_tfi][1], minBars=_tfs[_tfi][2];
+  const tfList = [['tf1d','1d'], ['tf4h','4h']];
+  for (const [tfKey, interval] of tfList) {
     const df = await fetchOHLCV(sym, interval, 1000);
-    if (!df || df.length < minBars) continue;
+    if (!df || df.length < 60) continue;
 
     const segs = getPivotSegments(df, pivLen);
     if (!segs.length) continue;
@@ -1717,7 +1712,7 @@ async function scanSymbol(sym) {
     const conf  = calcConfluences(df, vp, close, sig);
     const bt    = runBacktest(df, segs, pivLen, nRows, vaPct);
 
-    result[tfKey] = {df, vp, sig, conf, close, segs, bt};
+    result[tfKey] = { df, vp, sig, conf, close, segs, bt, devSlice };
   }
 
   return result;
@@ -1761,6 +1756,7 @@ async function runScan() {
         sig: td.sig.signal, label: td.sig.label,
         stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2, inv: td.sig.invalidation,
         rr: td.sig.rr, score: td.conf.score,
+        scorePct: scorePercentile(td.conf.score, td.bt?.allScores),
         bt: td.bt,
         _td: td, _res: res
       });
@@ -1965,8 +1961,24 @@ function binomialWRTest(trades) {
   };
 }
 
+function scorePercentile(currentScore, allScores) {
+  // Percentil estándar: (nº menores + 0.5 × nº iguales) / total
+  // Evita que un score igual al máximo histórico dé 100%
+  if (!allScores || allScores.length < 5) return null;
+  const below = allScores.filter(s => s < currentScore).length;
+  const equal = allScores.filter(s => s === currentScore).length;
+  return Math.round((below + 0.5 * equal) / allScores.length * 100);
+}
+
+function scorePercentileLabel(pct) {
+  if (pct === null) return null;
+  if (pct >= 90) return { label: `Top ${100-pct}% histórico`, color: 'var(--emerald)', icon: '🏆' };
+  if (pct >= 75) return { label: `Top ${100-pct}% histórico`, color: 'var(--cyan)',    icon: '⚡' };
+  if (pct >= 50) return { label: `Percentil ${pct}%`,         color: 'var(--amber)',   icon: '📊' };
+  return           { label: `Percentil ${pct}% (setup débil)`,color: 'var(--sub)',     icon: '📉' };
+}
+
 function calcIC(bt) {
-  // Mantener compatibilidad: devuelve IC puntual para el resto del código
   const trades = bt?.list;
   if (!trades || trades.length < 5) return null;
   return +spearmanIC(trades).toFixed(3);
@@ -2175,6 +2187,10 @@ function renderPanel() {
       const op  = opData.op;
       const opc = opColor(op);
       const sc  = r.score, scc = scC(sc);
+      const pct = r.scorePct;
+      const pctInfo = scorePercentileLabel(pct);
+      const pctTxt = pct !== null ? `P${pct}` : '';
+      const pctColor = pctInfo?.color || 'var(--dim)';
       const wr  = r.bt?.wr;
       const wrC = wr >= 60 ? 'var(--emerald)' : wr >= 45 ? 'var(--amber)' : 'var(--ember)';
       const wrTxt = wr !== null && wr !== undefined ? `${wr}%` : '—';
@@ -2203,7 +2219,7 @@ function renderPanel() {
         </div>
         <div class="trow-mobile-stats">
           <span>TF <b>${r.tf}</b></span>
-          <span>Score <b style="color:${scc}">${sc}/10</b></span>
+          <span>Score <b style="color:${scc}">${sc}/10</b>${pctTxt ? ` <span style="color:${pctColor};font-size:9px">${pctTxt}</span>` : ''}</span>
           <span>R:R <b>${r.rr?'1:'+r.rr:'—'}</b></span>
           <span>WR <b style="color:${wrC}">${wrTxt}</b></span>
           <span>OP <b style="color:${opc}">${op}</b></span>
@@ -2216,9 +2232,9 @@ function renderPanel() {
         <span class="n n-vah">${f(r.val)}</span>
         <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span></span>
         <span class="n n-stop">${f(r.stop)}<span style="font-size:9px;color:var(--dim);margin-left:2px">${r.close&&r.stop?'('+((Math.abs(r.stop-r.close)/r.close*100).toFixed(1))+'%)':''}</span></span>
-        <span class="n n-tgt">${f(r.t1)}<span style="font-size:9px;color:var(--emerald);margin-left:2px">${r.close&&r.t1?'(+'+(((Math.abs(r.t1-r.close)/r.close)*100).toFixed(1))+'%)':''}</span></span>
+        <span class="n n-tgt">${f(r.t1)}<span style="font-size:9px;color:var(--emerald);margin-left:2px">${r.close&&r.t1?(()=>{const d=((r.t1-r.close)/r.close*100).toFixed(1);return '('+(parseFloat(d)>0?'+':'')+d+'%)'})():''}</span></span>
         <span class="n n-rr">${r.rr ? '1:'+r.rr : '—'}</span>
-        <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${scc}">${sc}<span style="font-size:9px;color:var(--dim)">/10</span></span>
+        <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${scc}" title="${pctInfo ? pctInfo.icon+' '+pctInfo.label : ''}">${sc}<span style="font-size:9px;color:var(--dim)">/10</span>${pctTxt ? `<span style="font-size:9px;color:${pctColor};margin-left:3px">${pctTxt}</span>` : ''}</span>
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${wrC};border-left:1px solid var(--rule);padding-left:8px">${wrTxt}</span>
         <span style="font-family:var(--f-mono);font-size:10px;font-weight:600;color:${fiabC}" title="FIAB">${fiabTxt}</span>
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:800;color:${opc}" title="OP=${op}">${op}</span>`}
@@ -2255,6 +2271,7 @@ function openModal(symFull, tf) {
 
   document.getElementById('overlay').classList.add('open');
   document.getElementById('m-sym').textContent  = `${symFull} · ${tf}`;
+  const bt = td.bt;
   const od = calcOpScore(row);
   document.getElementById('m-meta').textContent =
     'Volume Profile Pivot Anchored · ' + new Date().toLocaleString('es-ES') +
@@ -2297,11 +2314,16 @@ function openModal(symFull, tf) {
   document.getElementById('m-scenario').textContent = sig.scenario;
 
   const sc = conf.score, scc = scC(sc);
-  const slbl = sc>=8?'Setup de primer nivel':sc>=6?'Alta calidad':sc>=4?'Señal sólida':'Señal débil';
+  const pct = scorePercentile(sc, bt?.allScores);
+  const pctInfo = scorePercentileLabel(pct);
+  const slbl = pctInfo
+    ? `${pctInfo.icon} ${pctInfo.label}`
+    : sc>=8?'Setup de primer nivel':sc>=6?'Alta calidad':sc>=4?'Señal sólida':'Señal débil';
   document.getElementById('m-score-big').textContent = sc;
   document.getElementById('m-score-big').style.color = scc;
   document.getElementById('m-pin').style.left = `${sc*10}%`;
   document.getElementById('m-score-lbl').textContent = slbl;
+  document.getElementById('m-score-lbl').style.color = pctInfo?.color || 'var(--sub)';
   document.getElementById('m-confs').innerHTML =
     conf.items.map(c => `<div class="conf-item ${c.str}"><span class="conf-ico">${c.icon}</span><span>${c.label}</span></div>`).join('');
 
@@ -2394,7 +2416,6 @@ function renderBacktest(bt) {
 
   const wrC  = bt.wr>=60?'var(--emerald)':bt.wr>=45?'var(--amber)':'var(--ember)';
   const pnlC = bt.avgPnl>0?'var(--emerald)':'var(--ember)';
-  const expC = bt.expectancy>0?'var(--emerald)':'var(--ember)';
   const totC = bt.totalPnl>0?'var(--emerald)':'var(--ember)';
   const p55C = bt.avgPnl5050>0?'var(--emerald)':'var(--ember)';
 
@@ -2464,8 +2485,10 @@ function renderBacktest(bt) {
       const bC  = bwr>=60?'var(--emerald)':bwr>=45?'var(--amber)':'var(--ember)';
       const bPnl = +(data.pnl/data.total).toFixed(1);
       const bPC  = bPnl>0?'var(--emerald)':'var(--ember)';
+      const bMax = Math.min(+bucket+2, 10);
+      const bLbl = +bucket === bMax ? String(bucket) : bucket+'-'+bMax;
       return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-        + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);width:32px;text-align:right">' + bucket + '-' + (+bucket+2) + '</div>'
+        + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);width:32px;text-align:right">' + bLbl + '</div>'
         + '<div style="flex:1;height:16px;background:var(--ink);border-radius:2px;overflow:hidden;position:relative">'
         + '<div style="height:100%;width:' + bwr + '%;background:' + bC + ';opacity:.7;border-radius:2px"></div>'
         + '<span style="position:absolute;left:5px;top:50%;transform:translateY(-50%);font-size:9px;color:white;font-weight:700">' + bwr + '%</span>'
@@ -2538,7 +2561,7 @@ function renderBacktest(bt) {
     </div>
 
     <!-- Verdict -->
-    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;font-size:12px;color:var(--sub);border-left:3px solid ${expC};line-height:1.7;margin-bottom:10px">
+    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;font-size:12px;color:var(--sub);border-left:3px solid ${pnlC};line-height:1.7;margin-bottom:10px">
       ${verdict}<br>
       <span style="font-size:10px;color:var(--dim)">
         PnL/op: <strong style="color:${pnlC}">${bt.avgPnl>0?'+':''}${bt.avgPnl}%</strong> ·
@@ -2551,14 +2574,14 @@ function renderBacktest(bt) {
     </div>
 
     <!-- T2 recommendation -->
-    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;border-left:3px solid ${bt.t2HitRate>=60?'var(--emerald)':bt.t2HitRate>=35?'var(--amber)':'var(--ember)'};margin-bottom:10px">
+    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;border-left:3px solid ${bt.t2HitRate===null?'var(--dim)':bt.t2HitRate>=60?'var(--emerald)':bt.t2HitRate>=35?'var(--amber)':'var(--ember)'};margin-bottom:10px">
       <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase">¿Mantener hasta T2?</div>
       <div style="font-size:11px;color:var(--sub);line-height:1.6">${t2Rec}</div>
       ${stratComp ? '<div style="font-size:10px;color:var(--dim);margin-top:4px">'+stratComp+'</div>' : ''}
     </div>
 
     <!-- Temporal consistency -->
-    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;border-left:3px solid ${tempC>=5?'var(--emerald)':tempC<=-10?'var(--ember)':'var(--amber)'};margin-bottom:10px">
+    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;border-left:3px solid ${tempC===null?'var(--dim)':tempC>=5?'var(--emerald)':tempC<=-10?'var(--ember)':'var(--amber)'};margin-bottom:10px">
       <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase">Consistencia temporal</div>
       <div style="font-size:11px;color:var(--sub)">${tempTxt}</div>
     </div>
