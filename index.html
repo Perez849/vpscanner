@@ -718,6 +718,7 @@ canvas { width: 100% !important; height: 100% !important; }
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
       <button class="tf-pill" onclick="setTF('1D',this)">1D</button>
       <button class="tf-pill" onclick="setTF('4H',this)">4H</button>
+      <button class="tf-pill" onclick="setTF('TRACKER',this)" id="tracker-pill">📌 TRACKER <span id="tracker-badge" style="display:none;background:var(--ember);color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;margin-left:3px"></span></button>
     </div>
   </div>
 
@@ -1719,8 +1720,283 @@ async function scanSymbol(sym) {
 }
 
 // ════════════════════════════════════════════════════════════
-// MAIN SCAN LOOP
+// ALERT TRACKER — persiste alertas con niveles fijos
+//
+// Cuando el scanner detecta una señal nueva, la guarda en
+// localStorage con entry/stop/T1/T2 congelados en ese momento.
+// En cada scan actualiza el estado comparando el precio actual
+// contra esos niveles fijos. Así el stop no "persigue" al precio.
+//
+// Estados:
+//   active   — alerta vigente, esperando resolución
+//   hit_t1   — precio alcanzó T1 (WIN parcial)
+//   hit_t2   — precio alcanzó T2 (WIN completo)
+//   stopped  — precio tocó el stop (LOSS)
+//   expired  — han pasado demasiadas barras sin resolución
+//
+// Expiración: 60 barras del timeframe (60 días en 1D, 10 días en 4H)
 // ════════════════════════════════════════════════════════════
+
+const TRACKER_KEY = 'vpscanner_tracker_v1';
+const TRACKER_EXPIRY_BARS = 60; // barras hasta expiración
+
+function trackerLoad() {
+  try {
+    return JSON.parse(localStorage.getItem(TRACKER_KEY) || '{}');
+  } catch(e) { return {}; }
+}
+
+function trackerSave(data) {
+  try { localStorage.setItem(TRACKER_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function trackerAlertId(sym, tf, entryTs) {
+  // ID único: sym + tf + timestamp de detección (redondeado a hora para evitar duplicados)
+  const roundedTs = Math.floor(entryTs / 3600000) * 3600000;
+  return sym.replace('/','_') + '_' + tf + '_' + roundedTs;
+}
+
+function trackerAddAlert(row) {
+  const data = trackerLoad();
+  const id = trackerAlertId(row.sym, row.tf, Date.now());
+  if (data[id]) return; // ya existe
+
+  const msPerBar = row.tf === '4H' ? 4*3600*1000 : 86400*1000;
+  data[id] = {
+    id,
+    sym:       row.sym,
+    tf:        row.tf,
+    sig:       row.sig,
+    entry:     row.close,      // precio de entrada congelado
+    stop:      row.stop,       // stop congelado
+    t1:        row.t1,         // target 1 congelado
+    t2:        row.t2 || null, // target 2 congelado
+    poc:       row.poc,
+    vah:       row.vah,
+    val:       row.val,
+    score:     row.score,
+    rr:        row.rr,
+    detectedAt:    Date.now(),
+    expiresAt:     Date.now() + TRACKER_EXPIRY_BARS * msPerBar,
+    status:        'active',
+    highAfterEntry: row.close, // para tracking del mejor precio
+    lowAfterEntry:  row.close,
+    closedAt:      null,
+    closedPrice:   null,
+    pnlPct:        null,
+  };
+  trackerSave(data);
+  trackerUpdateBadge();
+}
+
+function trackerUpdateWithPrice(sym, tf, currentPrice, currentHigh, currentLow) {
+  // Llamado en cada scan con el precio actual — actualiza alertas activas
+  const data = trackerLoad();
+  let changed = false;
+
+  for (const id of Object.keys(data)) {
+    const a = data[id];
+    if (a.status !== 'active') continue;
+    if (a.sym !== sym || a.tf !== tf) continue;
+
+    const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
+
+    // Actualizar extremos desde la entrada
+    if (currentHigh > a.highAfterEntry) { a.highAfterEntry = currentHigh; changed = true; }
+    if (currentLow  < a.lowAfterEntry)  { a.lowAfterEntry  = currentLow;  changed = true; }
+
+    // Expiración
+    if (Date.now() > a.expiresAt) {
+      a.status = 'expired';
+      a.closedAt = Date.now();
+      a.closedPrice = currentPrice;
+      a.pnlPct = +((currentPrice - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+      changed = true;
+      continue;
+    }
+
+    // Comprobar stop (usando low para longs, high para shorts — peor caso intradía)
+    const stopHit = isLong
+      ? currentLow <= a.stop
+      : currentHigh >= a.stop;
+
+    // Comprobar T2 primero (mejor resultado)
+    const t2Hit = a.t2 && (isLong
+      ? currentHigh >= a.t2
+      : currentLow  <= a.t2);
+
+    // Comprobar T1
+    const t1Hit = isLong
+      ? currentHigh >= a.t1
+      : currentLow  <= a.t1;
+
+    if (t2Hit) {
+      a.status = 'hit_t2';
+      a.closedAt = Date.now();
+      a.closedPrice = a.t2;
+      a.pnlPct = +((a.t2 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+      changed = true;
+    } else if (stopHit && t1Hit) {
+      // Tocó stop y T1 en la misma barra — gana T1 (asumimos movimiento favorable primero)
+      a.status = 'hit_t1';
+      a.closedAt = Date.now();
+      a.closedPrice = a.t1;
+      a.pnlPct = +((a.t1 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+      changed = true;
+    } else if (stopHit) {
+      a.status = 'stopped';
+      a.closedAt = Date.now();
+      a.closedPrice = a.stop;
+      a.pnlPct = +((a.stop - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+      changed = true;
+    } else if (t1Hit) {
+      a.status = 'hit_t1';
+      a.closedAt = Date.now();
+      a.closedPrice = a.t1;
+      a.pnlPct = +((a.t1 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+      changed = true;
+    }
+  }
+
+  if (changed) { trackerSave(data); trackerUpdateBadge(); }
+}
+
+function trackerPinRow(btn, sym, tf) {
+  // Look up current row data from allResults — avoids serializing in onclick attribute
+  const row = allResults.find(r => r.sym === sym && r.tf === tf);
+  if (!row) return;
+  trackerAddAlert({
+    sym: row.sym, tf: row.tf,
+    close: row.close, sig: row.sig,
+    stop: row.stop, t1: row.t1, t2: row.t2 || null,
+    poc: row.poc, vah: row.vah, val: row.val,
+    score: row.score, rr: row.rr
+  });
+  btn.textContent = '✅';
+  setTimeout(() => { btn.textContent = '📌'; }, 1500);
+}
+
+function trackerDeleteAlert(id) {
+  const data = trackerLoad();
+  delete data[id];
+  trackerSave(data);
+  trackerUpdateBadge();
+  if (activeTF === 'TRACKER') renderPanel();
+}
+
+function trackerClearClosed() {
+  const data = trackerLoad();
+  for (const id of Object.keys(data)) {
+    if (data[id].status !== 'active') delete data[id];
+  }
+  trackerSave(data);
+  trackerUpdateBadge();
+  renderPanel();
+}
+
+function trackerUpdateBadge() {
+  const data = trackerLoad();
+  const active = Object.values(data).filter(a => a.status === 'active').length;
+  const badge = document.getElementById('tracker-badge');
+  if (!badge) return;
+  if (active > 0) {
+    badge.style.display = 'inline';
+    badge.textContent = active;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function trackerRender() {
+  const data = trackerLoad();
+  const alerts = Object.values(data).sort((a,b) => {
+    // Activas primero, luego por fecha desc
+    if (a.status === 'active' && b.status !== 'active') return -1;
+    if (b.status === 'active' && a.status !== 'active') return 1;
+    return b.detectedAt - a.detectedAt;
+  });
+
+  if (!alerts.length) {
+    return `<div style="padding:60px 24px;text-align:center;color:var(--dim);font-family:var(--f-mono);font-size:11px">
+      <div style="font-size:32px;margin-bottom:16px">📌</div>
+      <div>Sin alertas guardadas.</div>
+      <div style="margin-top:8px;color:var(--rule2)">Las alertas se guardan automáticamente cuando aparecen señales en el scan.<br>Vuelve a la vista ALL y pulsa 📌 en cualquier fila para guardar una manualmente.</div>
+    </div>`;
+  }
+
+  const active  = alerts.filter(a => a.status === 'active');
+  const closed  = alerts.filter(a => a.status !== 'active');
+  const wins    = closed.filter(a => a.status === 'hit_t1' || a.status === 'hit_t2');
+  const losses  = closed.filter(a => a.status === 'stopped');
+  const totalPnl = closed.reduce((s,a) => s + (a.pnlPct || 0), 0);
+
+  const statusLabel = s => ({
+    active:  '<span style="color:var(--sapphire)">● ACTIVA</span>',
+    hit_t1:  '<span style="color:var(--emerald)">✅ T1 ALCANZADO</span>',
+    hit_t2:  '<span style="color:var(--emerald)">🏆 T2 ALCANZADO</span>',
+    stopped: '<span style="color:var(--ember)">❌ STOP</span>',
+    expired: '<span style="color:var(--dim)">⏳ EXPIRADA</span>',
+  }[s] || s);
+
+  const sigColor = s => ({
+    LONG:'var(--emerald)', SHORT:'var(--ember)',
+    RANGE_LONG:'var(--sapphire)', RANGE_SHORT:'var(--amber)'
+  }[s] || 'var(--dim)');
+
+  let html = `<div style="padding:20px 0">`;
+
+  // Summary stats
+  if (closed.length > 0) {
+    const wr = Math.round(wins.length / closed.length * 100);
+    const wrC = wr >= 60 ? 'var(--emerald)' : wr >= 45 ? 'var(--amber)' : 'var(--ember)';
+    const pnlC = totalPnl >= 0 ? 'var(--emerald)' : 'var(--ember)';
+    html += `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${wrC}">${wr}%</div><div class="bt-stat-lbl">WR TRACKER</div></div>
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${pnlC}">${totalPnl>=0?'+':''}${totalPnl.toFixed(1)}%</div><div class="bt-stat-lbl">PnL TOTAL</div></div>
+      <div class="bt-stat"><div class="bt-stat-val">${wins.length}W / ${losses.length}L</div><div class="bt-stat-lbl">RESULTADOS</div></div>
+      <div class="bt-stat"><div class="bt-stat-val" style="color:var(--sapphire)">${active.length}</div><div class="bt-stat-lbl">ACTIVAS</div></div>
+      <button onclick="trackerClearClosed()" style="padding:8px 14px;border:1px solid var(--rule2);background:transparent;color:var(--sub);border-radius:8px;cursor:pointer;font-family:var(--f-mono);font-size:10px;align-self:center">🗑 Limpiar cerradas</button>
+    </div>`;
+  }
+
+  // Alert rows
+  alerts.forEach(a => {
+    const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
+    const isActive = a.status === 'active';
+    const pnlColor = (a.pnlPct || 0) >= 0 ? 'var(--emerald)' : 'var(--ember)';
+    const detDate = new Date(a.detectedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const closDate = a.closedAt ? new Date(a.closedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : null;
+    const expiryPct = isActive ? Math.min(100, Math.round((Date.now() - a.detectedAt) / (a.expiresAt - a.detectedAt) * 100)) : 100;
+
+    html += `<div style="background:var(--ink2);border:1px solid ${isActive?'var(--sapphire)':'var(--rule)'};border-radius:12px;padding:14px 16px;margin-bottom:10px;opacity:${isActive?1:0.7}">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-family:var(--f-display);font-size:15px;font-weight:600">${a.sym}</span>
+        <span style="font-family:var(--f-mono);font-size:9px;background:var(--ink3);padding:2px 7px;border-radius:5px">${a.tf}</span>
+        <span style="font-family:var(--f-mono);font-size:9px;color:${sigColor(a.sig)};font-weight:700">${a.sig.replace('_',' ')}</span>
+        <span style="font-family:var(--f-mono);font-size:9px;color:var(--sub)">Score ${a.score}/10</span>
+        <span style="margin-left:auto;font-size:11px">${statusLabel(a.status)}</span>
+        <button onclick="trackerDeleteAlert('${a.id}')" style="background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:12px;padding:2px 6px" title="Eliminar">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:10px">
+        <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--dim)">ENTRADA</div><div style="font-family:var(--f-mono);font-size:11px">${f(a.entry)}</div></div>
+        <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--ember)">STOP</div><div style="font-family:var(--f-mono);font-size:11px;color:var(--ember)">${f(a.stop)}</div></div>
+        <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--emerald)">T1</div><div style="font-family:var(--f-mono);font-size:11px;color:var(--emerald)">${f(a.t1)}</div></div>
+        ${a.t2 ? `<div><div style="font-family:var(--f-mono);font-size:9px;color:var(--cyan)">T2</div><div style="font-family:var(--f-mono);font-size:11px;color:var(--cyan)">${f(a.t2)}</div></div>` : ''}
+        <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--dim)">R:R</div><div style="font-family:var(--f-mono);font-size:11px">${a.rr ? '1:'+a.rr : '—'}</div></div>
+        ${!isActive ? `<div><div style="font-family:var(--f-mono);font-size:9px;color:var(--dim)">CIERRE</div><div style="font-family:var(--f-mono);font-size:11px">${f(a.closedPrice)}</div></div>
+        <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--dim)">PnL</div><div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:${pnlColor}">${(a.pnlPct||0)>=0?'+':''}${a.pnlPct}%</div></div>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:9px;color:var(--dim)">
+        <span>📅 ${detDate}</span>
+        ${closDate ? `<span>→ ${closDate}</span>` : ''}
+        ${isActive ? `<div style="flex:1;margin-left:8px"><div style="height:3px;background:var(--ink3);border-radius:2px"><div style="height:100%;width:${expiryPct}%;background:${expiryPct>80?'var(--ember)':expiryPct>50?'var(--amber)':'var(--sapphire)'};border-radius:2px;transition:width .5s"></div></div><div style="margin-top:2px;color:${expiryPct>80?'var(--ember)':'var(--dim)'}">${expiryPct}% del tiempo expirado</div></div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  return html;
+}
 async function runScan() {
   const loaderEl = document.getElementById('loader');
   loaderEl.style.display = 'flex';
@@ -1741,15 +2017,33 @@ async function runScan() {
     var _tfs2=[['1D','tf1d'],['4H','tf4h']];
     for (var _ti2=0;_ti2<_tfs2.length;_ti2++) { var tf=_tfs2[_ti2][0], key=_tfs2[_ti2][1];
       const td = res[key];
-      // Debug log para BTC y ETH — visible en consola
       if (sym === 'BTC' || sym === 'ETH') {
         if (!td) {
-          console.warn('[SCAN] ' + sym + ' ' + tf + ': sin datos (fetchOHLCV devolvió null o pocas barras)');
+          console.warn('[SCAN] ' + sym + ' ' + tf + ': sin datos');
         } else {
-          console.log('[SCAN] ' + sym + ' ' + tf + ': ' + (res[key]?.df?.length||0) + ' velas | sig=' + td.sig.signal + ' | score=' + td.conf.score + ' | rr=' + td.sig.rr + ' | t1=' + td.sig.target?.toFixed(2) + ' | close=' + td.close?.toFixed(2));
+          console.log('[SCAN] ' + sym + ' ' + tf + ': ' + (res[key]?.df?.length||0) + ' velas | sig=' + td.sig.signal + ' | score=' + td.conf.score);
         }
       }
       if (!td) continue;
+
+      // ── TRACKER: guardar señal nueva PRIMERO (niveles congelados) ──
+      // Debe hacerse antes de trackerUpdateWithPrice para que la alerta
+      // exista cuando se comprueba su estado por primera vez
+      const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 0);
+      if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target && td.conf.score >= minSc) {
+        trackerAddAlert({
+          sym: sym+'/USDT', tf,
+          close: td.close, sig: td.sig.signal,
+          stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
+          poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
+          score: td.conf.score, rr: td.sig.rr
+        });
+      }
+
+      // ── TRACKER: actualizar alertas activas con precio actual ──
+      const df = td.df;
+      const lastBar = df[df.length - 1];
+      trackerUpdateWithPrice(sym+'/USDT', tf, td.close, lastBar.high, lastBar.low);
       rows.push({
         sym:`${sym}/USDT`, tf, close: td.close,
         poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
@@ -2139,8 +2433,15 @@ function setSort(col) {
 }
 
 function renderPanel() {
-  const data = getFiltered();
   const content = document.getElementById('content');
+
+  // ── TRACKER VIEW ──
+  if (activeTF === 'TRACKER') {
+    if (content) content.innerHTML = trackerRender();
+    return;
+  }
+
+  const data = getFiltered();
 
   // Update sort indicators
   ['sym','tf','sig','rr','score','wr','fiab','op'].forEach(col => {
@@ -2237,7 +2538,8 @@ function renderPanel() {
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${scc}" title="${pctInfo ? pctInfo.icon+' '+pctInfo.label : ''}">${sc}<span style="font-size:9px;color:var(--dim)">/10</span>${pctTxt ? `<span style="font-size:9px;color:${pctColor};margin-left:3px">${pctTxt}</span>` : ''}</span>
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${wrC};border-left:1px solid var(--rule);padding-left:8px">${wrTxt}</span>
         <span style="font-family:var(--f-mono);font-size:10px;font-weight:600;color:${fiabC}" title="FIAB">${fiabTxt}</span>
-        <span style="font-family:var(--f-mono);font-size:12px;font-weight:800;color:${opc}" title="OP=${op}">${op}</span>`}
+        <span style="font-family:var(--f-mono);font-size:12px;font-weight:800;color:${opc}" title="OP=${op}">${op}</span>
+        <button onclick="event.stopPropagation();trackerPinRow(this,'${r.sym}','${r.tf}')" style="background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:11px;padding:2px 4px" title="Guardar en tracker">📌</button>`}
       </div>`;
     });
   }
@@ -2255,7 +2557,6 @@ function setTF(tf, btn) {
   btn.classList.add('on');
   applyFilters();
 }
-
 // ════════════════════════════════════════════════════════════
 // MODAL
 // ════════════════════════════════════════════════════════════
@@ -2876,6 +3177,7 @@ window.addEventListener('resize', () => {
 function isMobile() { return window.innerWidth <= 768; }
 
 // Start scan
+trackerUpdateBadge();
 runScan().catch(function(err) {
   console.error('runScan failed:', err);
   var c = document.getElementById('content');
