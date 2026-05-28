@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VP Scanner · Live</title>
+<title>Stocks VP Scanner · Live</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -703,7 +703,7 @@ canvas { width: 100% !important; height: 100% !important; }
 
   <div class="live-indicator">
     <div class="live-dot"></div>
-    <span id="live-txt">Conectando... (Binance · OKX · Bybit · Gate.io)</span>
+    <span id="live-txt">Conectando... (Stooq · Yahoo Finance)</span>
   </div>
 </aside>
 
@@ -711,13 +711,13 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Crypto Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Binance · OKX · Bybit · Gate.io · 1D + 4H · Pivots anclados · VP Scanner</div>
+      <h1>Stocks Volume Profile <span>Scanner</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · Oro/Plata/Uranio · Pivots anclados · VP Scanner</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
       <button class="tf-pill" onclick="setTF('1D',this)">1D</button>
-      <button class="tf-pill" onclick="setTF('4H',this)">4H</button>
+      <button class="tf-pill" onclick="setTF('1W',this)">1W</button>
       <button class="tf-pill" onclick="setTF('TRACKER',this)" id="tracker-pill">📌 TRACKER <span id="tracker-badge" style="display:none;background:var(--ember);color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;margin-left:3px"></span></button>
     </div>
   </div>
@@ -727,7 +727,7 @@ canvas { width: 100% !important; height: 100% !important; }
       <div class="loader-ring"></div>
       <div>
         <div class="loader-text">CARGANDO DATOS</div>
-        <div class="loader-sym" id="loader-sym">Probando Binance · Gate.io · Bybit...</div>
+        <div class="loader-sym" id="loader-sym">Probando Stooq · Yahoo...</div>
       </div>
     </div>
   </div>
@@ -791,12 +791,88 @@ canvas { width: 100% !important; height: 100% !important; }
 // ════════════════════════════════════════════════════════════
 // CONFIGURATION
 // ════════════════════════════════════════════════════════════
-const SYMBOLS = [
-  'BTC','ETH','BNB','SOL','XRP','DOGE','ADA','AVAX','TRX',
-  'LINK','DOT','LTC','BCH','NEAR','UNI','ARB','OP','ATOM',
-  'INJ','AAVE','FIL','HBAR','VET','MKR','GRT','XLM','ALGO',
-  'EOS','SAND','MANA','AXS','ICP','APT','MATIC','SHIB'
-];
+// ════════════════════════════════════════════════════════════
+// UNIVERSO DE ACCIONES (50) — selección con fuerte peso en mineras de
+// oro, plata y uranio, más sectores potentes (energía, defensa, semis,
+// cobre, tierras raras). Cada entrada mapea:
+//   base   → ticker mostrado en el panel
+//   stooq  → símbolo para Stooq (sufijo de bolsa: .US, .UK, .DE, .F...)
+//   yahoo  → símbolo para Yahoo Finance
+//   sector → etiqueta para filtros/lectura
+// Notas de sufijos:
+//   Stooq: US=.US, Londres=.UK, Toronto=.CA, Fráncfort/Xetra=.DE
+//   Yahoo: Londres=.L, Toronto=.TO, Xetra=.DE, París=.PA, Madrid=.MC,
+//          Ámsterdam=.AS, Oslo=.OL, Estocolmo=.ST
+// ════════════════════════════════════════════════════════════
+const SYM_META = {
+  // ── ORO (mineras) ──────────────────────────────────────────
+  'NEM':   { stooq:'nem.us',   yahoo:'NEM',     sector:'Oro' },        // Newmont
+  'GOLD':  { stooq:'gold.us',  yahoo:'GOLD',    sector:'Oro' },        // Barrick
+  'AEM':   { stooq:'aem.us',   yahoo:'AEM',     sector:'Oro' },        // Agnico Eagle
+  'KGC':   { stooq:'kgc.us',   yahoo:'KGC',     sector:'Oro' },        // Kinross
+  'AU':    { stooq:'au.us',    yahoo:'AU',      sector:'Oro' },        // AngloGold Ashanti
+  'GFI':   { stooq:'gfi.us',   yahoo:'GFI',     sector:'Oro' },        // Gold Fields
+  'HMY':   { stooq:'hmy.us',   yahoo:'HMY',     sector:'Oro' },        // Harmony Gold
+  'BTG':   { stooq:'btg.us',   yahoo:'BTG',     sector:'Oro' },        // B2Gold
+  'FNV':   { stooq:'fnv.us',   yahoo:'FNV',     sector:'Oro' },        // Franco-Nevada (royalty)
+  'WPM':   { stooq:'wpm.us',   yahoo:'WPM',     sector:'Oro/Plata' },  // Wheaton Precious Metals
+  'EGO':   { stooq:'ego.us',   yahoo:'EGO',     sector:'Oro' },        // Eldorado Gold
+  'FRES':  { stooq:'fres.uk',  yahoo:'FRES.L',  sector:'Plata/Oro' },  // Fresnillo (LSE)
+  'GDX':   { stooq:'gdx.us',   yahoo:'GDX',     sector:'Oro (ETF)' },  // VanEck Gold Miners
+  'GDXJ':  { stooq:'gdxj.us',  yahoo:'GDXJ',    sector:'Oro (ETF jr)' },// Junior Gold Miners
+
+  // ── PLATA (mineras) ────────────────────────────────────────
+  'PAAS':  { stooq:'paas.us',  yahoo:'PAAS',    sector:'Plata' },      // Pan American Silver
+  'AG':    { stooq:'ag.us',    yahoo:'AG',      sector:'Plata' },      // First Majestic Silver
+  'HL':    { stooq:'hl.us',    yahoo:'HL',      sector:'Plata' },      // Hecla Mining
+  'CDE':   { stooq:'cde.us',   yahoo:'CDE',     sector:'Plata' },      // Coeur Mining
+  'SIL':   { stooq:'sil.us',   yahoo:'SIL',     sector:'Plata (ETF)' },// Global X Silver Miners
+  'SILV':  { stooq:'silv.us',  yahoo:'SILV',    sector:'Plata' },      // SilverCrest
+
+  // ── URANIO ─────────────────────────────────────────────────
+  'CCJ':   { stooq:'ccj.us',   yahoo:'CCJ',     sector:'Uranio' },     // Cameco
+  'UEC':   { stooq:'uec.us',   yahoo:'UEC',     sector:'Uranio' },     // Uranium Energy
+  'DNN':   { stooq:'dnn.us',   yahoo:'DNN',     sector:'Uranio' },     // Denison Mines
+  'NXE':   { stooq:'nxe.us',   yahoo:'NXE',     sector:'Uranio' },     // NexGen Energy
+  'UUUU':  { stooq:'uuuu.us',  yahoo:'UUUU',    sector:'Uranio' },     // Energy Fuels
+  'URA':   { stooq:'ura.us',   yahoo:'URA',     sector:'Uranio (ETF)' },// Global X Uranium
+  'URNM':  { stooq:'urnm.us',  yahoo:'URNM',    sector:'Uranio (ETF)' },// Sprott Uranium Miners
+  'YCA':   { stooq:'yca.uk',   yahoo:'YCA.L',   sector:'Uranio' },     // Yellow Cake (LSE, físico)
+
+  // ── COBRE / METALES BASE ───────────────────────────────────
+  'FCX':   { stooq:'fcx.us',   yahoo:'FCX',     sector:'Cobre' },      // Freeport-McMoRan
+  'SCCO':  { stooq:'scco.us',  yahoo:'SCCO',    sector:'Cobre' },      // Southern Copper
+  'TECK':  { stooq:'teck.us',  yahoo:'TECK',    sector:'Cobre/Diversif' }, // Teck Resources
+  'ANTO':  { stooq:'anto.uk',  yahoo:'ANTO.L',  sector:'Cobre' },      // Antofagasta (LSE)
+  'GLEN':  { stooq:'glen.uk',  yahoo:'GLEN.L',  sector:'Diversificada' }, // Glencore (LSE)
+  'RIO':   { stooq:'rio.us',   yahoo:'RIO',     sector:'Diversificada' }, // Rio Tinto
+
+  // ── TIERRAS RARAS / LITIO ──────────────────────────────────
+  'MP':    { stooq:'mp.us',    yahoo:'MP',      sector:'Tierras raras' }, // MP Materials
+  'ALB':   { stooq:'alb.us',   yahoo:'ALB',     sector:'Litio' },      // Albemarle
+
+  // ── ENERGÍA ────────────────────────────────────────────────
+  'XOM':   { stooq:'xom.us',   yahoo:'XOM',     sector:'Petróleo' },   // ExxonMobil
+  'CVX':   { stooq:'cvx.us',   yahoo:'CVX',     sector:'Petróleo' },   // Chevron
+  'OXY':   { stooq:'oxy.us',   yahoo:'OXY',     sector:'Petróleo' },   // Occidental
+  'SHEL':  { stooq:'shel.uk',  yahoo:'SHEL.L',  sector:'Petróleo' },   // Shell (LSE)
+  'EQNR':  { stooq:'eqnr.us',  yahoo:'EQNR',    sector:'Petróleo/Gas' }, // Equinor
+
+  // ── DEFENSA / AEROESPACIAL ─────────────────────────────────
+  'LMT':   { stooq:'lmt.us',   yahoo:'LMT',     sector:'Defensa' },    // Lockheed Martin
+  'RTX':   { stooq:'rtx.us',   yahoo:'RTX',     sector:'Defensa' },    // RTX
+  'RHM':   { stooq:'rhm.de',   yahoo:'RHM.DE',  sector:'Defensa' },    // Rheinmetall (Xetra)
+  'BA.':   { stooq:'ba.uk',    yahoo:'BA.L',    sector:'Defensa' },    // BAE Systems (LSE)
+
+  // ── SEMICONDUCTORES / TECH POTENTE ─────────────────────────
+  'NVDA':  { stooq:'nvda.us',  yahoo:'NVDA',    sector:'Semis' },      // Nvidia
+  'AMD':   { stooq:'amd.us',   yahoo:'AMD',     sector:'Semis' },      // AMD
+  'ASML':  { stooq:'asml.us',  yahoo:'ASML',    sector:'Semis' },      // ASML (NASDAQ ADR)
+  'TSM':   { stooq:'tsm.us',   yahoo:'TSM',     sector:'Semis' },      // TSMC (ADR)
+  'AVGO':  { stooq:'avgo.us',  yahoo:'AVGO',    sector:'Semis' },      // Broadcom
+};
+
+const SYMBOLS = Object.keys(SYM_META);
 
 // ════════════════════════════════════════════════════════════
 // STATE
@@ -807,27 +883,21 @@ let activeModal = null;
 let chartInst = null;
 
 // ════════════════════════════════════════════════════════════
-// MOTOR DE DATOS — FUENTE CANÓNICA ÚNICA + INTEGRIDAD
+// MOTOR DE DATOS (ACCIONES) — FUENTE CANÓNICA ÚNICA + INTEGRIDAD
 //
-// Principio rector: una serie OHLCV debe provenir de UN solo mercado.
-// NUNCA se cosen velas de exchanges distintos. Mezclar precios y
-// volúmenes de libros diferentes (Binance USDT vs Yahoo USD vs Gate
-// quote-vol) producía históricos fantasma: precios y fechas que en
-// ningún mercado real existieron. Eso se acabó.
+// Igual principio que la versión cripto: una serie OHLCV proviene de UN
+// solo mercado. NUNCA se cosen fuentes. Cada serie pasa validación de
+// integridad ENTERA o se descarta y se prueba la siguiente.
 //
-// Jerarquía de fuentes (se prueban EN ORDEN, no en carrera):
-//   1. Binance      — fuente canónica (par BASE/USDT spot)
-//   2. Binance.US   — mismo libro USDT, fallback geográfico
-//   3. Bybit        — par BASE/USDT spot
-//   4. OKX          — par BASE/USDT spot
-//   5. Gate.io      — par BASE/USDT spot
-//   6. CryptoCompare— agregado, último recurso
-// Cada nivel se intenta directo y, si CORS/geobloqueo lo tumba, vía proxy.
-// Se devuelve la PRIMERA fuente que pase la validación de integridad
-// ENTERA. No hay concatenación ni "extensión" entre fuentes.
+// Jerarquía (se prueban EN ORDEN):
+//   1. Stooq      — CSV diario/semanal, gratis, sin key, muy estable.
+//                   Tickers US con sufijo .US ; europeos con sufijo de bolsa.
+//   2. Yahoo v8   — JSON chart API vía proxy CORS (fallback).
+// Timeframes: 1D (diario) y 1W (semanal). Para acciones el semanal es el
+// horizonte natural de swing; el intradía gratuito y fiable sin key no
+// existe de forma robusta, por eso NO usamos 4H aquí.
 //
-// Cada serie devuelta lleva metadato .source (qué exchange la generó),
-// de modo que el resto del sistema sabe exactamente de dónde salió.
+// Cada serie devuelta lleva .source para trazabilidad.
 // ════════════════════════════════════════════════════════════
 
 function makeAbortSignal(ms) {
@@ -837,12 +907,18 @@ function makeAbortSignal(ms) {
 }
 
 const INTERVALS = {
-  '1d': { binance:'1d', okx:'1D', bybit:'D',   gate:'1d', cc:'histoday',  ms: 86400000 },
-  '4h': { binance:'4h', okx:'4H', bybit:'240', gate:'4h', cc:'histohour', ms: 4*3600000 },
+  '1d': { stooq:'d', yahoo:'1d', yrange:'2y', ms: 86400000,     label:'1D' },
+  '1w': { stooq:'w', yahoo:'1wk', yrange:'10y', ms: 7*86400000, label:'1W' },
 };
 
-const PROXY = 'https://corsproxy.io/?url=';
+const PROXY  = 'https://corsproxy.io/?url=';
+const PROXY2 = 'https://api.allorigins.win/raw?url=';
 
+async function fetchText(url, ms) {
+  const r = await fetch(url, { signal: makeAbortSignal(ms) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.text();
+}
 async function fetchJSON(url, ms) {
   const r = await fetch(url, { signal: makeAbortSignal(ms) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -850,80 +926,64 @@ async function fetchJSON(url, ms) {
 }
 
 // ════════════════════════════════════════════════════════════
-// PARSERS — cada uno normaliza a { ts(ms), open, high, low, close, volume(base) }
-// Auditados contra documentación oficial de cada exchange.
+// PARSERS — normalizan a { ts(ms), open, high, low, close, volume }
 // ════════════════════════════════════════════════════════════
 
-function parseBinance(data) {
-  // [open_time_ms, open, high, low, close, base_vol, close_time, quote_vol, ...]
-  if (!Array.isArray(data) || data.length < 5) throw new Error('Binance vacío');
-  return data.map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
+// Stooq CSV: Date,Open,High,Low,Close,Volume  (oldest-first)
+function parseStooq(csv) {
+  if (!csv || csv.indexOf('Date') !== 0) {
+    // Stooq devuelve "No data" o vacío si el ticker no existe en su catálogo
+    throw new Error('Stooq sin datos');
+  }
+  const lines = csv.trim().split('\n');
+  const out = [];
+  for (let i = 1; i < lines.length; i++) {
+    const p = lines[i].split(',');
+    if (p.length < 5) continue;
+    const ts = Date.parse(p[0] + 'T00:00:00Z');
+    const o = +p[1], h = +p[2], l = +p[3], c = +p[4], v = p[5] != null ? +p[5] : 0;
+    if (!Number.isFinite(ts) || !Number.isFinite(c)) continue;
+    out.push({ ts, open:o, high:h, low:l, close:c, volume: Number.isFinite(v) ? v : 0 });
+  }
+  if (out.length < 5) throw new Error('Stooq pocas filas');
+  return out;
 }
 
-function parseOKX(data) {
-  // newest-first: [ts_ms, open, high, low, close, base_vol, quote_vol, ...]
-  if (!data.data || data.data.length < 5) throw new Error('OKX vacío');
-  return data.data.slice().reverse()
-    .map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
-}
-
-function parseBybit(data) {
-  // newest-first: [startTime_ms, open, high, low, close, base_vol, turnover]
-  if (!data.result?.list || data.result.list.length < 5) throw new Error('Bybit vacío');
-  return data.result.list.slice().reverse()
-    .map(d => ({ ts:+d[0], open:+d[1], high:+d[2], low:+d[3], close:+d[4], volume:+d[5] }));
-}
-
-function parseGate(data) {
-  // oldest-first: [t_sec, quote_vol, close, high, low, open, ...]
-  // d[1] = volumen en USDT (quote). Convertimos a base ≈ quote/close para homogeneidad.
-  if (!Array.isArray(data) || data.length < 5) throw new Error('Gate vacío');
-  return data.map(d => {
-    const close = +d[2], quoteVol = +d[1];
-    return { ts:+d[0]*1000, open:+d[5], high:+d[3], low:+d[4], close, volume: close > 0 ? quoteVol/close : 0 };
-  });
-}
-
-function parseCryptoCompare(data) {
-  // { Data: { Data: [ {time(sec), open, high, low, close, volumefrom, volumeto} ] } }
-  const arr = data?.Data?.Data;
-  if (!Array.isArray(arr) || arr.length < 5) throw new Error('CryptoCompare vacío');
-  return arr
-    .filter(d => d.close > 0 && d.open > 0)
-    .map(d => ({ ts:+d.time*1000, open:+d.open, high:+d.high, low:+d.low, close:+d.close, volume:+(d.volumefrom||0) }));
+// Yahoo v8 chart JSON
+function parseYahoo(data) {
+  const res = data?.chart?.result?.[0];
+  if (!res || !res.timestamp) throw new Error('Yahoo sin datos');
+  const ts = res.timestamp;
+  const q = res.indicators?.quote?.[0];
+  if (!q) throw new Error('Yahoo sin quote');
+  const out = [];
+  for (let i = 0; i < ts.length; i++) {
+    const o = q.open?.[i], h = q.high?.[i], l = q.low?.[i], c = q.close?.[i], v = q.volume?.[i];
+    if ([o,h,l,c].some(x => x == null)) continue; // velas con null (festivos) se saltan
+    out.push({ ts: ts[i]*1000, open:+o, high:+h, low:+l, close:+c, volume: v != null ? +v : 0 });
+  }
+  if (out.length < 5) throw new Error('Yahoo pocas filas');
+  return out;
 }
 
 // ════════════════════════════════════════════════════════════
 // URLs
 // ════════════════════════════════════════════════════════════
-function urlBinance(sym, interval, limit) {
-  return 'https://api.binance.com/api/v3/klines?symbol='+sym+'USDT&interval='+INTERVALS[interval].binance+'&limit='+Math.min(limit,1000);
+function urlStooq(stooqSym, interval) {
+  // stooqSym ya incluye sufijo (.us, .uk, .de, etc.)
+  return 'https://stooq.com/q/d/l/?s=' + encodeURIComponent(stooqSym) + '&i=' + INTERVALS[interval].stooq;
 }
-function urlBinanceUS(sym, interval, limit) {
-  return 'https://api.binance.us/api/v3/klines?symbol='+sym+'USDT&interval='+INTERVALS[interval].binance+'&limit='+Math.min(limit,1000);
-}
-function urlBybit(sym, interval, limit) {
-  return 'https://api.bybit.com/v5/market/kline?category=spot&symbol='+sym+'USDT&interval='+INTERVALS[interval].bybit+'&limit='+Math.min(limit,1000);
-}
-function urlOKX(sym, interval, limit) {
-  return 'https://www.okx.com/api/v5/market/history-candles?instId='+sym+'-USDT&bar='+INTERVALS[interval].okx+'&limit='+Math.min(limit,300);
-}
-function urlGate(sym, interval, limit) {
-  return 'https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair='+sym+'_USDT&interval='+INTERVALS[interval].gate+'&limit='+Math.min(limit,1000);
-}
-function urlCryptoCompare(sym, interval, limit) {
+function urlYahoo(yhSym, interval) {
   const I = INTERVALS[interval];
-  const agg = interval === '4h' ? 4 : 1;
-  return 'https://min-api.cryptocompare.com/data/v2/'+I.cc+'?fsym='+sym+'&tsym=USDT&aggregate='+agg+'&limit='+Math.min(limit,2000);
+  return 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yhSym) +
+         '?interval=' + I.yahoo + '&range=' + I.yrange;
 }
 
 // ════════════════════════════════════════════════════════════
-// VALIDACIÓN DE INTEGRIDAD
-//
-// Una serie solo se acepta si pasa TODAS estas comprobaciones. Si una
-// fuente falla cualquier regla, se descarta ENTERA y se prueba la
-// siguiente. Esto garantiza que el histórico que ves es un mercado real
-// y coherente, no un collage.
+// VALIDACIÓN DE INTEGRIDAD (adaptada a acciones)
+// Las acciones tienen huecos legítimos (fines de semana, festivos), así
+// que el control de regularidad es más laxo que en cripto 24/7, pero
+// seguimos exigiendo OHLC coherente, orden temporal y datos vivos.
 // ════════════════════════════════════════════════════════════
 function validateSeries(bars, interval, sym, source) {
   if (!Array.isArray(bars) || bars.length < 60) {
@@ -935,50 +995,32 @@ function validateSeries(bars, interval, sym, source) {
 
   for (let i = 0; i < bars.length; i++) {
     const b = bars[i];
-    // 1. Campos numéricos finitos
     if (![b.ts,b.open,b.high,b.low,b.close,b.volume].every(Number.isFinite)) {
       return { ok:false, reason:'vela '+i+' con campo no numérico' };
     }
-    // 2. Timestamp plausible: ms, entre 2010 y +2 días de margen
-    if (b.ts < 1262304000000 || b.ts > now + 2*step) {
-      return { ok:false, reason:'ts implausible en vela '+i+' ('+new Date(b.ts).toISOString()+')' };
+    if (b.ts < 631152000000 || b.ts > now + 5*step) { // desde 1990
+      return { ok:false, reason:'ts implausible en vela '+i };
     }
-    // 3. Orden estrictamente creciente
     if (b.ts <= prevTs) {
       return { ok:false, reason:'timestamps no crecientes en vela '+i };
     }
-    // 4. Coherencia OHLC: high es el máximo, low el mínimo, precios > 0
     if (b.high < b.low || b.high < b.open || b.high < b.close ||
         b.low > b.open || b.low > b.close ||
         b.open <= 0 || b.close <= 0) {
       return { ok:false, reason:'OHLC incoherente en vela '+i };
     }
-    // 5. Volumen no negativo
     if (b.volume < 0) {
       return { ok:false, reason:'volumen negativo en vela '+i };
     }
     prevTs = b.ts;
   }
 
-  // 6. Regularidad temporal: la mayoría de los huecos deben ser ~1 step.
-  //    Toleramos gaps (mantenimiento/halts) pero no una serie cuyo
-  //    espaciado medio no se parezca al timeframe declarado.
-  let gaps = 0, irregular = 0;
-  for (let i = 1; i < bars.length; i++) {
-    const dt = bars[i].ts - bars[i-1].ts;
-    gaps++;
-    // Un dt válido es múltiplo aproximado del step (1×, 2×, 3×... por huecos)
-    const ratio = dt / step;
-    if (ratio < 0.5 || Math.abs(ratio - Math.round(ratio)) > 0.15) irregular++;
-  }
-  if (gaps > 0 && irregular / gaps > 0.25) {
-    return { ok:false, reason:'espaciado irregular ('+irregular+'/'+gaps+' velas) — no parece '+interval };
-  }
-
-  // 7. La última vela debe ser razonablemente reciente (datos vivos)
+  // Última vela razonablemente reciente. Para diario toleramos hasta ~6
+  // días (puentes largos); para semanal hasta ~3 semanas.
+  const maxAgeBars = interval === '1w' ? 3 : 6;
   const ageBars = (now - bars[bars.length-1].ts) / step;
-  if (ageBars > 5) {
-    return { ok:false, reason:'última vela demasiado antigua ('+ageBars.toFixed(1)+' barras)' };
+  if (ageBars > maxAgeBars) {
+    return { ok:false, reason:'última vela antigua ('+ageBars.toFixed(1)+' barras)' };
   }
 
   return { ok:true, source };
@@ -988,57 +1030,69 @@ function validateSeries(bars, interval, sym, source) {
 // FETCH ENGINE — secuencial por jerarquía, integridad estricta
 // ════════════════════════════════════════════════════════════
 
-async function trySource(name, directUrl, parser, interval, sym, limit) {
-  const T = 7000;
-  // Intento directo
+async function tryStooq(stooqSym, interval) {
+  const url = urlStooq(stooqSym, interval);
+  // directo
   try {
-    const raw = await fetchJSON(directUrl, T);
-    const bars = parser(raw);
-    const v = validateSeries(bars, interval, sym, name);
-    if (v.ok) { bars.source = name; return bars; }
-    console.warn('['+sym+' '+interval+'] '+name+' directo rechazado: '+v.reason);
-  } catch (e) {
-    // CORS / geobloqueo / red → probamos proxy
-  }
-  // Intento vía proxy
+    const csv = await fetchText(url, 8000);
+    const bars = parseStooq(csv);
+    const v = validateSeries(bars, interval, stooqSym, 'Stooq');
+    if (v.ok) { bars.source='Stooq'; return bars; }
+  } catch(e) {}
+  // proxy 1
   try {
-    const raw = await fetchJSON(PROXY + encodeURIComponent(directUrl), 14000);
-    const bars = parser(raw);
-    const v = validateSeries(bars, interval, sym, name+'(proxy)');
-    if (v.ok) { bars.source = name+'(proxy)'; return bars; }
-    console.warn('['+sym+' '+interval+'] '+name+' proxy rechazado: '+v.reason);
-  } catch (e) {
-    console.warn('['+sym+' '+interval+'] '+name+' no disponible');
-  }
+    const csv = await fetchText(PROXY + encodeURIComponent(url), 15000);
+    const bars = parseStooq(csv);
+    const v = validateSeries(bars, interval, stooqSym, 'Stooq(proxy)');
+    if (v.ok) { bars.source='Stooq(proxy)'; return bars; }
+  } catch(e) {}
+  // proxy 2
+  try {
+    const csv = await fetchText(PROXY2 + encodeURIComponent(url), 15000);
+    const bars = parseStooq(csv);
+    const v = validateSeries(bars, interval, stooqSym, 'Stooq(proxy2)');
+    if (v.ok) { bars.source='Stooq(proxy2)'; return bars; }
+  } catch(e) {}
   return null;
 }
 
-async function fetchOHLCV(sym, interval, limit) {
-  limit = limit || 1000;
-
-  // Orden de preferencia. Binance es la fuente canónica. El resto solo
-  // entra si Binance no está disponible — y SIEMPRE serie entera, nunca
-  // mezclada con la anterior.
-  const ladder = [
-    ['Binance',       urlBinance(sym, interval, limit),       parseBinance],
-    ['Binance.US',    urlBinanceUS(sym, interval, limit),     parseBinance],
-    ['Bybit',         urlBybit(sym, interval, limit),         parseBybit],
-    ['OKX',           urlOKX(sym, interval, limit),           parseOKX],
-    ['Gate.io',       urlGate(sym, interval, limit),          parseGate],
-    ['CryptoCompare', urlCryptoCompare(sym, interval, limit), parseCryptoCompare],
-  ];
-
-  for (const [name, url, parser] of ladder) {
-    const data = await trySource(name, url, parser, interval, sym, limit);
-    if (data) {
-      console.log('['+sym+' '+interval+'] ✓ '+data.source+' · '+data.length+
-                  ' velas · '+new Date(data[0].ts).toLocaleDateString('es')+
-                  ' → '+new Date(data[data.length-1].ts).toLocaleDateString('es'));
-      return data;
-    }
+async function tryYahoo(yhSym, interval) {
+  const url = urlYahoo(yhSym, interval);
+  for (const [tag, pfx] of [['Yahoo(proxy)', PROXY],['Yahoo(proxy2)', PROXY2]]) {
+    try {
+      const data = await fetchJSON(pfx + encodeURIComponent(url), 15000);
+      const bars = parseYahoo(data);
+      const v = validateSeries(bars, interval, yhSym, tag);
+      if (v.ok) { bars.source=tag; return bars; }
+    } catch(e) {}
   }
+  // intento directo por si el proxy cae (algunos navegadores/extensiones lo permiten)
+  try {
+    const data = await fetchJSON(url, 8000);
+    const bars = parseYahoo(data);
+    const v = validateSeries(bars, interval, yhSym, 'Yahoo');
+    if (v.ok) { bars.source='Yahoo'; return bars; }
+  } catch(e) {}
+  return null;
+}
 
-  console.error('['+sym+' '+interval+'] SIN FUENTE VÁLIDA — ninguna pasó integridad');
+// `sym` es el ticker base del UNIVERSE; resolvemos sus variantes Stooq/Yahoo
+async function fetchOHLCV(sym, interval) {
+  const meta = SYM_META[sym];
+  if (!meta) { console.error('Sin metadatos para '+sym); return null; }
+
+  // 1. Stooq (canónica)
+  let data = await tryStooq(meta.stooq, interval);
+  // 2. Yahoo (fallback)
+  if (!data) data = await tryYahoo(meta.yahoo, interval);
+
+  if (data) {
+    console.log('['+sym+' '+INTERVALS[interval].label+'] ✓ '+data.source+' · '+data.length+
+                ' velas · '+new Date(data[0].ts).toLocaleDateString('es')+
+                ' → '+new Date(data[data.length-1].ts).toLocaleDateString('es'));
+    return data;
+  }
+  console.error('['+sym+' '+INTERVALS[interval].label+'] SIN FUENTE VÁLIDA');
   return null;
 }
 
@@ -1695,11 +1749,11 @@ async function scanSymbol(sym) {
   const nRows  = parseInt(document.querySelector('input[oninput*="vrows"]')?.value || 25);
   const vaPct  = parseInt(document.querySelector('input[oninput*="vva"]')?.value || 68) / 100;
 
-  const result = { sym, tf1d: null, tf4h: null };
+  const result = { sym, tf1d: null, tf1w: null };
 
-  const tfList = [['tf1d','1d'], ['tf4h','4h']];
+  const tfList = [['tf1d','1d'], ['tf1w','1w']];
   for (const [tfKey, interval] of tfList) {
-    const df = await fetchOHLCV(sym, interval, 1000);
+    const df = await fetchOHLCV(sym, interval);
     if (!df || df.length < 60) continue;
 
     const segs = getPivotSegments(df, pivLen);
@@ -2010,7 +2064,7 @@ function trackerRender() {
       <div style="display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:9px;color:var(--dim)">
         <span>📅 ${detDate}</span>
         ${closDate ? `<span>→ ${closDate}</span>` : ''}
-        ${isActive ? `<div style="flex:1;margin-left:8px"><div style="height:3px;background:var(--ink3);border-radius:2px"><div style="height:100%;width:${expiryPct}%;background:${expiryPct>80?'var(--ember)':expiryPct>50?'var(--amber)':'var(--sapphire)'};border-radius:2px;transition:width .5s"></div></div><div style="margin-top:2px;color:${expiryPct>80?'var(--ember)':'var(--dim)'}">${barsLeft} ${a.tf==='4H'?'velas 4H':'días'} restantes · ${expiryPct}%</div></div>` : ''}
+        ${isActive ? `<div style="flex:1;margin-left:8px"><div style="height:3px;background:var(--ink3);border-radius:2px"><div style="height:100%;width:${expiryPct}%;background:${expiryPct>80?'var(--ember)':expiryPct>50?'var(--amber)':'var(--sapphire)'};border-radius:2px;transition:width .5s"></div></div><div style="margin-top:2px;color:${expiryPct>80?'var(--ember)':'var(--dim)'}">${barsLeft} ${a.tf==='1W'?'semanas':'días'} restantes · ${expiryPct}%</div></div>` : ''}
       </div>
     </div>`;
   });
@@ -2035,16 +2089,9 @@ async function runScan() {
 
     const res = await scanSymbol(sym);
 
-    var _tfs2=[['1D','tf1d'],['4H','tf4h']];
+    var _tfs2=[['1D','tf1d'],['1W','tf1w']];
     for (var _ti2=0;_ti2<_tfs2.length;_ti2++) { var tf=_tfs2[_ti2][0], key=_tfs2[_ti2][1];
       const td = res[key];
-      if (sym === 'BTC' || sym === 'ETH') {
-        if (!td) {
-          console.warn('[SCAN] ' + sym + ' ' + tf + ': sin datos');
-        } else {
-          console.log('[SCAN] ' + sym + ' ' + tf + ': ' + (res[key]?.df?.length||0) + ' velas | sig=' + td.sig.signal + ' | score=' + td.conf.score);
-        }
-      }
       if (!td) continue;
 
       // ── TRACKER: guardar señal nueva PRIMERO (niveles congelados) ──
@@ -2054,7 +2101,7 @@ async function runScan() {
       if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target && td.conf.score >= minSc) {
         const lastBar = td.df[td.df.length - 1];
         trackerAddAlert({
-          sym: sym+'/USDT', tf,
+          sym, tf,
           close: td.close,           // precio actual — lo que pagarías al entrar ahora
           sig: td.sig.signal,
           stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
@@ -2066,9 +2113,10 @@ async function runScan() {
       }
 
       // ── TRACKER: actualizar alertas activas con historial completo ──
-      trackerUpdateWithPrice(sym+'/USDT', tf, td.df);
+      trackerUpdateWithPrice(sym, tf, td.df);
       rows.push({
-        sym:`${sym}/USDT`, tf, close: td.close,
+        sym, tf, close: td.close,
+        sector: (SYM_META[sym]?.sector || ''),
         poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
         sig: td.sig.signal, label: td.sig.label,
         stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2, inv: td.sig.invalidation,
@@ -2091,16 +2139,17 @@ async function runScan() {
       // Update progress in topbar
       const pct = Math.round((i+1)/SYMBOLS.length*100);
       document.getElementById('top-meta').textContent =
-        `Cargando... ${i+1}/${SYMBOLS.length} (${pct}%) · Binance · 1D + 4H`;
+        `Cargando... ${i+1}/${SYMBOLS.length} (${pct}%) · Stooq/Yahoo · 1D + 1W`;
     }
 
-    // Tiny pause para no saturar — con parallel fetch ya no necesitamos más
-    if (i < SYMBOLS.length - 1) await sleep(60);
+    // Pausa entre símbolos: las fuentes de acciones via proxy pueden
+    // rate-limitar; un respiro evita bloqueos.
+    if (i < SYMBOLS.length - 1) await sleep(250);
   }
 
   allResults = rows;
   document.getElementById('live-txt').textContent =
-    `Binance · ${new Date().toLocaleTimeString('es-ES')} · ${rows.length} señales`;
+    `Stooq/Yahoo · ${new Date().toLocaleTimeString('es-ES')} · ${rows.length} señales`;
   renderPanel();
 }
 
@@ -2494,12 +2543,12 @@ function getFiltered() {
     if (r.sig==='RANGE_SHORT' && !frs) return false;
     if (r.sig==='NEUTRAL' && !fn) return false;
     // Filter out signals where target distance is < 0.5% (demasiado cerca — no vale la pena)
-    // Nota: para BTC/ETH con precios altos el 1% era demasiado estricto
+    // Para acciones el 0.5% mínimo evita objetivos triviales por ruido
     if (r.t1 && r.close) {
       const targetDist = Math.abs(r.t1 - r.close) / r.close;
       if (targetDist < 0.005) return false;
     }
-    // R:R fuera de rango razonable — ampliamos máximo a 15 (BTC puede tener R:R altos)
+    // R:R fuera de rango razonable — descartamos
     if (r.rr && (parseFloat(r.rr) < 0.3 || parseFloat(r.rr) > 15)) return false;
     return true;
   });
@@ -2530,7 +2579,7 @@ function setSort(col) {
 function renderTop3(data) {
   if (!data || data.length < 2) return '';
 
-  // Deduplicar por símbolo base: si BTC 1D y BTC 4H ambos califican,
+  // Deduplicar por símbolo base: si un valor califica en 1D y 1W,
   // solo el de mayor IOA entra en Top 3 para forzar diversificación
   const seenSyms = new Set();
   const ranked = data
@@ -2538,7 +2587,7 @@ function renderTop3(data) {
     .filter(x => x.ioa.ioa > 0 && x.r.bt?.total >= 3)
     .sort((a, b) => b.ioa.ioa - a.ioa.ioa)
     .filter(x => {
-      const base = x.r.sym.replace('/USDT','');
+      const base = x.r.sym;
       if (seenSyms.has(base)) return false;
       seenSyms.add(base);
       return true;
@@ -2644,7 +2693,7 @@ function renderTop3(data) {
     html += `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:9px;padding:11px 13px;cursor:pointer;border:1px solid ${i===0?'var(--emerald)':'var(--rule2)'}">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px">
         <span style="font-size:14px">${['🥇','🥈','🥉'][i]}</span>
-        <span style="font-family:var(--f-display);font-size:13px;font-weight:700">${r.sym.replace('/USDT','')}</span>
+        <span style="font-family:var(--f-display);font-size:13px;font-weight:700">${r.sym}</span>
         <span style="font-family:var(--f-mono);font-size:8px;background:var(--ink2);padding:1px 5px;border-radius:4px">${r.tf}</span>
         <span style="font-family:var(--f-mono);font-size:8px;color:${sigColor(r.sig)};font-weight:700;margin-left:auto">${sigFull(r.sig)}</span>
       </div>
@@ -2708,7 +2757,7 @@ function renderTop3(data) {
     const top3Syms = new Set();
     const seen1 = new Set(), seen3 = new Set();
     for (const x of rankAll) {
-      const base = x.r.sym.replace('/USDT','');
+      const base = x.r.sym;
       if (top1Syms.size === 0 && !seen1.has(base)) { top1Syms.add(x.r.sym+'|'+x.r.tf); seen1.add(base); }
       if (top3Syms.size < 3 && !seen3.has(base))   { top3Syms.add(x.r.sym+'|'+x.r.tf); seen3.add(base); }
     }
@@ -2882,6 +2931,7 @@ function renderPanel() {
         ${isMobile() ? `
         <div class="trow-mobile-top">
           <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')" style="font-size:15px">${r.sym}</button>
+          ${r.sector?`<span style="font-size:8px;color:var(--dim);font-family:var(--f-mono)">${r.sector}</span>`:''}
           <span class="badge ${bCls(r.sig)}" style="font-size:9px">${sigTxt(r.sig)}</span>
           <span style="font-family:var(--f-mono);font-size:12px;margin-left:auto">${f(r.close)}</span>
         </div>
@@ -2892,7 +2942,7 @@ function renderPanel() {
           <span>WR <b style="color:${wrC}">${wrTxt}</b></span>
           <span>OP <b style="color:${opc}">${op}</b></span>
         </div>` : `
-        <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')">${r.sym}</button>
+        <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')" title="${r.sector||''}">${r.sym}${r.sector?`<span style="display:block;font-size:7px;color:var(--dim);font-weight:400;letter-spacing:0">${r.sector}</span>`:''}</button>
         <span class="tf-chip">${r.tf}</span>
         <span class="n">${f(r.close)}</span>
         <span class="n n-poc">${f(r.poc)}</span>
