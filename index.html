@@ -2530,42 +2530,56 @@ function renderTop3(data) {
 
   if (!ranked.length) return '';
 
-  const top3  = ranked.slice(0, 3);
-  const top1  = ranked.slice(0, 1);
-  const allN  = data.length;
+  const top3 = ranked.slice(0, 3);
+  const top1 = ranked.slice(0, 1);
+  const allN = data.length;
+
+  // ── Comparativa histórica correcta ───────────────────────
+  // Pregunta: "¿Los activos con IOA alto tienen mejor WR histórico que los de IOA bajo?"
+  // Para responderla de forma estable:
+  //   - Tomamos TODOS los activos con backtest (independientemente de si están en Top 3 hoy)
+  //   - Los dividimos en tercio alto, tercio medio, tercio bajo por IOA
+  //   - Comparamos el WR histórico de cada grupo
+  // Esto es estable porque los backtest históricos no cambian día a día.
 
   function poolStats(items) {
-    // Usamos TODOS los trades históricos del bt — no filtrar por tipo de señal
-    // porque el tipo puede cambiar día a día y con pocos trades la varianza es enorme
     const trades = items.flatMap(x => x.r.bt?.list || []);
     if (!trades.length) return null;
-    const wins    = trades.filter(t => t.outcome === 'win').length;
-    const wr      = Math.round(wins / trades.length * 100);
-    const avgPnl  = +(trades.reduce((a,t) => a+t.pnlPct, 0) / trades.length).toFixed(2);
-    const totPnl  = +(trades.reduce((a,t) => a+t.pnlPct, 0)).toFixed(1);
-    // PnL compuesto (reinvirtiendo) — más realista
-    const cmpPnl  = +(trades.reduce((a,t) => a*(1+t.pnlPct/100), 1)*100 - 100).toFixed(1);
-    const wArr    = trades.filter(t => t.outcome === 'win');
-    const lArr    = trades.filter(t => t.outcome === 'loss');
-    const avgW    = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
-    const avgL    = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
-    const realRR  = avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
+    const wins   = trades.filter(t => t.outcome === 'win').length;
+    const wr     = Math.round(wins / trades.length * 100);
+    const avgPnl = +(trades.reduce((a,t) => a+t.pnlPct, 0) / trades.length).toFixed(2);
+    const cmpPnl = +(trades.reduce((a,t) => a*(1+t.pnlPct/100), 1)*100 - 100).toFixed(1);
+    const wArr   = trades.filter(t => t.outcome === 'win');
+    const lArr   = trades.filter(t => t.outcome === 'loss');
+    const avgW   = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
+    const avgL   = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
+    const realRR = avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
     const p = wr/100, b = realRR ?? 1;
-    const kelly   = b > 0 ? +((p*b-(1-p))/b).toFixed(3) : null;
-    const halfK   = kelly != null && kelly > 0 ? +(kelly/2*100).toFixed(0) : null;
-    // Advertencia si la muestra es pequeña
-    const reliable = trades.length >= 10;
-    return { n:trades.length, wins, wr, avgPnl, totPnl, cmpPnl, realRR, kelly, halfK, reliable };
+    const kelly  = b > 0 ? +((p*b-(1-p))/b).toFixed(3) : null;
+    const halfK  = kelly != null && kelly > 0 ? +(kelly/2*100).toFixed(0) : null;
+    return { n:trades.length, wins, wr, avgPnl, cmpPnl, realRR, kelly, halfK,
+             reliable: trades.length >= 10 };
   }
 
-  const allItems = data
+  // Todos los activos con backtest válido, ordenados por IOA
+  const allWithBt = data
     .filter(r => r.bt?.total >= 3)
     .map(r => ({ r, ioa: calcIOA(r) }))
-    .filter(x => x.ioa.ioa > 0);
+    .sort((a, b) => b.ioa.ioa - a.ioa.ioa);
 
-  const statsTop1 = poolStats(top1);
-  const statsTop3 = poolStats(top3);
-  const statsAll  = poolStats(allItems);
+  const n3 = allWithBt.length;
+  const third = Math.max(1, Math.floor(n3 / 3));
+
+  // Tercio alto: activos con IOA más alto → estos son los que el sistema recomienda
+  const hiGroup  = allWithBt.slice(0, third);
+  // Tercio bajo: activos con IOA más bajo → los que el sistema descarta
+  const loGroup  = allWithBt.slice(n3 - third);
+  // Todos: referencia global
+  const allGroup = allWithBt;
+
+  const statsHi  = poolStats(hiGroup);
+  const statsLo  = poolStats(loGroup);
+  const statsAll = poolStats(allGroup);
 
   const sigColor = s => ({ LONG:'var(--emerald)', SHORT:'var(--ember)',
     RANGE_LONG:'var(--sapphire)', RANGE_SHORT:'var(--amber)' }[s] || 'var(--dim)');
@@ -2638,46 +2652,137 @@ function renderTop3(data) {
 
   html += `</div>`;
 
-  // ── Tabla: Solo la mejor vs Top 3 vs Todas ───────────────
-  if (statsTop1?.n && statsTop3?.n && statsAll?.n) {
-    const s1=statsTop1, s3=statsTop3, sA=statsAll;
-    const verdict = s1.wr>=s3.wr && s1.wr>=sA.wr
-      ? '✅ Concentrar en la mejor señal es lo más eficiente históricamente. El IOA identifica bien la mejor oportunidad.'
-      : s3.wr>=sA.wr
-      ? '✅ Las Top 3 superan a operar todo. Filtrar por IOA aporta valor real.'
-      : '⚠️ Operar todo ha superado al filtro en este momento. La muestra puede ser pequeña o el ranking IOA aún no tiene suficiente histórico.';
+  // ── Simulación histórica retrospectiva ───────────────────
+  // Método: para cada trade en el backtest de cada activo,
+  // marcamos si ese activo habría estado en el top1 o top3
+  // según su IOA actual (proxy del edge histórico estable).
+  // Luego comparamos los outcomes reales de esos trades.
+  // Nota: usamos IOA actual como proxy del IOA pasado —
+  // activos con buen edge histórico lo han tenido consistentemente.
 
-    html += `<div style="border-top:1px solid var(--rule);padding-top:14px">
-      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:10px;text-transform:uppercase">
-        📊 Si hubieras operado solo históricamente — comparativa real
-      </div>
-      <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:0 8px;font-family:var(--f-mono);font-size:10px;align-items:center">
-        <div style="font-size:8px;color:var(--dim);padding-bottom:8px"></div>
-        <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">🥇 SOLO MEJOR<br><span style="font-size:7px;color:var(--rule2)">${s1.n} ops</span></div>
-        <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TOP 3<br><span style="font-size:7px;color:var(--rule2)">${s3.n} ops</span></div>
-        <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TODAS (${allItems.length})<br><span style="font-size:7px;color:var(--rule2)">${sA.n} ops</span></div>
-        ${rowFn('% operaciones ganadoras', s1.wr, s3.wr, sA.wr, v=>v+'%')}
-        ${rowFn('Ganancia media por operación', s1.avgPnl, s3.avgPnl, sA.avgPnl, v=>(v>=0?'+':'')+v+'%')}
-        ${rowFn('Ganancia total compuesta (reinvirtiendo)', +s1.cmpPnl, +s3.cmpPnl, +sA.cmpPnl, v=>(v>=0?'+':'')+v+'%')}
-        ${s1.realRR!=null?rowFn('Ratio ganancia/pérdida real', s1.realRR, s3.realRR, sA.realRR, v=>'1:'+v):''}
-        ${s1.halfK!=null?rowFn('Tamaño óptimo por op (half-Kelly)', s1.halfK, s3.halfK, sA.halfK, v=>v+'% capital'):''}
-      </div>
-      ${(!s1.reliable||!s3.reliable||!sA.reliable)?`<div style="font-family:var(--f-mono);font-size:8px;color:var(--amber);margin-top:6px;padding:6px 8px;background:var(--ink3);border-radius:5px">⚠️ Muestra pequeña (${s1.n}/${s3.n}/${sA.n} trades). Los porcentajes tienen alta varianza — no extraer conclusiones firmes.</div>`:''}
-      <div style="margin-top:10px;background:var(--ink3);border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:8px;color:var(--dim);line-height:1.7">
-        <b style="color:var(--sub)">La columna en verde es la estrategia con mejor resultado histórico.</b>
-        La ganancia compuesta reinvierte el capital en cada operación — es la métrica real de crecimiento. Una ganancia lineal del +50% puede ser una compuesta del +35% si hubo pérdidas intermedias.
-        <br><br>
-        <b style="color:var(--sub)">Tamaño óptimo (half-Kelly):</b>
-        Responde directamente a "¿qué % de mi capital arriesgo por operación?".
-        Ejemplo: half-Kelly 18% con 10.000€ → arriesgas 1.800€ por trade.
-        Kelly=0 significa que el sistema no tiene ventaja estadística.
-        Kelly negativo significa que pierdes dinero a largo plazo.
-        En la práctica se usa siempre la mitad del Kelly teórico (half-Kelly) para
-        protegerse de errores en las estadísticas históricas.
-        <br><br>
-        ${verdict}
-      </div>
-    </div>`;
+  // Construir ranking IOA de todos los activos (dedupado por sym base)
+  const ioaRankMap = new Map(); // sym+tf → ioa
+  const dedupSet   = new Set();
+  const rankAll    = data
+    .filter(r => r.bt?.total >= 3)
+    .map(r => ({ r, ioa: calcIOA(r).ioa }))
+    .sort((a, b) => b.ioa - a.ioa);
+
+  rankAll.forEach((x, idx) => {
+    ioaRankMap.set(x.r.sym + '|' + x.r.tf, { ioa: x.ioa, rank: idx + 1, total: rankAll.length });
+  });
+
+  // Agrupar TODOS los trades históricos de todos los activos,
+  // enriqueciéndolos con el rank IOA de su activo
+  const allHistoricalTrades = rankAll.flatMap(x => {
+    const list = x.r.bt?.list || [];
+    return list.map(t => ({ ...t, _ioa: x.ioa, _rank: ioaRankMap.get(x.r.sym+'|'+x.r.tf)?.rank ?? 999 }));
+  });
+
+  if (allHistoricalTrades.length > 0) {
+    const nActivos = rankAll.length;
+
+    // Trades de activos que en el ranking IOA habrían estado en los primeros puestos
+    // Top 1: el activo con mayor IOA (1er puesto)
+    // Top 3: los 3 primeros puestos únicos por símbolo base
+    const top1Syms = new Set();
+    const top3Syms = new Set();
+    const seen1 = new Set(), seen3 = new Set();
+    for (const x of rankAll) {
+      const base = x.r.sym.replace('/USDT','');
+      if (top1Syms.size === 0 && !seen1.has(base)) { top1Syms.add(x.r.sym+'|'+x.r.tf); seen1.add(base); }
+      if (top3Syms.size < 3 && !seen3.has(base))   { top3Syms.add(x.r.sym+'|'+x.r.tf); seen3.add(base); }
+    }
+
+    const tradesTop1 = allHistoricalTrades.filter(t =>
+      top1Syms.has(rankAll.find(x => (x.r.bt?.list||[]).includes(t))?.r.sym+'|'+
+                   rankAll.find(x => (x.r.bt?.list||[]).includes(t))?.r.tf) );
+
+    // Método más eficiente: marcar trades en el momento de creación
+    const allTradesTagged = rankAll.flatMap(x => {
+      const key = x.r.sym+'|'+x.r.tf;
+      const inTop1 = top1Syms.has(key);
+      const inTop3 = top3Syms.has(key);
+      return (x.r.bt?.list||[]).map(t => ({ ...t, inTop1, inTop3 }));
+    });
+
+    function simStats(trades) {
+      if (!trades.length) return null;
+      const wins   = trades.filter(t => t.outcome==='win').length;
+      const wr     = Math.round(wins/trades.length*100);
+      const avgPnl = +(trades.reduce((a,t)=>a+t.pnlPct,0)/trades.length).toFixed(2);
+      const cmpPnl = +(trades.reduce((a,t)=>a*(1+t.pnlPct/100),1)*100-100).toFixed(1);
+      const wArr   = trades.filter(t=>t.outcome==='win');
+      const lArr   = trades.filter(t=>t.outcome==='loss');
+      const avgW   = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
+      const avgL   = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
+      const realRR = avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
+      const p = wr/100, b = realRR??1;
+      const kelly  = b>0 ? +((p*b-(1-p))/b).toFixed(3) : null;
+      const halfK  = kelly!=null&&kelly>0 ? +(kelly/2*100).toFixed(0) : null;
+      return { n:trades.length, wr, avgPnl, cmpPnl, realRR, kelly, halfK,
+               reliable: trades.length >= 10 };
+    }
+
+    const sT1  = simStats(allTradesTagged.filter(t => t.inTop1));
+    const sT3  = simStats(allTradesTagged.filter(t => t.inTop3));
+    const sAll = simStats(allTradesTagged);
+
+    if (sT1 && sT3 && sAll) {
+      const rowFn2 = (label, v1, v3, vA, fmt, hi=true) => {
+        const vals = [v1,v3,vA].filter(v=>v!=null);
+        if (!vals.length) return '';
+        const best = hi ? Math.max(...vals) : Math.min(...vals);
+        const style = v => v!=null&&v===best ? 'font-weight:800;color:var(--emerald)' : 'color:var(--sub)';
+        const f = v => v==null ? '<span style="color:var(--dim)">—</span>' : fmt(v);
+        return `<div style="color:var(--sub);font-size:9px;padding:3px 0;border-bottom:1px solid var(--rule)">${label}</div>
+          <div style="text-align:right;${style(v1)};border-bottom:1px solid var(--rule);padding:3px 0">${f(v1)}</div>
+          <div style="text-align:right;${style(v3)};border-bottom:1px solid var(--rule);padding:3px 0">${f(v3)}</div>
+          <div style="text-align:right;${style(vA)};border-bottom:1px solid var(--rule);padding:3px 0">${f(vA)}</div>`;
+      };
+
+      const ioaHelps = sT1.wr > sAll.wr || sT3.wr > sAll.wr;
+      const verdict  = sT1.wr>=sT3.wr && sT1.wr>=sAll.wr
+        ? '✅ Históricamente, concentrar en el activo con mayor IOA ha dado el mejor resultado.'
+        : sT3.wr>=sAll.wr
+        ? '✅ Históricamente, operar solo los top 3 por IOA ha superado a operar todo.'
+        : '⚠️ Históricamente, operar todo ha dado resultados similares o mejores. El IOA puede no discriminar suficiente con esta muestra.';
+
+      html += `<div style="border-top:1px solid var(--rule);padding-top:14px">
+        <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase">
+          📊 Simulación histórica — si siempre hubieras seguido al top IOA
+        </div>
+        <div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-bottom:10px;line-height:1.5">
+          Todos los trades históricos del backtest clasificados según el IOA actual de su activo.
+          ${nActivos} activos · ${sAll.n} trades totales.
+        </div>
+        <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:0 8px;font-family:var(--f-mono);font-size:10px;align-items:center">
+          <div style="font-size:8px;color:var(--dim);padding-bottom:8px"></div>
+          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">🥇 SOLO EL MEJOR<br><span style="font-size:7px;color:var(--rule2)">${sT1.n} trades</span></div>
+          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TOP 3<br><span style="font-size:7px;color:var(--rule2)">${sT3.n} trades</span></div>
+          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TODOS<br><span style="font-size:7px;color:var(--rule2)">${sAll.n} trades</span></div>
+          ${rowFn2('% operaciones ganadoras', sT1.wr, sT3.wr, sAll.wr, v=>v+'%')}
+          ${rowFn2('Ganancia media por operación', sT1.avgPnl, sT3.avgPnl, sAll.avgPnl, v=>(v>=0?'+':'')+v+'%')}
+          ${rowFn2('Ganancia compuesta total', +sT1.cmpPnl, +sT3.cmpPnl, +sAll.cmpPnl, v=>(v>=0?'+':'')+v+'%')}
+          ${sT1.realRR!=null?rowFn2('Ratio ganancia/pérdida real', sT1.realRR, sT3.realRR, sAll.realRR, v=>'1:'+v):''}
+          ${sT1.halfK!=null?rowFn2('Tamaño óptimo (half-Kelly)', sT1.halfK, sT3.halfK, sAll.halfK, v=>v+'% capital'):''}
+        </div>
+        ${(!sT1.reliable||!sT3.reliable)?`<div style="font-family:var(--f-mono);font-size:8px;color:var(--amber);margin-top:6px;padding:6px 8px;background:var(--ink3);border-radius:5px">⚠️ Muestra reducida en top1/top3 (${sT1.n}/${sT3.n} trades). Aumentará con más activos escaneados.</div>`:''}
+        <div style="margin-top:10px;background:var(--ink3);border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:8px;color:var(--dim);line-height:1.7">
+          <b style="color:var(--sub)">Cómo leer esto:</b> verde = mejor estrategia histórica.
+          "Ganancia compuesta" reinvierte el capital en cada operación (interés compuesto real).
+          <br><br>
+          <b style="color:var(--sub)">Limitación:</b> el IOA se calcula con el backtest completo actual,
+          no con el que habría habido en cada momento pasado. Es una aproximación válida si
+          el edge del activo ha sido consistente en el tiempo (ver tendencia WR en las tarjetas).
+          <br><br>
+          <b style="color:var(--sub)">Half-Kelly:</b> % del capital a arriesgar por operación.
+          Kelly=0.4 → half-Kelly=20% → con 10.000€ arriesgas 2.000€ por trade.
+          <br><br>
+          ${verdict}
+        </div>
+      </div>`;
+    }
   }
 
   html += `<div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-top:10px">IOA = Kelly realizado × confianza estadística × (1+IC) × ajuste tendencia/drawdown</div></div>`;
