@@ -1379,7 +1379,10 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
   const wr      = Math.round(wins/total*100);
   const avgRR   = +(trades.reduce((a,t)=>a+t.rr,0)/total).toFixed(2);  // R:R señalado (para referencia)
   const avgPnl  = +(trades.reduce((a,t)=>a+t.pnlPct,0)/total).toFixed(2);
-  const totalPnl= +(trades.reduce((a,t)=>a+t.pnlPct,0)).toFixed(2);
+  const totalPnl    = +(trades.reduce((a,t)=>a+t.pnlPct,0)).toFixed(2);
+  // PnL compuesto: reinvirtiendo capital en cada trade
+  // Más realista que la suma lineal para evaluar rendimiento real
+  const compoundPnl = +(trades.reduce((a,t) => a * (1 + t.pnlPct/100), 1) * 100 - 100).toFixed(2);
 
   // R:R realizado: ganancia media de wins / pérdida media de losses (valores absolutos)
   const winTrades  = trades.filter(t=>t.outcome==='win');
@@ -1450,7 +1453,7 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
 
   return {
     total, wins, losses, wr, avgRR, realizedRR, avgWinPnl, avgLossPnl,
-    avgPnl, totalPnl, expectancy,
+    avgPnl, totalPnl, compoundPnl, expectancy,
     t2HitRate, avgPnl5050, totalPnl5050,
     avgBarsToRes, avgDrawdownWin,
     hiScoreWR:hiWR, loScoreWR:loWR, scoreCorrPct, scoreCorrLabel, byScore,
@@ -1772,7 +1775,7 @@ function trackerAddAlert(row) {
     sym:          row.sym,
     tf:           row.tf,
     sig:          row.sig,
-    entry:        row.close,
+    entry:        row.close,       // precio al inicio del perfil VP
     stop:         row.stop,
     t1:           row.t1,
     t2:           row.t2 || null,
@@ -1781,8 +1784,9 @@ function trackerAddAlert(row) {
     val:          row.val,
     score:        row.score,
     rr:           row.rr,
-    signalStartTs,             // cuando empezó el perfil VP (fecha real de la señal)
-    detectedAt:   Date.now(),  // cuando el scanner la vio por primera vez
+    signalStartTs,
+    entryTs:      row.entryTs || signalStartTs,  // ts de la última barra del perfil
+    detectedAt:   Date.now(),
     expiresAt:    signalStartTs + TRACKER_EXPIRY_BARS * msPerBar,
     status:       'active',
     highAfterEntry: row.close,
@@ -1809,8 +1813,10 @@ function trackerUpdateWithPrice(sym, tf, df) {
 
     const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
 
-    // Solo barras posteriores al inicio del perfil de la señal
-    const relevantBars = df.filter(b => b.ts > a.signalStartTs);
+    // Solo barras POSTERIORES a la última barra del perfil (= cuando apareció la señal)
+    // Usamos entryTs si existe, sino signalStartTs como fallback
+    const cutoff = a.entryTs || a.signalStartTs;
+    const relevantBars = df.filter(b => b.ts > cutoff);
     if (!relevantBars.length) continue;
 
     // Actualizar extremos
@@ -2036,13 +2042,18 @@ async function runScan() {
       // exista cuando se comprueba su estado por primera vez
       const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 0);
       if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target && td.conf.score >= minSc) {
+        // Precio de entrada = cierre de la primera barra del perfil (no el precio actual)
+        const profileStartBar = td.devSlice[0];
+        const profileEndBar   = td.devSlice[td.devSlice.length - 1]; // última barra del perfil = cuando apareció la señal
         trackerAddAlert({
           sym: sym+'/USDT', tf,
-          close: td.close, sig: td.sig.signal,
+          close: profileStartBar?.close ?? td.close,
+          sig: td.sig.signal,
           stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
           poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
           score: td.conf.score, rr: td.sig.rr,
-          signalStartTs: td.signalStartTs  // fecha real de inicio del perfil
+          signalStartTs: td.signalStartTs,
+          entryTs: profileEndBar?.ts ?? td.signalStartTs  // barras POSTERIORES a esta son las que cuentan
         });
       }
 
@@ -2524,23 +2535,27 @@ function renderTop3(data) {
   const allN  = data.length;
 
   function poolStats(items) {
-    const trades = items.flatMap(x => {
-      return (x.r.bt?.list || []).filter(t => t.signal === x.r.sig);
-    });
+    // Usamos TODOS los trades históricos del bt — no filtrar por tipo de señal
+    // porque el tipo puede cambiar día a día y con pocos trades la varianza es enorme
+    const trades = items.flatMap(x => x.r.bt?.list || []);
     if (!trades.length) return null;
-    const wins   = trades.filter(t => t.outcome === 'win').length;
-    const wr     = Math.round(wins / trades.length * 100);
-    const avgPnl = +(trades.reduce((a,t) => a+t.pnlPct, 0) / trades.length).toFixed(2);
-    const totPnl = +(trades.reduce((a,t) => a+t.pnlPct, 0)).toFixed(1);
-    const wArr   = trades.filter(t => t.outcome === 'win');
-    const lArr   = trades.filter(t => t.outcome === 'loss');
-    const avgW   = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
-    const avgL   = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
-    const realRR = avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
+    const wins    = trades.filter(t => t.outcome === 'win').length;
+    const wr      = Math.round(wins / trades.length * 100);
+    const avgPnl  = +(trades.reduce((a,t) => a+t.pnlPct, 0) / trades.length).toFixed(2);
+    const totPnl  = +(trades.reduce((a,t) => a+t.pnlPct, 0)).toFixed(1);
+    // PnL compuesto (reinvirtiendo) — más realista
+    const cmpPnl  = +(trades.reduce((a,t) => a*(1+t.pnlPct/100), 1)*100 - 100).toFixed(1);
+    const wArr    = trades.filter(t => t.outcome === 'win');
+    const lArr    = trades.filter(t => t.outcome === 'loss');
+    const avgW    = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
+    const avgL    = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
+    const realRR  = avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
     const p = wr/100, b = realRR ?? 1;
-    const kelly  = b > 0 ? +((p*b-(1-p))/b).toFixed(3) : null;
-    const halfK  = kelly != null ? +(kelly/2*100).toFixed(0) : null;
-    return { n:trades.length, wins, wr, avgPnl, totPnl, realRR, kelly, halfK };
+    const kelly   = b > 0 ? +((p*b-(1-p))/b).toFixed(3) : null;
+    const halfK   = kelly != null && kelly > 0 ? +(kelly/2*100).toFixed(0) : null;
+    // Advertencia si la muestra es pequeña
+    const reliable = trades.length >= 10;
+    return { n:trades.length, wins, wr, avgPnl, totPnl, cmpPnl, realRR, kelly, halfK, reliable };
   }
 
   const allItems = data
@@ -2643,13 +2658,14 @@ function renderTop3(data) {
         <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TODAS (${allItems.length})<br><span style="font-size:7px;color:var(--rule2)">${sA.n} ops</span></div>
         ${rowFn('% operaciones ganadoras', s1.wr, s3.wr, sA.wr, v=>v+'%')}
         ${rowFn('Ganancia media por operación', s1.avgPnl, s3.avgPnl, sA.avgPnl, v=>(v>=0?'+':'')+v+'%')}
-        ${rowFn('Ganancia total acumulada', +s1.totPnl, +s3.totPnl, +sA.totPnl, v=>(v>=0?'+':'')+v+'%')}
+        ${rowFn('Ganancia total compuesta (reinvirtiendo)', +s1.cmpPnl, +s3.cmpPnl, +sA.cmpPnl, v=>(v>=0?'+':'')+v+'%')}
         ${s1.realRR!=null?rowFn('Ratio ganancia/pérdida real', s1.realRR, s3.realRR, sA.realRR, v=>'1:'+v):''}
         ${s1.halfK!=null?rowFn('Tamaño óptimo por op (half-Kelly)', s1.halfK, s3.halfK, sA.halfK, v=>v+'% capital'):''}
       </div>
+      ${(!s1.reliable||!s3.reliable||!sA.reliable)?`<div style="font-family:var(--f-mono);font-size:8px;color:var(--amber);margin-top:6px;padding:6px 8px;background:var(--ink3);border-radius:5px">⚠️ Muestra pequeña (${s1.n}/${s3.n}/${sA.n} trades). Los porcentajes tienen alta varianza — no extraer conclusiones firmes.</div>`:''}
       <div style="margin-top:10px;background:var(--ink3);border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:8px;color:var(--dim);line-height:1.7">
         <b style="color:var(--sub)">La columna en verde es la estrategia con mejor resultado histórico.</b>
-        Ganancia total asume mismo capital por operación (sin interés compuesto).
+        La ganancia compuesta reinvierte el capital en cada operación — es la métrica real de crecimiento. Una ganancia lineal del +50% puede ser una compuesta del +35% si hubo pérdidas intermedias.
         <br><br>
         <b style="color:var(--sub)">Tamaño óptimo (half-Kelly):</b>
         Responde directamente a "¿qué % de mi capital arriesgo por operación?".
@@ -3087,7 +3103,8 @@ function renderBacktest(bt) {
       <div class="bt-stat"><div class="bt-stat-val" style="color:${wrC}">${bt.wr}%</div><div class="bt-stat-lbl">WIN RATE</div></div>
       <div class="bt-stat"><div class="bt-stat-val" style="color:${pnlC}">${bt.avgPnl>0?'+':''}${bt.avgPnl}%</div><div class="bt-stat-lbl">PnL/OP (T1)</div></div>
       <div class="bt-stat"><div class="bt-stat-val" style="color:${p55C}">${bt.avgPnl5050>0?'+':''}${bt.avgPnl5050}%</div><div class="bt-stat-lbl">PnL/OP (50/50)</div></div>
-      <div class="bt-stat"><div class="bt-stat-val" style="color:${totC}">${bt.totalPnl>0?'+':''}${bt.totalPnl}%</div><div class="bt-stat-lbl">PnL TOTAL</div></div>
+      <div class="bt-stat"><div class="bt-stat-val" style="color:${totC}">${bt.totalPnl>=0?'+':''}${bt.totalPnl}%</div><div class="bt-stat-lbl">PnL LINEAL</div></div>
+      ${bt.compoundPnl!=null?`<div class="bt-stat" title="Reinvirtiendo capital en cada operación"><div class="bt-stat-val" style="color:${bt.compoundPnl>=0?'var(--emerald)':'var(--ember)'}">${bt.compoundPnl>=0?'+':''}${bt.compoundPnl}%</div><div class="bt-stat-lbl">PnL COMPUESTO</div></div>`:''}
       <div class="bt-stat"><div class="bt-stat-val">${bt.total}</div><div class="bt-stat-lbl">OPS</div></div>
       <div class="bt-stat"><div class="bt-stat-val"><span style="color:var(--emerald)">${bt.wins}W</span>/<span style="color:var(--ember)">${bt.losses}L</span></div><div class="bt-stat-lbl">W/L</div></div>
       <div class="bt-stat"><div class="bt-stat-val">1:${bt.avgRR}</div><div class="bt-stat-lbl">R:R SEÑALADO</div></div>
