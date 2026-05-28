@@ -1776,7 +1776,7 @@ function trackerAddAlert(row) {
     sym:          row.sym,
     tf:           row.tf,
     sig:          row.sig,
-    entry:        row.close,       // precio al inicio del perfil VP
+    entry:        row.close,       // precio actual cuando se detectó la señal
     stop:         row.stop,
     t1:           row.t1,
     t2:           row.t2 || null,
@@ -1786,7 +1786,7 @@ function trackerAddAlert(row) {
     score:        row.score,
     rr:           row.rr,
     signalStartTs,
-    entryTs:      row.entryTs || signalStartTs,  // ts de la última barra del perfil
+    entryTs:      row.entryTs || signalStartTs,  // solo barras POSTERIORES a este ts cuentan
     detectedAt:   Date.now(),
     expiresAt:    signalStartTs + TRACKER_EXPIRY_BARS * msPerBar,
     status:       'active',
@@ -1968,6 +1968,7 @@ function trackerRender() {
       <div class="bt-stat"><div class="bt-stat-val">${wins.length}W / ${losses.length}L</div><div class="bt-stat-lbl">RESULTADOS</div></div>
       <div class="bt-stat"><div class="bt-stat-val" style="color:var(--sapphire)">${active.length}</div><div class="bt-stat-lbl">ACTIVAS</div></div>
       <button onclick="trackerClearClosed()" style="padding:8px 14px;border:1px solid var(--rule2);background:transparent;color:var(--sub);border-radius:8px;cursor:pointer;font-family:var(--f-mono);font-size:10px;align-self:center">🗑 Limpiar cerradas</button>
+      <button onclick="if(confirm('¿Borrar TODAS las alertas del tracker y empezar desde cero?')){localStorage.removeItem('vpscanner_tracker_v1');trackerUpdateBadge();renderPanel();}" style="padding:8px 14px;border:1px solid var(--ember);background:transparent;color:var(--ember);border-radius:8px;cursor:pointer;font-family:var(--f-mono);font-size:10px;align-self:center">⚠️ Reset completo</button>
     </div>`;
   }
 
@@ -2043,18 +2044,16 @@ async function runScan() {
       // exista cuando se comprueba su estado por primera vez
       const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 0);
       if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target && td.conf.score >= minSc) {
-        // Precio de entrada = cierre de la primera barra del perfil (no el precio actual)
-        const profileStartBar = td.devSlice[0];
-        const profileEndBar   = td.devSlice[td.devSlice.length - 1]; // última barra del perfil = cuando apareció la señal
+        const lastBar = td.df[td.df.length - 1];
         trackerAddAlert({
           sym: sym+'/USDT', tf,
-          close: profileStartBar?.close ?? td.close,
+          close: td.close,           // precio actual — lo que pagarías al entrar ahora
           sig: td.sig.signal,
           stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
           poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
           score: td.conf.score, rr: td.sig.rr,
           signalStartTs: td.signalStartTs,
-          entryTs: profileEndBar?.ts ?? td.signalStartTs  // barras POSTERIORES a esta son las que cuentan
+          entryTs: lastBar.ts        // solo barras POSTERIORES a hoy cuentan para el cierre
         });
       }
 
