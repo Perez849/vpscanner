@@ -2520,16 +2520,12 @@ function renderTop3(data) {
   if (!ranked.length) return '';
 
   const top3  = ranked.slice(0, 3);
-  const allN  = data.length; // TODAS las señales, no solo las con IOA>0
+  const top1  = ranked.slice(0, 1);
+  const allN  = data.length;
 
-  // ── Estadísticas históricas: Top 3 vs todos ──────────────
-  // Filtra trades del mismo tipo de señal que la alerta actual
-  // para que la comparativa sea homogénea
   function poolStats(items) {
     const trades = items.flatMap(x => {
-      const list = x.r.bt?.list || [];
-      // Solo trades del mismo tipo de señal que la alerta actual
-      return list.filter(t => t.signal === x.r.sig);
+      return (x.r.bt?.list || []).filter(t => t.signal === x.r.sig);
     });
     if (!trades.length) return null;
     const wins   = trades.filter(t => t.outcome === 'win').length;
@@ -2542,133 +2538,133 @@ function renderTop3(data) {
     const avgL   = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
     const realRR = avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
     const p = wr/100, b = realRR ?? 1;
-    const kelly = b > 0 ? +((p*b-(1-p))/b).toFixed(3) : null;
-    return { n:trades.length, wins, wr, avgPnl, totPnl, realRR, kelly };
+    const kelly  = b > 0 ? +((p*b-(1-p))/b).toFixed(3) : null;
+    const halfK  = kelly != null ? +(kelly/2*100).toFixed(0) : null;
+    return { n:trades.length, wins, wr, avgPnl, totPnl, realRR, kelly, halfK };
   }
 
-  // "Todas" = mismas señales del universo actual filtrado con IOA>0
   const allItems = data
     .filter(r => r.bt?.total >= 3)
     .map(r => ({ r, ioa: calcIOA(r) }))
     .filter(x => x.ioa.ioa > 0);
 
+  const statsTop1 = poolStats(top1);
   const statsTop3 = poolStats(top3);
   const statsAll  = poolStats(allItems);
 
-  const medals = ['🥇','🥈','🥉'];
   const sigColor = s => ({ LONG:'var(--emerald)', SHORT:'var(--ember)',
     RANGE_LONG:'var(--sapphire)', RANGE_SHORT:'var(--amber)' }[s] || 'var(--dim)');
-  const sigShort = s => ({ LONG:'L↑', SHORT:'S↓', RANGE_LONG:'RL↑', RANGE_SHORT:'RS↓' }[s] || s);
-  const deltaColor = (a, b) => a >= b ? 'var(--emerald)' : 'var(--ember)';
-  const sign = v => v >= 0 ? '+' : '';
+  const sigFull  = s => ({ LONG:'Long → PoC', SHORT:'Short → PoC',
+    RANGE_LONG:'Range Long → VAH', RANGE_SHORT:'Range Short → VAL' }[s] || s);
+  const sign     = v => (v != null && v >= 0) ? '+' : '';
+  // highlight the best column: higherBetter=true → max is best
+  const rowFn = (label, v1, v3, vA, fmt, higherBetter=true) => {
+    const vals = [v1,v3,vA].filter(v => v != null);
+    if (!vals.length) return '';
+    const best = higherBetter ? Math.max(...vals) : Math.min(...vals);
+    const hi   = v => v != null && v === best
+      ? 'font-weight:800;color:var(--emerald)' : 'color:var(--sub)';
+    const f    = v => v == null ? '<span style="color:var(--dim)">—</span>' : fmt(v);
+    return `<div style="color:var(--sub);font-size:9px;padding:3px 0;border-bottom:1px solid var(--rule)">${label}</div>
+      <div style="text-align:right;${hi(v1)};border-bottom:1px solid var(--rule);padding:3px 0">${f(v1)}</div>
+      <div style="text-align:right;${hi(v3)};border-bottom:1px solid var(--rule);padding:3px 0">${f(v3)}</div>
+      <div style="text-align:right;${hi(vA)};border-bottom:1px solid var(--rule);padding:3px 0">${f(vA)}</div>`;
+  };
 
   let html = `<div style="background:var(--ink2);border:1px solid var(--rule2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
-    <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:12px;text-transform:uppercase">⭐ Top 3 por IOA — Mejores oportunidades ahora</div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px">`;
+    <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:12px;text-transform:uppercase">⭐ Top 3 — Mejores oportunidades según IOA</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:16px">`;
 
   top3.forEach(({ r, ioa }, i) => {
-    const ioaC      = ioa.ioa >= 65 ? 'var(--emerald)' : ioa.ioa >= 45 ? 'var(--cyan)' : 'var(--amber)';
-    const wr        = r.bt?.wr ?? '—';
-    const rr        = r.rr ? '1:'+r.rr : '—';
-    const wrC       = typeof wr === 'number' ? (wr >= 60 ? 'var(--emerald)' : wr >= 45 ? 'var(--amber)' : 'var(--ember)') : 'var(--dim)';
-    const ioaLabel  = ioa.ioa >= 65 ? 'Edge fuerte' : ioa.ioa >= 45 ? 'Edge moderado' : 'Edge débil';
-    const borderC   = i === 0 ? 'var(--emerald)' : 'var(--rule2)';
-    const dw        = r.bt?.avgDrawdownWin;
-    const dwTxt     = dw !== null && dw !== undefined ? dw+'%' : '—';
-    const dwC       = dw > 5 ? 'var(--ember)' : dw > 2 ? 'var(--amber)' : 'var(--emerald)';
-    const rWR       = r.bt?.recentWR, oWR = r.bt?.oldWR;
-    const trendTxt  = rWR !== null && oWR !== null
-      ? (rWR > oWR ? `↑ tendencia +${rWR-oWR}pp` : rWR < oWR ? `↓ deterioro ${rWR-oWR}pp` : '→ estable')
-      : '';
-    const trendC    = rWR > oWR ? 'var(--emerald)' : rWR < oWR ? 'var(--ember)' : 'var(--dim)';
+    const ioaC     = ioa.ioa >= 65 ? 'var(--emerald)' : ioa.ioa >= 45 ? 'var(--cyan)' : 'var(--amber)';
+    const wr       = r.bt?.wr;
+    const wrTxt    = wr != null ? wr+'%' : '—';
+    const wrC      = wr != null ? (wr>=60?'var(--emerald)':wr>=45?'var(--amber)':'var(--ember)') : 'var(--dim)';
+    const ioaLbl   = ioa.ioa >= 65 ? 'Edge fuerte' : ioa.ioa >= 45 ? 'Edge moderado' : 'Edge débil';
+    const dw       = r.bt?.avgDrawdownWin;
+    const dwC      = dw > 5 ? 'var(--ember)' : dw > 2 ? 'var(--amber)' : 'var(--emerald)';
+    const rWR = r.bt?.recentWR, oWR = r.bt?.oldWR;
+    const tdiff    = (rWR != null && oWR != null) ? rWR - oWR : null;
+    const tTxt     = tdiff != null ? (tdiff>0?`↑ mejorando +${tdiff}pp`:tdiff<0?`↓ deterioro ${tdiff}pp`:'→ estable') : '';
+    const tC       = tdiff == null ? 'var(--dim)' : tdiff>0 ? 'var(--emerald)' : tdiff<0 ? 'var(--ember)' : 'var(--dim)';
+    const kv       = ioa.kelly;
+    const hk       = kv != null && kv > 0 ? +(kv/2*100).toFixed(0) : null;
+    const kTxt     = kv == null ? '—' : kv <= 0 ? 'Sin edge' : `${hk}% del capital`;
+    const kC       = kv != null && kv > 0 ? 'var(--cyan)' : 'var(--ember)';
+    const avgPnl   = r.bt?.avgPnl;
 
-    html += `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:9px;padding:11px 13px;cursor:pointer;border:1px solid ${borderC}">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
-        <span style="font-size:14px">${medals[i]}</span>
+    html += `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:9px;padding:11px 13px;cursor:pointer;border:1px solid ${i===0?'var(--emerald)':'var(--rule2)'}">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px">
+        <span style="font-size:14px">${['🥇','🥈','🥉'][i]}</span>
         <span style="font-family:var(--f-display);font-size:13px;font-weight:700">${r.sym.replace('/USDT','')}</span>
         <span style="font-family:var(--f-mono);font-size:8px;background:var(--ink2);padding:1px 5px;border-radius:4px">${r.tf}</span>
-        <span style="font-family:var(--f-mono);font-size:8px;color:${sigColor(r.sig)};font-weight:700;margin-left:auto">${sigShort(r.sig)}</span>
+        <span style="font-family:var(--f-mono);font-size:8px;color:${sigColor(r.sig)};font-weight:700;margin-left:auto">${sigFull(r.sig)}</span>
       </div>
-      <div style="font-family:var(--f-mono);font-size:22px;font-weight:800;color:${ioaC};line-height:1">${ioa.ioa}</div>
-      <div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-bottom:6px">${ioaLabel}</div>
-      <div style="display:flex;gap:8px;font-family:var(--f-mono);font-size:9px">
-        <span>WR <b style="color:${wrC}">${wr}%</b></span>
-        <span>R:R <b>${rr}</b></span>
-        <span>K <b style="color:var(--cyan)">${ioa.kelly ?? '—'}</b></span>
+      <div style="font-family:var(--f-mono);font-size:21px;font-weight:800;color:${ioaC};line-height:1">${ioa.ioa}<span style="font-size:9px;font-weight:400;color:var(--dim)">/100</span></div>
+      <div style="font-family:var(--f-mono);font-size:8px;color:${ioaC};margin-bottom:8px">${ioaLbl}</div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-family:var(--f-mono);font-size:9px;line-height:1.5">
+        <span style="color:var(--dim)">Acierto hist.</span>
+        <span style="color:${wrC};font-weight:700">${wrTxt} (${r.bt?.total??0} ops)</span>
+        <span style="color:var(--dim)">Ganancia/op</span>
+        <span>${avgPnl!=null?(avgPnl>=0?'+':'')+avgPnl+'%':'—'}</span>
+        <span style="color:var(--dim)">Ratio G/P</span>
+        <span>${r.rr?'1:'+r.rr:'—'}</span>
+        <span style="color:var(--dim)">Tamaño op.</span>
+        <span style="color:${kC}">${kTxt}</span>
+        <span style="color:var(--dim)">Retroceso</span>
+        <span style="color:${dwC}">${dw!=null?dw+'% antes de ganar':'—'}</span>
+        ${tTxt?`<span style="color:var(--dim)">Tendencia</span><span style="color:${tC}">${tTxt}</span>`:''}
       </div>
-      <div style="display:flex;gap:8px;font-family:var(--f-mono);font-size:8px;margin-top:4px">
-        <span style="color:var(--dim)">DD <b style="color:${dwC}">${dwTxt}</b></span>
-        ${trendTxt ? `<span style="color:${trendC}">${trendTxt}</span>` : ''}
+      <div style="margin-top:7px;font-family:var(--f-mono);font-size:8px;color:var(--dim);border-top:1px solid var(--rule);padding-top:5px">
+        Confianza ${(ioa.confianza*100).toFixed(0)}% · Score VP ${r.score}/10
       </div>
-      <div style="margin-top:5px;font-family:var(--f-mono);font-size:8px;color:var(--dim)">conf ${(ioa.confianza*100).toFixed(0)}% · score ${r.score}/10 · ${r.bt?.total ?? 0} ops</div>
     </div>`;
   });
 
   html += `</div>`;
 
-  // ── Tabla comparativa histórica ───────────────────────────
-  if (statsTop3 && statsAll && statsTop3.n > 0 && statsAll.n > 0) {
-    const dWR    = statsTop3.wr    - statsAll.wr;
-    const dPnl   = +(statsTop3.avgPnl - statsAll.avgPnl).toFixed(2);
-    const dRR    = (statsTop3.realRR != null && statsAll.realRR != null)
-                   ? +(statsTop3.realRR - statsAll.realRR).toFixed(2) : null;
-    const dKelly = (statsTop3.kelly != null && statsAll.kelly != null)
-                   ? +(statsTop3.kelly - statsAll.kelly).toFixed(3) : null;
+  // ── Tabla: Solo la mejor vs Top 3 vs Todas ───────────────
+  if (statsTop1?.n && statsTop3?.n && statsAll?.n) {
+    const s1=statsTop1, s3=statsTop3, sA=statsAll;
+    const verdict = s1.wr>=s3.wr && s1.wr>=sA.wr
+      ? '✅ Concentrar en la mejor señal es lo más eficiente históricamente. El IOA identifica bien la mejor oportunidad.'
+      : s3.wr>=sA.wr
+      ? '✅ Las Top 3 superan a operar todo. Filtrar por IOA aporta valor real.'
+      : '⚠️ Operar todo ha superado al filtro en este momento. La muestra puede ser pequeña o el ranking IOA aún no tiene suficiente histórico.';
 
-    html += `<div style="border-top:1px solid var(--rule);padding-top:12px;margin-top:4px">
-      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:8px;text-transform:uppercase">
-        📊 Si hubieras operado solo las Top 3 históricamente
+    html += `<div style="border-top:1px solid var(--rule);padding-top:14px">
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:10px;text-transform:uppercase">
+        📊 Si hubieras operado solo históricamente — comparativa real
       </div>
-      <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:4px 12px;font-family:var(--f-mono);font-size:10px;align-items:center">
-        <div style="color:var(--dim);font-size:9px"></div>
-        <div style="color:var(--dim);font-size:9px;text-align:right">TOP 3</div>
-        <div style="color:var(--dim);font-size:9px;text-align:right">TODAS (${allN})</div>
-        <div style="color:var(--dim);font-size:9px;text-align:right">DELTA</div>
-
-        <div style="color:var(--sub)">Win Rate</div>
-        <div style="text-align:right;color:${statsTop3.wr>=60?'var(--emerald)':'var(--amber)'};font-weight:700">${statsTop3.wr}%</div>
-        <div style="text-align:right;color:var(--sub)">${statsAll.wr}%</div>
-        <div style="text-align:right;font-weight:700;color:${deltaColor(dWR,0)}">${sign(dWR)}${dWR}pp</div>
-
-        <div style="color:var(--sub)">PnL medio/op</div>
-        <div style="text-align:right;color:${statsTop3.avgPnl>=0?'var(--emerald)':'var(--ember)'};font-weight:700">${sign(statsTop3.avgPnl)}${statsTop3.avgPnl}%</div>
-        <div style="text-align:right;color:var(--sub)">${sign(statsAll.avgPnl)}${statsAll.avgPnl}%</div>
-        <div style="text-align:right;font-weight:700;color:${deltaColor(dPnl,0)}">${sign(dPnl)}${dPnl.toFixed(2)}pp</div>
-
-        <div style="color:var(--sub)">PnL acumulado</div>
-        <div style="text-align:right;color:${statsTop3.totPnl>=0?'var(--emerald)':'var(--ember)'};font-weight:700">${sign(statsTop3.totPnl)}${statsTop3.totPnl}%</div>
-        <div style="text-align:right;color:var(--sub)">${sign(statsAll.totPnl)}${statsAll.totPnl}%</div>
-        <div style="text-align:right;font-weight:700;color:${deltaColor(statsTop3.totPnl,statsAll.totPnl)}">
-          ${statsTop3.totPnl >= statsAll.totPnl ? '✅' : '⚠️'}
-        </div>
-
-        ${statsTop3.realRR && statsAll.realRR ? `
-        <div style="color:var(--sub)">R:R realizado</div>
-        <div style="text-align:right;font-weight:700">1:${statsTop3.realRR}</div>
-        <div style="text-align:right;color:var(--sub)">1:${statsAll.realRR}</div>
-        <div style="text-align:right;font-weight:700;color:${deltaColor(dRR,0)}">${sign(dRR)}${dRR?.toFixed(2)}</div>` : ''}
-
-        ${statsTop3.kelly && statsAll.kelly ? `
-        <div style="color:var(--sub)">Kelly</div>
-        <div style="text-align:right;color:var(--cyan);font-weight:700">${statsTop3.kelly}</div>
-        <div style="text-align:right;color:var(--sub)">${statsAll.kelly}</div>
-        <div style="text-align:right;font-weight:700;color:${deltaColor(dKelly,0)}">${sign(dKelly)}${dKelly?.toFixed(3)}</div>` : ''}
-
-        <div style="color:var(--sub)">Nº operaciones</div>
-        <div style="text-align:right;color:var(--sub)">${statsTop3.n}</div>
-        <div style="text-align:right;color:var(--sub)">${statsAll.n}</div>
-        <div style="text-align:right;color:var(--dim)">—</div>
+      <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:0 8px;font-family:var(--f-mono);font-size:10px;align-items:center">
+        <div style="font-size:8px;color:var(--dim);padding-bottom:8px"></div>
+        <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">🥇 SOLO MEJOR<br><span style="font-size:7px;color:var(--rule2)">${s1.n} ops</span></div>
+        <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TOP 3<br><span style="font-size:7px;color:var(--rule2)">${s3.n} ops</span></div>
+        <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TODAS (${allItems.length})<br><span style="font-size:7px;color:var(--rule2)">${sA.n} ops</span></div>
+        ${rowFn('% operaciones ganadoras', s1.wr, s3.wr, sA.wr, v=>v+'%')}
+        ${rowFn('Ganancia media por operación', s1.avgPnl, s3.avgPnl, sA.avgPnl, v=>(v>=0?'+':'')+v+'%')}
+        ${rowFn('Ganancia total acumulada', +s1.totPnl, +s3.totPnl, +sA.totPnl, v=>(v>=0?'+':'')+v+'%')}
+        ${s1.realRR!=null?rowFn('Ratio ganancia/pérdida real', s1.realRR, s3.realRR, sA.realRR, v=>'1:'+v):''}
+        ${s1.halfK!=null?rowFn('Tamaño óptimo por op (half-Kelly)', s1.halfK, s3.halfK, sA.halfK, v=>v+'% capital'):''}
       </div>
-
-      <div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-top:8px;line-height:1.5">
-        Comparativa sobre trades históricos reales (solo señales del mismo tipo). "Todas" = ${allItems.length} señales con IOA>0 de ${allN} totales.
-        El delta mide la ventaja de filtrar por IOA. ${dWR > 5 ? '✅ Filtrar por IOA mejora el WR.' : dWR > 0 ? '⚡ Leve mejora al filtrar por IOA.' : '⚠️ Filtrar por IOA no mejora el WR en este momento.'}
+      <div style="margin-top:10px;background:var(--ink3);border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:8px;color:var(--dim);line-height:1.7">
+        <b style="color:var(--sub)">La columna en verde es la estrategia con mejor resultado histórico.</b>
+        Ganancia total asume mismo capital por operación (sin interés compuesto).
+        <br><br>
+        <b style="color:var(--sub)">Tamaño óptimo (half-Kelly):</b>
+        Responde directamente a "¿qué % de mi capital arriesgo por operación?".
+        Ejemplo: half-Kelly 18% con 10.000€ → arriesgas 1.800€ por trade.
+        Kelly=0 significa que el sistema no tiene ventaja estadística.
+        Kelly negativo significa que pierdes dinero a largo plazo.
+        En la práctica se usa siempre la mitad del Kelly teórico (half-Kelly) para
+        protegerse de errores en las estadísticas históricas.
+        <br><br>
+        ${verdict}
       </div>
     </div>`;
   }
 
-  html += `<div style="font-family:var(--f-mono);font-size:8px;color:var(--rule2);margin-top:8px">IOA = Kelly realizado × confianza estadística × amplificador IC</div></div>`;
+  html += `<div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-top:10px">IOA = Kelly realizado × confianza estadística × (1+IC) × ajuste tendencia/drawdown</div></div>`;
   return html;
 }
 
