@@ -915,12 +915,12 @@ const INTERVALS = {
 // inestables y rate-limitan, así que probamos varios en orden. Cada
 // entrada es una función que envuelve la URL destino.
 const PROXIES = [
-  { name:'directo',     wrap: u => u },
-  { name:'corsproxy',   wrap: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u) },
-  { name:'allorigins',  wrap: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
-  { name:'codetabs',    wrap: u => 'https://api.codetabs.com/v1/proxy/?quest=' + u },
-  { name:'thingproxy',  wrap: u => 'https://thingproxy.freeboard.io/fetch/' + u },
-  { name:'corsfix',     wrap: u => 'https://proxy.corsfix.com/?' + u },
+  { name:'directo',      wrap: u => u },
+  { name:'corsproxy',    wrap: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u) },
+  { name:'allorigins',   wrap: u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u), wrapped:true },
+  { name:'alloriginsraw',wrap: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
+  { name:'codetabs',     wrap: u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u) },
+  { name:'thingproxy',   wrap: u => 'https://thingproxy.freeboard.io/fetch/' + u },
 ];
 
 // Registro de diagnóstico (visible en el panel, no solo en consola)
@@ -930,10 +930,6 @@ async function fetchText(url, ms) {
   const r = await fetch(url, { signal: makeAbortSignal(ms) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.text();
-}
-async function fetchJSON(url, ms) {
-  const txt = await fetchText(url, ms);
-  return JSON.parse(txt);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1042,15 +1038,27 @@ function validateSeries(bars, interval, sym, source) {
 // FETCH ENGINE — cascada de proxies, integridad estricta, diagnóstico
 // ════════════════════════════════════════════════════════════
 
-// Intenta una URL a través de cada proxy hasta que uno devuelva datos válidos
+// Intenta una URL a través de cada proxy hasta que uno devuelva datos válidos.
+// Maneja proxies que devuelven el cuerpo crudo y proxies que lo envuelven
+// (allorigins/get → {contents:"..."}). Detecta el formato y desenvuelve.
 async function fetchViaProxies(targetUrl, parser, interval, sym, sourceName) {
+  const isJSON = sourceName.startsWith('Yahoo');
   let lastReason = 'sin intento';
   for (const px of PROXIES) {
     try {
       const wrapped = px.wrap(targetUrl);
-      const isJSON = sourceName.startsWith('Yahoo');
-      const raw = isJSON ? await fetchJSON(wrapped, 13000) : await fetchText(wrapped, 13000);
-      const bars = parser(raw);
+      let body = await fetchText(wrapped, 13000);
+
+      // Si el proxy envuelve en {contents:...} (allorigins/get), extraer.
+      if (px.wrapped) {
+        try {
+          const env = JSON.parse(body);
+          body = env.contents != null ? env.contents : body;
+        } catch (_) { /* no era envoltorio, usar tal cual */ }
+      }
+
+      const payload = isJSON ? JSON.parse(body) : body;
+      const bars = parser(payload);
       const v = validateSeries(bars, interval, sym, sourceName);
       if (v.ok) {
         bars.source = sourceName + '·' + px.name;
@@ -1058,7 +1066,7 @@ async function fetchViaProxies(targetUrl, parser, interval, sym, sourceName) {
       }
       lastReason = v.reason + ' [' + px.name + ']';
     } catch (e) {
-      lastReason = (e?.message || 'error') + ' [' + px.name + ']';
+      lastReason = (e?.message || 'error').slice(0, 50) + ' [' + px.name + ']';
     }
   }
   return { bars:null, reason:lastReason };
@@ -1071,12 +1079,12 @@ async function fetchOHLCV(sym, interval) {
 
   if (!SCAN_DIAG[sym]) SCAN_DIAG[sym] = {};
 
-  // 1. Stooq (canónica)
-  let r = await fetchViaProxies(urlStooq(meta.stooq, interval), parseStooq, interval, sym, 'Stooq');
-  // 2. Yahoo (fallback)
+  // 1. Yahoo (canónica — la más completa y fiable para acciones)
+  let r = await fetchViaProxies(urlYahoo(meta.yahoo, interval), parseYahoo, interval, sym, 'Yahoo');
+  // 2. Stooq (respaldo)
   if (!r.bars) {
-    const ry = await fetchViaProxies(urlYahoo(meta.yahoo, interval), parseYahoo, interval, sym, 'Yahoo');
-    if (ry.bars) r = ry; else r.reason = 'Stooq:' + r.reason + ' | Yahoo:' + ry.reason;
+    const rs = await fetchViaProxies(urlStooq(meta.stooq, interval), parseStooq, interval, sym, 'Stooq');
+    if (rs.bars) r = rs; else r.reason = 'Yahoo:' + r.reason + ' | Stooq:' + rs.reason;
   }
 
   if (r.bars) {
@@ -1870,9 +1878,12 @@ function trackerUpdateWithPrice(sym, tf, df) {
 
     const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
 
-    // Solo barras POSTERIORES a la última barra del perfil (= cuando apareció la señal)
-    // Usamos entryTs si existe, sino signalStartTs como fallback
-    const cutoff = a.entryTs || a.signalStartTs;
+    // Contamos las velas reales transcurridas DESDE que apareció la señal
+    // hasta hoy. El bug anterior usaba entryTs (= última vela del día de
+    // creación), con lo que en escaneos posteriores casi ninguna vela era
+    // "posterior" y barsElapsed se quedaba clavado en 0. Lo correcto es
+    // anclar en signalStartTs y contar todo lo que vino después.
+    const cutoff = a.signalStartTs || a.entryTs;
     const relevantBars = df.filter(b => b.ts > cutoff);
     if (!relevantBars.length) continue;
 
