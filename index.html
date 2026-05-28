@@ -1204,6 +1204,17 @@ function calcVP(bars, nRows = 25, vaPct = 0.68) {
 // ════════════════════════════════════════════════════════════
 // SIGNAL CLASSIFICATION — improved
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// LÍMITES DE RIESGO DEL STOP
+// El stop sale de la estructura del Value Area, pero en timeframe semanal
+// el VA abarca años y el stop estructural puede arriesgar >20%, lo cual es
+// inoperable. Acotamos el riesgo entre un mínimo (evita stops triviales por
+// ruido) y un MÁXIMO (evita stops suicidas). Si el stop estructural supera
+// el máximo, se recorta a exactamente MAX_RISK_PCT.
+// ════════════════════════════════════════════════════════════
+const MIN_RISK_PCT = 1.5;   // riesgo mínimo por operación (%)
+const MAX_RISK_PCT = 8.0;   // riesgo máximo por operación (%) — swing acciones
+
 function classifySignal(close, vp, df) {
   const { pocPrice:poc, vahPrice:vah, valPrice:val,
           priceHigh:ph, priceLow:pl, priceStep:step } = vp;
@@ -1236,31 +1247,35 @@ function classifySignal(close, vp, df) {
   };
 
   if (close > vah + buf) {
-    // SHORT: stop above VAH, min 1.5% of price
+    // SHORT: stop sobre VAH, mínimo 1.5% y MÁXIMO MAX_RISK% de riesgo.
     const rawStop = vah + vaW * .25;
-    const minStop = close * 1.015;
-    const stop = Math.max(rawStop, minStop);
+    const minStop = close * (1 + MIN_RISK_PCT/100);
+    const maxStop = close * (1 + MAX_RISK_PCT/100);   // techo: no arriesgar más de X%
+    const stop = Math.min(Math.max(rawStop, minStop), maxStop);
     sig = {...sig, signal:'SHORT', label:'Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step * 2,
       scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
   } else if (close < val - buf) {
     const rawStop = val - vaW * .25;
-    const minStop = close * 0.985;
-    const stop = Math.min(rawStop, minStop);
+    const minStop = close * (1 - MIN_RISK_PCT/100);
+    const maxStop = close * (1 - MAX_RISK_PCT/100);   // suelo: no arriesgar más de X%
+    const stop = Math.max(Math.min(rawStop, minStop), maxStop);
     sig = {...sig, signal:'LONG', label:'Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
       scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA). Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
   } else if (inVA && close < poc) {
     const rawStop = val - vaW * 0.15;
-    const minStop = close * 0.985;
-    const stop = Math.min(rawStop, minStop);
+    const minStop = close * (1 - MIN_RISK_PCT/100);
+    const maxStop = close * (1 - MAX_RISK_PCT/100);
+    const stop = Math.max(Math.min(rawStop, minStop), maxStop);
     sig = {...sig, signal:'RANGE_LONG', label:'Range Long → VAH',
       stop, target: poc, target2: vah, invalidation: pl - step,
       scenario:'Dentro del VA bajo el PoC. Stop bajo el VAL. LVN entre precio y PoC acelera el movimiento.'};
   } else if (inVA && close > poc) {
     const rawStop = vah + vaW * 0.15;
-    const minStop = close * 1.015;
-    const stop = Math.max(rawStop, minStop);
+    const minStop = close * (1 + MIN_RISK_PCT/100);
+    const maxStop = close * (1 + MAX_RISK_PCT/100);
+    const stop = Math.min(Math.max(rawStop, minStop), maxStop);
     sig = {...sig, signal:'RANGE_SHORT', label:'Range Short → VAL',
       stop, target: poc, target2: val, invalidation: ph + step,
       scenario:'Dentro del VA sobre el PoC. Stop sobre el VAH. Confirmar con volumen decreciente.'};
