@@ -1417,14 +1417,23 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
       pnl50_50 = +((t1Pnl*0.5 + t2Pnl*0.5) - COST_ROUNDTRIP_PCT).toFixed(3);
     }
 
+    // Timestamps de entrada y cierre para mostrar ambas fechas y la duración
+    const entryTs = df[entryI].ts;
+    const exitIdx = (barsToRes && entryI + barsToRes < df.length) ? entryI + barsToRes : df.length - 1;
+    const exitTs  = df[exitIdx].ts;
+    const fmtD = ts => new Date(ts).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'});
+
     trades.push({
       signal:sig.signal, entry:entryClose, stop:sig.stop,
       target:sig.target, target2:sig.target2, exitPrice,
       rr, score, outcome, pnlPct, pnl50_50, t2Hit,
-      barsToRes,
+      barsToRes, barsHeld: barsToRes,
       maxDrawdown: outcome === 'win' ? +worstInWin.toFixed(2) : null,
-      date: new Date(df[entryI].ts).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'}),
-      ts: df[entryI].ts
+      date: fmtD(entryTs),            // compat: fecha de entrada
+      dateEntry: fmtD(entryTs),
+      dateExit:  fmtD(exitTs),
+      ts: entryTs,
+      entryTs, exitTs
     });
   }
 
@@ -1820,7 +1829,10 @@ async function scanSymbol(sym) {
 // v2: expiración medida en BARRAS DE MERCADO reales transcurridas tras la
 // señal (reloj de mercado), no en tiempo de pared. Clave nueva para no
 // heredar alertas corruptas del esquema antiguo (expiresAt de reloj).
-const TRACKER_KEY = 'vpscanner_tracker_v2';
+// v3: id estable por señal + entrada/fecha congeladas del primer avistamiento.
+// Clave nueva porque las alertas v2 tenían el precio de entrada mal (precio de
+// hoy en vez del de la fecha de la señal) y se regeneraban en cada escaneo.
+const TRACKER_KEY = 'vpscanner_tracker_v3';
 const TRACKER_EXPIRY_BARS = 60; // nº de velas reales hasta expiración
 
 function trackerLoad() {
@@ -1833,27 +1845,35 @@ function trackerSave(data) {
   try { localStorage.setItem(TRACKER_KEY, JSON.stringify(data)); } catch(e) {}
 }
 
-function trackerAlertId(sym, tf, signalStartTs) {
-  // ID basado en el inicio real del perfil VP — único por señal real
-  // Si el mismo perfil genera la misma señal en varios scans, el ID es idéntico
-  return sym.replace('/','_') + '_' + tf + '_' + signalStartTs;
+function trackerAlertId(sym, tf, sig) {
+  // ID ESTABLE mientras la señal siga viva. Antes incluía signalStartTs
+  // (la fecha del pivote), que cambia en cada escaneo al detectarse nuevos
+  // pivotes → generaba "alertas nuevas con el precio de hoy" cada vez. Ahora
+  // depende solo de símbolo + timeframe + tipo de señal: si URA sigue en
+  // LONG, es LA MISMA alerta, con su entrada y fecha congeladas del primer
+  // avistamiento. Solo si la señal cambia (LONG→SHORT) nace una alerta nueva.
+  return sym.replace('/','_') + '_' + tf + '_' + sig;
 }
 
 function trackerAddAlert(row) {
   const data = trackerLoad();
   const signalStartTs = row.signalStartTs || Date.now();
-  const id = trackerAlertId(row.sym, row.tf, signalStartTs);
+  const id = trackerAlertId(row.sym, row.tf, row.sig);
 
-  // Si ya existe esta señal, actualizar niveles si ha cambiado la señal (sig distinto)
-  // pero NO recrear — los niveles de la primera detección son los correctos
+  // Si ya existe una alerta viva para esta señal, NO se toca: su entrada,
+  // su precio y su fecha quedaron congelados en el primer avistamiento.
   if (data[id]) return;
+
+  // entryTs = timestamp de la vela en la que se detecta la señal (= "hoy"
+  // en el momento del primer escaneo que la vio). Es la FECHA DE ENTRADA real.
+  const entryTs = row.entryTs || Date.now();
 
   data[id] = {
     id,
     sym:          row.sym,
     tf:           row.tf,
     sig:          row.sig,
-    entry:        row.close,       // precio actual cuando se detectó la señal
+    entry:        row.close,       // precio congelado del primer avistamiento
     stop:         row.stop,
     t1:           row.t1,
     t2:           row.t2 || null,
@@ -1863,11 +1883,11 @@ function trackerAddAlert(row) {
     score:        row.score,
     rr:           row.rr,
     signalStartTs,
-    entryTs:      row.entryTs || signalStartTs,  // solo barras POSTERIORES a este ts cuentan
+    entryTs,                        // FECHA DE ENTRADA (congelada)
     detectedAt:   Date.now(),
     // ── Reloj de MERCADO ──
-    expiryBars:   TRACKER_EXPIRY_BARS,   // nº de velas reales hasta expiración
-    barsElapsed:  0,                     // velas reales transcurridas tras la señal
+    expiryBars:   TRACKER_EXPIRY_BARS,
+    barsElapsed:  0,
     status:       'active',
     highAfterEntry: row.close,
     lowAfterEntry:  row.close,
@@ -1893,13 +1913,13 @@ function trackerUpdateWithPrice(sym, tf, df) {
 
     const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
 
-    // Contamos las velas reales transcurridas DESDE que apareció la señal
-    // hasta hoy. El bug anterior usaba entryTs (= última vela del día de
-    // creación), con lo que en escaneos posteriores casi ninguna vela era
-    // "posterior" y barsElapsed se quedaba clavado en 0. Lo correcto es
-    // anclar en signalStartTs y contar todo lo que vino después.
-    const cutoff = a.signalStartTs || a.entryTs;
-    const relevantBars = df.filter(b => b.ts > cutoff);
+    // Ancla = entryTs (fecha de entrada CONGELADA en el primer avistamiento).
+    // Todo se mide desde la entrada: no se puede tocar stop/target ni contar
+    // barras antes de haber entrado. Como el id ahora es estable, entryTs ya
+    // no se regenera en cada escaneo (ese era el bug), así que esto es correcto
+    // y consistente: la entrada y su fecha quedan fijas.
+    const cutoff = a.entryTs || a.signalStartTs;
+    const relevantBars = df.filter(b => b.ts >= cutoff);
     if (!relevantBars.length) continue;
 
     // Ventana de evaluación: solo las primeras `expiryBars` velas reales
@@ -2062,7 +2082,7 @@ function trackerRender() {
     const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
     const isActive = a.status === 'active';
     const pnlColor = (a.pnlPct || 0) >= 0 ? 'var(--emerald)' : 'var(--ember)';
-    const detDate  = new Date(a.signalStartTs || a.detectedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',year:'2-digit'});
+    const detDate  = new Date(a.entryTs || a.detectedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',year:'2-digit'});
     const closDate = a.closedAt ? new Date(a.closedAt).toLocaleDateString('es-ES', {day:'2-digit',month:'short',year:'2-digit'}) : null;
     const expiryPct = isActive ? Math.min(100, Math.round((a.barsElapsed || 0) / (a.expiryBars || 60) * 100)) : 100;
     const barsLeft  = isActive ? Math.max(0, (a.expiryBars || 60) - (a.barsElapsed || 0)) : 0;
@@ -2086,8 +2106,8 @@ function trackerRender() {
         <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--dim)">PnL</div><div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:${pnlColor}">${(a.pnlPct||0)>=0?'+':''}${a.pnlPct}%</div></div>` : ''}
       </div>
       <div style="display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:9px;color:var(--dim)">
-        <span>📅 ${detDate}</span>
-        ${closDate ? `<span>→ ${closDate}</span>` : ''}
+        <span>📅 Entrada: ${detDate}</span>
+        ${closDate ? `<span>→ Cierre: ${closDate}</span>` : ''}
         ${isActive ? `<div style="flex:1;margin-left:8px"><div style="height:3px;background:var(--ink3);border-radius:2px"><div style="height:100%;width:${expiryPct}%;background:${expiryPct>80?'var(--ember)':expiryPct>50?'var(--amber)':'var(--sapphire)'};border-radius:2px;transition:width .5s"></div></div><div style="margin-top:2px;color:${expiryPct>80?'var(--ember)':'var(--dim)'}">${barsLeft} ${a.tf==='1W'?'semanas':'días'} restantes · ${expiryPct}%</div></div>` : ''}
       </div>
     </div>`;
@@ -2132,13 +2152,13 @@ async function runScan() {
         const lastBar = td.df[td.df.length - 1];
         trackerAddAlert({
           sym, tf,
-          close: td.close,           // precio actual — lo que pagarías al entrar ahora
+          close: td.close,           // precio de entrada — se congela al crear la alerta
           sig: td.sig.signal,
           stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
           poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
           score: td.conf.score, rr: td.sig.rr,
           signalStartTs: td.signalStartTs,
-          entryTs: lastBar.ts        // solo barras POSTERIORES a hoy cuentan para el cierre
+          entryTs: lastBar.ts        // fecha de entrada (vela actual) — se congela
         });
       }
 
@@ -3157,15 +3177,23 @@ function mergeTrackerTrades(bt, sym, tf) {
     const rr = (a.stop && a.t1 && a.entry && Math.abs(a.stop - a.entry) > 0)
       ? +(Math.abs(a.t1 - a.entry) / Math.abs(a.stop - a.entry)).toFixed(2)
       : (parseFloat(a.rr) || 1);
+    const fmtD = ts => new Date(ts).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'});
+    const entryTs = a.entryTs || a.signalStartTs || 0;
+    const exitTs  = a.closedAt || 0;
+    // Duración en barras: nº de velas del timeframe entre entrada y cierre
+    const stepMs = tf === '1W' ? 7*86400000 : 86400000;
+    const held = (entryTs && exitTs) ? Math.max(1, Math.round((exitTs - entryTs)/stepMs)) : null;
     return {
       signal: a.sig, entry: a.entry, stop: a.stop,
       target: a.t1, target2: a.t2 || null, exitPrice: a.closedPrice,
       rr, score: a.score ?? 5, outcome, pnlPct: pnlNet, pnl50_50: pnlNet,
       finWin: pnlNet > 0,
-      t2Hit: a.status === 'hit_t2', barsToRes: null, maxDrawdown: null,
-      date: new Date(a.closedAt || a.signalStartTs).toLocaleDateString(
-        'es-ES', {day:'2-digit', month:'short', year:'2-digit'}),
-      ts: a.closedAt || a.signalStartTs || 0,  // ordenar por cierre, no por inicio del perfil
+      t2Hit: a.status === 'hit_t2', barsToRes: held, barsHeld: held, maxDrawdown: null,
+      date:      entryTs ? fmtD(entryTs) : '—',
+      dateEntry: entryTs ? fmtD(entryTs) : '—',
+      dateExit:  exitTs  ? fmtD(exitTs)  : '—',
+      ts: exitTs || entryTs || 0,  // ordenar por cierre
+      entryTs, exitTs,
       _real: true,
     };
   });
@@ -3393,8 +3421,14 @@ function renderBacktest(bt) {
     const winC = t.finWin ? 'var(--emerald)' : 'var(--ember)';
     const t2Txt= t.outcome==='win' && t.target2
       ? (t.t2Hit ? '✅ ' + f(t.target2,4) : '❌ no') : '—';
-    return '<div style="display:grid;grid-template-columns:64px 44px 80px 80px 78px 42px 50px 52px 60px;gap:3px;padding:6px 8px;border-radius:6px;background:var(--ink2);border-left:3px solid ' + winC + ';margin-bottom:3px;font-family:var(--f-mono);font-size:10px;align-items:center">'
-      + '<span style="color:var(--sub)">' + t.date + (t._real ? ' <span style="color:var(--emerald);font-size:8px">●REAL</span>' : '') + '</span>'
+    const dEntry = t.dateEntry || t.date || '—';
+    const dExit  = t.dateExit || '—';
+    const held   = (t.barsHeld != null ? t.barsHeld : (t.barsToRes != null ? t.barsToRes : '—'));
+    const GRID = 'grid-template-columns:70px 70px 34px 36px 74px 74px 72px 40px 48px 50px 56px';
+    return '<div style="display:grid;' + GRID + ';gap:3px;padding:6px 8px;border-radius:6px;background:var(--ink2);border-left:3px solid ' + winC + ';margin-bottom:3px;font-family:var(--f-mono);font-size:10px;align-items:center">'
+      + '<span style="color:var(--sub)">' + dEntry + (t._real ? ' <span style="color:var(--emerald);font-size:8px">●REAL</span>' : '') + '</span>'
+      + '<span style="color:var(--dim)">' + dExit + '</span>'
+      + '<span style="color:var(--dim)">' + held + '</span>'
       + '<span style="color:' + scC2 + ';font-weight:700">' + t.score + '</span>'
       + '<span>' + f(t.entry,4) + '</span>'
       + '<span style="color:var(--poc)">' + f(t.target,4) + '</span>'
@@ -3408,10 +3442,11 @@ function renderBacktest(bt) {
 
   let tradesHtml = '';
   if (bt.list && bt.list.length) {
-    tradesHtml = '<div style="margin-top:4px">'
+    const GRID = 'grid-template-columns:70px 70px 34px 36px 74px 74px 72px 40px 48px 50px 56px';
+    tradesHtml = '<div style="margin-top:4px;overflow-x:auto">'
       + '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:6px;text-transform:uppercase">' + bt.list.length + ' operaciones históricas · PnL NETO de costes · ganadora = PnL>0 (incluye timeouts a mercado)</div>'
-      + '<div style="display:grid;grid-template-columns:64px 44px 80px 80px 78px 42px 50px 52px 60px;gap:3px;padding:4px 8px;font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px">'
-      + '<span>Fecha</span><span>Sc</span><span>Entrada</span><span>T1/PoC</span><span>Salida</span><span>R:R</span><span>PnL%</span><span>50/50</span><span>T2✓</span>'
+      + '<div style="display:grid;' + GRID + ';gap:3px;padding:4px 8px;font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px">'
+      + '<span>Entrada</span><span>Cierre</span><span>Días</span><span>Sc</span><span>P.Entr</span><span>T1/PoC</span><span>P.Salida</span><span>R:R</span><span>PnL%</span><span>50/50</span><span>T2✓</span>'
       + '</div>'
       + bt.list.slice().reverse().map(renderTradeRow).join('')
       + '<div style="margin-top:6px;padding:7px 10px;background:var(--ink2);border-radius:7px;font-size:10px;color:var(--dim);font-family:var(--f-mono);line-height:1.7">'
