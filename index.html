@@ -2992,11 +2992,99 @@ function openModal(symFull, tf) {
   document.getElementById('m-confs').innerHTML =
     conf.items.map(c => `<div class="conf-item ${c.str}"><span class="conf-ico">${c.icon}</span><span>${c.label}</span></div>`).join('');
 
-  setTimeout(() => { buildChart(td); renderBacktest(td.bt); }, 30);
+  setTimeout(() => {
+    buildChart(td);
+    // Enriquecer bt con trades reales del tracker para este activo+TF
+    const enrichedBt = mergeTrackerTrades(td.bt, symFull, tf);
+    renderBacktest(enrichedBt);
+  }, 30);
 }
 
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════════════
+// MERGE TRACKER TRADES INTO BACKTEST
+//
+// El backtest cubre segmentos de pivot históricos completos.
+// Los trades del tracker cubren el período reciente (desde el último pivot).
+// Ambos usan precios reales del exchange y son homogéneos.
+// Solo añadimos trades del tracker POSTERIORES al último trade del backtest.
+// ════════════════════════════════════════════════════════════
+function mergeTrackerTrades(bt, sym, tf) {
+  if (!bt) return bt;
+
+  const trackerData = trackerLoad();
+  const closed = Object.values(trackerData).filter(a =>
+    a.sym === sym && a.tf === tf &&
+    (a.status === 'hit_t1' || a.status === 'hit_t2' || a.status === 'stopped')
+  );
+
+  if (!closed.length) return bt;
+
+  // Solo trades del tracker POSTERIORES al último trade del backtest
+  // — evita solapamiento sin deduplicación por mes (que era incorrecta)
+  const lastBtTs = bt.list?.length
+    ? Math.max(...bt.list.map(t => t.ts || 0))
+    : 0;
+
+  // Solo trades del tracker cuyo CIERRE es posterior al último trade del backtest
+  // Usamos closedAt (cuándo se cerró) no signalStartTs (cuándo empezó el perfil)
+  const newClosed = closed.filter(a => {
+    const closedTs = a.closedAt || a.signalStartTs || 0;
+    return closedTs > lastBtTs;
+  });
+  if (!newClosed.length) return bt;
+
+  const realTrades = newClosed.map(a => {
+    const outcome = (a.status === 'hit_t1' || a.status === 'hit_t2') ? 'win' : 'loss';
+    const pnlPct  = a.pnlPct ?? 0;
+    const rr = (a.stop && a.t1 && a.entry && Math.abs(a.stop - a.entry) > 0)
+      ? +(Math.abs(a.t1 - a.entry) / Math.abs(a.stop - a.entry)).toFixed(2)
+      : (parseFloat(a.rr) || 1);
+    return {
+      signal: a.sig, entry: a.entry, stop: a.stop,
+      target: a.t1, target2: a.t2 || null, exitPrice: a.closedPrice,
+      rr, score: a.score ?? 5, outcome, pnlPct, pnl50_50: pnlPct,
+      t2Hit: a.status === 'hit_t2', barsToRes: null, maxDrawdown: null,
+      date: new Date(a.closedAt || a.signalStartTs).toLocaleDateString(
+        'es-ES', {day:'2-digit', month:'short', year:'2-digit'}),
+      ts: a.closedAt || a.signalStartTs || 0,  // ordenar por cierre, no por inicio del perfil
+      _real: true,
+    };
+  });
+
+  const mergedList = [...(bt.list || []), ...realTrades].sort((a,b) => a.ts - b.ts);
+  const total = mergedList.length;
+  if (!total) return bt;
+
+  const wins  = mergedList.filter(t => t.outcome === 'win').length;
+  const losses= mergedList.filter(t => t.outcome === 'loss').length;
+  const wr    = Math.round(wins / total * 100);
+  const avgPnl= +(mergedList.reduce((a,t) => a+t.pnlPct, 0) / total).toFixed(2);
+  const totalPnl = +(mergedList.reduce((a,t) => a+t.pnlPct, 0)).toFixed(2);
+  const _ls   = mergedList.reduce((a,t) => a + Math.log1p(t.pnlPct/100), 0);
+  const compoundPnl = +(( Math.exp(_ls / total) - 1) * 100).toFixed(3);
+  const wArr  = mergedList.filter(t => t.outcome === 'win');
+  const lArr  = mergedList.filter(t => t.outcome === 'loss');
+  const avgW  = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
+  const avgL  = lArr.length ? +(Math.abs(lArr.reduce((a,t)=>a+t.pnlPct,0)/lArr.length)).toFixed(2) : 1;
+  const realizedRR = lArr.length && avgL > 0 ? +(avgW/avgL).toFixed(2) : null;
+  const avgRR = +(mergedList.reduce((a,t) => a+t.rr, 0) / total).toFixed(2);
+  const mid   = Math.floor(mergedList.length / 2);
+  const oldWR = mid > 0 ? Math.round(mergedList.slice(0,mid).filter(t=>t.outcome==='win').length/mid*100) : null;
+  const recentWR = mergedList.length-mid > 0 ? Math.round(mergedList.slice(mid).filter(t=>t.outcome==='win').length/(mergedList.length-mid)*100) : null;
+
+  return {
+    ...bt,
+    total, wins, losses, wr, avgPnl, totalPnl, compoundPnl,
+    avgRR, realizedRR, avgWinPnl: avgW, avgLossPnl: avgL,
+    expectancy: avgPnl, oldWR, recentWR,
+    list: mergedList,
+    allScores: [...(bt.allScores||[]), ...realTrades.map(t=>t.score)],
+    _realTradeCount: realTrades.length,
+  };
 }
 
 function renderBtStat(val, lbl, color) {
@@ -3078,6 +3166,11 @@ function renderBacktest(bt) {
     el.innerHTML = '<span style="color:var(--dim);font-family:var(--f-mono);font-size:11px">Datos insuficientes (mín. 3 ops). Pocos pivotes en el histórico disponible.</span>';
     return;
   }
+
+  const realBanner = bt._realTradeCount > 0
+    ? `<div style="font-family:var(--f-mono);font-size:9px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:6px;padding:7px 10px;margin-bottom:10px;color:var(--emerald)">
+        ✅ Incluye ${bt._realTradeCount} trade${bt._realTradeCount>1?'s':''} real${bt._realTradeCount>1?'es':''} del tracker — estadísticas actualizadas con resultados reales. Los trades simulados del mismo período han sido reemplazados.
+       </div>` : '';
 
   const wrC  = bt.wr>=60?'var(--emerald)':bt.wr>=45?'var(--amber)':'var(--ember)';
   const pnlC = bt.avgPnl>0?'var(--emerald)':'var(--ember)';
@@ -3179,7 +3272,7 @@ function renderBacktest(bt) {
     const t2Txt= t.outcome==='win' && t.target2
       ? (t.t2Hit ? '✅ ' + f(t.target2,4) : '❌ no') : '—';
     return '<div style="display:grid;grid-template-columns:64px 44px 80px 80px 78px 42px 50px 52px 60px;gap:3px;padding:6px 8px;border-radius:6px;background:var(--ink2);border-left:3px solid ' + winC + ';margin-bottom:3px;font-family:var(--f-mono);font-size:10px;align-items:center">'
-      + '<span style="color:var(--sub)">' + t.date + '</span>'
+      + '<span style="color:var(--sub)">' + t.date + (t._real ? ' <span style="color:var(--emerald);font-size:8px">●REAL</span>' : '') + '</span>'
       + '<span style="color:' + scC2 + ';font-weight:700">' + t.score + '</span>'
       + '<span>' + f(t.entry,4) + '</span>'
       + '<span style="color:var(--poc)">' + f(t.target,4) + '</span>'
@@ -3208,7 +3301,7 @@ function renderBacktest(bt) {
       + '</div>';
   }
 
-  el.innerHTML = `
+  el.innerHTML = realBanner + `
     <!-- Main stats -->
     <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
       <div class="bt-stat"><div class="bt-stat-val" style="color:${wrC}">${bt.wr}%</div><div class="bt-stat-lbl">WIN RATE</div></div>
