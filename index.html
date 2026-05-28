@@ -911,8 +911,20 @@ const INTERVALS = {
   '1w': { stooq:'w', yahoo:'1wk', yrange:'10y', ms: 7*86400000, label:'1W' },
 };
 
-const PROXY  = 'https://corsproxy.io/?url=';
-const PROXY2 = 'https://api.allorigins.win/raw?url=';
+// Lista de proxies CORS en cascada. Los públicos gratuitos son
+// inestables y rate-limitan, así que probamos varios en orden. Cada
+// entrada es una función que envuelve la URL destino.
+const PROXIES = [
+  { name:'directo',     wrap: u => u },
+  { name:'corsproxy',   wrap: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u) },
+  { name:'allorigins',  wrap: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
+  { name:'codetabs',    wrap: u => 'https://api.codetabs.com/v1/proxy/?quest=' + u },
+  { name:'thingproxy',  wrap: u => 'https://thingproxy.freeboard.io/fetch/' + u },
+  { name:'corsfix',     wrap: u => 'https://proxy.corsfix.com/?' + u },
+];
+
+// Registro de diagnóstico (visible en el panel, no solo en consola)
+const SCAN_DIAG = {};   // sym → { '1D': {ok, source, n, reason}, '1W': {...} }
 
 async function fetchText(url, ms) {
   const r = await fetch(url, { signal: makeAbortSignal(ms) });
@@ -920,9 +932,8 @@ async function fetchText(url, ms) {
   return r.text();
 }
 async function fetchJSON(url, ms) {
-  const r = await fetch(url, { signal: makeAbortSignal(ms) });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
+  const txt = await fetchText(url, ms);
+  return JSON.parse(txt);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -931,11 +942,15 @@ async function fetchJSON(url, ms) {
 
 // Stooq CSV: Date,Open,High,Low,Close,Volume  (oldest-first)
 function parseStooq(csv) {
-  if (!csv || csv.indexOf('Date') !== 0) {
-    // Stooq devuelve "No data" o vacío si el ticker no existe en su catálogo
-    throw new Error('Stooq sin datos');
+  if (!csv) throw new Error('respuesta vacía');
+  // Algunos proxies devuelven con BOM o espacios al inicio
+  csv = csv.replace(/^\uFEFF/, '').trim();
+  if (csv.indexOf('Date') !== 0) {
+    // "No data" / "Exceeded the daily hits limit" / HTML de error
+    const head = csv.slice(0, 60).replace(/\n/g, ' ');
+    throw new Error('no-CSV: ' + head);
   }
-  const lines = csv.trim().split('\n');
+  const lines = csv.split('\n');
   const out = [];
   for (let i = 1; i < lines.length; i++) {
     const p = lines[i].split(',');
@@ -945,14 +960,17 @@ function parseStooq(csv) {
     if (!Number.isFinite(ts) || !Number.isFinite(c)) continue;
     out.push({ ts, open:o, high:h, low:l, close:c, volume: Number.isFinite(v) ? v : 0 });
   }
-  if (out.length < 5) throw new Error('Stooq pocas filas');
+  if (out.length < 5) throw new Error('pocas filas (' + out.length + ')');
   return out;
 }
 
 // Yahoo v8 chart JSON
 function parseYahoo(data) {
   const res = data?.chart?.result?.[0];
-  if (!res || !res.timestamp) throw new Error('Yahoo sin datos');
+  if (!res || !res.timestamp) {
+    const err = data?.chart?.error?.description || 'sin timestamp';
+    throw new Error('Yahoo: ' + err);
+  }
   const ts = res.timestamp;
   const q = res.indicators?.quote?.[0];
   if (!q) throw new Error('Yahoo sin quote');
@@ -962,7 +980,7 @@ function parseYahoo(data) {
     if ([o,h,l,c].some(x => x == null)) continue; // velas con null (festivos) se saltan
     out.push({ ts: ts[i]*1000, open:+o, high:+h, low:+l, close:+c, volume: v != null ? +v : 0 });
   }
-  if (out.length < 5) throw new Error('Yahoo pocas filas');
+  if (out.length < 5) throw new Error('Yahoo pocas filas (' + out.length + ')');
   return out;
 }
 
@@ -970,8 +988,7 @@ function parseYahoo(data) {
 // URLs
 // ════════════════════════════════════════════════════════════
 function urlStooq(stooqSym, interval) {
-  // stooqSym ya incluye sufijo (.us, .uk, .de, etc.)
-  return 'https://stooq.com/q/d/l/?s=' + encodeURIComponent(stooqSym) + '&i=' + INTERVALS[interval].stooq;
+  return 'https://stooq.com/q/d/l/?s=' + stooqSym + '&i=' + INTERVALS[interval].stooq;
 }
 function urlYahoo(yhSym, interval) {
   const I = INTERVALS[interval];
@@ -981,9 +998,6 @@ function urlYahoo(yhSym, interval) {
 
 // ════════════════════════════════════════════════════════════
 // VALIDACIÓN DE INTEGRIDAD (adaptada a acciones)
-// Las acciones tienen huecos legítimos (fines de semana, festivos), así
-// que el control de regularidad es más laxo que en cripto 24/7, pero
-// seguimos exigiendo OHLC coherente, orden temporal y datos vivos.
 // ════════════════════════════════════════════════════════════
 function validateSeries(bars, interval, sym, source) {
   if (!Array.isArray(bars) || bars.length < 60) {
@@ -996,28 +1010,26 @@ function validateSeries(bars, interval, sym, source) {
   for (let i = 0; i < bars.length; i++) {
     const b = bars[i];
     if (![b.ts,b.open,b.high,b.low,b.close,b.volume].every(Number.isFinite)) {
-      return { ok:false, reason:'vela '+i+' con campo no numérico' };
+      return { ok:false, reason:'vela '+i+' campo no numérico' };
     }
-    if (b.ts < 631152000000 || b.ts > now + 5*step) { // desde 1990
-      return { ok:false, reason:'ts implausible en vela '+i };
+    if (b.ts < 631152000000 || b.ts > now + 5*step) {
+      return { ok:false, reason:'ts implausible vela '+i };
     }
     if (b.ts <= prevTs) {
-      return { ok:false, reason:'timestamps no crecientes en vela '+i };
+      return { ok:false, reason:'ts no crecientes vela '+i };
     }
     if (b.high < b.low || b.high < b.open || b.high < b.close ||
         b.low > b.open || b.low > b.close ||
         b.open <= 0 || b.close <= 0) {
-      return { ok:false, reason:'OHLC incoherente en vela '+i };
+      return { ok:false, reason:'OHLC incoherente vela '+i };
     }
     if (b.volume < 0) {
-      return { ok:false, reason:'volumen negativo en vela '+i };
+      return { ok:false, reason:'volumen negativo vela '+i };
     }
     prevTs = b.ts;
   }
 
-  // Última vela razonablemente reciente. Para diario toleramos hasta ~6
-  // días (puentes largos); para semanal hasta ~3 semanas.
-  const maxAgeBars = interval === '1w' ? 3 : 6;
+  const maxAgeBars = interval === '1w' ? 4 : 8;
   const ageBars = (now - bars[bars.length-1].ts) / step;
   if (ageBars > maxAgeBars) {
     return { ok:false, reason:'última vela antigua ('+ageBars.toFixed(1)+' barras)' };
@@ -1027,72 +1039,53 @@ function validateSeries(bars, interval, sym, source) {
 }
 
 // ════════════════════════════════════════════════════════════
-// FETCH ENGINE — secuencial por jerarquía, integridad estricta
+// FETCH ENGINE — cascada de proxies, integridad estricta, diagnóstico
 // ════════════════════════════════════════════════════════════
 
-async function tryStooq(stooqSym, interval) {
-  const url = urlStooq(stooqSym, interval);
-  // directo
-  try {
-    const csv = await fetchText(url, 8000);
-    const bars = parseStooq(csv);
-    const v = validateSeries(bars, interval, stooqSym, 'Stooq');
-    if (v.ok) { bars.source='Stooq'; return bars; }
-  } catch(e) {}
-  // proxy 1
-  try {
-    const csv = await fetchText(PROXY + encodeURIComponent(url), 15000);
-    const bars = parseStooq(csv);
-    const v = validateSeries(bars, interval, stooqSym, 'Stooq(proxy)');
-    if (v.ok) { bars.source='Stooq(proxy)'; return bars; }
-  } catch(e) {}
-  // proxy 2
-  try {
-    const csv = await fetchText(PROXY2 + encodeURIComponent(url), 15000);
-    const bars = parseStooq(csv);
-    const v = validateSeries(bars, interval, stooqSym, 'Stooq(proxy2)');
-    if (v.ok) { bars.source='Stooq(proxy2)'; return bars; }
-  } catch(e) {}
-  return null;
-}
-
-async function tryYahoo(yhSym, interval) {
-  const url = urlYahoo(yhSym, interval);
-  for (const [tag, pfx] of [['Yahoo(proxy)', PROXY],['Yahoo(proxy2)', PROXY2]]) {
+// Intenta una URL a través de cada proxy hasta que uno devuelva datos válidos
+async function fetchViaProxies(targetUrl, parser, interval, sym, sourceName) {
+  let lastReason = 'sin intento';
+  for (const px of PROXIES) {
     try {
-      const data = await fetchJSON(pfx + encodeURIComponent(url), 15000);
-      const bars = parseYahoo(data);
-      const v = validateSeries(bars, interval, yhSym, tag);
-      if (v.ok) { bars.source=tag; return bars; }
-    } catch(e) {}
+      const wrapped = px.wrap(targetUrl);
+      const isJSON = sourceName.startsWith('Yahoo');
+      const raw = isJSON ? await fetchJSON(wrapped, 13000) : await fetchText(wrapped, 13000);
+      const bars = parser(raw);
+      const v = validateSeries(bars, interval, sym, sourceName);
+      if (v.ok) {
+        bars.source = sourceName + '·' + px.name;
+        return { bars };
+      }
+      lastReason = v.reason + ' [' + px.name + ']';
+    } catch (e) {
+      lastReason = (e?.message || 'error') + ' [' + px.name + ']';
+    }
   }
-  // intento directo por si el proxy cae (algunos navegadores/extensiones lo permiten)
-  try {
-    const data = await fetchJSON(url, 8000);
-    const bars = parseYahoo(data);
-    const v = validateSeries(bars, interval, yhSym, 'Yahoo');
-    if (v.ok) { bars.source='Yahoo'; return bars; }
-  } catch(e) {}
-  return null;
+  return { bars:null, reason:lastReason };
 }
 
-// `sym` es el ticker base del UNIVERSE; resolvemos sus variantes Stooq/Yahoo
 async function fetchOHLCV(sym, interval) {
   const meta = SYM_META[sym];
+  const lbl = INTERVALS[interval].label;
   if (!meta) { console.error('Sin metadatos para '+sym); return null; }
 
-  // 1. Stooq (canónica)
-  let data = await tryStooq(meta.stooq, interval);
-  // 2. Yahoo (fallback)
-  if (!data) data = await tryYahoo(meta.yahoo, interval);
+  if (!SCAN_DIAG[sym]) SCAN_DIAG[sym] = {};
 
-  if (data) {
-    console.log('['+sym+' '+INTERVALS[interval].label+'] ✓ '+data.source+' · '+data.length+
-                ' velas · '+new Date(data[0].ts).toLocaleDateString('es')+
-                ' → '+new Date(data[data.length-1].ts).toLocaleDateString('es'));
-    return data;
+  // 1. Stooq (canónica)
+  let r = await fetchViaProxies(urlStooq(meta.stooq, interval), parseStooq, interval, sym, 'Stooq');
+  // 2. Yahoo (fallback)
+  if (!r.bars) {
+    const ry = await fetchViaProxies(urlYahoo(meta.yahoo, interval), parseYahoo, interval, sym, 'Yahoo');
+    if (ry.bars) r = ry; else r.reason = 'Stooq:' + r.reason + ' | Yahoo:' + ry.reason;
   }
-  console.error('['+sym+' '+INTERVALS[interval].label+'] SIN FUENTE VÁLIDA');
+
+  if (r.bars) {
+    SCAN_DIAG[sym][lbl] = { ok:true, source:r.bars.source, n:r.bars.length };
+    console.log('['+sym+' '+lbl+'] ✓ '+r.bars.source+' · '+r.bars.length+' velas');
+    return r.bars;
+  }
+  SCAN_DIAG[sym][lbl] = { ok:false, reason:r.reason };
+  console.warn('['+sym+' '+lbl+'] ✗ '+r.reason);
   return null;
 }
 
@@ -1753,26 +1746,31 @@ async function scanSymbol(sym) {
 
   const tfList = [['tf1d','1d'], ['tf1w','1w']];
   for (const [tfKey, interval] of tfList) {
-    const df = await fetchOHLCV(sym, interval);
-    if (!df || df.length < 60) continue;
+    try {
+      const df = await fetchOHLCV(sym, interval);
+      if (!df || df.length < 60) continue;
 
-    const segs = getPivotSegments(df, pivLen);
-    if (!segs.length) continue;
+      const segs = getPivotSegments(df, pivLen);
+      if (!segs.length) continue;
 
-    const last     = segs[segs.length - 1];
-    const devSlice = df.slice(last.endI);
-    const vp = devSlice.length >= 15
-      ? calcVP(devSlice, nRows, vaPct)
-      : calcVP(last.slice, nRows, vaPct);
-    if (!vp) continue;
+      const last     = segs[segs.length - 1];
+      const devSlice = df.slice(last.endI);
+      const vp = devSlice.length >= 15
+        ? calcVP(devSlice, nRows, vaPct)
+        : calcVP(last.slice, nRows, vaPct);
+      if (!vp) continue;
 
-    const close = df[df.length - 1].close;
-    const sig   = classifySignal(close, vp, devSlice);
-    const conf  = calcConfluences(df, vp, close, sig);
-    const bt    = runBacktest(df, segs, pivLen, nRows, vaPct);
+      const close = df[df.length - 1].close;
+      const sig   = classifySignal(close, vp, devSlice);
+      const conf  = calcConfluences(df, vp, close, sig);
+      const bt    = runBacktest(df, segs, pivLen, nRows, vaPct);
 
-    result[tfKey] = { df, vp, sig, conf, close, segs, bt, devSlice,
-                      signalStartTs: devSlice[0]?.ts ?? df[last.endI]?.ts ?? Date.now() };
+      result[tfKey] = { df, vp, sig, conf, close, segs, bt, devSlice,
+                        signalStartTs: devSlice[0]?.ts ?? df[last.endI]?.ts ?? Date.now() };
+    } catch (e) {
+      console.warn('[SCAN] ' + sym + ' ' + interval + ' falló: ' + (e?.message || e));
+      // continúa con el siguiente timeframe / símbolo
+    }
   }
 
   return result;
@@ -2087,7 +2085,13 @@ async function runScan() {
     const loaderSym = document.getElementById('loader-sym');
     if (loaderSym) loaderSym.textContent = `Analizando ${sym} (${i+1}/${SYMBOLS.length})...`;
 
-    const res = await scanSymbol(sym);
+    let res;
+    try {
+      res = await scanSymbol(sym);
+    } catch (e) {
+      console.warn('[SCAN] ' + sym + ' error general: ' + (e?.message || e));
+      res = { sym, tf1d: null, tf1w: null };
+    }
 
     var _tfs2=[['1D','tf1d'],['1W','tf1w']];
     for (var _ti2=0;_ti2<_tfs2.length;_ti2++) { var tf=_tfs2[_ti2][0], key=_tfs2[_ti2][1];
@@ -2151,6 +2155,34 @@ async function runScan() {
   document.getElementById('live-txt').textContent =
     `Stooq/Yahoo · ${new Date().toLocaleTimeString('es-ES')} · ${rows.length} señales`;
   renderPanel();
+  renderDiag();
+}
+
+// Panel de diagnóstico: qué símbolos cargaron y cuáles fallaron (y por qué).
+// Se inyecta arriba del contenido para que no haga falta abrir la consola.
+function renderDiag() {
+  const syms = Object.keys(SCAN_DIAG);
+  if (!syms.length) return;
+  let okCount = 0, failSyms = [];
+  for (const s of syms) {
+    const d = SCAN_DIAG[s];
+    const any = (d['1D']?.ok) || (d['1W']?.ok);
+    if (any) okCount++;
+    else failSyms.push({ sym:s, reason: (d['1D']?.reason || d['1W']?.reason || 'desconocido') });
+  }
+  const host = document.getElementById('diag-area');
+  if (!host) return;
+  if (!failSyms.length) {
+    host.innerHTML = `<div style="font-family:var(--f-mono);font-size:10px;color:var(--emerald);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:8px 12px;margin-bottom:12px">✓ ${okCount}/${syms.length} valores cargados correctamente.</div>`;
+    return;
+  }
+  const rows = failSyms.map(f => `<div style="display:flex;gap:8px;padding:2px 0"><span style="color:var(--ember);font-weight:700;min-width:54px">${f.sym}</span><span style="color:var(--dim)">${f.reason}</span></div>`).join('');
+  host.innerHTML = `
+    <details style="font-family:var(--f-mono);font-size:10px;background:rgba(255,181,71,.07);border:1px solid rgba(255,181,71,.3);border-radius:8px;padding:8px 12px;margin-bottom:12px">
+      <summary style="cursor:pointer;color:var(--amber)">⚠️ ${okCount}/${syms.length} cargados · ${failSyms.length} fallidos (toca para ver detalle)</summary>
+      <div style="margin-top:8px;max-height:240px;overflow:auto">${rows}</div>
+      <div style="margin-top:8px;color:var(--dim);line-height:1.6">Causa habitual: los proxies CORS públicos están saturados o caídos. Reintenta con "↻ Re-escanear" en unos segundos; suele resolverse. Si un valor falla siempre, su ticker no existe en esas fuentes.</div>
+    </details>`;
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -2873,6 +2905,7 @@ function renderPanel() {
 
   let html = `
   <div id="err-area"></div>
+  <div id="diag-area"></div>
   ${renderTop3(data)}
   <div class="metrics">
     <div class="mc m1"><div class="mc-val">${total}</div><div class="mc-lbl">Señales activas</div></div>
