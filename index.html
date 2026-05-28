@@ -1382,7 +1382,8 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
   const totalPnl    = +(trades.reduce((a,t)=>a+t.pnlPct,0)).toFixed(2);
   // PnL compuesto: reinvirtiendo capital en cada trade
   // Más realista que la suma lineal para evaluar rendimiento real
-  const compoundPnl = +(trades.reduce((a,t) => a * (1 + t.pnlPct/100), 1) * 100 - 100).toFixed(2);
+  const _logSumBt = trades.reduce((a,t) => a + Math.log1p(t.pnlPct/100), 0);
+  const compoundPnl = +(( Math.exp(_logSumBt / trades.length) - 1) * 100).toFixed(3);
 
   // R:R realizado: ganancia media de wins / pérdida media de losses (valores absolutos)
   const winTrades  = trades.filter(t=>t.outcome==='win');
@@ -2548,7 +2549,10 @@ function renderTop3(data) {
     const wins   = trades.filter(t => t.outcome === 'win').length;
     const wr     = Math.round(wins / trades.length * 100);
     const avgPnl = +(trades.reduce((a,t) => a+t.pnlPct, 0) / trades.length).toFixed(2);
-    const cmpPnl = +(trades.reduce((a,t) => a*(1+t.pnlPct/100), 1)*100 - 100).toFixed(1);
+    // Retorno geométrico medio por operación: comparable independientemente del nº de trades
+    // = raíz n-ésima del producto de (1+r_i) − 1, expresado en %
+    const _logS1 = trades.reduce((a,t) => a + Math.log1p(t.pnlPct/100), 0);
+    const cmpPnl = +(( Math.exp(_logS1 / trades.length) - 1) * 100).toFixed(3); // % por op (geométrico)
     const wArr   = trades.filter(t => t.outcome === 'win');
     const lArr   = trades.filter(t => t.outcome === 'loss');
     const avgW   = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
@@ -2711,7 +2715,8 @@ function renderTop3(data) {
       const wins   = trades.filter(t => t.outcome==='win').length;
       const wr     = Math.round(wins/trades.length*100);
       const avgPnl = +(trades.reduce((a,t)=>a+t.pnlPct,0)/trades.length).toFixed(2);
-      const cmpPnl = +(trades.reduce((a,t)=>a*(1+t.pnlPct/100),1)*100-100).toFixed(1);
+      const _logS2 = trades.reduce((a,t) => a + Math.log1p(t.pnlPct/100), 0);
+      const cmpPnl = +(( Math.exp(_logS2 / trades.length) - 1) * 100).toFixed(3);
       const wArr   = trades.filter(t=>t.outcome==='win');
       const lArr   = trades.filter(t=>t.outcome==='loss');
       const avgW   = wArr.length ? +(wArr.reduce((a,t)=>a+t.pnlPct,0)/wArr.length).toFixed(2) : 0;
@@ -2763,14 +2768,15 @@ function renderTop3(data) {
           <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TODOS<br><span style="font-size:7px;color:var(--rule2)">${sAll.n} trades</span></div>
           ${rowFn2('% operaciones ganadoras', sT1.wr, sT3.wr, sAll.wr, v=>v+'%')}
           ${rowFn2('Ganancia media por operación', sT1.avgPnl, sT3.avgPnl, sAll.avgPnl, v=>(v>=0?'+':'')+v+'%')}
-          ${rowFn2('Ganancia compuesta total', +sT1.cmpPnl, +sT3.cmpPnl, +sAll.cmpPnl, v=>(v>=0?'+':'')+v+'%')}
+          ${rowFn2('Retorno geométrico por operación', sT1.cmpPnl, sT3.cmpPnl, sAll.cmpPnl, v=>(v>=0?'+':'')+v+'%')}
           ${sT1.realRR!=null?rowFn2('Ratio ganancia/pérdida real', sT1.realRR, sT3.realRR, sAll.realRR, v=>'1:'+v):''}
           ${sT1.halfK!=null?rowFn2('Tamaño óptimo (half-Kelly)', sT1.halfK, sT3.halfK, sAll.halfK, v=>v+'% capital'):''}
         </div>
         ${(!sT1.reliable||!sT3.reliable)?`<div style="font-family:var(--f-mono);font-size:8px;color:var(--amber);margin-top:6px;padding:6px 8px;background:var(--ink3);border-radius:5px">⚠️ Muestra reducida en top1/top3 (${sT1.n}/${sT3.n} trades). Aumentará con más activos escaneados.</div>`:''}
         <div style="margin-top:10px;background:var(--ink3);border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:8px;color:var(--dim);line-height:1.7">
           <b style="color:var(--sub)">Cómo leer esto:</b> verde = mejor estrategia histórica.
-          "Ganancia compuesta" reinvierte el capital en cada operación (interés compuesto real).
+          "Retorno geométrico" = retorno medio por operación considerando el efecto compuesto.
+          A diferencia del promedio aritmético, no se dispara con muchos trades y es comparable entre estrategias con distinto número de operaciones.
           <br><br>
           <b style="color:var(--sub)">Limitación:</b> el IOA se calcula con el backtest completo actual,
           no con el que habría habido en cada momento pasado. Es una aproximación válida si
@@ -3209,7 +3215,7 @@ function renderBacktest(bt) {
       <div class="bt-stat"><div class="bt-stat-val" style="color:${pnlC}">${bt.avgPnl>0?'+':''}${bt.avgPnl}%</div><div class="bt-stat-lbl">PnL/OP (T1)</div></div>
       <div class="bt-stat"><div class="bt-stat-val" style="color:${p55C}">${bt.avgPnl5050>0?'+':''}${bt.avgPnl5050}%</div><div class="bt-stat-lbl">PnL/OP (50/50)</div></div>
       <div class="bt-stat"><div class="bt-stat-val" style="color:${totC}">${bt.totalPnl>=0?'+':''}${bt.totalPnl}%</div><div class="bt-stat-lbl">PnL LINEAL</div></div>
-      ${bt.compoundPnl!=null?`<div class="bt-stat" title="Reinvirtiendo capital en cada operación"><div class="bt-stat-val" style="color:${bt.compoundPnl>=0?'var(--emerald)':'var(--ember)'}">${bt.compoundPnl>=0?'+':''}${bt.compoundPnl}%</div><div class="bt-stat-lbl">PnL COMPUESTO</div></div>`:''}
+      ${bt.compoundPnl!=null?`<div class="bt-stat" title="Retorno geométrico medio por operación (comparable entre activos)"><div class="bt-stat-val" style="color:${bt.compoundPnl>=0?'var(--emerald)':'var(--ember)'}">${bt.compoundPnl>=0?'+':''}${bt.compoundPnl}%</div><div class="bt-stat-lbl">RET.GEOMÉTRICO</div></div>`:''}
       <div class="bt-stat"><div class="bt-stat-val">${bt.total}</div><div class="bt-stat-lbl">OPS</div></div>
       <div class="bt-stat"><div class="bt-stat-val"><span style="color:var(--emerald)">${bt.wins}W</span>/<span style="color:var(--ember)">${bt.losses}L</span></div><div class="bt-stat-lbl">W/L</div></div>
       <div class="bt-stat"><div class="bt-stat-val">1:${bt.avgRR}</div><div class="bt-stat-lbl">R:R SEÑALADO</div></div>
