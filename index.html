@@ -718,7 +718,7 @@ canvas { width: 100% !important; height: 100% !important; }
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
       <button class="tf-pill" onclick="setTF('1D',this)">1D</button>
       <button class="tf-pill" onclick="setTF('1W',this)">1W</button>
-      <button class="tf-pill" onclick="setTF('TRACKER',this)" id="tracker-pill">📌 TRACKER <span id="tracker-badge" style="display:none;background:var(--ember);color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;margin-left:3px"></span></button>
+      <button class="tf-pill" onclick="toggleTrackerStats()" id="tracker-pill" title="Resumen y gestión del seguimiento">📌 Seguimiento <span id="tracker-badge" style="display:none;background:var(--ember);color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;margin-left:3px"></span></button>
       <select id="sector-filter" onchange="onSectorChange()" style="margin-left:8px;background:var(--ink2);color:var(--text);border:1px solid var(--rule);border-radius:8px;padding:5px 10px;font-family:var(--f-mono);font-size:10px;cursor:pointer" title="Escanear solo una narrativa (más rápido)">
         <option value="ALL">🌐 Todos los sectores (96)</option>
       </select>
@@ -2250,16 +2250,19 @@ function trackerUpdateWithPrice(sym, tf, df) {
 function trackerPinRow(btn, sym, tf) {
   const row = allResults.find(r => r.sym === sym && r.tf === tf);
   if (!row) return;
+  const lastBar = row._td?.df?.[row._td.df.length - 1];
   trackerAddAlert({
     sym: row.sym, tf: row.tf,
     close: row.close, sig: row.sig,
     stop: row.stop, t1: row.t1, t2: row.t2 || null,
     poc: row.poc, vah: row.vah, val: row.val,
     score: row.score, rr: row.rr,
-    signalStartTs: row._td?.signalStartTs || Date.now()
+    signalStartTs: row._td?.signalStartTs || Date.now(),
+    entryTs: lastBar?.ts || Date.now()   // fecha de entrada congelada
   });
   btn.textContent = '✅';
-  setTimeout(() => { btn.textContent = '📌'; }, 1500);
+  trackerUpdateBadge();
+  setTimeout(() => { applyFilters(); }, 600);  // refrescar para mostrar el 📌
 }
 
 function trackerDeleteAlert(id) {
@@ -2267,7 +2270,7 @@ function trackerDeleteAlert(id) {
   delete data[id];
   trackerSave(data);
   trackerUpdateBadge();
-  if (activeTF === 'TRACKER') renderPanel();
+  applyFilters();
 }
 
 function trackerClearClosed() {
@@ -2413,11 +2416,8 @@ async function runScan() {
   const rows = [];
   const scanList = symbolsToScan();
 
-  for (let i = 0; i < scanList.length; i++) {
-    const sym = scanList[i];
-    const loaderSym = document.getElementById('loader-sym');
-    if (loaderSym) loaderSym.textContent = `Analizando ${sym} (${i+1}/${scanList.length})...`;
-
+  // Procesa un símbolo completo (ambos TF) y devuelve sus filas
+  async function processSymbol(sym) {
     let res;
     try {
       res = await scanSymbol(sym);
@@ -2425,41 +2425,27 @@ async function runScan() {
       console.warn('[SCAN] ' + sym + ' error general: ' + (e?.message || e));
       res = { sym, tf1d: null, tf1w: null };
     }
-
-    var _tfs2=[['1D','tf1d'],['1W','tf1w']];
-    for (var _ti2=0;_ti2<_tfs2.length;_ti2++) { var tf=_tfs2[_ti2][0], key=_tfs2[_ti2][1];
+    const out = [];
+    const _tfs2 = [['1D','tf1d'],['1W','tf1w']];
+    for (const [tf, key] of _tfs2) {
       const td = res[key];
       if (!td) continue;
-
-      // Registrar en diagnóstico qué señal/score sacó este TF (para visibilidad)
-      if (SCAN_DIAG[sym] && SCAN_DIAG[sym][tf === '1D' ? '1D' : '1W']) {
-        SCAN_DIAG[sym][tf === '1D' ? '1D' : '1W'].sig = td.sig.signal;
-        SCAN_DIAG[sym][tf === '1D' ? '1D' : '1W'].score = td.conf.score;
+      if (SCAN_DIAG[sym] && SCAN_DIAG[sym][tf]) {
+        SCAN_DIAG[sym][tf].sig = td.sig.signal;
+        SCAN_DIAG[sym][tf].score = td.conf.score;
       }
-
-      // ── TRACKER: guardar señal nueva PRIMERO (niveles congelados) ──
-      // El SCORE YA NO ES UN PORTERO. En muchos activos el score no predice
-      // nada (lo confirma el propio IC del backtest), así que descartar por
-      // score < 3 tiraba oportunidades válidas. Ahora basta con que haya una
-      // señal real (no NEUTRAL) con stop y target válidos. El score queda como
-      // dato informativo, no como filtro.
       if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target) {
         const lastBar = td.df[td.df.length - 1];
         trackerAddAlert({
-          sym, tf,
-          close: td.close,           // PRECIO DE ENTRADA — se congela para siempre al crear
-          sig: td.sig.signal,
+          sym, tf, close: td.close, sig: td.sig.signal,
           stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
           poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
           score: td.conf.score, rr: td.sig.rr,
-          signalStartTs: td.signalStartTs,
-          entryTs: lastBar.ts        // fecha de entrada — se congela
+          signalStartTs: td.signalStartTs, entryTs: lastBar.ts
         });
       }
-
-      // ── TRACKER: actualizar alertas activas con historial completo ──
       trackerUpdateWithPrice(sym, tf, td.df);
-      rows.push({
+      out.push({
         sym, tf, close: td.close,
         sector: (SYM_META[sym]?.sector || ''),
         poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
@@ -2467,29 +2453,34 @@ async function runScan() {
         stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2, inv: td.sig.invalidation,
         rr: td.sig.rr, score: td.conf.score,
         scorePct: scorePercentile(td.conf.score, td.bt?.allScores),
-        bt: td.bt,
-        _td: td, _res: res
+        bt: td.bt, _td: td, _res: res
       });
     }
+    return out;
+  }
 
-    // Render partial results as they come in
-    if (rows.length > 0) {
-      allResults = [...rows];
-      // Hide full loader after first symbol loads
-      const loaderEl2 = document.getElementById('loader');
-      if (loaderEl2 && loaderEl2.style.display !== 'none') {
-        loaderEl2.style.display = 'none';
-      }
-      renderPanel();
-      // Update progress in topbar
-      const pct = Math.round((i+1)/scanList.length*100);
-      document.getElementById('top-meta').textContent =
-        `Cargando... ${i+1}/${scanList.length} (${pct}%) · Stooq/Yahoo · 1D + 1W`;
-    }
+  // ── ESCANEO EN LOTES PARALELOS ────────────────────────────
+  // Antes: 1 símbolo cada vez + 250ms = lentísimo con 96 valores.
+  // Ahora: lotes de 4 en paralelo. ~4× más rápido sin saturar proxies.
+  const BATCH = 4;
+  let done = 0;
+  for (let i = 0; i < scanList.length; i += BATCH) {
+    const batch = scanList.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(processSymbol));
+    for (const symRows of results) rows.push(...symRows);
+    done += batch.length;
 
-    // Pausa entre símbolos: las fuentes de acciones via proxy pueden
-    // rate-limitar; un respiro evita bloqueos.
-    if (i < scanList.length - 1) await sleep(250);
+    allResults = [...rows];
+    const loaderEl2 = document.getElementById('loader');
+    if (loaderEl2 && loaderEl2.style.display !== 'none') loaderEl2.style.display = 'none';
+    renderPanel();
+    const pct = Math.round(done/scanList.length*100);
+    const tm = document.getElementById('top-meta');
+    if (tm) tm.textContent = `Cargando... ${done}/${scanList.length} (${pct}%) · ${BATCH} en paralelo · 1D + 1W`;
+    const ls = document.getElementById('loader-sym');
+    if (ls) ls.textContent = `Analizando lote ${Math.ceil(done/BATCH)} (${done}/${scanList.length})...`;
+
+    if (i + BATCH < scanList.length) await sleep(120);
   }
 
   allResults = rows;
@@ -2942,17 +2933,54 @@ let sortBy = 'op'; // default: sort by opportunity score
 let sortDir = -1;
 
 function getFiltered() {
-  // El slider de score ya NO es un portero por defecto. Arranca en 0 (muestra
-  // todo). Si TÚ decides subirlo, filtra; pero por defecto el score no descarta
-  // nada, porque en muchos activos no predice resultados. Es una herramienta
-  // opcional de realce, no una guillotina.
+  // VISTA UNIFICADA: fusiona las señales del escaneo de HOY (allResults) con
+  // las alertas GUARDADAS en el tracker (localStorage). Una fila por
+  // sym+tf+señal. Si una señal de hoy coincide con una guardada, se funden en
+  // UNA sola fila con ambos datos (precio de entrada congelado + estado actual).
   const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 0);
   const fl  = document.getElementById('fl')?.checked;
   const fs  = document.getElementById('fs')?.checked;
   const frl = document.getElementById('frl')?.checked;
   const frs = document.getElementById('frs')?.checked;
   const fn  = document.getElementById('fn')?.checked;
-  const data = allResults.filter(r => {
+
+  const key = (sym, tf, sig) => `${sym}|${tf}|${sig}`;
+  const merged = new Map();
+
+  // 1. Señales vivas de hoy
+  for (const r of allResults) {
+    const k = key(r.sym, r.tf, r.sig);
+    merged.set(k, { ...r, liveToday: true, tracked: false, trackerData: null });
+  }
+
+  // 2. Alertas guardadas del tracker — fusionar o añadir
+  const tdata = (typeof trackerLoad === 'function') ? trackerLoad() : {};
+  for (const id of Object.keys(tdata)) {
+    const a = tdata[id];
+    const k = key(a.sym, a.tf, a.sig);
+    if (merged.has(k)) {
+      // coincide con una señal viva → enriquecer la misma fila
+      const row = merged.get(k);
+      row.tracked = true;
+      row.trackerData = a;
+      row.trackerId = id;
+    } else {
+      // alerta guardada que HOY no salió en el escaneo (no cargó / cambió /
+      // NEUTRAL). Se muestra igual, marcada como seguimiento.
+      merged.set(k, {
+        sym: a.sym, tf: a.tf, sig: a.sig, label: a.sig.replace('_',' '),
+        close: a.currentPrice ?? a.entry,
+        sector: (typeof SYM_META!=='undefined' && SYM_META[a.sym]?.sector) || '',
+        poc: a.poc, vah: a.vah, val: a.val,
+        stop: a.stop, t1: a.t1, t2: a.t2, inv: null,
+        rr: a.rr, score: a.score ?? 0, scorePct: null, bt: null,
+        liveToday: false, tracked: true, trackerData: a, trackerId: id,
+        _td: null, _res: null
+      });
+    }
+  }
+
+  let data = [...merged.values()].filter(r => {
     if (activeTF !== 'ALL' && r.tf !== activeTF) return false;
     if (minSc > 0 && r.score < minSc) return false;   // solo filtra si el usuario lo sube
     if (r.sig==='LONG' && !fl) return false;
@@ -2960,17 +2988,21 @@ function getFiltered() {
     if (r.sig==='RANGE_LONG' && !frl) return false;
     if (r.sig==='RANGE_SHORT' && !frs) return false;
     if (r.sig==='NEUTRAL' && !fn) return false;
-    // Objetivo demasiado cercano (<0.5%) — no vale la pena operarlo
-    if (r.t1 && r.close) {
+    // Objetivo demasiado cercano (<0.5%) — no vale la pena. Excepción: si está
+    // en seguimiento (tracked), se muestra igual aunque hoy el precio se acercó.
+    if (!r.tracked && r.t1 && r.close) {
       const targetDist = Math.abs(r.t1 - r.close) / r.close;
       if (targetDist < 0.005) return false;
     }
-    // R:R fuera de rango razonable — descartamos
-    if (r.rr && (parseFloat(r.rr) < 0.3 || parseFloat(r.rr) > 15)) return false;
+    if (!r.tracked && r.rr && (parseFloat(r.rr) < 0.3 || parseFloat(r.rr) > 15)) return false;
     return true;
   });
 
   data.sort((a,b) => {
+    // Las que están en seguimiento Y activas suben arriba del todo
+    const aTrack = a.tracked && a.trackerData?.status === 'active' ? 1 : 0;
+    const bTrack = b.tracked && b.trackerData?.status === 'active' ? 1 : 0;
+    if (aTrack !== bTrack && sortBy === 'score') return bTrack - aTrack;
     let va, vb;
     if (sortBy === 'score') { va = a.score; vb = b.score; }
     else if (sortBy === 'rr') { va = parseFloat(a.rr)||0; vb = parseFloat(b.rr)||0; }
@@ -3267,12 +3299,6 @@ function renderTop3(data) {
 function renderPanel() {
   const content = document.getElementById('content');
 
-  // ── TRACKER VIEW ──
-  if (activeTF === 'TRACKER') {
-    if (content) content.innerHTML = trackerRender();
-    return;
-  }
-
   const data = getFiltered();
 
   // Update sort indicators
@@ -3293,7 +3319,7 @@ function renderPanel() {
   <div id="diag-area"></div>
   ${renderTop3(data)}
   <div class="metrics">
-    <div class="mc m1"><div class="mc-val">${total}</div><div class="mc-lbl">Señales activas</div></div>
+    <div class="mc m1"><div class="mc-val">${total}</div><div class="mc-lbl">Señales + seguimiento</div></div>
     <div class="mc m2"><div class="mc-val" style="color:var(--emerald)">${longs}</div><div class="mc-lbl">Long</div></div>
     <div class="mc m3"><div class="mc-val" style="color:var(--ember)">${shorts}</div><div class="mc-lbl">Short</div></div>
     <div class="mc m4"><div class="mc-val" style="color:var(--amber)">${ranges}</div><div class="mc-lbl">Range</div></div>
@@ -3344,29 +3370,44 @@ function renderPanel() {
         fiabTxt = 'pocas'; fiabC = 'var(--dim)';
       }
 
+      // ── Marcadores de seguimiento (fila unificada) ──
+      const td = r.trackerData;
+      const isTracked = r.tracked && td;
+      const trackActive = isTracked && td.status === 'active';
+      const pin = isTracked ? `<span title="En seguimiento desde ${new Date(td.entryTs||td.detectedAt).toLocaleDateString('es-ES')}" style="color:var(--sapphire)">📌</span> ` : '';
+      // Estado de la alerta en seguimiento
+      const stLabel = isTracked ? ({active:'● activa',hit_t1:'✅ T1',hit_t2:'🏆 T2',stopped:'❌ stop',expired:'⏳ exp'}[td.status]||td.status) : '';
+      const stColor = isTracked ? ({active:'var(--sapphire)',hit_t1:'var(--emerald)',hit_t2:'var(--emerald)',stopped:'var(--ember)',expired:'var(--dim)'}[td.status]||'var(--dim)') : '';
+      // Precio de entrada congelado + flotante (si en seguimiento)
+      const entryFrozen = isTracked ? td.entry : null;
+      const floatPnl = (trackActive && td.floatPnl != null) ? td.floatPnl : null;
+      const notLiveTxt = (isTracked && !r.liveToday) ? `<span title="Hoy esta señal no apareció en el escaneo (no cargó o cambió). Sigue en seguimiento." style="color:var(--amber);font-size:8px">⚠ no vigente hoy</span>` : '';
+
       html += `
-      <div class="trow ${rowCls(r.sig)}" style="animation-delay:${i*.03}s" onclick="openModal('${r.sym}','${r.tf}')">
+      <div class="trow ${rowCls(r.sig)}${trackActive?' tracked-row':''}" style="animation-delay:${i*.03}s${trackActive?';border-left:3px solid var(--sapphire)':''}" onclick="openModal('${r.sym}','${r.tf}')">
         ${isMobile() ? `
         <div class="trow-mobile-top">
-          <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')" style="font-size:15px">${r.sym}</button>
+          <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')" style="font-size:15px">${pin}${r.sym}</button>
           ${r.sector?`<span style="font-size:8px;color:var(--dim);font-family:var(--f-mono)">${r.sector}</span>`:''}
           <span class="badge ${bCls(r.sig)}" style="font-size:9px">${sigTxt(r.sig)}</span>
+          ${isTracked?`<span style="font-size:8px;color:${stColor};font-family:var(--f-mono)">${stLabel}</span>`:''}
           <span style="font-family:var(--f-mono);font-size:12px;margin-left:auto">${f(r.close)}</span>
         </div>
         <div class="trow-mobile-stats">
           <span>TF <b>${r.tf}</b></span>
-          <span>Score <b style="color:${scc}">${sc}/10</b>${pctTxt ? ` <span style="color:${pctColor};font-size:9px">${pctTxt}</span>` : ''}</span>
-          <span title="R:R realizado en el histórico (objetivo entre paréntesis)">R:R <b>${r.bt?.realizedRR!=null?'1:'+r.bt.realizedRR:(r.rr?'1:'+r.rr:'—')}</b>${r.bt?.realizedRR!=null&&r.rr?`<span style="color:var(--dim);font-size:9px"> (obj 1:${r.rr})</span>`:''}</span>
+          ${entryFrozen!=null?`<span title="Precio de entrada congelado">Ent.fija <b>${f(entryFrozen)}</b></span>`:''}
+          ${floatPnl!=null?`<span>Flot. <b style="color:${floatPnl>=0?'var(--emerald)':'var(--ember)'}">${floatPnl>=0?'+':''}${floatPnl}%</b></span>`:''}
+          <span>Score <b style="color:${scc}">${sc}/10</b></span>
           <span>WR <b style="color:${wrC}">${wrTxt}</b></span>
-          <span>OP <b style="color:${opc}">${op}</b></span>
+          ${notLiveTxt?`<span>${notLiveTxt}</span>`:''}
         </div>` : `
-        <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')" title="${r.sector||''}">${r.sym}${r.sector?`<span style="display:block;font-size:7px;color:var(--dim);font-weight:400;letter-spacing:0">${r.sector}</span>`:''}</button>
+        <button class="sym-cell" onclick="event.stopPropagation();openModal('${r.sym}','${r.tf}')" title="${r.sector||''}">${pin}${r.sym}${r.sector?`<span style="display:block;font-size:7px;color:var(--dim);font-weight:400;letter-spacing:0">${r.sector}${notLiveTxt?' · '+notLiveTxt:''}</span>`:''}</button>
         <span class="tf-chip">${r.tf}</span>
-        <span class="n">${f(r.close)}</span>
+        <span class="n">${f(r.close)}${floatPnl!=null?`<span style="font-size:8px;color:${floatPnl>=0?'var(--emerald)':'var(--ember)'};display:block">${floatPnl>=0?'+':''}${floatPnl}%</span>`:''}</span>
         <span class="n n-poc">${f(r.poc)}</span>
         <span class="n n-vah">${f(r.vah)}</span>
         <span class="n n-vah">${f(r.val)}</span>
-        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span></span>
+        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
         <span class="n n-stop">${f(r.stop)}<span style="font-size:9px;color:var(--dim);margin-left:2px">${r.close&&r.stop?'('+((Math.abs(r.stop-r.close)/r.close*100).toFixed(1))+'%)':''}</span></span>
         <span class="n n-tgt">${f(r.t1)}<span style="font-size:9px;color:var(--emerald);margin-left:2px">${r.close&&r.t1?(()=>{const d=((r.t1-r.close)/r.close*100).toFixed(1);return '('+(parseFloat(d)>0?'+':'')+d+'%)'})():''}</span></span>
         <span class="n n-rr">${r.rr ? '1:'+r.rr : '—'}</span>
@@ -3374,7 +3415,7 @@ function renderPanel() {
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:${wrC};border-left:1px solid var(--rule);padding-left:8px">${wrTxt}</span>
         <span style="font-family:var(--f-mono);font-size:10px;font-weight:600;color:${fiabC}" title="FIAB">${fiabTxt}</span>
         <span style="font-family:var(--f-mono);font-size:12px;font-weight:800;color:${opc}" title="OP=${op}">${op}</span>
-        <button onclick="event.stopPropagation();trackerPinRow(this,'${r.sym}','${r.tf}')" style="background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:11px;padding:2px 4px" title="Guardar en tracker">📌</button>`}
+        <button onclick="event.stopPropagation();trackerPinRow(this,'${r.sym}','${r.tf}')" style="background:transparent;border:none;color:${isTracked?'var(--sapphire)':'var(--dim)'};cursor:pointer;font-size:11px;padding:2px 4px" title="${isTracked?'Ya en seguimiento':'Guardar en seguimiento'}">📌</button>`}
       </div>`;
     });
   }
@@ -3389,15 +3430,55 @@ function applyFilters() {
 function setTF(tf, btn) {
   activeTF = tf;
   document.querySelectorAll('.tf-pill').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
+  if (btn) btn.classList.add('on');
+  // ocultar panel de seguimiento si estaba abierto
+  const ts = document.getElementById('tracker-stats-panel');
+  if (ts) ts.remove();
   applyFilters();
+}
+
+// Muestra/oculta un panel-resumen del seguimiento (WR, PnL, reset) SIN cambiar
+// la vista de datos. Las alertas en seguimiento ya están integradas en la tabla.
+function toggleTrackerStats() {
+  const existing = document.getElementById('tracker-stats-panel');
+  if (existing) { existing.remove(); return; }
+  const data = (typeof trackerLoad === 'function') ? trackerLoad() : {};
+  const all = Object.values(data);
+  const closed = all.filter(a => a.status !== 'active');
+  const active = all.filter(a => a.status === 'active');
+  const wins = closed.filter(a => (a.pnlPct||0) > 0);
+  const wr = closed.length ? Math.round(wins.length/closed.length*100) : null;
+  const totalPnl = closed.reduce((s,a)=>s+(a.pnlPct||0),0);
+  const wrC = wr==null?'var(--dim)':wr>=60?'var(--emerald)':wr>=45?'var(--amber)':'var(--ember)';
+  const panel = document.createElement('div');
+  panel.id = 'tracker-stats-panel';
+  panel.style.cssText = 'margin:0 0 14px;padding:14px 16px;background:var(--ink2);border:1px solid var(--sapphire);border-radius:12px';
+  panel.innerHTML = `
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-family:var(--f-mono)">
+      <div style="font-size:11px;color:var(--sub);font-weight:700">📌 SEGUIMIENTO</div>
+      <div style="font-size:10px;color:var(--dim)">Activas: <b style="color:var(--sapphire)">${active.length}</b></div>
+      <div style="font-size:10px;color:var(--dim)">Cerradas: <b>${closed.length}</b></div>
+      <div style="font-size:10px;color:var(--dim)">WR: <b style="color:${wrC}">${wr==null?'—':wr+'%'}</b></div>
+      <div style="font-size:10px;color:var(--dim)">PnL acum.: <b style="color:${totalPnl>=0?'var(--emerald)':'var(--ember)'}">${totalPnl>=0?'+':''}${totalPnl.toFixed(1)}%</b></div>
+      <button onclick="trackerClearClosed();toggleTrackerStats();toggleTrackerStats()" style="margin-left:auto;padding:5px 10px;border:1px solid var(--rule2);background:transparent;color:var(--sub);border-radius:7px;cursor:pointer;font-family:var(--f-mono);font-size:9px">🗑 Limpiar cerradas</button>
+      <button onclick="if(confirm('¿Borrar TODO el seguimiento y empezar de cero?')){localStorage.removeItem(TRACKER_KEY);trackerUpdateBadge();toggleTrackerStats();applyFilters();}" style="padding:5px 10px;border:1px solid var(--ember);background:transparent;color:var(--ember);border-radius:7px;cursor:pointer;font-family:var(--f-mono);font-size:9px">⚠️ Reset</button>
+    </div>
+    <div style="font-size:9px;color:var(--dim);margin-top:8px;line-height:1.5">Las alertas en seguimiento aparecen marcadas con 📌 dentro de la tabla principal, con su precio de entrada congelado y el actual al lado.</div>`;
+  const content = document.getElementById('content');
+  if (content && content.firstChild) content.insertBefore(panel, content.firstChild);
+  else if (content) content.appendChild(panel);
 }
 // ════════════════════════════════════════════════════════════
 // MODAL
 // ════════════════════════════════════════════════════════════
 function openModal(symFull, tf) {
   const row = allResults.find(r => r.sym === symFull && r.tf === tf);
-  if (!row) return;
+  if (!row || !row._td) {
+    // Fila que solo existe en seguimiento (hoy no se escaneó o no cargó):
+    // no hay análisis de VP actual que mostrar.
+    alert('Esta alerta está en seguimiento pero hoy no tiene datos de escaneo recientes (no cargó o cambió de señal). Vuelve a escanear para ver su análisis actual.');
+    return;
+  }
   activeModal = row;
   const td = row._td;
   const {vp, sig, conf, close} = td;
