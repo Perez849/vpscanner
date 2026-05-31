@@ -2844,20 +2844,32 @@ function calcIOA(r) {
     return { ioa:0, kelly:+kelly.toFixed(3), kellyRaw, confianza:0, icAdj:0, detalle:'Kelly negativo — sin edge neto' };
   }
 
-  // 2. Confianza estadística: muestra + CI bootstrap
-  // ENDURECIDO: con muestras minúsculas (n<8) la confianza se desploma,
-  // porque 3-5 trades no prueban absolutamente nada por buenos que parezcan.
+  // 2. CONFIANZA ESTADÍSTICA — curva CONTINUA (no escalones).
+  // El problema anterior: multiplicadores por tramos (×0.3 si n<8, ×0.65 si
+  // n<15) colapsaban casi todos los activos a 2-3 valores idénticos y aplastaban
+  // el índice por debajo de 50. Ahora usamos curvas suaves:
+  //   · sampleConf sube de forma continua con n (saturación tipo n/(n+k)).
+  //     Con k=12: n=6→0.33, n=12→0.50, n=25→0.68, n=50→0.81, n=100→0.89.
+  //   · ciConf decae continuamente con el ancho del intervalo de confianza.
+  // Así cada activo obtiene un valor propio en todo el rango 0-1.
   const n = bt.total;
-  let sampleConf = Math.min(n / 25, 1);
-  if (n < 8)       sampleConf *= 0.3;   // muestra ridícula → casi sin confianza
-  else if (n < 15) sampleConf *= 0.65;  // muestra pequeña → confianza recortada
-  let ciConf = 0.2; // mínimo cuando no hay bootstrap
-  if (kFull) {
-    const ciWidth = kFull.ci90hi - kFull.ci90lo;
-    ciConf = Math.max(0, Math.min(1, 1 - ciWidth * 0.8));
-    if (kFull.ci90lo < 0) ciConf *= 0.5;
+  const sampleConf = n / (n + 12);   // continua, sin escalones
+  let ciConf = 0.35;                 // valor por defecto si no hay bootstrap
+  if (kFull && Number.isFinite(kFull.ci90hi) && Number.isFinite(kFull.ci90lo)) {
+    const ciWidth = Math.max(0, kFull.ci90hi - kFull.ci90lo);
+    ciConf = 1 / (1 + ciWidth * 4);  // decaimiento continuo: CI estrecho → alta confianza
+    if (kFull.ci90lo < 0) ciConf *= 0.6;  // si el CI cruza 0, el edge no es seguro
   }
-  const confianza = +(sampleConf * 0.6 + ciConf * 0.4).toFixed(3);
+  // Media geométrica suave de ambos factores (penaliza si CUALQUIERA es bajo)
+  let confianza = Math.sqrt(Math.max(0.01, sampleConf) * Math.max(0.01, ciConf));
+  // Tercer factor: la MAGNITUD del edge. Dos activos con la misma muestra pero
+  // distinto PnL/op no merecen la misma confianza. Un edge neto grande sube la
+  // confianza; uno marginal la baja. Escala suave centrada en ~1%/op.
+  if (Number.isFinite(bt.avgPnl)) {
+    const edgeFactor = Math.max(0.5, Math.min(1.3, 1 + (bt.avgPnl - 1) * 0.15));
+    confianza *= edgeFactor;
+  }
+  confianza = +Math.max(0, Math.min(1, confianza)).toFixed(3);
 
   // 3. Amplificador IC — solo si bootstrap lo confirma
   const icFull = calcICFull(bt);
@@ -2953,20 +2965,18 @@ function getFiltered() {
     merged.set(k, { ...r, liveToday: true, tracked: false, trackerData: null });
   }
 
-  // 2. Alertas guardadas del tracker — fusionar o añadir
+  // 2. Alertas guardadas del tracker — SOLO LAS ACTIVAS.
+  // Las cerradas (stop / T1 / T2 / expiradas) NO se muestran aquí: ya están
+  // finalizadas y solo cuentan en el histórico de trades y en las estadísticas.
   const tdata = (typeof trackerLoad === 'function') ? trackerLoad() : {};
   for (const id of Object.keys(tdata)) {
     const a = tdata[id];
+    if (a.status !== 'active') continue;   // ← cerradas fuera de la vista activa
     const k = key(a.sym, a.tf, a.sig);
     if (merged.has(k)) {
-      // coincide con una señal viva → enriquecer la misma fila
       const row = merged.get(k);
-      row.tracked = true;
-      row.trackerData = a;
-      row.trackerId = id;
+      row.tracked = true; row.trackerData = a; row.trackerId = id;
     } else {
-      // alerta guardada que HOY no salió en el escaneo (no cargó / cambió /
-      // NEUTRAL). Se muestra igual, marcada como seguimiento.
       merged.set(k, {
         sym: a.sym, tf: a.tf, sig: a.sig, label: a.sig.replace('_',' '),
         close: a.currentPrice ?? a.entry,
@@ -2978,6 +2988,36 @@ function getFiltered() {
         _td: null, _res: null
       });
     }
+  }
+
+  // ── NORMALIZACIÓN DE PRECIOS — UNA SOLA FUENTE DE VERDAD ──────────
+  // Cada fila queda con TRES precios de nombre inequívoco. La fila Y el modal
+  // usan EXACTAMENTE estos, sin recalcular nada distinto en otro sitio:
+  //   priceEntry → precio FIJO de cuando saltó la alerta (solo si en seguimiento)
+  //   priceNow   → precio ACTUAL (cierre de hoy del escaneo; si hoy no cargó, el
+  //                último precio guardado en la alerta)
+  //   val/vah/poc→ niveles del perfil; de hoy si se escaneó, congelados si no.
+  //                Estos se mantienen fijos hasta que cambia el pivote (igual
+  //                que el "perfil en desarrollo" del Pine Script original).
+  for (const row of merged.values()) {
+    const a = row.trackerData;
+    row.priceEntry = a ? a.entry : null;                       // FIJO, nunca cambia
+    row.priceNow   = row.liveToday ? row.close : (a?.currentPrice ?? a?.entry ?? row.close);
+    // NIVELES del perfil: si está en seguimiento, se muestran los CONGELADOS de
+    // la alerta (los de cuando saltó), igual que el perfil "congelado" del Pine.
+    // Solo cuando NO hay alerta se usan los niveles vivos de hoy.
+    if (a) {
+      row.val = a.val; row.vah = a.vah; row.poc = a.poc;
+      row.stop = a.stop; row.t1 = a.t1; row.t2 = a.t2; row.rr = a.rr;
+    }
+    // PnL flotante desde la entrada fija al precio actual
+    if (row.priceEntry != null && row.priceNow != null) {
+      const isLong = row.sig === 'LONG' || row.sig === 'RANGE_LONG';
+      row.floatPnl = +((row.priceNow - row.priceEntry) / row.priceEntry * 100 * (isLong ? 1 : -1)).toFixed(2);
+    } else {
+      row.floatPnl = null;
+    }
+    row.close = row.priceNow;
   }
 
   let data = [...merged.values()].filter(r => {
@@ -3370,18 +3410,18 @@ function renderPanel() {
         fiabTxt = 'pocas'; fiabC = 'var(--dim)';
       }
 
-      // ── Marcadores de seguimiento (fila unificada) ──
+      // ── Marcadores de seguimiento (usa los precios YA normalizados en la fila) ──
       const td = r.trackerData;
       const isTracked = r.tracked && td;
       const trackActive = isTracked && td.status === 'active';
       const pin = isTracked ? `<span title="En seguimiento desde ${new Date(td.entryTs||td.detectedAt).toLocaleDateString('es-ES')}" style="color:var(--sapphire)">📌</span> ` : '';
-      // Estado de la alerta en seguimiento
       const stLabel = isTracked ? ({active:'● activa',hit_t1:'✅ T1',hit_t2:'🏆 T2',stopped:'❌ stop',expired:'⏳ exp'}[td.status]||td.status) : '';
       const stColor = isTracked ? ({active:'var(--sapphire)',hit_t1:'var(--emerald)',hit_t2:'var(--emerald)',stopped:'var(--ember)',expired:'var(--dim)'}[td.status]||'var(--dim)') : '';
-      // Precio de entrada congelado + flotante (si en seguimiento)
-      const entryFrozen = isTracked ? td.entry : null;
-      const floatPnl = (trackActive && td.floatPnl != null) ? td.floatPnl : null;
-      const notLiveTxt = (isTracked && !r.liveToday) ? `<span title="Hoy esta señal no apareció en el escaneo (no cargó o cambió). Sigue en seguimiento." style="color:var(--amber);font-size:8px">⚠ no vigente hoy</span>` : '';
+      // PRECIOS NORMALIZADOS (definidos una sola vez en getFiltered):
+      const entryFrozen = r.priceEntry;     // FIJO de cuando saltó la alerta
+      const priceNow    = r.priceNow;       // ACTUAL
+      const floatPnl    = (isTracked && r.floatPnl != null) ? r.floatPnl : null;
+      const notLiveTxt = (isTracked && !r.liveToday) ? `<span title="Hoy no apareció en el escaneo (no cargó o cambió). Sigue en seguimiento." style="color:var(--amber);font-size:8px">⚠ no vigente hoy</span>` : '';
 
       html += `
       <div class="trow ${rowCls(r.sig)}${trackActive?' tracked-row':''}" style="animation-delay:${i*.03}s${trackActive?';border-left:3px solid var(--sapphire)':''}" onclick="openModal('${r.sym}','${r.tf}')">
@@ -3472,16 +3512,21 @@ function toggleTrackerStats() {
 // MODAL
 // ════════════════════════════════════════════════════════════
 function openModal(symFull, tf) {
+  // Buscar la fila FUSIONADA (la misma que ves en la tabla), para usar sus
+  // precios normalizados y que el modal muestre EXACTAMENTE lo mismo.
+  const frow = getFiltered().find(r => r.sym === symFull && r.tf === tf);
   const row = allResults.find(r => r.sym === symFull && r.tf === tf);
   if (!row || !row._td) {
-    // Fila que solo existe en seguimiento (hoy no se escaneó o no cargó):
-    // no hay análisis de VP actual que mostrar.
     alert('Esta alerta está en seguimiento pero hoy no tiene datos de escaneo recientes (no cargó o cambió de señal). Vuelve a escanear para ver su análisis actual.');
     return;
   }
   activeModal = row;
   const td = row._td;
   const {vp, sig, conf, close} = td;
+  // Precios normalizados (idénticos a la fila). Si no hay fila fusionada, caer al close de hoy.
+  const priceNow    = frow?.priceNow ?? close;
+  const priceEntry  = frow?.priceEntry ?? null;
+  const floatPnl    = frow?.floatPnl ?? null;
   const isL = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
   const tC  = isL ? 'var(--emerald)' : 'var(--ember)';
   const t2C = isL ? '#34d399' : '#f87171';
@@ -3511,22 +3556,34 @@ function openModal(symFull, tf) {
   document.getElementById('m-badge').innerHTML =
     `<span class="badge ${bCls(sig.signal)}" style="font-size:12px">${sigTxt(sig.signal)}</span>`;
 
+  // Niveles a mostrar: si la fila está en seguimiento, los CONGELADOS (los
+  // mismos que la fila); si no, los vivos del perfil de hoy.
+  const lvVal = frow?.val ?? vp.valPrice;
+  const lvVah = frow?.vah ?? vp.vahPrice;
+  const lvPoc = frow?.poc ?? vp.pocPrice;
+  const lvStop = frow?.stop ?? sig.stop;
+  const lvT1 = frow?.t1 ?? sig.target;
+  const lvT2 = frow?.t2 ?? sig.target2;
+  const lvRR = frow?.rr ?? sig.rr;
+
   document.getElementById('m-levels').innerHTML = `
     <div class="lv-table">
-      <div class="lv-row"><span class="lv-lbl">Precio</span><span class="lv-val">${f(close)}</span></div>
-      <div class="lv-row"><span class="lv-lbl" style="color:var(--ember)">PoC</span><span class="lv-val" style="color:var(--ember)">${f(vp.pocPrice)}</span></div>
-      <div class="lv-row"><span class="lv-lbl" style="color:var(--sapphire)">VAH</span><span class="lv-val" style="color:var(--sapphire)">${f(vp.vahPrice)}</span></div>
-      <div class="lv-row"><span class="lv-lbl" style="color:var(--sapphire)">VAL</span><span class="lv-val" style="color:var(--sapphire)">${f(vp.valPrice)}</span></div>
-      <div class="lv-row lv-stop"><span class="lv-lbl" style="color:var(--amber)">◆ Stop</span><span class="lv-val" style="color:var(--amber)">${f(sig.stop)}</span></div>
-      <div class="lv-row"><span class="lv-lbl" style="color:${tC}">Target 1</span><span class="lv-val" style="color:${tC}">${f(sig.target)}</span></div>
-      <div class="lv-row"><span class="lv-lbl" style="color:${t2C}">Target 2</span><span class="lv-val" style="color:${t2C}">${f(sig.target2)}</span></div>
+      ${priceEntry != null ? `<div class="lv-row" style="background:rgba(41,98,255,.08)"><span class="lv-lbl" style="color:var(--sapphire)">📌 Entrada (FIJA)</span><span class="lv-val" style="color:var(--sapphire)">${f(priceEntry)}</span></div>` : ''}
+      <div class="lv-row"><span class="lv-lbl">Precio actual</span><span class="lv-val">${f(priceNow)}${floatPnl!=null?` <span style="font-size:10px;color:${floatPnl>=0?'var(--emerald)':'var(--ember)'}">${floatPnl>=0?'+':''}${floatPnl}%</span>`:''}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--ember)">PoC</span><span class="lv-val" style="color:var(--ember)">${f(lvPoc)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--sapphire)">VAH</span><span class="lv-val" style="color:var(--sapphire)">${f(lvVah)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--sapphire)">VAL</span><span class="lv-val" style="color:var(--sapphire)">${f(lvVal)}</span></div>
+      <div class="lv-row lv-stop"><span class="lv-lbl" style="color:var(--amber)">◆ Stop</span><span class="lv-val" style="color:var(--amber)">${f(lvStop)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:${tC}">Target 1</span><span class="lv-val" style="color:${tC}">${f(lvT1)}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:${t2C}">Target 2</span><span class="lv-val" style="color:${t2C}">${f(lvT2)}</span></div>
       <div class="lv-row"><span class="lv-lbl" style="color:var(--violet)">Invalidación</span><span class="lv-val" style="color:var(--violet)">${f(sig.invalidation)}</span></div>
-      <div class="lv-row"><span class="lv-lbl" style="color:var(--violet)">R : R</span><span class="lv-val" style="color:var(--violet)">${sig.rr ? '1:'+sig.rr : '—'}</span></div>
+      <div class="lv-row"><span class="lv-lbl" style="color:var(--violet)">R : R</span><span class="lv-val" style="color:var(--violet)">${lvRR ? '1:'+lvRR : '—'}</span></div>
       <div class="lv-row"><span class="lv-lbl">RSI(14)</span><span class="lv-val">${conf.rsi ?? '—'}</span></div>
       <div class="lv-row"><span class="lv-lbl">EMA21</span><span class="lv-val">${f(conf.ema21)}</span></div>
       <div class="lv-row"><span class="lv-lbl">EMA50</span><span class="lv-val">${f(conf.ema50)}</span></div>
       <div class="lv-row"><span class="lv-lbl">Vol / SMA89</span><span class="lv-val">×${conf.volRatio}</span></div>
-    </div>`;
+    </div>
+    ${priceEntry != null ? '' : '<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);margin-top:6px">Esta señal aún no está en seguimiento — no hay precio de entrada fijo. Pulsa 📌 en la fila para fijarlo.</div>'}`;
 
   document.getElementById('m-scenario').textContent = sig.scenario;
 
