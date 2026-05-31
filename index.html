@@ -681,8 +681,8 @@ canvas { width: 100% !important; height: 100% !important; }
       <input type="range" min="50" max="90" value="68" oninput="document.getElementById('vva').textContent=this.value+'%'">
     </div>
     <div class="sl-wrap" style="margin-bottom:0">
-      <div class="sl-top"><span class="sl-name">Score mín.</span><span class="sl-val" id="vsc">3</span></div>
-      <input type="range" min="0" max="10" value="3" oninput="document.getElementById('vsc').textContent=this.value;applyFilters()">
+      <div class="sl-top"><span class="sl-name">Score mín. (opcional)</span><span class="sl-val" id="vsc">0</span></div>
+      <input type="range" min="0" max="10" value="0" oninput="document.getElementById('vsc').textContent=this.value;applyFilters()">
     </div>
   </div>
 
@@ -2173,6 +2173,15 @@ function trackerUpdateWithPrice(sym, tf, df) {
 
     const isLong = a.sig === 'LONG' || a.sig === 'RANGE_LONG';
 
+    // PRECIO ACTUAL (último cierre) — se guarda SOLO para comparar contra el
+    // precio de entrada congelado. NUNCA toca a.entry. Esto es lo que el
+    // usuario pidió: el precio de entrada es fijo, y al lado se ve el de hoy.
+    const lastClose = df[df.length - 1].close;
+    if (a.currentPrice !== lastClose) { a.currentPrice = lastClose; changed = true; }
+    // PnL flotante actual respecto a la entrada congelada (informativo)
+    const floatPnl = +((lastClose - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+    if (a.floatPnl !== floatPnl) { a.floatPnl = floatPnl; changed = true; }
+
     // Ancla = entryTs (fecha de entrada CONGELADA en el primer avistamiento).
     // Todo se mide desde la entrada: no se puede tocar stop/target ni contar
     // barras antes de haber entrado. Como el id ahora es estable, entryTs ya
@@ -2322,6 +2331,14 @@ function trackerRender() {
 
   let html = `<div style="padding:20px 0">`;
 
+  // Aclaración tracker vs tabla — la diferencia clave que confunde
+  html += `<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);background:var(--ink2);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;margin-bottom:14px;line-height:1.6">
+    ℹ️ <b style="color:var(--sub)">Tracker ≠ tabla.</b> Aquí las alertas tienen el precio y la fecha
+    <b>CONGELADOS</b> del momento en que se detectaron (seguimiento de una operación real en el tiempo).
+    La tabla principal muestra el estado <b>ACTUAL</b> de cada señal, recalculado en cada escaneo.
+    Por eso los precios no coinciden: son dos cosas distintas a propósito.
+  </div>`;
+
   // Summary stats
   if (closed.length > 0) {
     const wr = Math.round(wins.length / closed.length * 100);
@@ -2357,7 +2374,8 @@ function trackerRender() {
         <button onclick="trackerDeleteAlert('${a.id}')" style="background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:12px;padding:2px 6px" title="Eliminar">✕</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:10px">
-        <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--dim)">ENTRADA</div><div style="font-family:var(--f-mono);font-size:11px">${f(a.entry)}</div></div>
+        <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--dim)">ENTRADA (fija)</div><div style="font-family:var(--f-mono);font-size:11px">${f(a.entry)}</div></div>
+        ${isActive && a.currentPrice != null ? `<div><div style="font-family:var(--f-mono);font-size:9px;color:var(--sapphire)">ACTUAL</div><div style="font-family:var(--f-mono);font-size:11px;color:var(--sapphire)">${f(a.currentPrice)} <span style="color:${(a.floatPnl||0)>=0?'var(--emerald)':'var(--ember)'};font-size:9px">${(a.floatPnl||0)>=0?'+':''}${a.floatPnl}%</span></div></div>` : ''}
         <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--ember)">STOP</div><div style="font-family:var(--f-mono);font-size:11px;color:var(--ember)">${f(a.stop)}</div></div>
         <div><div style="font-family:var(--f-mono);font-size:9px;color:var(--emerald)">T1</div><div style="font-family:var(--f-mono);font-size:11px;color:var(--emerald)">${f(a.t1)}</div></div>
         ${a.t2 ? `<div><div style="font-family:var(--f-mono);font-size:9px;color:var(--cyan)">T2</div><div style="font-family:var(--f-mono);font-size:11px;color:var(--cyan)">${f(a.t2)}</div></div>` : ''}
@@ -2383,6 +2401,7 @@ async function runScan() {
   loaderEl.style.alignItems = 'center';
   loaderEl.style.justifyContent = 'center';
   allResults = [];
+  for (const k in SCAN_DIAG) delete SCAN_DIAG[k];  // reset diagnóstico
 
   // ── RÉGIMEN DE MERCADO ────────────────────────────────────
   // Antes de escanear nada, medimos el estado del mercado global con SPY
@@ -2412,21 +2431,29 @@ async function runScan() {
       const td = res[key];
       if (!td) continue;
 
+      // Registrar en diagnóstico qué señal/score sacó este TF (para visibilidad)
+      if (SCAN_DIAG[sym] && SCAN_DIAG[sym][tf === '1D' ? '1D' : '1W']) {
+        SCAN_DIAG[sym][tf === '1D' ? '1D' : '1W'].sig = td.sig.signal;
+        SCAN_DIAG[sym][tf === '1D' ? '1D' : '1W'].score = td.conf.score;
+      }
+
       // ── TRACKER: guardar señal nueva PRIMERO (niveles congelados) ──
-      // Debe hacerse antes de trackerUpdateWithPrice para que la alerta
-      // exista cuando se comprueba su estado por primera vez
-      const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 0);
-      if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target && td.conf.score >= minSc) {
+      // El SCORE YA NO ES UN PORTERO. En muchos activos el score no predice
+      // nada (lo confirma el propio IC del backtest), así que descartar por
+      // score < 3 tiraba oportunidades válidas. Ahora basta con que haya una
+      // señal real (no NEUTRAL) con stop y target válidos. El score queda como
+      // dato informativo, no como filtro.
+      if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target) {
         const lastBar = td.df[td.df.length - 1];
         trackerAddAlert({
           sym, tf,
-          close: td.close,           // precio de entrada — se congela al crear la alerta
+          close: td.close,           // PRECIO DE ENTRADA — se congela para siempre al crear
           sig: td.sig.signal,
           stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2||null,
           poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
           score: td.conf.score, rr: td.sig.rr,
           signalStartTs: td.signalStartTs,
-          entryTs: lastBar.ts        // fecha de entrada (vela actual) — se congela
+          entryTs: lastBar.ts        // fecha de entrada — se congela
         });
       }
 
@@ -2478,30 +2505,61 @@ async function runScan() {
   renderDiag();
 }
 
-// Panel de diagnóstico: qué símbolos cargaron y cuáles fallaron (y por qué).
-// Se inyecta arriba del contenido para que no haga falta abrir la consola.
+// Panel de diagnóstico: estado de CADA empresa escaneada — si cargó, qué
+// señal sacó y con qué score. Hace visible por qué una empresa no aparece
+// en la tabla (no cargó / salió NEUTRAL / score bajo el mínimo).
 function renderDiag() {
   const syms = Object.keys(SCAN_DIAG);
   if (!syms.length) return;
-  let okCount = 0, failSyms = [];
-  for (const s of syms) {
-    const d = SCAN_DIAG[s];
-    const any = (d['1D']?.ok) || (d['1W']?.ok);
-    if (any) okCount++;
-    else failSyms.push({ sym:s, reason: (d['1D']?.reason || d['1W']?.reason || 'desconocido') });
-  }
   const host = document.getElementById('diag-area');
   if (!host) return;
-  if (!failSyms.length) {
-    host.innerHTML = `<div style="font-family:var(--f-mono);font-size:10px;color:var(--emerald);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:8px 12px;margin-bottom:12px">✓ ${okCount}/${syms.length} valores cargados correctamente.</div>`;
-    return;
+
+  const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 0);
+  let loaded = 0, failed = [], neutral = 0, belowScore = 0, operable = 0;
+  const detail = [];
+
+  for (const s of syms) {
+    const d = SCAN_DIAG[s];
+    const tfs = ['1D','1W'].map(k => d[k]).filter(Boolean);
+    const anyOk = tfs.some(t => t.ok);
+    if (!anyOk) {
+      failed.push({ sym:s, reason:(d['1D']?.reason || d['1W']?.reason || '—') });
+      detail.push({ sym:s, state:'fail', txt:(d['1D']?.reason || d['1W']?.reason || 'sin datos') });
+      continue;
+    }
+    loaded++;
+    // mejor señal entre los TF cargados
+    let best = null;
+    for (const t of tfs) {
+      if (!t.ok || !t.sig) continue;
+      if (t.sig === 'NEUTRAL') continue;
+      if (!best || (t.score||0) > (best.score||0)) best = t;
+    }
+    if (!best) { neutral++; detail.push({ sym:s, state:'neutral', txt:'NEUTRAL (sin setup claro)' }); }
+    else if ((best.score||0) < minSc) { belowScore++; detail.push({ sym:s, state:'low', txt:`${best.sig} score ${best.score} < min ${minSc}` }); }
+    else { operable++; detail.push({ sym:s, state:'ok', txt:`${best.sig} score ${best.score}` }); }
   }
-  const rows = failSyms.map(f => `<div style="display:flex;gap:8px;padding:2px 0"><span style="color:var(--ember);font-weight:700;min-width:54px">${f.sym}</span><span style="color:var(--dim)">${f.reason}</span></div>`).join('');
+
+  const stateColor = st => st==='ok'?'var(--emerald)':st==='fail'?'var(--ember)':st==='neutral'?'var(--dim)':'var(--amber)';
+  const stateIcon  = st => st==='ok'?'✓':st==='fail'?'✗':st==='neutral'?'·':'▾';
+  const rowsHtml = detail
+    .sort((a,b)=>{const o={ok:0,low:1,neutral:2,fail:3};return o[a.state]-o[b.state];})
+    .map(x => `<div style="display:flex;gap:8px;padding:2px 0"><span style="color:${stateColor(x.state)};min-width:14px">${stateIcon(x.state)}</span><span style="color:var(--sub);font-weight:700;min-width:60px">${x.sym}</span><span style="color:var(--dim)">${x.txt}</span></div>`).join('');
+
   host.innerHTML = `
-    <details style="font-family:var(--f-mono);font-size:10px;background:rgba(255,181,71,.07);border:1px solid rgba(255,181,71,.3);border-radius:8px;padding:8px 12px;margin-bottom:12px">
-      <summary style="cursor:pointer;color:var(--amber)">⚠️ ${okCount}/${syms.length} cargados · ${failSyms.length} fallidos (toca para ver detalle)</summary>
-      <div style="margin-top:8px;max-height:240px;overflow:auto">${rows}</div>
-      <div style="margin-top:8px;color:var(--dim);line-height:1.6">Causa habitual: los proxies CORS públicos están saturados o caídos. Reintenta con "↻ Re-escanear" en unos segundos; suele resolverse. Si un valor falla siempre, su ticker no existe en esas fuentes.</div>
+    <details style="font-family:var(--f-mono);font-size:10px;background:var(--ink2);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;margin-bottom:12px">
+      <summary style="cursor:pointer;color:var(--sub)">
+        📋 Diagnóstico del escaneo: <b style="color:var(--emerald)">${operable} operables</b> ·
+        ${belowScore} bajo score · ${neutral} neutrales · <span style="color:var(--ember)">${failed.length} sin datos</span>
+        <span style="color:var(--dim)"> (${loaded}/${syms.length} cargaron) — toca para ver cada empresa</span>
+      </summary>
+      <div style="margin-top:8px;max-height:320px;overflow:auto">${rowsHtml}</div>
+      <div style="margin-top:8px;color:var(--dim);line-height:1.6">
+        <b style="color:var(--emerald)">✓</b> operable (en la tabla) ·
+        <b style="color:var(--amber)">▾</b> cargó pero score &lt; mínimo (baja el slider de Score para verla) ·
+        <b style="color:var(--dim)">·</b> NEUTRAL, sin setup ·
+        <b style="color:var(--ember)">✗</b> no cargó (proxy/ticker). Reintenta el escaneo si hay muchos ✗.
+      </div>
     </details>`;
 }
 
@@ -2796,8 +2854,12 @@ function calcIOA(r) {
   }
 
   // 2. Confianza estadística: muestra + CI bootstrap
+  // ENDURECIDO: con muestras minúsculas (n<8) la confianza se desploma,
+  // porque 3-5 trades no prueban absolutamente nada por buenos que parezcan.
   const n = bt.total;
-  const sampleConf = Math.min(n / 25, 1);
+  let sampleConf = Math.min(n / 25, 1);
+  if (n < 8)       sampleConf *= 0.3;   // muestra ridícula → casi sin confianza
+  else if (n < 15) sampleConf *= 0.65;  // muestra pequeña → confianza recortada
   let ciConf = 0.2; // mínimo cuando no hay bootstrap
   if (kFull) {
     const ciWidth = kFull.ci90hi - kFull.ci90lo;
@@ -2880,7 +2942,11 @@ let sortBy = 'op'; // default: sort by opportunity score
 let sortDir = -1;
 
 function getFiltered() {
-  const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 3);
+  // El slider de score ya NO es un portero por defecto. Arranca en 0 (muestra
+  // todo). Si TÚ decides subirlo, filtra; pero por defecto el score no descarta
+  // nada, porque en muchos activos no predice resultados. Es una herramienta
+  // opcional de realce, no una guillotina.
+  const minSc = parseInt(document.querySelector('input[oninput*="vsc"]')?.value || 0);
   const fl  = document.getElementById('fl')?.checked;
   const fs  = document.getElementById('fs')?.checked;
   const frl = document.getElementById('frl')?.checked;
@@ -2888,14 +2954,13 @@ function getFiltered() {
   const fn  = document.getElementById('fn')?.checked;
   const data = allResults.filter(r => {
     if (activeTF !== 'ALL' && r.tf !== activeTF) return false;
-    if (r.score < minSc) return false;
+    if (minSc > 0 && r.score < minSc) return false;   // solo filtra si el usuario lo sube
     if (r.sig==='LONG' && !fl) return false;
     if (r.sig==='SHORT' && !fs) return false;
     if (r.sig==='RANGE_LONG' && !frl) return false;
     if (r.sig==='RANGE_SHORT' && !frs) return false;
     if (r.sig==='NEUTRAL' && !fn) return false;
-    // Filter out signals where target distance is < 0.5% (demasiado cerca — no vale la pena)
-    // Para acciones el 0.5% mínimo evita objetivos triviales por ruido
+    // Objetivo demasiado cercano (<0.5%) — no vale la pena operarlo
     if (r.t1 && r.close) {
       const targetDist = Math.abs(r.t1 - r.close) / r.close;
       if (targetDist < 0.005) return false;
