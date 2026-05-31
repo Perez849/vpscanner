@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · Oro/Plata/Uranio · Pivots anclados · VP Scanner</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r2</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1221,28 +1221,35 @@ async function fetchViaProxies(targetUrl, parser, interval, sym, sourceName) {
   return { bars:null, reason:lastReason };
 }
 
-async function fetchOHLCV(sym, interval) {
+async function fetchOHLCV(sym, interval, maxRetries = 3) {
   const meta = SYM_META[sym];
   const lbl = INTERVALS[interval].label;
   if (!meta) { console.error('Sin metadatos para '+sym); return null; }
 
   if (!SCAN_DIAG[sym]) SCAN_DIAG[sym] = {};
 
-  // 1. Yahoo (canónica — la más completa y fiable para acciones)
-  let r = await fetchViaProxies(urlYahoo(meta.yahoo, interval), parseYahoo, interval, sym, 'Yahoo');
-  // 2. Stooq (respaldo)
-  if (!r.bars) {
-    const rs = await fetchViaProxies(urlStooq(meta.stooq, interval), parseStooq, interval, sym, 'Stooq');
-    if (rs.bars) r = rs; else r.reason = 'Yahoo:' + r.reason + ' | Stooq:' + rs.reason;
+  let lastReason = '';
+  // Reintenta la ronda completa (Yahoo + Stooq por todos los proxies) varias
+  // veces: un proxy caído un instante no debe condenar al símbolo. Espera
+  // creciente entre rondas para dar tiempo a que los proxies se recuperen.
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // 1. Yahoo (canónica)
+    let r = await fetchViaProxies(urlYahoo(meta.yahoo, interval), parseYahoo, interval, sym, 'Yahoo');
+    // 2. Stooq (respaldo)
+    if (!r.bars) {
+      const rs = await fetchViaProxies(urlStooq(meta.stooq, interval), parseStooq, interval, sym, 'Stooq');
+      if (rs.bars) r = rs; else r.reason = 'Yahoo:' + r.reason + ' | Stooq:' + rs.reason;
+    }
+    if (r.bars) {
+      SCAN_DIAG[sym][lbl] = { ok:true, source:r.bars.source, n:r.bars.length, retries:attempt-1 };
+      console.log('['+sym+' '+lbl+'] ✓ '+r.bars.source+' · '+r.bars.length+' velas'+(attempt>1?' (intento '+attempt+')':''));
+      return r.bars;
+    }
+    lastReason = r.reason;
+    if (attempt < maxRetries) await sleep(400 * attempt);  // 400ms, 800ms…
   }
-
-  if (r.bars) {
-    SCAN_DIAG[sym][lbl] = { ok:true, source:r.bars.source, n:r.bars.length };
-    console.log('['+sym+' '+lbl+'] ✓ '+r.bars.source+' · '+r.bars.length+' velas');
-    return r.bars;
-  }
-  SCAN_DIAG[sym][lbl] = { ok:false, reason:r.reason };
-  console.warn('['+sym+' '+lbl+'] ✗ '+r.reason);
+  SCAN_DIAG[sym][lbl] = { ok:false, reason:lastReason, retries:maxRetries };
+  console.warn('['+sym+' '+lbl+'] ✗ tras '+maxRetries+' intentos · '+lastReason);
   return null;
 }
 
@@ -2977,6 +2984,8 @@ function getFiltered() {
       const row = merged.get(k);
       row.tracked = true; row.trackerData = a; row.trackerId = id;
     } else {
+      const diag = (typeof SCAN_DIAG !== 'undefined') ? SCAN_DIAG[a.sym] : null;
+      const loadedToday = !!(diag && diag[a.tf] && diag[a.tf].ok);
       merged.set(k, {
         sym: a.sym, tf: a.tf, sig: a.sig, label: a.sig.replace('_',' '),
         close: a.currentPrice ?? a.entry,
@@ -2984,7 +2993,7 @@ function getFiltered() {
         poc: a.poc, vah: a.vah, val: a.val,
         stop: a.stop, t1: a.t1, t2: a.t2, inv: null,
         rr: a.rr, score: a.score ?? 0, scorePct: null, bt: null,
-        liveToday: false, tracked: true, trackerData: a, trackerId: id,
+        liveToday: loadedToday, tracked: true, trackerData: a, trackerId: id,
         _td: null, _res: null
       });
     }
@@ -3202,7 +3211,7 @@ function renderTop3(data) {
         ${tTxt?`<span style="color:var(--dim)">Tendencia</span><span style="color:${tC}">${tTxt}</span>`:''}
       </div>
       <div style="margin-top:7px;font-family:var(--f-mono);font-size:8px;color:var(--dim);border-top:1px solid var(--rule);padding-top:5px">
-        Confianza ${(ioa.confianza*100).toFixed(0)}% · Score VP ${r.score}/10
+        Confianza ${(ioa.confianza*100).toFixed(1)}% <span style="opacity:.7">(${r.bt?.total??0} ops)</span> · Score VP ${r.score}/10
       </div>
     </div>`;
   });
@@ -3421,7 +3430,7 @@ function renderPanel() {
       const entryFrozen = r.priceEntry;     // FIJO de cuando saltó la alerta
       const priceNow    = r.priceNow;       // ACTUAL
       const floatPnl    = (isTracked && r.floatPnl != null) ? r.floatPnl : null;
-      const notLiveTxt = (isTracked && !r.liveToday) ? `<span title="Hoy no apareció en el escaneo (no cargó o cambió). Sigue en seguimiento." style="color:var(--amber);font-size:8px">⚠ no vigente hoy</span>` : '';
+      const notLiveTxt = '';
 
       html += `
       <div class="trow ${rowCls(r.sig)}${trackActive?' tracked-row':''}" style="animation-delay:${i*.03}s${trackActive?';border-left:3px solid var(--sapphire)':''}" onclick="openModal('${r.sym}','${r.tf}')">
