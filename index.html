@@ -719,6 +719,9 @@ canvas { width: 100% !important; height: 100% !important; }
       <button class="tf-pill" onclick="setTF('1D',this)">1D</button>
       <button class="tf-pill" onclick="setTF('1W',this)">1W</button>
       <button class="tf-pill" onclick="setTF('TRACKER',this)" id="tracker-pill">📌 TRACKER <span id="tracker-badge" style="display:none;background:var(--ember);color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;margin-left:3px"></span></button>
+      <select id="sector-filter" onchange="onSectorChange()" style="margin-left:8px;background:var(--ink2);color:var(--text);border:1px solid var(--rule);border-radius:8px;padding:5px 10px;font-family:var(--f-mono);font-size:10px;cursor:pointer" title="Escanear solo una narrativa (más rápido)">
+        <option value="ALL">🌐 Todos los sectores (96)</option>
+      </select>
     </div>
   </div>
 
@@ -870,6 +873,74 @@ const SYM_META = {
   'ASML':  { stooq:'asml.us',  yahoo:'ASML',    sector:'Semis' },      // ASML (NASDAQ ADR)
   'TSM':   { stooq:'tsm.us',   yahoo:'TSM',     sector:'Semis' },      // TSMC (ADR)
   'AVGO':  { stooq:'avgo.us',  yahoo:'AVGO',    sector:'Semis' },      // Broadcom
+
+  // ── COMPUTACIÓN CUÁNTICA (pure-play, muy volátiles) ────────
+  'IONQ':  { stooq:'ionq.us',  yahoo:'IONQ',    sector:'Cuántica' },   // IonQ (trapped-ion)
+  'RGTI':  { stooq:'rgti.us',  yahoo:'RGTI',    sector:'Cuántica' },   // Rigetti
+  'QBTS':  { stooq:'qbts.us',  yahoo:'QBTS',    sector:'Cuántica' },   // D-Wave
+  'QUBT':  { stooq:'qubt.us',  yahoo:'QUBT',    sector:'Cuántica' },   // Quantum Computing Inc
+  'IBM':   { stooq:'ibm.us',   yahoo:'IBM',     sector:'Cuántica/Tech' },// IBM (cuántica + balance sólido)
+
+  // ── DRONES / GUERRA NO TRIPULADA ───────────────────────────
+  'KTOS':  { stooq:'ktos.us',  yahoo:'KTOS',    sector:'Drones/Defensa' }, // Kratos (Valkyrie)
+  'AVAV':  { stooq:'avav.us',  yahoo:'AVAV',    sector:'Drones/Defensa' }, // AeroVironment (Switchblade)
+  'ONDS':  { stooq:'onds.us',  yahoo:'ONDS',    sector:'Drones' },     // Ondas Holdings
+  'AIRO':  { stooq:'airo.us',  yahoo:'AIRO',    sector:'Drones/Avionica' }, // AIRO Group
+  'PLTR':  { stooq:'pltr.us',  yahoo:'PLTR',    sector:'Defensa/IA' }, // Palantir
+
+  // ── ESPACIO ────────────────────────────────────────────────
+  'RKLB':  { stooq:'rklb.us',  yahoo:'RKLB',    sector:'Espacio' },    // Rocket Lab
+  'RDW':   { stooq:'rdw.us',   yahoo:'RDW',     sector:'Espacio' },    // Redwire
+  'LUNR':  { stooq:'lunr.us',  yahoo:'LUNR',    sector:'Espacio' },    // Intuitive Machines
+  'ASTS':  { stooq:'asts.us',  yahoo:'ASTS',    sector:'Espacio/Satélite' }, // AST SpaceMobile
+
+  // ── eVTOL / MOVILIDAD AÉREA ────────────────────────────────
+  'ACHR':  { stooq:'achr.us',  yahoo:'ACHR',    sector:'eVTOL' },      // Archer Aviation
+  'JOBY':  { stooq:'joby.us',  yahoo:'JOBY',    sector:'eVTOL' },      // Joby Aviation
+
+  // ── MEMORIAS / CHIPS (ciclo de memoria + IA) ───────────────
+  'MU':    { stooq:'mu.us',    yahoo:'MU',      sector:'Memorias' },   // Micron
+  'WDC':   { stooq:'wdc.us',   yahoo:'WDC',     sector:'Memorias' },   // Western Digital
+  'STX':   { stooq:'stx.us',   yahoo:'STX',     sector:'Memorias' },   // Seagate
+  'INTC':  { stooq:'intc.us',  yahoo:'INTC',    sector:'Semis' },      // Intel
+  'QCOM':  { stooq:'qcom.us',  yahoo:'QCOM',    sector:'Semis' },      // Qualcomm
+  'MRVL':  { stooq:'mrvl.us',  yahoo:'MRVL',    sector:'Semis' },      // Marvell
+  'SMCI':  { stooq:'smci.us',  yahoo:'SMCI',    sector:'IA/Hardware' },// Super Micro
+  'ARM':   { stooq:'arm.us',   yahoo:'ARM',     sector:'Semis' },      // ARM Holdings
+  'LRCX':  { stooq:'lrcx.us',  yahoo:'LRCX',    sector:'Semis/Equipos' }, // Lam Research
+  'AMAT':  { stooq:'amat.us',  yahoo:'AMAT',    sector:'Semis/Equipos' }, // Applied Materials
+
+  // ── NUCLEAR / SMR (energía para la IA) ─────────────────────
+  'OKLO':  { stooq:'oklo.us',  yahoo:'OKLO',    sector:'Nuclear SMR' },// Oklo
+  'SMR':   { stooq:'smr.us',   yahoo:'SMR',     sector:'Nuclear SMR' },// NuScale
+  'CEG':   { stooq:'ceg.us',   yahoo:'CEG',     sector:'Nuclear' },    // Constellation Energy
+  'VST':   { stooq:'vst.us',   yahoo:'VST',     sector:'Nuclear/Energía' }, // Vistra
+  'LEU':   { stooq:'leu.us',   yahoo:'LEU',     sector:'Uranio/Enriquec.' }, // Centrus Energy
+
+  // ── IA / DATACENTER / ENERGÍA ──────────────────────────────
+  'VRT':   { stooq:'vrt.us',   yahoo:'VRT',     sector:'IA/Datacenter' }, // Vertiv (cooling)
+  'GEV':   { stooq:'gev.us',   yahoo:'GEV',     sector:'Energía/Red' },// GE Vernova
+  'GOOGL': { stooq:'googl.us', yahoo:'GOOGL',   sector:'IA/Tech' },    // Alphabet
+  'MSFT':  { stooq:'msft.us',  yahoo:'MSFT',    sector:'IA/Tech' },    // Microsoft
+  'META':  { stooq:'meta.us',  yahoo:'META',    sector:'IA/Tech' },    // Meta
+  'TSLA':  { stooq:'tsla.us',  yahoo:'TSLA',    sector:'EV/IA' },      // Tesla
+
+  // ── CIBERSEGURIDAD ─────────────────────────────────────────
+  'CRWD':  { stooq:'crwd.us',  yahoo:'CRWD',    sector:'Ciberseguridad' }, // CrowdStrike
+  'PANW':  { stooq:'panw.us',  yahoo:'PANW',    sector:'Ciberseguridad' }, // Palo Alto
+
+  // ── DEFENSA EUROPEA (gasto militar al alza) ────────────────
+  'HO':    { stooq:'ho.fr',    yahoo:'HO.PA',   sector:'Defensa EU' }, // Thales (París)
+  'LDO':   { stooq:'ldo.it',   yahoo:'LDO.MI',  sector:'Defensa EU' }, // Leonardo (Milán)
+  'SAAB':  { stooq:'saab-b.se',yahoo:'SAAB-B.ST',sector:'Defensa EU' },// Saab (Estocolmo)
+
+  // ── TIERRAS RARAS / MAGNETOS (cuello de botella drones/EV) ──
+  'LYC':   { stooq:'lyc.au',   yahoo:'LYC.AX',  sector:'Tierras raras' }, // Lynas (Australia)
+  'TMC':   { stooq:'tmc.us',   yahoo:'TMC',     sector:'Minería marina' }, // TMC metals
+
+  // ── COBRE PURO (electrificación) ───────────────────────────
+  'IVN':   { stooq:'ivn.ca',   yahoo:'IVN.TO',  sector:'Cobre' },      // Ivanhoe Mines (Toronto)
+  'ERO':   { stooq:'ero.us',   yahoo:'ERO',     sector:'Cobre' },      // Ero Copper
 };
 
 const SYMBOLS = Object.keys(SYM_META);
@@ -881,6 +952,84 @@ let allResults = [];
 let activeTF = 'ALL';
 let activeModal = null;
 let chartInst = null;
+let activeSector = 'ALL';   // filtro de narrativa para acotar el escaneo
+let MARKET_REGIME = null;   // estado del mercado global (SPY) calculado al escanear
+
+// Mide el régimen del mercado global con SPY. Alcista si SPY > EMA50.
+async function computeMarketRegime() {
+  try {
+    const url = 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y';
+    let bars = null;
+    for (const px of PROXIES) {
+      try {
+        let body = await fetchText(px.wrap(url), 12000);
+        if (px.wrapped) { try { const e = JSON.parse(body); body = e.contents ?? body; } catch(_){} }
+        bars = parseYahoo(JSON.parse(body));
+        if (bars && bars.length >= 60) break;
+      } catch(_) { bars = null; }
+    }
+    if (!bars || bars.length < 60) return { ok:false, bullish:true, label:'desconocido' };
+    const closes = bars.map(b => b.close);
+    const ema50 = calcEMA(closes, 50);
+    const last = closes[closes.length-1];
+    const e = ema50[ema50.length-1];
+    const bullish = last > e;
+    // Pendiente reciente de la EMA50 (20 barras) para matizar
+    const slope = e - ema50[ema50.length-21];
+    return {
+      ok:true, bullish,
+      label: bullish ? (slope>0?'alcista':'alcista débil') : (slope<0?'bajista':'bajista débil'),
+      spyVsEma: +((last-e)/e*100).toFixed(1)
+    };
+  } catch(e) {
+    return { ok:false, bullish:true, label:'desconocido' };
+  }
+}
+
+// Agrupa los sub-sectores en narrativas amplias para el selector
+function sectorGroup(sec) {
+  const s = (sec || '').toLowerCase();
+  if (s.includes('oro') || s.includes('plata')) return 'Metales preciosos';
+  if (s.includes('uranio') || s.includes('nuclear') || s.includes('enriquec')) return 'Nuclear y uranio';
+  if (s.includes('cuántica')) return 'Cuántica';
+  if (s.includes('dron')) return 'Drones';
+  if (s.includes('espacio') || s.includes('satélite') || s.includes('evtol')) return 'Espacio y eVTOL';
+  if (s.includes('memoria') || s.includes('semis') || s.includes('hardware')) return 'Chips y memorias';
+  if (s.includes('defensa')) return 'Defensa';
+  if (s.includes('cobre') || s.includes('tierras raras') || s.includes('litio') || s.includes('minería') || s.includes('diversif')) return 'Materias primas';
+  if (s.includes('ia') || s.includes('tech') || s.includes('ciber') || s.includes('ev') || s.includes('datacenter')) return 'IA y tech';
+  if (s.includes('petróleo') || s.includes('energía') || s.includes('red')) return 'Energía';
+  return 'Otros';
+}
+
+// Poblar el <select> con las narrativas disponibles y su recuento
+function populateSectorFilter() {
+  const sel = document.getElementById('sector-filter');
+  if (!sel) return;
+  const groups = {};
+  for (const sym of Object.keys(SYM_META)) {
+    const g = sectorGroup(SYM_META[sym].sector);
+    groups[g] = (groups[g] || 0) + 1;
+  }
+  const total = Object.keys(SYM_META).length;
+  let html = `<option value="ALL">🌐 Todos los sectores (${total})</option>`;
+  Object.keys(groups).sort().forEach(g => {
+    html += `<option value="${g}">${g} (${groups[g]})</option>`;
+  });
+  sel.innerHTML = html;
+}
+
+// Lista de símbolos a escanear según el filtro activo
+function symbolsToScan() {
+  if (activeSector === 'ALL') return Object.keys(SYM_META);
+  return Object.keys(SYM_META).filter(s => sectorGroup(SYM_META[s].sector) === activeSector);
+}
+
+function onSectorChange() {
+  const sel = document.getElementById('sector-filter');
+  activeSector = sel ? sel.value : 'ALL';
+  runScan().catch(e => console.error(e));
+}
 
 // ════════════════════════════════════════════════════════════
 // MOTOR DE DATOS (ACCIONES) — FUENTE CANÓNICA ÚNICA + INTEGRIDAD
@@ -1191,13 +1340,22 @@ function calcVP(bars, nRows = 25, vaPct = 0.68) {
     else { va += vaDn; lb--; }
   }
 
+  // ── CALIDAD DE DATOS DE VOLUMEN ───────────────────────────
+  // Si muchas velas tienen volumen 0 o el total es ínfimo, el "perfil de
+  // volumen" en realidad es casi un perfil de TIEMPO (todos los niveles
+  // pesan parecido). Eso degrada la fiabilidad del PoC/VAH/VAL. Lo marcamos.
+  const zeroVolBars = bars.filter(b => !(b.volume > 0)).length;
+  const zeroVolPct  = zeroVolBars / bars.length;
+  const volReliable = totalVol > 0 && zeroVolPct < 0.20;
+
   return {
     pocPrice: pl + (poc + .5) * step,
     vahPrice: pl + (la + 1.0) * step,
     valPrice: pl + (lb + 0.0) * step,
     pocLevel: poc, vahLevel: la, valLevel: lb,
     priceHigh: ph, priceLow: pl, priceStep: step,
-    volByLevel: vols, totalVol, nRows
+    volByLevel: vols, totalVol, nRows,
+    volReliable, zeroVolPct: +(zeroVolPct*100).toFixed(0)
   };
 }
 
@@ -1530,6 +1688,35 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
   const oldWR    = oldTrades.length>0 ? Math.round(oldTrades.filter(t=>t.finWin).length/oldTrades.length*100) : null;
   const recentWR = recentTrades.length>0 ? Math.round(recentTrades.filter(t=>t.finWin).length/recentTrades.length*100) : null;
 
+  // ── VALIDACIÓN OUT-OF-SAMPLE (split 70/30) ────────────────
+  // El gran riesgo de un backtest es el sobreajuste: que el "edge" solo
+  // exista en los datos con que se calibró. Partimos los trades en orden
+  // cronológico: 70% antiguo (in-sample) vs 30% reciente (out-of-sample).
+  // Si el PnL/op se mantiene o mejora fuera de muestra, el edge es robusto;
+  // si se desploma o se vuelve negativo, era espejismo.
+  let oos = null;
+  if (trades.length >= 12) {
+    const splitIdx = Math.floor(trades.length * 0.7);
+    const inS  = trades.slice(0, splitIdx);
+    const outS = trades.slice(splitIdx);
+    if (inS.length >= 5 && outS.length >= 4) {
+      const avg = arr => +(arr.reduce((a,t)=>a+t.pnlPct,0)/arr.length).toFixed(2);
+      const wrf = arr => Math.round(arr.filter(t=>t.finWin).length/arr.length*100);
+      const isAvg = avg(inS), osAvg = avg(outS);
+      let verdict, robust;
+      if (osAvg <= 0)              { verdict='roto';        robust=false; }
+      else if (osAvg >= isAvg*0.5) { verdict='robusto';     robust=true;  }
+      else                         { verdict='debilitado';  robust=false; }
+      oos = {
+        inSampleN: inS.length, outSampleN: outS.length,
+        inSamplePnl: isAvg, outSamplePnl: osAvg,
+        inSampleWR: wrf(inS), outSampleWR: wrf(outS),
+        verdict, robust,
+        retention: isAvg !== 0 ? +(osAvg/isAvg*100).toFixed(0) : null
+      };
+    }
+  }
+
   return {
     total, wins, losses, timeouts, wr, wrLevel, avgRR, realizedRR, avgWinPnl, avgLossPnl,
     avgPnl, totalPnl, compoundPnl, expectancy,
@@ -1537,7 +1724,7 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     avgBarsToRes, avgDrawdownWin,
     costPerTrade: COST_ROUNDTRIP_PCT,
     hiScoreWR:hiWR, loScoreWR:loWR, scoreCorrPct, scoreCorrLabel, byScore,
-    bySig, oldWR, recentWR,
+    bySig, oldWR, recentWR, oos,
     list: trades,        // todos los trades
     allScores: _allScores // distribución completa de scores para percentil
   };
@@ -1745,6 +1932,76 @@ function calcConfluences(df, vp, close, sig) {
     // pero advertimos del sesgo
   }
 
+  // ── 4. PERSISTENCIA DEL NIVEL (0-2): MEMORIA REAL ─────────
+  // ¿Cuántas veces, en el histórico, el precio se ACERCÓ a este VAL/VAH
+  // y REBOTÓ de verdad? Un nivel que ya ha frenado el precio varias veces
+  // tiene memoria real, no solo teórica. Esto es lo que distingue un nivel
+  // que funciona de uno dibujado por casualidad.
+  const lvlPrice = isLong ? val : vah;
+  const tol = lvlPrice * 0.015;          // "tocar" = acercarse a <1.5%
+  const bounceMove = lvlPrice * 0.03;    // "rebotar" = alejarse >3% después
+  let touches = 0, respects = 0;
+  for (let i = 2; i < n - 3; i++) {
+    const bar = df[i];
+    const touched = isLong
+      ? (bar.low  <= lvlPrice + tol && bar.low  >= lvlPrice - tol)
+      : (bar.high >= lvlPrice - tol && bar.high <= lvlPrice + tol);
+    if (!touched) continue;
+    touches++;
+    // ¿Rebotó en las siguientes 3 velas en la dirección esperada?
+    const fwd = df.slice(i+1, i+4);
+    const bounced = isLong
+      ? fwd.some(b => b.high >= lvlPrice + bounceMove)
+      : fwd.some(b => b.low  <= lvlPrice - bounceMove);
+    if (bounced) respects++;
+  }
+  const respectRate = touches > 0 ? respects / touches : 0;
+  if (touches >= 3 && respectRate >= 0.6) {
+    items.push({ icon:'🛡️', label:`Nivel respetado ${respects}/${touches} veces en el histórico (${(respectRate*100).toFixed(0)}%) — memoria fuerte`, str:'alta' });
+    result.score += 2;
+  } else if (touches >= 2 && respectRate >= 0.5) {
+    items.push({ icon:'🔁', label:`Nivel respetado ${respects}/${touches} veces (${(respectRate*100).toFixed(0)}%) — memoria moderada`, str:'media' });
+    result.score += 1;
+  } else if (touches >= 3 && respectRate < 0.35) {
+    items.push({ icon:'⚠️', label:`Nivel roto ${touches-respects}/${touches} veces — memoria débil, el precio suele atravesarlo`, str:'baja' });
+    result.score -= 1;
+  } else if (touches === 0) {
+    items.push({ icon:'🆕', label:`Nivel sin toques previos en el histórico — sin memoria que lo respalde`, str:'baja' });
+  }
+  result.levelTouches = touches;
+  result.levelRespects = respects;
+  result.levelRespectRate = +(respectRate*100).toFixed(0);
+
+  // ── 5. RÉGIMEN DE MERCADO GLOBAL (penaliza ir contra la marea) ──
+  // Un long estructuralmente perfecto falla si todo el mercado se desploma.
+  // MARKET_REGIME viene de SPY (calculado una vez por escaneo).
+  if (typeof MARKET_REGIME !== 'undefined' && MARKET_REGIME && MARKET_REGIME.ok) {
+    const againstMarket = (isLong && !MARKET_REGIME.bullish) || (isShort && MARKET_REGIME.bullish);
+    const withMarket    = (isLong && MARKET_REGIME.bullish)  || (isShort && !MARKET_REGIME.bullish);
+    if (againstMarket) {
+      items.push({ icon:'🌊', label:`Mercado global ${MARKET_REGIME.label} (SPY ${MARKET_REGIME.spyVsEma>0?'+':''}${MARKET_REGIME.spyVsEma}% vs EMA50) — esta señal rema contra la marea`, str:'baja' });
+      result.score -= 2;
+      result.againstMarket = true;
+    } else if (withMarket) {
+      items.push({ icon:'🌊', label:`Mercado global ${MARKET_REGIME.label} — a favor de la corriente`, str:'media' });
+      result.score += 1;
+      result.againstMarket = false;
+    }
+  }
+
+  // ── 6. CALIDAD DE DATOS DE VOLUMEN ────────────────────────
+  // Si el VP se calculó con volumen poco fiable, el PoC/VAH/VAL valen menos.
+  if (vp.volReliable === false) {
+    items.push({ icon:'🚩', label:`Volumen poco fiable (${vp.zeroVolPct}% de velas sin volumen) — el perfil es casi de tiempo, no de volumen`, str:'baja' });
+    result.score -= 1;
+    result.lowQualityData = true;
+  }
+
+  // ── NORMALIZACIÓN DEL SCORE A ESCALA 0-10 HONESTA ─────────
+  // El techo bruto no es 10 para todas las señales. Guardamos el bruto y
+  // reescalamos al cierre según el techo realmente alcanzable por ESTA señal.
+  result._rawScore = result.score;
+
   // ── Vela actual — informativo, no afecta score ────────────
   const smaVol = vols.slice(-89).reduce((a,b) => a+b, 0) / Math.min(vols.length, 89);
   const lv = vols[n-1], openPrice = df[n-1].open, lc = df[n-1].close;
@@ -1763,7 +2020,10 @@ function calcConfluences(df, vp, close, sig) {
   result.ema200 = isNaN(e200a[n-1]) ? null : e200a[n-1];
   result.rsi    = calcRSI(closes);
 
-  result.score = Math.max(0, Math.min(result.score, 10));
+  // Reescalar de techo bruto a escala 0-10 mostrada. Techo alcanzable:
+  // vol 4 + entrada 3 + perfil 3 + persistencia 2 + régimen favorable 1 = 13.
+  const BRUTO_MAX = 13;
+  result.score = Math.max(0, Math.min(10, Math.round(result.score / BRUTO_MAX * 10)));
   return result;
 }
 // ════════════════════════════════════════════════════════════
@@ -2124,12 +2384,20 @@ async function runScan() {
   loaderEl.style.justifyContent = 'center';
   allResults = [];
 
-  const rows = [];
+  // ── RÉGIMEN DE MERCADO ────────────────────────────────────
+  // Antes de escanear nada, medimos el estado del mercado global con SPY
+  // (S&P 500). Si el mercado está bajo su EMA50, los longs contra-corriente
+  // fallan en masa por mucho que la estructura VP sea bonita. Esto NO bloquea
+  // señales, pero las marca para que sepas que remas contra la marea.
+  MARKET_REGIME = await computeMarketRegime();
 
-  for (let i = 0; i < SYMBOLS.length; i++) {
-    const sym = SYMBOLS[i];
+  const rows = [];
+  const scanList = symbolsToScan();
+
+  for (let i = 0; i < scanList.length; i++) {
+    const sym = scanList[i];
     const loaderSym = document.getElementById('loader-sym');
-    if (loaderSym) loaderSym.textContent = `Analizando ${sym} (${i+1}/${SYMBOLS.length})...`;
+    if (loaderSym) loaderSym.textContent = `Analizando ${sym} (${i+1}/${scanList.length})...`;
 
     let res;
     try {
@@ -2187,19 +2455,25 @@ async function runScan() {
       }
       renderPanel();
       // Update progress in topbar
-      const pct = Math.round((i+1)/SYMBOLS.length*100);
+      const pct = Math.round((i+1)/scanList.length*100);
       document.getElementById('top-meta').textContent =
-        `Cargando... ${i+1}/${SYMBOLS.length} (${pct}%) · Stooq/Yahoo · 1D + 1W`;
+        `Cargando... ${i+1}/${scanList.length} (${pct}%) · Stooq/Yahoo · 1D + 1W`;
     }
 
     // Pausa entre símbolos: las fuentes de acciones via proxy pueden
     // rate-limitar; un respiro evita bloqueos.
-    if (i < SYMBOLS.length - 1) await sleep(250);
+    if (i < scanList.length - 1) await sleep(250);
   }
 
   allResults = rows;
   document.getElementById('live-txt').textContent =
     `Stooq/Yahoo · ${new Date().toLocaleTimeString('es-ES')} · ${rows.length} señales`;
+  // Indicador de régimen de mercado en la cabecera
+  const regimeEl = document.getElementById('top-meta');
+  if (regimeEl && MARKET_REGIME && MARKET_REGIME.ok) {
+    const col = MARKET_REGIME.bullish ? '#34D399' : '#FF4D6A';
+    regimeEl.innerHTML = `Mercado (SPY): <b style="color:${col}">${MARKET_REGIME.label.toUpperCase()}</b> · ${MARKET_REGIME.spyVsEma>0?'+':''}${MARKET_REGIME.spyVsEma}% vs EMA50 · ${rows.length} señales`;
+  }
   renderPanel();
   renderDiag();
 }
@@ -3017,7 +3291,7 @@ function renderPanel() {
         <div class="trow-mobile-stats">
           <span>TF <b>${r.tf}</b></span>
           <span>Score <b style="color:${scc}">${sc}/10</b>${pctTxt ? ` <span style="color:${pctColor};font-size:9px">${pctTxt}</span>` : ''}</span>
-          <span>R:R <b>${r.rr?'1:'+r.rr:'—'}</b></span>
+          <span title="R:R realizado en el histórico (objetivo entre paréntesis)">R:R <b>${r.bt?.realizedRR!=null?'1:'+r.bt.realizedRR:(r.rr?'1:'+r.rr:'—')}</b>${r.bt?.realizedRR!=null&&r.rr?`<span style="color:var(--dim);font-size:9px"> (obj 1:${r.rr})</span>`:''}</span>
           <span>WR <b style="color:${wrC}">${wrTxt}</b></span>
           <span>OP <b style="color:${opc}">${op}</b></span>
         </div>` : `
@@ -3471,8 +3745,10 @@ function renderBacktest(bt) {
       <div class="bt-stat"><div class="bt-stat-val"><span style="color:var(--emerald)">${bt.wins}W</span>/<span style="color:var(--ember)">${bt.losses}L</span></div><div class="bt-stat-lbl">W/L NETO</div></div>
       ${bt.timeouts?`<div class="bt-stat" title="Operaciones que no tocaron T1 ni stop en 60 barras; cerradas a precio de mercado al final de la ventana."><div class="bt-stat-val" style="color:var(--amber)">${bt.timeouts}</div><div class="bt-stat-lbl">TIMEOUTS</div></div>`:''}
       <div class="bt-stat" title="Coste round-trip aplicado a cada operación (comisión + slippage). Ya descontado de todas las cifras de PnL."><div class="bt-stat-val" style="color:var(--dim)">${bt.costPerTrade?.toFixed(2)??'0.30'}%</div><div class="bt-stat-lbl">COSTE/OP</div></div>
-      <div class="bt-stat"><div class="bt-stat-val">1:${bt.avgRR}</div><div class="bt-stat-lbl">R:R SEÑALADO</div></div>
-      ${bt.realizedRR !== null ? renderBtStat('1:'+bt.realizedRR, 'R:R REALIZADO', bt.realizedRR>=1?'var(--emerald)':'var(--amber)') : ''}
+      ${bt.realizedRR !== null
+        ? `<div class="bt-stat" title="R:R REALIZADO: ganancia media real de las ganadoras ÷ pérdida media real de las perdedoras. Es lo que de verdad consigues, NO lo que la señal promete."><div class="bt-stat-val" style="color:${bt.realizedRR>=1.5?'var(--emerald)':bt.realizedRR>=1?'var(--amber)':'var(--ember)'}">1:${bt.realizedRR}</div><div class="bt-stat-lbl">R:R REALIZADO</div></div>`
+        : `<div class="bt-stat" title="Aún sin perdedoras suficientes para calcular el R:R realizado"><div class="bt-stat-val" style="color:var(--dim)">—</div><div class="bt-stat-lbl">R:R REALIZADO</div></div>`}
+      ${renderBtStat('1:'+bt.avgRR, 'R:R objetivo', 'var(--dim)')}
       ${renderICKellyStats(bt)}
       ${bt.t2HitRate!==null ? renderBtStat(bt.t2HitRate+'%', 'HIT T2', bt.t2HitRate>=60?'var(--emerald)':bt.t2HitRate>=35?'var(--amber)':'var(--ember)') : ''}
       ${bt.avgBarsToRes!==null ? renderBtStat(bt.avgBarsToRes, 'BARRAS/OP', 'var(--text)') : ''}
@@ -3485,7 +3761,8 @@ function renderBacktest(bt) {
       <span style="font-size:10px;color:var(--dim)">
         PnL/op: <strong style="color:${pnlC}">${bt.avgPnl>0?'+':''}${bt.avgPnl}%</strong> ·
         Acumulado: <strong style="color:${totC}">${bt.totalPnl>0?'+':''}${bt.totalPnl}%</strong> ·
-        R:R medio: <strong style="color:var(--violet)">1:${bt.avgRR}</strong>
+        R:R realizado: <strong style="color:var(--violet)">${bt.realizedRR!=null?'1:'+bt.realizedRR:'—'}</strong>
+        <span style="color:var(--dim)">(objetivo 1:${bt.avgRR})</span>
       </span><br>
       <span style="font-size:10px;color:var(--dim)">
         ${renderICKellyVerdict(bt)}
@@ -3504,6 +3781,23 @@ function renderBacktest(bt) {
       <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase">Consistencia temporal</div>
       <div style="font-size:11px;color:var(--sub)">${tempTxt}</div>
     </div>
+
+    ${bt.oos ? `<!-- Out-of-sample -->
+    <div style="padding:10px 14px;background:var(--ink2);border-radius:9px;border-left:3px solid ${bt.oos.robust?'var(--emerald)':bt.oos.verdict==='roto'?'var(--ember)':'var(--amber)'};margin-bottom:10px">
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase">🔬 Validación fuera de muestra (70/30)</div>
+      <div style="font-size:11px;color:var(--sub);line-height:1.6">
+        El edge ${bt.oos.robust
+          ? `<b style="color:var(--emerald)">SE SOSTIENE</b> fuera de muestra`
+          : bt.oos.verdict==='roto'
+          ? `<b style="color:var(--ember)">SE ROMPE</b> fuera de muestra — probable sobreajuste`
+          : `<b style="color:var(--amber)">SE DEBILITA</b> fuera de muestra`}.
+        <br><span style="font-family:var(--f-mono);font-size:10px;color:var(--dim)">
+        Calibración (${bt.oos.inSampleN} ops): PnL/op <b style="color:${bt.oos.inSamplePnl>0?'var(--emerald)':'var(--ember)'}">${bt.oos.inSamplePnl>0?'+':''}${bt.oos.inSamplePnl}%</b> · WR ${bt.oos.inSampleWR}%
+        <br>Validación (${bt.oos.outSampleN} ops): PnL/op <b style="color:${bt.oos.outSamplePnl>0?'var(--emerald)':'var(--ember)'}">${bt.oos.outSamplePnl>0?'+':''}${bt.oos.outSamplePnl}%</b> · WR ${bt.oos.outSampleWR}%
+        ${bt.oos.retention!=null?` · retención del edge: ${bt.oos.retention}%`:''}
+        </span>
+      </div>
+    </div>` : ''}
 
     <!-- By signal type -->
     ${bySigHtml?`<div style="margin-bottom:10px">
@@ -3795,6 +4089,7 @@ window.addEventListener('resize', () => {
 function isMobile() { return window.innerWidth <= 768; }
 
 // Start scan
+populateSectorFilter();
 trackerUpdateBadge();
 runScan().catch(function(err) {
   console.error('runScan failed:', err);
