@@ -10,31 +10,32 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --ink: #0A0C10;
-  --ink2: #13161E;
-  --ink3: #1C2030;
-  --rule: #252A38;
-  --rule2: #323848;
-  --text: #E2E8F8;
-  --sub: #7B85A0;
-  --dim: #3D4560;
+  /* Paleta moderna — fondos profundos con tinte frío, acentos suaves */
+  --ink: #0B0D12;
+  --ink2: #14171F;
+  --ink3: #1E222D;
+  --rule: #262B37;
+  --rule2: #363D4D;
+  --text: #EDF1FA;
+  --sub: #99A3BC;
+  --dim: #5A647E;
 
-  --emerald: #00C896;
-  --ember: #FF4D6A;
-  --sapphire: #4B8EFF;
-  --amber: #FFB547;
-  --violet: #A78BFA;
-  --cyan: #22D3EE;
+  --emerald: #2DD4A7;
+  --ember: #FF5C7A;
+  --sapphire: #5B9BFF;
+  --amber: #FFC061;
+  --violet: #B79BFF;
+  --cyan: #3DDDF0;
 
-  --poc: #FF4D6A;
-  --vah: #4B8EFF;
+  --poc: #FF5C7A;
+  --vah: #5B9BFF;
 
   --f-display: 'Fraunces', serif;
   --f-mono: 'DM Mono', monospace;
   --f-body: 'DM Sans', sans-serif;
 
-  --r: 8px;
-  --r-lg: 14px;
+  --r: 10px;
+  --r-lg: 16px;
 }
 
 html { font-size: 13px; height: 100%; }
@@ -712,7 +713,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r2</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r3</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -2467,29 +2468,58 @@ async function runScan() {
     return out;
   }
 
-  // ── ESCANEO EN LOTES PARALELOS ────────────────────────────
-  // Antes: 1 símbolo cada vez + 250ms = lentísimo con 96 valores.
-  // Ahora: lotes de 4 en paralelo. ~4× más rápido sin saturar proxies.
-  const BATCH = 6;
-  let done = 0;
-  for (let i = 0; i < scanList.length; i += BATCH) {
-    const batch = scanList.slice(i, i + BATCH);
-    const results = await Promise.all(batch.map(processSymbol));
-    for (const symRows of results) rows.push(...symRows);
-    done += batch.length;
+  // ── ESCANEO CON POOL DE CONCURRENCIA CONTINUA ─────────────
+  // En vez de lotes secuenciales (donde el símbolo más lento frena a los 6),
+  // mantenemos N descargas SIEMPRE en vuelo: en cuanto una termina, arranca la
+  // siguiente. Sin huecos, sin esperas entre lotes. Mucho más rápido.
+  const CONCURRENCY = 8;
+  let done = 0, nextIdx = 0, lastRender = 0;
+  const inFlight = new Set();   // símbolos descargándose ahora mismo
 
-    allResults = [...rows];
-    const loaderEl2 = document.getElementById('loader');
-    if (loaderEl2 && loaderEl2.style.display !== 'none') loaderEl2.style.display = 'none';
-    renderPanel();
-    const pct = Math.round(done/scanList.length*100);
+  // Actualiza la barra superior en tiempo real: cuántos faltan y cuáles están
+  // descargándose en este instante.
+  function updateProgress() {
+    const pct = Math.round(done / scanList.length * 100);
+    const remaining = scanList.length - done;
     const tm = document.getElementById('top-meta');
-    if (tm) tm.textContent = `Cargando... ${done}/${scanList.length} (${pct}%) · ${BATCH} en paralelo · 1D + 1W`;
+    if (tm) {
+      const live = [...inFlight].slice(0, 6).join(' · ');
+      tm.innerHTML = `⏳ <b>${done}/${scanList.length}</b> (${pct}%) · faltan <b>${remaining}</b>`
+        + (live ? ` · <span style="color:var(--sapphire)">descargando: ${live}${inFlight.size>6?' +'+(inFlight.size-6):''}</span>` : '');
+    }
     const ls = document.getElementById('loader-sym');
-    if (ls) ls.textContent = `Analizando lote ${Math.ceil(done/BATCH)} (${done}/${scanList.length})...`;
-
-    if (i + BATCH < scanList.length) await sleep(120);
+    if (ls) ls.textContent = `${done}/${scanList.length} · descargando: ${[...inFlight].slice(0,4).join(', ')}`;
   }
+
+  async function worker() {
+    while (nextIdx < scanList.length) {
+      const sym = scanList[nextIdx++];
+      inFlight.add(sym);
+      updateProgress();
+      try {
+        const symRows = await processSymbol(sym);
+        rows.push(...symRows);
+      } catch (e) {
+        console.warn('[POOL] ' + sym + ': ' + (e?.message || e));
+      }
+      inFlight.delete(sym);
+      done++;
+      // Render incremental con throttle: la tabla y el Top 3 se refrescan a
+      // menudo (cada ~350ms o al terminar) sin repintar 96 veces seguidas.
+      allResults = [...rows];
+      const loaderEl2 = document.getElementById('loader');
+      if (loaderEl2 && loaderEl2.style.display !== 'none') loaderEl2.style.display = 'none';
+      const now = Date.now();
+      if (now - lastRender > 350 || done === scanList.length) {
+        renderPanel();
+        lastRender = now;
+      }
+      updateProgress();
+    }
+  }
+
+  // Lanzar CONCURRENCY workers en paralelo; todos consumen de la misma cola
+  await Promise.all(Array.from({length: Math.min(CONCURRENCY, scanList.length)}, worker));
 
   allResults = rows;
   document.getElementById('live-txt').textContent =
@@ -2910,13 +2940,16 @@ function calcIOA(r) {
 
   // IOA final. Como `kelly` ahora es CUARTO-Kelly (rango ~0–0.25), lo
   // reescalamos ×4 dentro del cap para mantener el índice 0–100 calibrado.
-  // El tamaño de posición SUGERIDO al usuario, en cambio, es el cuarto-Kelly
-  // real (prudente), no este valor reescalado.
   const ioaKelly = Math.min(kelly * 4, 1.0);
   const adjustmentFactor = 1 + consistencyBonus - drawdownPenalty;
-  const ioa = Math.round(
-    ioaKelly * confianza * (1 + icAdj) * Math.max(adjustmentFactor, 0.5) * 100
-  );
+  // Producto crudo de factores (todos ≤1) → naturalmente se queda en la zona
+  // baja. Es honesto pero desperdicia media escala y no discrimina bien entre
+  // señales mediocres y buenas. Aplicamos una raíz para EXPANDIR el rango útil
+  // SIN alterar el orden de mérito: si A>B en crudo, sigue A>B tras la raíz.
+  // raw=0.25 → 50, raw=0.5 → 71, raw=0.7 → 84, raw=1.0 → 100. Así una señal
+  // realmente buena puede acercarse a 100 y distingues mejor en la zona media.
+  const rawProduct = ioaKelly * confianza * (1 + icAdj) * Math.max(adjustmentFactor, 0.5);
+  const ioa = Math.round(Math.sqrt(Math.max(0, Math.min(1, rawProduct))) * 100);
 
   return {
     ioa:             Math.max(0, Math.min(100, ioa)),
