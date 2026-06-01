@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r6 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r7 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -3069,6 +3069,14 @@ function getFiltered() {
   //                que el "perfil en desarrollo" del Pine Script original).
   for (const row of merged.values()) {
     const a = row.trackerData;
+    // Si esta fila no tiene backtest fresco (viene del tracker y hoy no se
+    // escaneó esa señal exacta), intentamos heredar el bt del MISMO símbolo+tf
+    // escaneado hoy bajo cualquier señal. Evita mostrar WR 0%/"—" falso en
+    // valores que sí cargaron pero con señal distinta a la guardada.
+    if (!row.bt) {
+      const fresh = allResults.find(x => x.sym === row.sym && x.tf === row.tf && x.bt);
+      if (fresh) { row.bt = fresh.bt; row.scorePct = row.scorePct ?? fresh.scorePct; }
+    }
     // PRECIO DE ENTRADA AUTOMÁTICO — el sistema lo fija solo, sin guardar nada:
     //   · Si hay alerta (se crea sola al nacer la señal), su precio congelado.
     //   · Si por lo que sea no hay alerta enlazada pero la señal está viva hoy,
@@ -3098,11 +3106,6 @@ function getFiltered() {
 
   let data = [...merged.values()].filter(r => {
     if (activeTF !== 'ALL' && r.tf !== activeTF) return false;
-    // CONTINUACIÓN sin alerta: señal viva que NO es cruce nuevo y NO está en
-    // seguimiento. No es una oportunidad nueva (lleva días fuera del VA), así
-    // que no la mostramos — esto alinea el ritmo del vivo con el del backtest
-    // y evita el chorreo de alertas diarias sobre la misma situación.
-    if (r.liveToday && !r.tracked && r._td && r._td.sig && r._td.sig.isNewCross === false) return false;
     if (minSc > 0 && r.score < minSc) return false;   // solo filtra si el usuario lo sube
     if (r.sig==='LONG' && !fl) return false;
     if (r.sig==='SHORT' && !fs) return false;
