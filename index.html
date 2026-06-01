@@ -1064,11 +1064,12 @@ const INTERVALS = {
 // inestables y rate-limitan, así que probamos varios en orden. Cada
 // entrada es una función que envuelve la URL destino.
 const PROXIES = [
-  { name:'directo',      wrap: u => u },
+  // Orden por fiabilidad real con Yahoo Finance. El primero que funcione gana.
   { name:'corsproxy',    wrap: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u) },
   { name:'allorigins',   wrap: u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u), wrapped:true },
-  { name:'alloriginsraw',wrap: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
   { name:'codetabs',     wrap: u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u) },
+  { name:'alloriginsraw',wrap: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
+  { name:'directo',      wrap: u => u },
   { name:'thingproxy',   wrap: u => 'https://thingproxy.freeboard.io/fetch/' + u },
 ];
 
@@ -2036,7 +2037,7 @@ function calcConfluences(df, vp, close, sig) {
 // ════════════════════════════════════════════════════════════
 // SCAN ENGINE
 // ════════════════════════════════════════════════════════════
-async function scanSymbol(sym) {
+async function scanSymbol(sym, retries = 2) {
   const pivLen = parseInt(document.querySelector('input[oninput*="vpl"]')?.value || 20);
   const nRows  = parseInt(document.querySelector('input[oninput*="vrows"]')?.value || 25);
   const vaPct  = parseInt(document.querySelector('input[oninput*="vva"]')?.value || 68) / 100;
@@ -2046,7 +2047,7 @@ async function scanSymbol(sym) {
   const tfList = [['tf1d','1d'], ['tf1w','1w']];
   for (const [tfKey, interval] of tfList) {
     try {
-      const df = await fetchOHLCV(sym, interval);
+      const df = await fetchOHLCV(sym, interval, retries);
       if (!df || df.length < 60) continue;
 
       const segs = getPivotSegments(df, pivLen);
@@ -2427,7 +2428,7 @@ async function runScan() {
   async function processSymbol(sym) {
     let res;
     try {
-      res = await scanSymbol(sym);
+      res = await scanSymbol(sym, 1);   // masivo: 1 intento rápido; el modal insiste si hace falta
     } catch (e) {
       console.warn('[SCAN] ' + sym + ' error general: ' + (e?.message || e));
       res = { sym, tf1d: null, tf1w: null };
@@ -2469,7 +2470,7 @@ async function runScan() {
   // ── ESCANEO EN LOTES PARALELOS ────────────────────────────
   // Antes: 1 símbolo cada vez + 250ms = lentísimo con 96 valores.
   // Ahora: lotes de 4 en paralelo. ~4× más rápido sin saturar proxies.
-  const BATCH = 4;
+  const BATCH = 6;
   let done = 0;
   for (let i = 0; i < scanList.length; i += BATCH) {
     const batch = scanList.slice(i, i + BATCH);
@@ -3423,7 +3424,7 @@ function renderPanel() {
       const td = r.trackerData;
       const isTracked = r.tracked && td;
       const trackActive = isTracked && td.status === 'active';
-      const pin = isTracked ? `<span title="En seguimiento desde ${new Date(td.entryTs||td.detectedAt).toLocaleDateString('es-ES')}" style="color:var(--sapphire)">📌</span> ` : '';
+      const pin = `<span style="display:inline-block;width:14px;text-align:center;color:var(--sapphire)">${isTracked ? '📌' : ''}</span>`;
       const stLabel = isTracked ? ({active:'● activa',hit_t1:'✅ T1',hit_t2:'🏆 T2',stopped:'❌ stop',expired:'⏳ exp'}[td.status]||td.status) : '';
       const stColor = isTracked ? ({active:'var(--sapphire)',hit_t1:'var(--emerald)',hit_t2:'var(--emerald)',stopped:'var(--ember)',expired:'var(--dim)'}[td.status]||'var(--dim)') : '';
       // PRECIOS NORMALIZADOS (definidos una sola vez en getFiltered):
@@ -3520,15 +3521,61 @@ function toggleTrackerStats() {
 // ════════════════════════════════════════════════════════════
 // MODAL
 // ════════════════════════════════════════════════════════════
-function openModal(symFull, tf) {
-  // Buscar la fila FUSIONADA (la misma que ves en la tabla), para usar sus
-  // precios normalizados y que el modal muestre EXACTAMENTE lo mismo.
-  const frow = getFiltered().find(r => r.sym === symFull && r.tf === tf);
-  const row = allResults.find(r => r.sym === symFull && r.tf === tf);
+async function openModal(symFull, tf) {
+  // Buscar la fila FUSIONADA (la misma que ves en la tabla).
+  let row = allResults.find(r => r.sym === symFull && r.tf === tf);
+
+  // Si esta fila no tiene datos de hoy (viene del tracker y hoy no se escaneó,
+  // o el escaneo masivo falló para este símbolo), los DESCARGAMOS AHORA bajo
+  // demanda. Pinchar SIEMPRE debe dar información — nunca un mensaje de error.
   if (!row || !row._td) {
-    alert('Esta alerta está en seguimiento pero hoy no tiene datos de escaneo recientes (no cargó o cambió de señal). Vuelve a escanear para ver su análisis actual.');
-    return;
+    // Mostrar el modal con un cargando mientras bajamos los datos
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('m-sym').textContent = `${symFull} · ${tf}`;
+    document.getElementById('m-meta').textContent = 'Descargando datos de ' + symFull + '…';
+    document.getElementById('m-levels').innerHTML = '<div style="padding:30px;text-align:center;color:var(--dim);font-family:var(--f-mono);font-size:11px">⏳ Descargando histórico de ' + symFull + '…<br><span style="font-size:9px">Reintentando en todas las fuentes</span></div>';
+    document.getElementById('m-confs').innerHTML = '';
+    document.getElementById('m-scenario').textContent = '';
+
+    try {
+      const res = await scanSymbol(symFull, 4);   // insistir: es un solo símbolo
+      const key = tf === '1D' ? 'tf1d' : 'tf1w';
+      const td = res[key];
+      if (!td) {
+        // probar el otro timeframe si el pedido no salió
+        const alt = res.tf1d || res.tf1w;
+        if (alt) {
+          const altTf = res.tf1d ? '1D' : '1W';
+          document.getElementById('m-levels').innerHTML =
+            `<div style="padding:24px;text-align:center;color:var(--amber);font-family:var(--f-mono);font-size:11px">El timeframe ${tf} no tiene suficientes datos para ${symFull}, pero ${altTf} sí.<br><br><button onclick="openModal('${symFull}','${altTf}')" style="margin-top:8px;padding:6px 14px;background:var(--sapphire);border:none;color:#fff;border-radius:7px;cursor:pointer;font-family:var(--f-mono);font-size:10px">Ver ${symFull} en ${altTf}</button></div>`;
+          return;
+        }
+        document.getElementById('m-levels').innerHTML =
+          `<div style="padding:24px;text-align:center;color:var(--ember);font-family:var(--f-mono);font-size:11px">No se pudieron descargar datos de ${symFull} tras varios intentos.<br><span style="font-size:9px;color:var(--dim)">Las fuentes gratuitas (Yahoo/Stooq vía proxy) están saturadas o el ticker no existe en ellas. Prueba de nuevo en unos segundos.</span><br><br><button onclick="openModal('${symFull}','${tf}')" style="margin-top:8px;padding:6px 14px;background:var(--sapphire);border:none;color:#fff;border-radius:7px;cursor:pointer;font-family:var(--f-mono);font-size:10px">🔄 Reintentar</button></div>`;
+        return;
+      }
+      // Inyectar la fila recién cargada en allResults para que todo cuadre
+      row = {
+        sym: symFull, tf, close: td.close,
+        sector: (SYM_META[symFull]?.sector || ''),
+        poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
+        sig: td.sig.signal, label: td.sig.label,
+        stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2, inv: td.sig.invalidation,
+        rr: td.sig.rr, score: td.conf.score,
+        scorePct: scorePercentile(td.conf.score, td.bt?.allScores),
+        bt: td.bt, _td: td, _res: res
+      };
+      const existing = allResults.findIndex(r => r.sym === symFull && r.tf === tf);
+      if (existing >= 0) allResults[existing] = row; else allResults.push(row);
+      trackerUpdateWithPrice(symFull, tf, td.df);  // actualizar precio si está en seguimiento
+    } catch (e) {
+      document.getElementById('m-levels').innerHTML =
+        `<div style="padding:24px;text-align:center;color:var(--ember);font-family:var(--f-mono);font-size:11px">Error descargando ${symFull}: ${e?.message || e}<br><br><button onclick="openModal('${symFull}','${tf}')" style="margin-top:8px;padding:6px 14px;background:var(--sapphire);border:none;color:#fff;border-radius:7px;cursor:pointer;font-family:var(--f-mono);font-size:10px">🔄 Reintentar</button></div>`;
+      return;
+    }
   }
+
+  const frow = getFiltered().find(r => r.sym === symFull && r.tf === tf) || row;
   activeModal = row;
   const td = row._td;
   const {vp, sig, conf, close} = td;
