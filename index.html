@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r5 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r6 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1453,6 +1453,25 @@ function classifySignal(close, vp, df) {
     const reward = Math.abs(sig.target - close);
     sig.rr = risk > 0 ? +(reward / risk).toFixed(2) : null;
   }
+
+  // ── ¿ES UN CRUCE NUEVO O UNA CONTINUACIÓN? ────────────────
+  // Una señal solo es "nueva" el día que el precio CRUZA fuera del Value Area
+  // por primera vez. Si lleva días fuera, NO es una señal nueva cada día — es
+  // la misma. Esto alinea el vivo con el backtest (que entra una vez por cruce)
+  // y evita que salten alertas a diario sobre la misma situación.
+  // Comparamos la zona de HOY con la de AYER (vela previa) sobre el mismo VA.
+  sig.isNewCross = true;   // por defecto (sin histórico) lo tratamos como nuevo
+  if (df && df.length >= 2 && sig.signal !== 'NEUTRAL') {
+    const prevClose = df[df.length - 2].close;
+    const zoneOf = p => (p > vah + buf) ? 'above' : (p < val - buf) ? 'below'
+                      : (p > poc) ? 'inHigh' : (p < poc) ? 'inLow' : 'poc';
+    const zoneNow  = zoneOf(close);
+    const zonePrev = zoneOf(prevClose);
+    // Es cruce nuevo solo si la zona cambió respecto a ayer. Si ayer ya estaba
+    // en la misma zona, la señal ya existía → continuación, no nueva.
+    sig.isNewCross = zoneNow !== zonePrev;
+  }
+
   return sig;
 }
 
@@ -2442,7 +2461,14 @@ async function runScan() {
         SCAN_DIAG[sym][tf].sig = td.sig.signal;
         SCAN_DIAG[sym][tf].score = td.conf.score;
       }
-      if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target) {
+      // Crear alerta automática SOLO en un cruce nuevo (igual que el backtest:
+      // una entrada por aparición de señal, no una por día). Si es continuación
+      // (lleva días fuera del VA) y NO existe ya alerta, no la creamos: no es
+      // una señal nueva. Si la alerta YA existe, trackerAddAlert la respeta.
+      const existsAlert = (typeof trackerLoad === 'function')
+        && trackerLoad()[trackerAlertId(sym, tf, td.sig.signal)];
+      if (td.sig.signal !== 'NEUTRAL' && td.sig.stop && td.sig.target
+          && (td.sig.isNewCross || existsAlert)) {
         const lastBar = td.df[td.df.length - 1];
         trackerAddAlert({
           sym, tf, close: td.close, sig: td.sig.signal,
@@ -3072,14 +3098,17 @@ function getFiltered() {
 
   let data = [...merged.values()].filter(r => {
     if (activeTF !== 'ALL' && r.tf !== activeTF) return false;
+    // CONTINUACIÓN sin alerta: señal viva que NO es cruce nuevo y NO está en
+    // seguimiento. No es una oportunidad nueva (lleva días fuera del VA), así
+    // que no la mostramos — esto alinea el ritmo del vivo con el del backtest
+    // y evita el chorreo de alertas diarias sobre la misma situación.
+    if (r.liveToday && !r.tracked && r._td && r._td.sig && r._td.sig.isNewCross === false) return false;
     if (minSc > 0 && r.score < minSc) return false;   // solo filtra si el usuario lo sube
     if (r.sig==='LONG' && !fl) return false;
     if (r.sig==='SHORT' && !fs) return false;
     if (r.sig==='RANGE_LONG' && !frl) return false;
     if (r.sig==='RANGE_SHORT' && !frs) return false;
     if (r.sig==='NEUTRAL' && !fn) return false;
-    // Objetivo demasiado cercano (<0.5%) — no vale la pena. Excepción: si está
-    // en seguimiento (tracked), se muestra igual aunque hoy el precio se acercó.
     if (!r.tracked && r.t1 && r.close) {
       const targetDist = Math.abs(r.t1 - r.close) / r.close;
       if (targetDist < 0.005) return false;
