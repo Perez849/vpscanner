@@ -10,32 +10,32 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Paleta moderna — fondos profundos con tinte frío, acentos suaves */
-  --ink: #0B0D12;
-  --ink2: #14171F;
-  --ink3: #1E222D;
-  --rule: #262B37;
-  --rule2: #363D4D;
-  --text: #EDF1FA;
-  --sub: #99A3BC;
-  --dim: #5A647E;
+  /* Wall Street moderno — terminal financiero claro, nítido y potente */
+  --ink: #F4F6FA;          /* fondo general claro */
+  --ink2: #FFFFFF;         /* paneles / tarjetas */
+  --ink3: #EDF1F7;         /* zonas y filas alternas */
+  --rule: #DCE2EC;         /* líneas */
+  --rule2: #C2CBD9;        /* líneas más marcadas */
+  --text: #0C1320;         /* texto principal casi negro */
+  --sub: #4A5568;          /* texto secundario */
+  --dim: #8A95A8;          /* texto tenue */
 
-  --emerald: #2DD4A7;
-  --ember: #FF5C7A;
-  --sapphire: #5B9BFF;
-  --amber: #FFC061;
-  --violet: #B79BFF;
-  --cyan: #3DDDF0;
+  --emerald: #00A865;      /* verde dinero saturado */
+  --ember: #E5384F;        /* rojo financiero */
+  --sapphire: #1E63E9;     /* azul corporativo */
+  --amber: #D98A00;        /* ámbar para avisos */
+  --violet: #7C4DFF;       /* violeta datos */
+  --cyan: #0496C7;         /* cian datos */
 
-  --poc: #FF5C7A;
-  --vah: #5B9BFF;
+  --poc: #E5384F;
+  --vah: #1E63E9;
 
   --f-display: 'Fraunces', serif;
   --f-mono: 'DM Mono', monospace;
   --f-body: 'DM Sans', sans-serif;
 
-  --r: 10px;
-  --r-lg: 16px;
+  --r: 12px;
+  --r-lg: 18px;
 }
 
 html { font-size: 13px; height: 100%; }
@@ -47,14 +47,13 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Ambient background ── */
+/* ── Ambient background — toque sutil de color tipo terminal financiero ── */
 body::before {
   content: '';
   position: fixed; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 15% 10%, rgba(75,142,255,.07) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 60% at 85% 90%, rgba(0,200,150,.05) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255,77,106,.03) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 50% at 12% 8%, rgba(30,99,233,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 88% 92%, rgba(0,168,101,.04) 0%, transparent 55%);
   pointer-events: none;
 }
 
@@ -64,9 +63,9 @@ body::before {
 /* ── Sidebar ── */
 .sb {
   width: 230px; flex-shrink: 0;
-  background: rgba(19,22,30,.95);
+  background: var(--ink2);
   border-right: 1px solid var(--rule);
-  backdrop-filter: blur(20px);
+  box-shadow: 1px 0 0 rgba(12,19,32,.02), 4px 0 24px rgba(12,19,32,.04);
   display: flex; flex-direction: column;
   overflow-y: auto; overflow-x: hidden;
 }
@@ -81,9 +80,7 @@ body::before {
   font-family: var(--f-display);
   font-size: 26px; font-weight: 600;
   letter-spacing: -.04em; line-height: 1;
-  background: linear-gradient(135deg, #fff 0%, var(--sub) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text);
 }
 .wordmark em {
   font-style: italic; font-weight: 300;
@@ -166,7 +163,8 @@ input[type=range] {
   padding: 14px 24px;
   border-bottom: 1px solid var(--rule);
   display: flex; align-items: center; justify-content: space-between;
-  background: rgba(10,12,16,.8); backdrop-filter: blur(12px);
+  background: rgba(255,255,255,.82); backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 var(--rule), 0 2px 16px rgba(12,19,32,.04);
   position: sticky; top: 0; z-index: 50;
 }
 .topbar-left h1 {
@@ -365,9 +363,10 @@ input[type=range] {
   background: var(--ink2); border: 1px solid var(--rule);
   border-radius: var(--r-lg); padding: 14px 16px;
   position: relative; overflow: hidden;
-  transition: border-color .15s, transform .15s;
+  box-shadow: 0 1px 2px rgba(12,19,32,.04), 0 4px 16px rgba(12,19,32,.05);
+  transition: border-color .15s, transform .15s, box-shadow .15s;
 }
-.mc:hover { border-color: var(--rule2); transform: translateY(-1px); }
+.mc:hover { border-color: var(--rule2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(12,19,32,.10); }
 .mc::after {
   content: ''; position: absolute;
   bottom: 0; left: 0; right: 0; height: 2px;
@@ -391,13 +390,13 @@ input[type=range] {
 .tbl-wrap {
   background: var(--ink2); border: 1px solid var(--rule);
   border-radius: var(--r-lg); overflow: hidden;
-  box-shadow: 0 4px 32px rgba(0,0,0,.3);
+  box-shadow: 0 1px 2px rgba(12,19,32,.04), 0 6px 28px rgba(12,19,32,.06);
 }
 .tbl-head {
   display: grid;
-  grid-template-columns: 114px 40px 80px 76px 76px 76px 140px 86px 86px 50px 64px 54px 66px 58px;
+  grid-template-columns: 110px 38px 78px 72px 72px 72px 128px 84px 84px 48px 60px 52px 60px 54px 34px;
   padding: 10px 16px;
-  background: rgba(28,32,48,.8);
+  background: var(--ink3);
   border-bottom: 1px solid var(--rule);
   font-family: var(--f-mono); font-size: 9px;
   color: var(--dim); letter-spacing: .14em; text-transform: uppercase;
@@ -409,7 +408,7 @@ input[type=range] {
 .sh:hover { color: var(--sapphire); }
 .trow {
   display: grid;
-  grid-template-columns: 114px 40px 80px 76px 76px 76px 140px 86px 86px 50px 64px 54px 66px 58px;
+  grid-template-columns: 110px 38px 78px 72px 72px 72px 128px 84px 84px 48px 60px 52px 60px 54px 34px;
   padding: 11px 16px; border-bottom: 1px solid var(--rule);
   align-items: center; cursor: pointer;
   transition: background .1s;
@@ -421,7 +420,7 @@ input[type=range] {
   to   { opacity: 1; transform: none; }
 }
 .trow:last-child { border: none; }
-.trow:hover { background: rgba(75,142,255,.04); }
+.trow:hover { background: rgba(30,99,233,.05); }
 .trow::before {
   content: ''; position: absolute;
   left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 0 3px 3px 0;
@@ -477,7 +476,7 @@ input[type=range] {
 /* ── Modal ── */
 .overlay {
   display: none; position: fixed; inset: 0; z-index: 200;
-  background: rgba(0,0,0,.75); backdrop-filter: blur(10px);
+  background: rgba(12,19,32,.45); backdrop-filter: blur(10px);
   align-items: center; justify-content: center; padding: 20px;
 }
 .overlay.open { display: flex; animation: fadein .2s ease; }
@@ -713,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r3</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r5 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -3044,16 +3043,24 @@ function getFiltered() {
   //                que el "perfil en desarrollo" del Pine Script original).
   for (const row of merged.values()) {
     const a = row.trackerData;
-    row.priceEntry = a ? a.entry : null;                       // FIJO, nunca cambia
-    row.priceNow   = row.liveToday ? row.close : (a?.currentPrice ?? a?.entry ?? row.close);
-    // NIVELES del perfil: si está en seguimiento, se muestran los CONGELADOS de
-    // la alerta (los de cuando saltó), igual que el perfil "congelado" del Pine.
-    // Solo cuando NO hay alerta se usan los niveles vivos de hoy.
+    // PRECIO DE ENTRADA AUTOMÁTICO — el sistema lo fija solo, sin guardar nada:
+    //   · Si hay alerta (se crea sola al nacer la señal), su precio congelado.
+    //   · Si por lo que sea no hay alerta enlazada pero la señal está viva hoy,
+    //     el precio de entrada ES el precio al que apareció (su close de hoy).
+    // Nunca queda null para una señal real: toda alerta marca su entrada sola.
+    if (a && a.entry != null) {
+      row.priceEntry = a.entry;
+    } else if (row.liveToday) {
+      row.priceEntry = row.close;
+    } else {
+      row.priceEntry = null;
+    }
+    row.priceNow = row.liveToday ? row.close : (a?.currentPrice ?? a?.entry ?? row.close);
+    // NIVELES: si hay alerta, los congelados de cuando saltó; si no, los vivos.
     if (a) {
       row.val = a.val; row.vah = a.vah; row.poc = a.poc;
       row.stop = a.stop; row.t1 = a.t1; row.t2 = a.t2; row.rr = a.rr;
     }
-    // PnL flotante desde la entrada fija al precio actual
     if (row.priceEntry != null && row.priceNow != null) {
       const isLong = row.sig === 'LONG' || row.sig === 'RANGE_LONG';
       row.floatPnl = +((row.priceNow - row.priceEntry) / row.priceEntry * 100 * (isLong ? 1 : -1)).toFixed(2);
@@ -3222,29 +3229,48 @@ function renderTop3(data) {
     const kC       = kv != null && kv > 0 ? 'var(--cyan)' : 'var(--ember)';
     const avgPnl   = r.bt?.avgPnl;
 
-    html += `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:9px;padding:11px 13px;cursor:pointer;border:1px solid ${i===0?'var(--emerald)':'var(--rule2)'}">
-      <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px">
-        <span style="font-size:14px">${['🥇','🥈','🥉'][i]}</span>
-        <span style="font-family:var(--f-display);font-size:13px;font-weight:700">${r.sym}</span>
+    // ── PRECIOS PARA MEDIR LA OPORTUNIDAD ──
+    // priceEntry: si ya está en seguimiento, la entrada FIJA real. Si es una
+    // señal nueva, el precio actual ES el precio de entrada propuesto (a lo que
+    // entrarías si la tomas ahora). Siempre mostramos algo medible.
+    const isTrk    = r.tracked && r.trackerData;
+    const entryRef = (isTrk && r.priceEntry != null) ? r.priceEntry : r.priceNow;
+    const entryLbl = (isTrk && r.priceEntry != null) ? 'Entrada FIJA' : 'Entrada (ahora)';
+    const now      = r.priceNow;
+    const stopD    = (r.stop && entryRef) ? ((r.stop-entryRef)/entryRef*100) : null;   // distancia a stop %
+    const tgtD     = (r.t1 && entryRef) ? ((r.t1-entryRef)/entryRef*100) : null;       // recorrido a T1 %
+    const flt      = (isTrk && r.floatPnl != null) ? r.floatPnl : null;
+
+    html += `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:var(--r);padding:13px 15px;cursor:pointer;border:1px solid ${i===0?'var(--emerald)':'var(--rule2)'}">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
+        <span style="font-size:15px">${['🥇','🥈','🥉'][i]}</span>
+        <span style="font-family:var(--f-display);font-size:14px;font-weight:700">${r.sym}</span>
         <span style="font-family:var(--f-mono);font-size:8px;background:var(--ink2);padding:1px 5px;border-radius:4px">${r.tf}</span>
         <span style="font-family:var(--f-mono);font-size:8px;color:${sigColor(r.sig)};font-weight:700;margin-left:auto">${sigFull(r.sig)}</span>
       </div>
-      <div style="font-family:var(--f-mono);font-size:21px;font-weight:800;color:${ioaC};line-height:1">${ioa.ioa}<span style="font-size:9px;font-weight:400;color:var(--dim)">/100</span></div>
-      <div style="font-family:var(--f-mono);font-size:8px;color:${ioaC};margin-bottom:8px">${ioaLbl}</div>
+      <div style="font-family:var(--f-mono);font-size:22px;font-weight:800;color:${ioaC};line-height:1">${ioa.ioa}<span style="font-size:9px;font-weight:400;color:var(--dim)">/100</span></div>
+      <div style="font-family:var(--f-mono);font-size:8px;color:${ioaC};margin-bottom:9px">${ioaLbl}</div>
+
+      <!-- PRECIOS — lo primero para medir la oportunidad -->
+      <div style="background:var(--ink2);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-family:var(--f-mono);font-size:10px;line-height:1.7">
+        <div style="display:flex;justify-content:space-between"><span style="color:${isTrk&&r.priceEntry!=null?'var(--sapphire)':'var(--sub)'}">${isTrk&&r.priceEntry!=null?'📌 ':''}${entryLbl}</span><span style="font-weight:700;color:${isTrk&&r.priceEntry!=null?'var(--sapphire)':'var(--text)'}">${f(entryRef)}</span></div>
+        ${flt!=null?`<div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Precio actual</span><span>${f(now)} <span style="color:${flt>=0?'var(--emerald)':'var(--ember)'}">${flt>=0?'+':''}${flt}%</span></span></div>`:''}
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--emerald)">🎯 Objetivo T1</span><span style="color:var(--emerald)">${f(r.t1)} ${tgtD!=null?`<span style="font-size:8px">(${tgtD>=0?'+':''}${tgtD.toFixed(1)}%)</span>`:''}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--amber)">◆ Stop</span><span style="color:var(--amber)">${f(r.stop)} ${stopD!=null?`<span style="font-size:8px">(${stopD.toFixed(1)}%)</span>`:''}</span></div>
+      </div>
+
       <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-family:var(--f-mono);font-size:9px;line-height:1.5">
         <span style="color:var(--dim)">Acierto hist.</span>
         <span style="color:${wrC};font-weight:700">${wrTxt} (${r.bt?.total??0} ops)</span>
         <span style="color:var(--dim)">Ganancia/op</span>
         <span>${avgPnl!=null?(avgPnl>=0?'+':'')+avgPnl+'%':'—'}</span>
-        <span style="color:var(--dim)">Ratio G/P</span>
-        <span>${r.rr?'1:'+r.rr:'—'}</span>
+        <span style="color:var(--dim)">Ratio R:R</span>
+        <span style="color:var(--violet)">${r.rr?'1:'+r.rr:'—'}</span>
         <span style="color:var(--dim)">Tamaño op.</span>
         <span style="color:${kC}">${kTxt}</span>
-        <span style="color:var(--dim)">Retroceso</span>
-        <span style="color:${dwC}">${dw!=null?dw+'% antes de ganar':'—'}</span>
         ${tTxt?`<span style="color:var(--dim)">Tendencia</span><span style="color:${tC}">${tTxt}</span>`:''}
       </div>
-      <div style="margin-top:7px;font-family:var(--f-mono);font-size:8px;color:var(--dim);border-top:1px solid var(--rule);padding-top:5px">
+      <div style="margin-top:8px;font-family:var(--f-mono);font-size:8px;color:var(--dim);border-top:1px solid var(--rule);padding-top:6px">
         Confianza ${(ioa.confianza*100).toFixed(1)}% <span style="opacity:.7">(${r.bt?.total??0} ops)</span> · Score VP ${r.score}/10
       </div>
     </div>`;
@@ -3420,6 +3446,7 @@ function renderPanel() {
       <span class="sh" onclick="setSort('wr')" style="padding-left:4px">WR% <span id="sh-wr"></span></span>
       <span class="sh" onclick="setSort('fiab')" style="color:var(--cyan)">FIAB <span id="sh-fiab"></span></span>
       <span class="sh" onclick="setSort('op')" style="color:var(--emerald)">OP⭐ <span id="sh-op"></span></span>
+      <span style="text-align:center">📌</span>
     </div>
     <div id="tbl-body">`;
 
@@ -4298,7 +4325,7 @@ function buildChart(td) {
           ctx.font = 'bold 9px DM Mono';
           const tw = ctx.measureText(lbl).width;
           const px = labelRight - tw - 6;
-          ctx.fillStyle = 'rgba(10,12,16,.9)';
+          ctx.fillStyle = 'rgba(255,255,255,.92)';
           ctx.beginPath();
           ctx.rect(px-3, labelY-9, tw+8, 12);
           ctx.fill();
