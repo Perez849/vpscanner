@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r10 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r12 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1508,67 +1508,59 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
 
   const _allScores = []; // scores de todos los setups para calcular percentil
 
-  for (const seg of testSegs) {
-    const entryI = seg.endI + 1;
-    if (entryI >= df.length) continue;
+  // Detecta la zona del precio respecto al Value Area (igual criterio que el vivo)
+  const zoneOf = (p, vp) => {
+    const buf = (vp.vahPrice - vp.valPrice) * 0.02;
+    return (p > vp.vahPrice + buf) ? 'above' : (p < vp.valPrice - buf) ? 'below'
+         : (p > vp.pocPrice) ? 'inHigh' : (p < vp.pocPrice) ? 'inLow' : 'poc';
+  };
 
-    // VP calculado sobre las barras desde el inicio del segmento hasta ANTES de la entrada
-    // — excluimos df[entryI] para evitar look-ahead bias (no conocemos el cierre al inicio de esa barra)
-    const vpSlice = df.slice(seg.startI, entryI);
-    const vp = calcVP(vpSlice, nRows, vaPct);
-    if (!vp) continue;
-
+  // Procesa UNA entrada en la barra `entryI` con el perfil `vp` dado. Devuelve
+  // true si registró un trade. Contiene toda la lógica de resolución honesta.
+  function processEntry(entryI, vp) {
+    if (entryI >= df.length) return false;
+    // Necesitamos al menos unas pocas velas futuras para que la operación pueda
+    // resolverse de forma realista. Sin ellas, sería un trade "fantasma" que
+    // cierra a coste cero y ensucia las estadísticas. Exigimos ≥3 velas por
+    // delante.
+    if (entryI + 3 >= df.length) return false;
     const entryClose = df[entryI].close;
-    // Use full history up to entry for correct EMA200 trend calculation
     const dfUpToEntry = df.slice(0, entryI + 1);
     const sig = classifySignal(entryClose, vp, dfUpToEntry);
-    if (sig.signal === 'NEUTRAL' || !sig.stop || !sig.target) continue;
+    if (sig.signal === 'NEUTRAL' || !sig.stop || !sig.target) return false;
     const rr = parseFloat(sig.rr);
-    if (!rr || rr < 0.3 || rr > 15) continue;
-    if (Math.abs(sig.target - entryClose) / entryClose < 0.005) continue;
+    if (!rr || rr < 0.3 || rr > 15) return false;
+    if (Math.abs(sig.target - entryClose) / entryClose < 0.005) return false;
 
     const conf  = calcConfluences(dfUpToEntry, vp, entryClose, sig);
     const score = conf.score;
-    _allScores.push(score); // capturar score de todos los setups, no solo los que resuelven
+    _allScores.push(score);
     const isLong = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
 
-    // Forward scan honesto:
-    //  · En empate intrabar (stop y target en la MISMA vela) asumimos STOP
-    //    primero. No conocemos el orden intrabar; esta es la convención
-    //    conservadora que evita inflar el WR.
-    //  · Si en 60 barras no resuelve, se cierra A MERCADO al cierre de la
-    //    última vela de la ventana (timeout = resultado real, no se descarta).
     let outcome = 'timeout', exitPrice = null;
     let t2Hit = false, barsToRes = 0;
-    let worstInWin = 0;  // max adverse excursion antes de resolver
+    let worstInWin = 0;
     let lastSeenClose = entryClose, lastBarIdx = 0;
 
     for (let fi = 1; fi <= 60 && entryI+fi < df.length; fi++) {
       const bar = df[entryI + fi];
       barsToRes = fi;
       lastSeenClose = bar.close; lastBarIdx = fi;
-
       const stopHit   = isLong ? bar.low  <= sig.stop   : bar.high >= sig.stop;
       const targetHit = isLong ? bar.high >= sig.target : bar.low  <= sig.target;
-
-      // Drawdown adverso mientras la operación está abierta
       const drawdown = isLong
         ? (entryClose - bar.low)  / entryClose * 100
         : (bar.high - entryClose) / entryClose * 100;
       if (drawdown > worstInWin) worstInWin = drawdown;
-
-      // CONVENCIÓN CONSERVADORA: si ambos se tocan en la misma vela → STOP gana
       if (stopHit) { outcome='loss'; exitPrice=sig.stop; break; }
-
       if (targetHit) {
         outcome='win'; exitPrice=sig.target;
-        // Tras T1, ¿se alcanza T2 en las siguientes 30 barras? (stop también gana empate)
         if (sig.target2) {
           for (let fi2 = fi+1; fi2 <= fi+30 && entryI+fi2 < df.length; fi2++) {
             const bar2 = df[entryI + fi2];
             const s2 = isLong ? bar2.low  <= sig.stop    : bar2.high >= sig.stop;
             const g2 = isLong ? bar2.high >= sig.target2 : bar2.low  <= sig.target2;
-            if (s2) break;        // stop antes de T2 → no cuenta T2
+            if (s2) break;
             if (g2) { t2Hit = true; break; }
           }
         }
@@ -1576,36 +1568,24 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
       }
     }
 
-    // Timeout → cierre a mercado al final de la ventana (resultado real)
-    if (outcome === 'timeout') {
-      exitPrice = lastSeenClose;
-      barsToRes = lastBarIdx || null;
-    }
+    if (outcome === 'timeout') { exitPrice = lastSeenClose; barsToRes = lastBarIdx || null; }
 
-    // PnL BRUTO según salida
     const grossPnl = exitPrice
       ? (isLong ? (exitPrice-entryClose) : (entryClose-exitPrice)) / entryClose * 100
       : 0;
-    // PnL NETO: descontamos costes round-trip a TODA operación que se ejecuta
     const pnlPct = +(grossPnl - COST_ROUNDTRIP_PCT).toFixed(3);
 
-    // Estrategia 50/50 (mitad en T1, mitad en T2 o stop), también neta
     let pnl50_50 = pnlPct;
     if (outcome === 'win' && sig.target2) {
       const t1Gross = isLong ? (sig.target-entryClose) : (entryClose-sig.target);
       const t1Pnl = t1Gross / entryClose * 100;
       let t2Gross;
-      if (t2Hit) {
-        t2Gross = isLong ? (sig.target2-entryClose) : (entryClose-sig.target2);
-      } else {
-        // Si no llega a T2, asumimos cierre en stop (peor caso para la 2ª mitad)
-        t2Gross = isLong ? (sig.stop-entryClose) : (entryClose-sig.stop);
-      }
+      if (t2Hit) t2Gross = isLong ? (sig.target2-entryClose) : (entryClose-sig.target2);
+      else       t2Gross = isLong ? (sig.stop-entryClose)    : (entryClose-sig.stop);
       const t2Pnl = t2Gross / entryClose * 100;
       pnl50_50 = +((t1Pnl*0.5 + t2Pnl*0.5) - COST_ROUNDTRIP_PCT).toFixed(3);
     }
 
-    // Timestamps de entrada y cierre para mostrar ambas fechas y la duración
     const entryTs = df[entryI].ts;
     const exitIdx = (barsToRes && entryI + barsToRes < df.length) ? entryI + barsToRes : df.length - 1;
     const exitTs  = df[exitIdx].ts;
@@ -1617,12 +1597,48 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
       rr, score, outcome, pnlPct, pnl50_50, t2Hit,
       barsToRes, barsHeld: barsToRes,
       maxDrawdown: outcome === 'win' ? +worstInWin.toFixed(2) : null,
-      date: fmtD(entryTs),            // compat: fecha de entrada
-      dateEntry: fmtD(entryTs),
-      dateExit:  fmtD(exitTs),
-      ts: entryTs,
-      entryTs, exitTs
+      date: fmtD(entryTs), dateEntry: fmtD(entryTs), dateExit: fmtD(exitTs),
+      ts: entryTs, entryTs, exitTs
     });
+    return true;
+  }
+
+  // ── DETECCIÓN DE ENTRADAS: CADA CRUCE DEL VALUE AREA ──────
+  // Antes el backtest entraba UNA vez por segmento de pivote (≈ una cada 20+
+  // barras) → poquísimos trades, muy espaciados, sin parecido con lo que pasa
+  // de verdad en el gráfico. Ahora, dentro de cada segmento, calculamos su
+  // perfil de volumen y recorremos sus velas detectando CADA cruce nuevo del
+  // Value Area (mismo criterio `zoneOf` que el vivo). Cada cruce = una entrada
+  // potencial. Para no abrir dos trades del mismo tipo solapados, exigimos que
+  // el trade anterior haya cerrado (su ventana de resolución terminó) antes de
+  // registrar otro. Así el ritmo del histórico cuadra con el del vivo.
+  let lastExitBar = -1;
+  for (const seg of testSegs) {
+    const segStart = seg.startI, segEnd = Math.min(seg.endI, df.length - 2);
+    if (segEnd - segStart < 3) continue;
+
+    let prevZone = null;
+    for (let i = segStart + 1; i <= segEnd; i++) {
+      // PERFIL SIN LOOK-AHEAD: se calcula solo con las barras del segmento
+      // hasta la barra actual `i` (incluida), NUNCA con barras futuras del
+      // segmento. Antes se usaba el perfil del segmento completo, lo que dejaba
+      // que el perfil "conociera" velas posteriores al cruce → sesgo optimista.
+      const vp = calcVP(df.slice(segStart, i + 1), nRows, vaPct);
+      if (!vp) { continue; }
+      const zone = zoneOf(df[i].close, vp);
+      // Cruce nuevo = la zona cambió respecto a la barra anterior
+      if (prevZone !== null && zone !== prevZone) {
+        const entryI = i + 1;   // entrar al cierre de la barra siguiente al cruce
+        if (entryI > lastExitBar && entryI < df.length) {
+          const ok = processEntry(entryI, vp);
+          if (ok) {
+            const last = trades[trades.length - 1];
+            lastExitBar = entryI + (last.barsToRes || 1);
+          }
+        }
+      }
+      prevZone = zone;
+    }
   }
 
   const total = trades.length;
@@ -2216,15 +2232,14 @@ async function resolveEntryBar(a, sym, tf, isLong) {
       .sort((x,y) => x.ts - y.ts);
     if (!subs.length) return { checked:true, outcome:null };  // sin datos finos: nada que cerrar aquí
 
-    // Recorrer en orden real y devolver el PRIMER evento que ocurra
+    // Recorrer en orden real y devolver el PRIMER evento que ocurra.
+    // Dentro de una misma sub-vela, convención conservadora: STOP primero.
     for (const b of subs) {
       const stopHit = isLong ? b.low  <= a.stop : b.high >= a.stop;
       const t1Hit   = isLong ? b.high >= a.t1   : b.low  <= a.t1;
       const t2Hit   = a.t2 && (isLong ? b.high >= a.t2 : b.low <= a.t2);
-      // Orden real: lo que aparezca primero en el tiempo gana. Si en la MISMA
-      // sub-vela coinciden, mantenemos la convención conservadora (stop primero).
-      if (t2Hit) return { checked:true, outcome:'hit_t2', ts:b.ts, price:a.t2 };
       if (stopHit) return { checked:true, outcome:'stopped', ts:b.ts, price:a.stop };
+      if (t2Hit) return { checked:true, outcome:'hit_t2', ts:b.ts, price:a.t2 };
       if (t1Hit) return { checked:true, outcome:'hit_t1', ts:b.ts, price:a.t1 };
     }
     return { checked:true, outcome:null };  // la vela de entrada no tocó nada
@@ -2306,16 +2321,19 @@ async function trackerUpdateWithPrice(sym, tf, df, allowFine = false) {
       const t1Hit   = isLong ? bar.high >= a.t1     : bar.low  <= a.t1;
       const t2Hit   = a.t2 && (isLong ? bar.high >= a.t2 : bar.low <= a.t2);
 
-      if (t2Hit) {
-        a.status = 'hit_t2'; a.closedAt = bar.ts; a.closedPrice = a.t2;
-        a.pnlPct = +((a.t2 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
-        resolved = true; changed = true; break;
-      }
-      // CONVENCIÓN CONSERVADORA (igual que el backtest): si stop y T1 caen en
-      // la misma vela, asumimos que saltó el STOP primero. No infla resultados.
+      // CONVENCIÓN CONSERVADORA (igual que el backtest): el STOP se comprueba
+      // PRIMERO. Si en la misma vela coinciden stop y objetivo, asumimos que
+      // saltó el stop (no conocemos el orden intra-vela en datos diarios). Esto
+      // evita inflar los resultados. Antes se comprobaba T2 primero, lo que era
+      // optimista e incoherente con el backtest.
       if (stopHit) {
         a.status = 'stopped'; a.closedAt = bar.ts; a.closedPrice = a.stop;
         a.pnlPct = +((a.stop - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved = true; changed = true; break;
+      }
+      if (t2Hit) {
+        a.status = 'hit_t2'; a.closedAt = bar.ts; a.closedPrice = a.t2;
+        a.pnlPct = +((a.t2 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
         resolved = true; changed = true; break;
       }
       if (t1Hit) {
