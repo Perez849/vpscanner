@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r7 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r10 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1058,6 +1058,9 @@ function makeAbortSignal(ms) {
 const INTERVALS = {
   '1d': { stooq:'d', yahoo:'1d', yrange:'2y', ms: 86400000,     label:'1D' },
   '1w': { stooq:'w', yahoo:'1wk', yrange:'10y', ms: 7*86400000, label:'1W' },
+  // Auxiliares para resolver el ORDEN dentro de la vela de entrada (stop vs
+  // target el mismo período). No se escanean; solo se piden bajo demanda.
+  '1h': { stooq:'d', yahoo:'1h', yrange:'1mo', ms: 3600000,     label:'1H' },
 };
 
 // Lista de proxies CORS en cascada. Los públicos gratuitos son
@@ -2119,7 +2122,10 @@ async function scanSymbol(sym, retries = 2) {
 // v3: id estable por señal + entrada/fecha congeladas del primer avistamiento.
 // Clave nueva porque las alertas v2 tenían el precio de entrada mal (precio de
 // hoy en vez del de la fecha de la señal) y se regeneraban en cada escaneo.
-const TRACKER_KEY = 'vpscanner_tracker_v3';
+// v4: reset por el bug de look-ahead en la resolución de stop. Las alertas v3
+// podían cerrarse por un stop tocado ANTES de la entrada (mismo día, vela de
+// entrada). Arrancamos limpio para no arrastrar trades cerrados erróneamente.
+const TRACKER_KEY = 'vpscanner_tracker_v4';
 const TRACKER_EXPIRY_BARS = 60; // nº de velas reales hasta expiración
 
 function trackerLoad() {
@@ -2186,7 +2192,48 @@ function trackerAddAlert(row) {
   trackerUpdateBadge();
 }
 
-function trackerUpdateWithPrice(sym, tf, df) {
+// Resuelve el ORDEN dentro de la vela de entrada usando el timeframe inferior.
+// Para 1D baja velas 1h del día de entrada; para 1W baja velas 1d de la semana.
+// Solo mira sub-velas POSTERIORES a la entrada. Devuelve el primer evento real
+// (stop o target) si lo hubo, respetando el orden cronológico verdadero.
+async function resolveEntryBar(a, sym, tf, isLong) {
+  try {
+    // Timeframe fino según el de la alerta
+    const fineInterval = tf === '1W' ? '1d' : '1h';
+    const fine = await fetchOHLCV(sym, fineInterval, 1);
+    if (!fine || !fine.length) return { checked:false };
+
+    // Límites del período de la vela de entrada
+    const periodMs = tf === '1W' ? 7*86400000 : 86400000;
+    const entryTs  = a.entryTs;
+    const periodEnd = entryTs + periodMs;
+
+    // Sub-velas dentro del período de entrada y POSTERIORES al momento de entrada.
+    // (entryTs marca la vela de entrada; sus sub-velas tras ese instante son las
+    // que ocurren ya con la posición abierta.)
+    const subs = fine
+      .filter(b => b.ts >= entryTs && b.ts < periodEnd)
+      .sort((x,y) => x.ts - y.ts);
+    if (!subs.length) return { checked:true, outcome:null };  // sin datos finos: nada que cerrar aquí
+
+    // Recorrer en orden real y devolver el PRIMER evento que ocurra
+    for (const b of subs) {
+      const stopHit = isLong ? b.low  <= a.stop : b.high >= a.stop;
+      const t1Hit   = isLong ? b.high >= a.t1   : b.low  <= a.t1;
+      const t2Hit   = a.t2 && (isLong ? b.high >= a.t2 : b.low <= a.t2);
+      // Orden real: lo que aparezca primero en el tiempo gana. Si en la MISMA
+      // sub-vela coinciden, mantenemos la convención conservadora (stop primero).
+      if (t2Hit) return { checked:true, outcome:'hit_t2', ts:b.ts, price:a.t2 };
+      if (stopHit) return { checked:true, outcome:'stopped', ts:b.ts, price:a.stop };
+      if (t1Hit) return { checked:true, outcome:'hit_t1', ts:b.ts, price:a.t1 };
+    }
+    return { checked:true, outcome:null };  // la vela de entrada no tocó nada
+  } catch (e) {
+    return { checked:false };  // si falla la descarga fina, seguir con velas normales
+  }
+}
+
+async function trackerUpdateWithPrice(sym, tf, df, allowFine = false) {
   // df = array completo de velas OHLCV descargadas
   // Solo miramos velas con ts > signalStartTs para evitar cierres instantáneos
   if (!df || !df.length) return;
@@ -2209,13 +2256,14 @@ function trackerUpdateWithPrice(sym, tf, df) {
     const floatPnl = +((lastClose - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
     if (a.floatPnl !== floatPnl) { a.floatPnl = floatPnl; changed = true; }
 
-    // Ancla = entryTs (fecha de entrada CONGELADA en el primer avistamiento).
-    // Todo se mide desde la entrada: no se puede tocar stop/target ni contar
-    // barras antes de haber entrado. Como el id ahora es estable, entryTs ya
-    // no se regenera en cada escaneo (ese era el bug), así que esto es correcto
-    // y consistente: la entrada y su fecha quedan fijas.
+    // Ancla = entryTs (vela de entrada). CRÍTICO: la resolución de stop/target
+    // empieza en la vela SIGUIENTE a la de entrada, NO en la propia vela de
+    // entrada. La vela del día de entrada contiene movimiento ANTERIOR al momento
+    // en que entraste (p.ej. un mínimo de la mañana antes de tu entrada de la
+    // tarde), y contar ese rango sería look-ahead: marcaría un stop que ocurrió
+    // ANTES de existir la posición. Usamos `>` (estrictamente posterior), no `>=`.
     const cutoff = a.entryTs || a.signalStartTs;
-    const relevantBars = df.filter(b => b.ts >= cutoff);
+    const relevantBars = df.filter(b => b.ts > cutoff);
     if (!relevantBars.length) continue;
 
     // Ventana de evaluación: solo las primeras `expiryBars` velas reales
@@ -2230,6 +2278,25 @@ function trackerUpdateWithPrice(sym, tf, df) {
     const minL = Math.min(...window.map(b => b.low));
     if (maxH > a.highAfterEntry) { a.highAfterEntry = maxH; changed = true; }
     if (minL < a.lowAfterEntry)  { a.lowAfterEntry  = minL; changed = true; }
+
+    // ── DESAMBIGUAR LA VELA DE ENTRADA CON DATOS FINOS ────────
+    // Problema: en la vela del período de entrada no sabemos el orden intra-vela
+    // (¿tocó antes stop o target, y antes o después de entrar?). Para resolverlo
+    // bajamos el timeframe inferior SOLO de ese período: para 1D → velas 1h del
+    // día de entrada; para 1W → velas 1d de la semana de entrada. Miramos solo
+    // las sub-velas POSTERIORES al momento de entrada y vemos el orden real.
+    // Esto solo se hace una vez por alerta (se marca con _entryBarChecked).
+    if (allowFine && !a._entryBarChecked) {
+      const sub = await resolveEntryBar(a, sym, tf, isLong);
+      if (sub.checked) {
+        a._entryBarChecked = true; changed = true;
+        if (sub.outcome) {
+          a.status = sub.outcome; a.closedAt = sub.ts; a.closedPrice = sub.price;
+          a.pnlPct = +((sub.price - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+          continue;  // resuelto dentro de la vela de entrada
+        }
+      }
+    }
 
     // Comprobar barra a barra en orden cronológico para resolución correcta
     // (stop y T1 en la misma barra → T1 gana, asumiendo movimiento favorable primero)
@@ -2478,7 +2545,7 @@ async function runScan() {
           signalStartTs: td.signalStartTs, entryTs: lastBar.ts
         });
       }
-      trackerUpdateWithPrice(sym, tf, td.df);
+      trackerUpdateWithPrice(sym, tf, td.df, false);
       out.push({
         sym, tf, close: td.close,
         sector: (SYM_META[sym]?.sector || ''),
@@ -3106,6 +3173,22 @@ function getFiltered() {
 
   let data = [...merged.values()].filter(r => {
     if (activeTF !== 'ALL' && r.tf !== activeTF) return false;
+    // RITMO COHERENTE CON EL BACKTEST: el backtest cuenta una operación cuando
+    // la señal NACE (el precio cruza a la zona). El vivo debe hacer igual: solo
+    // mostramos la señal el día del CRUCE NUEVO, no todos los días que el precio
+    // siga en zona (eso sería repetir la misma señal). Excepción: si la tienes
+    // en seguimiento, se muestra siempre (estás siguiendo esa operación).
+    // Nota: el WR/backtest ya se hereda antes, así que ocultar aquí NO afecta a
+    // las estadísticas de las que sí se muestran.
+    // Ocultamos la continuación SOLO si su alerta ya fue registrada en su
+    // cruce (entonces ya la viste nacer). Si no hay alerta, es que no capturamos
+    // el cruce (la señal ya estaba en zona antes), así que la mostramos igual
+    // para no perder oportunidades válidas.
+    if (r.liveToday && !r.tracked && r._td?.sig?.isNewCross === false) {
+      const hasAlert = (typeof trackerLoad === 'function')
+        && trackerLoad()[trackerAlertId(r.sym, r.tf, r.sig)];
+      if (hasAlert) return false;
+    }
     if (minSc > 0 && r.score < minSc) return false;   // solo filtra si el usuario lo sube
     if (r.sig==='LONG' && !fl) return false;
     if (r.sig==='SHORT' && !fs) return false;
@@ -3659,7 +3742,7 @@ async function openModal(symFull, tf) {
       };
       const existing = allResults.findIndex(r => r.sym === symFull && r.tf === tf);
       if (existing >= 0) allResults[existing] = row; else allResults.push(row);
-      trackerUpdateWithPrice(symFull, tf, td.df);  // actualizar precio si está en seguimiento
+      await trackerUpdateWithPrice(symFull, tf, td.df, true);  // con datos finos: resuelve el orden en la vela de entrada
     } catch (e) {
       document.getElementById('m-levels').innerHTML =
         `<div style="padding:24px;text-align:center;color:var(--ember);font-family:var(--f-mono);font-size:11px">Error descargando ${symFull}: ${e?.message || e}<br><br><button onclick="openModal('${symFull}','${tf}')" style="margin-top:8px;padding:6px 14px;background:var(--sapphire);border:none;color:#fff;border-radius:7px;cursor:pointer;font-family:var(--f-mono);font-size:10px">🔄 Reintentar</button></div>`;
