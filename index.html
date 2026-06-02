@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r14 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r16 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1497,7 +1497,14 @@ const COST_ROUNDTRIP_PCT = (COST_FEE_PCT + COST_SLIP_PCT) * 2; // 0.30% por trad
 // ════════════════════════════════════════════════════════════
 function runBacktest(df, segs, pivLen, nRows, vaPct) {
   const trades = [];
-  const testSegs = segs.slice(0, -1);
+  // Antes se descartaba el ÚLTIMO segmento (segs.slice(0,-1)) por ser el "en
+  // desarrollo". Pero eso tiraba operaciones REALES ya resueltas de las últimas
+  // semanas — las más recientes y relevantes — restando muestra injustamente.
+  // El anti-look-ahead ya lo garantiza el forward scan (solo resuelve con velas
+  // posteriores a la entrada y exige ≥3 velas futuras), así que incluir todos
+  // los segmentos es correcto y honesto. Solo las entradas sin futuro suficiente
+  // se descartan, dentro de processEntry.
+  const testSegs = segs;
   const empty = {
     total:0, wins:0, losses:0, wr:null, avgRR:null, avgPnl:null, totalPnl:null,
     expectancy:null, t2HitRate:null, avgBarsToRes:null, maxDrawdownWin:null,
@@ -1566,7 +1573,6 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
       if (gapBeyondStop) {            // abrió ya pasado el stop → salida real = apertura
         outcome='loss'; exitPrice = o; break;
       }
-      if (stopHit) { outcome='loss'; exitPrice=sig.stop; break; }
       if (gapBeyondTarget) {          // abrió ya pasado el target → salida real = apertura (a favor)
         outcome='win'; exitPrice = o;
         if (sig.target2) {
@@ -1580,6 +1586,35 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
         }
         break;
       }
+
+      // ── EMPATE INTRADÍA: la vela toca STOP y TARGET el mismo día ──
+      // Antes asumíamos SIEMPRE pérdida ("stop primero"). Eso es demasiado
+      // pesimista: ~10% de los trades caen aquí y muchos fueron al target
+      // primero. Sin tick data no sabemos el orden exacto, pero la APERTURA da
+      // una pista honesta: el precio parte de la apertura, así que el nivel que
+      // tenga la apertura MÁS CERCA es el que probablemente se tocó primero.
+      if (stopHit && targetHit) {
+        const distToStop   = Math.abs(o - sig.stop);
+        const distToTarget = Math.abs(o - sig.target);
+        if (distToTarget <= distToStop) {
+          // Apertura más cerca del target → probablemente target primero
+          outcome='win'; exitPrice=sig.target;
+          if (sig.target2) {
+            for (let fi2 = fi+1; fi2 <= fi+30 && entryI+fi2 < df.length; fi2++) {
+              const bar2 = df[entryI + fi2];
+              const s2 = isLong ? bar2.low  <= sig.stop    : bar2.high >= sig.stop;
+              const g2 = isLong ? bar2.high >= sig.target2 : bar2.low  <= sig.target2;
+              if (s2) break;
+              if (g2) { t2Hit = true; break; }
+            }
+          }
+        } else {
+          outcome='loss'; exitPrice=sig.stop;   // apertura más cerca del stop
+        }
+        break;
+      }
+
+      if (stopHit) { outcome='loss'; exitPrice=sig.stop; break; }
       if (targetHit) {
         outcome='win'; exitPrice=sig.target;
         if (sig.target2) {
@@ -2358,10 +2393,30 @@ async function trackerUpdateWithPrice(sym, tf, df, allowFine = false) {
       const gapStop = isLong ? o <= a.stop : o >= a.stop;
       const gapT1   = isLong ? o >= a.t1   : o <= a.t1;
 
-      // STOP primero (conservador). Si abrió pasado el stop, sale en apertura.
+      // STOP por gap de apertura (peor caso real)
       if (gapStop) {
         a.status='stopped'; a.closedAt=bar.ts; a.closedPrice=o;
         a.pnlPct = +((o - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved=true; changed=true; break;
+      }
+      if (gapT1 && !gapStop) {       // gap a favor pasado T1 → salida en apertura
+        a.status='hit_t1'; a.closedAt=bar.ts; a.closedPrice=o;
+        a.pnlPct = +((o - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved=true; changed=true; break;
+      }
+      // EMPATE intradía (stop y objetivo el mismo día): desempate honesto por
+      // proximidad de la apertura, igual que el backtest. No asumir siempre lo
+      // peor — eso restaba ganadoras injustamente.
+      if (stopHit && (t1Hit || t2Hit)) {
+        const lvl = t2Hit ? a.t2 : a.t1;
+        const distStop = Math.abs(o - a.stop), distTgt = Math.abs(o - lvl);
+        if (distTgt <= distStop) {
+          a.status = t2Hit ? 'hit_t2' : 'hit_t1'; a.closedAt=bar.ts; a.closedPrice=lvl;
+          a.pnlPct = +((lvl - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        } else {
+          a.status='stopped'; a.closedAt=bar.ts; a.closedPrice=a.stop;
+          a.pnlPct = +((a.stop - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        }
         resolved=true; changed=true; break;
       }
       if (stopHit) {
@@ -2373,11 +2428,6 @@ async function trackerUpdateWithPrice(sym, tf, df, allowFine = false) {
         a.status = 'hit_t2'; a.closedAt = bar.ts; a.closedPrice = a.t2;
         a.pnlPct = +((a.t2 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
         resolved = true; changed = true; break;
-      }
-      if (gapT1) {       // abrió pasado T1 → salida real en apertura (a favor)
-        a.status='hit_t1'; a.closedAt=bar.ts; a.closedPrice=o;
-        a.pnlPct = +((o - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
-        resolved=true; changed=true; break;
       }
       if (t1Hit) {
         a.status = 'hit_t1'; a.closedAt = bar.ts; a.closedPrice = a.t1;
