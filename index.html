@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r13 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r14 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1552,7 +1552,34 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
         ? (entryClose - bar.low)  / entryClose * 100
         : (bar.high - entryClose) / entryClose * 100;
       if (drawdown > worstInWin) worstInWin = drawdown;
+
+      // ── GAPS DE APERTURA (honestidad) ─────────────────────
+      // En acciones, una vela puede ABRIR de golpe más allá de tu stop o tu
+      // target (hueco nocturno). En ese caso NO sales al nivel teórico, sales
+      // al precio de APERTURA real, que puede ser peor (stop) o mejor (target).
+      // Asumir que sales en el nivel exacto infla los resultados. Modelarlo es
+      // lo realista. La convención conservadora se mantiene: el stop manda.
+      const o = bar.open;
+      const gapBeyondStop   = isLong ? o <= sig.stop   : o >= sig.stop;
+      const gapBeyondTarget = isLong ? o >= sig.target : o <= sig.target;
+
+      if (gapBeyondStop) {            // abrió ya pasado el stop → salida real = apertura
+        outcome='loss'; exitPrice = o; break;
+      }
       if (stopHit) { outcome='loss'; exitPrice=sig.stop; break; }
+      if (gapBeyondTarget) {          // abrió ya pasado el target → salida real = apertura (a favor)
+        outcome='win'; exitPrice = o;
+        if (sig.target2) {
+          for (let fi2 = fi+1; fi2 <= fi+30 && entryI+fi2 < df.length; fi2++) {
+            const bar2 = df[entryI + fi2];
+            const s2 = isLong ? bar2.low  <= sig.stop    : bar2.high >= sig.stop;
+            const g2 = isLong ? bar2.high >= sig.target2 : bar2.low  <= sig.target2;
+            if (s2) break;
+            if (g2) { t2Hit = true; break; }
+          }
+        }
+        break;
+      }
       if (targetHit) {
         outcome='win'; exitPrice=sig.target;
         if (sig.target2) {
@@ -2322,15 +2349,21 @@ async function trackerUpdateWithPrice(sym, tf, df, allowFine = false) {
     // (stop y T1 en la misma barra → T1 gana, asumiendo movimiento favorable primero)
     let resolved = false;
     for (const bar of window) {
+      const o = bar.open;
       const stopHit = isLong ? bar.low  <= a.stop   : bar.high >= a.stop;
       const t1Hit   = isLong ? bar.high >= a.t1     : bar.low  <= a.t1;
       const t2Hit   = a.t2 && (isLong ? bar.high >= a.t2 : bar.low <= a.t2);
+      // Gaps de apertura: si la vela ABRE pasada el stop/objetivo, la salida
+      // real es la apertura, no el nivel teórico. Igual que el backtest.
+      const gapStop = isLong ? o <= a.stop : o >= a.stop;
+      const gapT1   = isLong ? o >= a.t1   : o <= a.t1;
 
-      // CONVENCIÓN CONSERVADORA (igual que el backtest): el STOP se comprueba
-      // PRIMERO. Si en la misma vela coinciden stop y objetivo, asumimos que
-      // saltó el stop (no conocemos el orden intra-vela en datos diarios). Esto
-      // evita inflar los resultados. Antes se comprobaba T2 primero, lo que era
-      // optimista e incoherente con el backtest.
+      // STOP primero (conservador). Si abrió pasado el stop, sale en apertura.
+      if (gapStop) {
+        a.status='stopped'; a.closedAt=bar.ts; a.closedPrice=o;
+        a.pnlPct = +((o - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved=true; changed=true; break;
+      }
       if (stopHit) {
         a.status = 'stopped'; a.closedAt = bar.ts; a.closedPrice = a.stop;
         a.pnlPct = +((a.stop - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
@@ -2340,6 +2373,11 @@ async function trackerUpdateWithPrice(sym, tf, df, allowFine = false) {
         a.status = 'hit_t2'; a.closedAt = bar.ts; a.closedPrice = a.t2;
         a.pnlPct = +((a.t2 - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
         resolved = true; changed = true; break;
+      }
+      if (gapT1) {       // abrió pasado T1 → salida real en apertura (a favor)
+        a.status='hit_t1'; a.closedAt=bar.ts; a.closedPrice=o;
+        a.pnlPct = +((o - a.entry) / a.entry * 100 * (isLong ? 1 : -1)).toFixed(2);
+        resolved=true; changed=true; break;
       }
       if (t1Hit) {
         a.status = 'hit_t1'; a.closedAt = bar.ts; a.closedPrice = a.t1;
