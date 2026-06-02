@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r12 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r13 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1617,19 +1617,24 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     const segStart = seg.startI, segEnd = Math.min(seg.endI, df.length - 2);
     if (segEnd - segStart < 3) continue;
 
+    // PERFIL DEL SEGMENTO — válido y estable, calculado con las velas del
+    // segmento, EXACTAMENTE como hace el sistema en vivo con su perfil. Un
+    // perfil necesita ~20 velas para tener sentido; calcularlo con 2-3 (como
+    // hacía la versión anterior) producía VAL/VAH/PoC disparatados y señales
+    // basura, hundiendo todos los win rates. El sesgo de look-ahead NO está
+    // aquí: lo evita el forward scan, que solo resuelve con velas POSTERIORES a
+    // la entrada. Usar las velas del propio segmento para el perfil es justo lo
+    // que define el indicador (perfil entre pivotes).
+    const vp = calcVP(seg.slice && seg.slice.length >= 10 ? seg.slice : df.slice(segStart, segEnd + 1), nRows, vaPct);
+    if (!vp) continue;
+
     let prevZone = null;
     for (let i = segStart + 1; i <= segEnd; i++) {
-      // PERFIL SIN LOOK-AHEAD: se calcula solo con las barras del segmento
-      // hasta la barra actual `i` (incluida), NUNCA con barras futuras del
-      // segmento. Antes se usaba el perfil del segmento completo, lo que dejaba
-      // que el perfil "conociera" velas posteriores al cruce → sesgo optimista.
-      const vp = calcVP(df.slice(segStart, i + 1), nRows, vaPct);
-      if (!vp) { continue; }
       const zone = zoneOf(df[i].close, vp);
       // Cruce nuevo = la zona cambió respecto a la barra anterior
       if (prevZone !== null && zone !== prevZone) {
         const entryI = i + 1;   // entrar al cierre de la barra siguiente al cruce
-        if (entryI > lastExitBar && entryI < df.length) {
+        if (entryI > lastExitBar && entryI + 3 < df.length) {
           const ok = processEntry(entryI, vp);
           if (ok) {
             const last = trades[trades.length - 1];
