@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r20 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r21 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1409,6 +1409,37 @@ function classifySignal(close, vp, df) {
   }
 
   const inVA = val <= close && close <= vah;
+
+  // ── ATR (Average True Range) — volatilidad real del valor ──
+  // El stop se mide desde la ENTRADA usando ATR, no desde un nivel fijo del
+  // perfil. Así el riesgo se adapta a cada acción (ancho si es volátil, ajustado
+  // si es tranquila) y nunca queda absurdamente lejos por estar anclado al VAL.
+  let atr = null;
+  if (df && df.length >= 15) {
+    const period = 14;
+    let sumTR = 0, count = 0;
+    for (let i = df.length - period; i < df.length; i++) {
+      if (i < 1) continue;
+      const tr = Math.max(
+        df[i].high - df[i].low,
+        Math.abs(df[i].high - df[i-1].close),
+        Math.abs(df[i].low - df[i-1].close)
+      );
+      sumTR += tr; count++;
+    }
+    if (count > 0) atr = sumTR / count;
+  }
+  // Stop por ATR (2× ATR desde la entrada) limitado al rango de riesgo permitido.
+  // Devuelve el precio de stop para un long (resta) o short (suma).
+  const atrStop = (entry, isLong) => {
+    if (!atr || atr <= 0) return null;
+    const dist = 2 * atr;                         // 2×ATR: estándar swing
+    const minDist = entry * (MIN_RISK_PCT/100);
+    const maxDist = entry * (MAX_RISK_PCT/100);
+    const d = Math.min(Math.max(dist, minDist), maxDist);
+    return isLong ? entry - d : entry + d;
+  };
+
   let sig = {
     signal:'NEUTRAL', label:'En PoC — esperar', stop:null, target:null,
     target2:null, invalidation:null, rr:null, trendBias,
@@ -1416,38 +1447,35 @@ function classifySignal(close, vp, df) {
   };
 
   if (close > vah + buf) {
-    // SHORT: stop sobre VAH, mínimo 1.5% y MÁXIMO MAX_RISK% de riesgo.
-    const rawStop = vah + vaW * .25;
-    const minStop = close * (1 + MIN_RISK_PCT/100);
-    const maxStop = close * (1 + MAX_RISK_PCT/100);   // techo: no arriesgar más de X%
-    const stop = Math.min(Math.max(rawStop, minStop), maxStop);
+    // SHORT: stop por ATR desde la entrada (volatilidad real), o estructural si
+    // no hay ATR. Se toma el MÁS AJUSTADO de ambos para no alejar el riesgo.
+    const structStop = Math.min(Math.max(vah + vaW * .25, close*(1+MIN_RISK_PCT/100)), close*(1+MAX_RISK_PCT/100));
+    const aStop = atrStop(close, false);
+    const stop = aStop ? Math.min(structStop, aStop) : structStop;
     sig = {...sig, signal:'SHORT', label:'Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step * 2,
       scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
   } else if (close < val - buf) {
-    const rawStop = val - vaW * .25;
-    const minStop = close * (1 - MIN_RISK_PCT/100);
-    const maxStop = close * (1 - MAX_RISK_PCT/100);   // suelo: no arriesgar más de X%
-    const stop = Math.max(Math.min(rawStop, minStop), maxStop);
+    const structStop = Math.max(Math.min(val - vaW * .25, close*(1-MIN_RISK_PCT/100)), close*(1-MAX_RISK_PCT/100));
+    const aStop = atrStop(close, true);
+    const stop = aStop ? Math.max(structStop, aStop) : structStop;  // long: el más cercano (mayor) limita riesgo
     sig = {...sig, signal:'LONG', label:'Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
       scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA). Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
   } else if (inVA && close < poc) {
-    const rawStop = val - vaW * 0.15;
-    const minStop = close * (1 - MIN_RISK_PCT/100);
-    const maxStop = close * (1 - MAX_RISK_PCT/100);
-    const stop = Math.max(Math.min(rawStop, minStop), maxStop);
+    const structStop = Math.max(Math.min(val - vaW * 0.15, close*(1-MIN_RISK_PCT/100)), close*(1-MAX_RISK_PCT/100));
+    const aStop = atrStop(close, true);
+    const stop = aStop ? Math.max(structStop, aStop) : structStop;
     sig = {...sig, signal:'RANGE_LONG', label:'Range Long → VAH',
       stop, target: poc, target2: vah, invalidation: pl - step,
-      scenario:'Dentro del VA bajo el PoC. Stop bajo el VAL. LVN entre precio y PoC acelera el movimiento.'};
+      scenario:'Dentro del VA bajo el PoC. Stop por volatilidad (ATR) desde la entrada. LVN entre precio y PoC acelera el movimiento.'};
   } else if (inVA && close > poc) {
-    const rawStop = vah + vaW * 0.15;
-    const minStop = close * (1 + MIN_RISK_PCT/100);
-    const maxStop = close * (1 + MAX_RISK_PCT/100);
-    const stop = Math.min(Math.max(rawStop, minStop), maxStop);
+    const structStop = Math.min(Math.max(vah + vaW * 0.15, close*(1+MIN_RISK_PCT/100)), close*(1+MAX_RISK_PCT/100));
+    const aStop = atrStop(close, false);
+    const stop = aStop ? Math.min(structStop, aStop) : structStop;
     sig = {...sig, signal:'RANGE_SHORT', label:'Range Short → VAL',
       stop, target: poc, target2: val, invalidation: ph + step,
-      scenario:'Dentro del VA sobre el PoC. Stop sobre el VAH. Confirmar con volumen decreciente.'};
+      scenario:'Dentro del VA sobre el PoC. Stop por volatilidad (ATR) desde la entrada. Confirmar con volumen decreciente.'};
   }
 
   // Final hierarchy check
