@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r23 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r24 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1469,31 +1469,34 @@ function classifySignal(close, vp, df) {
   //    SHORT = toca el PoC desde abajo y lo rechaza como resistencia.
   // En todos los casos el objetivo es el PoC (o, en los rebotes, el borde).
   const pocTol = (atr && atr > 0) ? atr * 0.5 : step;   // tolerancia de "toque" al PoC
+  const stopMargin = (atr && atr > 0) ? atr * 0.3 : step;  // colchón para no saltar por un roce
 
   if (prevClose < val - buf && close >= val - buf && close < poc) {
-    // LONG por recuperación del VAL (cruce de fuera hacia dentro)
-    const stop = makeStop(close, true);
-    sig = {...sig, signal:'LONG', label:'Long → PoC',
+    // LONG por recuperación del VAL. STOP = volver a perder el VAL (con colchón).
+    // stopType 'reclaim' → la resolución NO cuenta el toque de la vela de entrada
+    // (ahí el precio tocó el VAL para CRUZARLO, no para invalidar).
+    const stop = (val - stopMargin);
+    sig = {...sig, signal:'LONG', label:'Long → PoC', stopType:'reclaim', stopLevel: val,
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
-      scenario:`Precio recupera el VA cruzando el VAL al alza. Sesgo alcista hacia el PoC (ancla de volumen).${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
+      scenario:`Precio recupera el VA cruzando el VAL al alza. Stop si vuelve a perder el VAL. Objetivo PoC (ancla de volumen).${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
   } else if (prevClose > vah + buf && close <= vah + buf && close > poc) {
-    // SHORT por pérdida del VAH (cruce de fuera hacia dentro)
-    const stop = makeStop(close, false);
-    sig = {...sig, signal:'SHORT', label:'Short → PoC',
+    // SHORT por pérdida del VAH. STOP = volver a superar el VAH (con colchón).
+    const stop = (vah + stopMargin);
+    sig = {...sig, signal:'SHORT', label:'Short → PoC', stopType:'reclaim', stopLevel: vah,
       stop, target: poc, target2: val, invalidation: ph + step * 2,
-      scenario:`Precio pierde el VAH cruzando a la baja. Sesgo bajista hacia el PoC (ancla de volumen).${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
+      scenario:`Precio pierde el VAH cruzando a la baja. Stop si vuelve a superar el VAH. Objetivo PoC (ancla de volumen).${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
   } else if (prevClose > poc + pocTol && Math.abs(close - poc) <= pocTol) {
-    // REBOTE en PoC desde ARRIBA → PoC como soporte → LONG hacia VAH
-    const stop = makeStop(close, true);
-    sig = {...sig, signal:'RANGE_LONG', label:'Long ← rebote PoC',
+    // REBOTE en PoC desde ARRIBA → soporte → LONG. STOP FIJO 2% bajo la entrada.
+    const stop = close * (1 - 0.02);
+    sig = {...sig, signal:'RANGE_LONG', label:'Long ← rebote PoC', stopType:'fixed',
       stop, target: vah, target2: vah, invalidation: poc - pocTol*2,
-      scenario:'Precio rebota en el PoC como soporte (lo toca desde arriba). Sesgo alcista hacia el VAH.'};
+      scenario:'Rebote en el PoC como soporte (lo toca desde arriba). Stop fijo 2%. Objetivo VAH.'};
   } else if (prevClose < poc - pocTol && Math.abs(close - poc) <= pocTol) {
-    // REBOTE en PoC desde ABAJO → PoC como resistencia → SHORT hacia VAL
-    const stop = makeStop(close, false);
-    sig = {...sig, signal:'RANGE_SHORT', label:'Short ← rechazo PoC',
+    // REBOTE en PoC desde ABAJO → resistencia → SHORT. STOP FIJO 2% sobre la entrada.
+    const stop = close * (1 + 0.02);
+    sig = {...sig, signal:'RANGE_SHORT', label:'Short ← rechazo PoC', stopType:'fixed',
       stop, target: val, target2: val, invalidation: poc + pocTol*2,
-      scenario:'Precio rechazado en el PoC como resistencia (lo toca desde abajo). Sesgo bajista hacia el VAL.'};
+      scenario:'Rechazo en el PoC como resistencia (lo toca desde abajo). Stop fijo 2%. Objetivo VAL.'};
   }
 
   // Final hierarchy check
