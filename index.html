@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v25</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r25 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v26</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r26 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1469,34 +1469,37 @@ function classifySignal(close, vp, df) {
   //    SHORT = toca el PoC desde abajo y lo rechaza como resistencia.
   // En todos los casos el objetivo es el PoC (o, en los rebotes, el borde).
   const pocTol = (atr && atr > 0) ? atr * 0.5 : step;   // tolerancia de "toque" al PoC
-  const stopMargin = (atr && atr > 0) ? atr * 0.3 : step;  // colchón para no saltar por un roce
+  // Distancia mínima del stop a la ENTRADA. El problema de poner el stop justo
+  // en el nivel cruzado es que entras PEGADO a ese nivel (lo acabas de cruzar),
+  // así que el stop queda a un roce y la oscilación normal te barre el día 1.
+  // Exigimos que el stop esté al menos a esta distancia de la entrada.
+  const minStopDist = (atr && atr > 0) ? Math.max(atr * 1.0, close * 0.015) : close * 0.025;
 
   if (prevClose < val - buf && close >= val - buf && close < poc) {
-    // LONG por recuperación del VAL. STOP = volver a perder el VAL (con colchón).
-    // stopType 'reclaim' → la resolución NO cuenta el toque de la vela de entrada
-    // (ahí el precio tocó el VAL para CRUZARLO, no para invalidar).
-    const stop = (val - stopMargin);
+    // LONG por recuperación del VAL. Stop = perder el VA, PERO nunca más cerca
+    // de la entrada que minStopDist (si no, el stop queda pegado y salta enseguida).
+    const stop = Math.min(val - pocTol, close - minStopDist);
     sig = {...sig, signal:'LONG', label:'Long → PoC', stopType:'reclaim', stopLevel: val,
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
-      scenario:`Precio recupera el VA cruzando el VAL al alza. Stop si vuelve a perder el VAL. Objetivo PoC (ancla de volumen).${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
+      scenario:`Precio recupera el VA cruzando el VAL al alza. Objetivo PoC (ancla de volumen).${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
   } else if (prevClose > vah + buf && close <= vah + buf && close > poc) {
-    // SHORT por pérdida del VAH. STOP = volver a superar el VAH (con colchón).
-    const stop = (vah + stopMargin);
+    // SHORT por pérdida del VAH. Stop = superar el VAH, nunca más cerca que minStopDist.
+    const stop = Math.max(vah + pocTol, close + minStopDist);
     sig = {...sig, signal:'SHORT', label:'Short → PoC', stopType:'reclaim', stopLevel: vah,
       stop, target: poc, target2: val, invalidation: ph + step * 2,
-      scenario:`Precio pierde el VAH cruzando a la baja. Stop si vuelve a superar el VAH. Objetivo PoC (ancla de volumen).${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
+      scenario:`Precio pierde el VAH cruzando a la baja. Objetivo PoC (ancla de volumen).${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
   } else if (prevClose > poc + pocTol && Math.abs(close - poc) <= pocTol) {
-    // REBOTE en PoC desde ARRIBA → soporte → LONG. STOP FIJO 2% bajo la entrada.
-    const stop = close * (1 - 0.02);
+    // REBOTE en PoC desde ARRIBA → soporte → LONG. Stop al menos minStopDist.
+    const stop = close - Math.max(minStopDist, close * 0.02);
     sig = {...sig, signal:'RANGE_LONG', label:'Long ← rebote PoC', stopType:'fixed',
       stop, target: vah, target2: vah, invalidation: poc - pocTol*2,
-      scenario:'Rebote en el PoC como soporte (lo toca desde arriba). Stop fijo 2%. Objetivo VAH.'};
+      scenario:'Rebote en el PoC como soporte (lo toca desde arriba). Objetivo VAH.'};
   } else if (prevClose < poc - pocTol && Math.abs(close - poc) <= pocTol) {
-    // REBOTE en PoC desde ABAJO → resistencia → SHORT. STOP FIJO 2% sobre la entrada.
-    const stop = close * (1 + 0.02);
+    // REBOTE en PoC desde ABAJO → resistencia → SHORT. Stop al menos minStopDist.
+    const stop = close + Math.max(minStopDist, close * 0.02);
     sig = {...sig, signal:'RANGE_SHORT', label:'Short ← rechazo PoC', stopType:'fixed',
       stop, target: val, target2: val, invalidation: poc + pocTol*2,
-      scenario:'Rechazo en el PoC como resistencia (lo toca desde abajo). Stop fijo 2%. Objetivo VAL.'};
+      scenario:'Rechazo en el PoC como resistencia (lo toca desde abajo). Objetivo VAL.'};
   }
 
   // Final hierarchy check
