@@ -711,14 +711,15 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v30</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r30 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v31</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r31 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
       <button class="tf-pill" onclick="setTF('1D',this)">1D</button>
       <button class="tf-pill" onclick="setTF('1W',this)">1W</button>
       <button class="tf-pill" onclick="toggleTrackerStats()" id="tracker-pill" title="Resumen y gestión del seguimiento">📌 Seguimiento <span id="tracker-badge" style="display:none;background:var(--ember);color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;margin-left:3px"></span></button>
+      <button class="tf-pill" onclick="runDiagnosisPanel()" id="diag-pill" title="Diagnóstico: qué factores ayudan o perjudican">🔬 Diagnóstico</button>
       <select id="sector-filter" onchange="onSectorChange()" style="margin-left:8px;background:var(--ink2);color:var(--text);border:1px solid var(--rule);border-radius:8px;padding:5px 10px;font-family:var(--f-mono);font-size:10px;cursor:pointer" title="Escanear solo una narrativa (más rápido)">
         <option value="ALL">🌐 Todos los sectores (96)</option>
       </select>
@@ -1532,6 +1533,16 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     sig.rr = risk > 0 ? +(reward / risk).toFixed(2) : null;
   }
 
+  // Flags de diagnóstico (para el panel de diagnosis): condiciones de mercado
+  // en el momento de la señal, para poder medir después qué filtro ayuda o no.
+  sig.diagRoBreakUp = roBreakUp;
+  sig.diagRoBreakDn = roBreakDn;
+  sig.diagTrendBias = trendBias;
+  // ¿El Range Oscillator habría bloqueado esta dirección? (rompe en contra)
+  const _isLongDir = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
+  const _isShortDir = sig.signal === 'SHORT' || sig.signal === 'RANGE_SHORT';
+  sig.diagTrendAgainst = (_isLongDir && trendBias < 0) || (_isShortDir && trendBias > 0);
+
   // ── ¿ES UN CRUCE NUEVO O UNA CONTINUACIÓN? ────────────────
   // Una señal solo es "nueva" el día que el precio CRUZA fuera del Value Area
   // por primera vez. Si lleva días fuera, NO es una señal nueva cada día — es
@@ -1934,6 +1945,114 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     allScores: _allScores // distribución completa de scores para percentil
   };
 }
+
+// ════════════════════════════════════════════════════════════
+// DIAGNÓSTICO DE FACTORES — mide con datos reales qué ayuda y qué estorba.
+// Corre el backtest SIN ningún filtro (registra TODAS las entradas posibles,
+// incluso las que el Range Oscillator o la tendencia bloquearían) y para cada
+// operación guarda sus condiciones y su resultado. Luego compara el WR de cada
+// grupo, para responder: ¿el RO me quita ganadoras o perdedoras? ¿la tendencia?
+// ¿qué tipo de señal va mejor? ¿el stop por MAE me saca antes de tiempo?
+// ════════════════════════════════════════════════════════════
+function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
+  if (!df || df.length < 60 || !segs || segs.length < 3) return null;
+  const buf2 = 0; // placeholder
+  const all = [];   // todas las operaciones posibles con sus flags
+  const COST = COST_ROUNDTRIP_PCT;
+  let lastExit = -1;
+
+  for (const seg of segs) {
+    const segStart = seg.startI, segEnd = Math.min(seg.endI, df.length - 2);
+    if (segEnd - segStart < 3) continue;
+    const vp = calcVP(seg.slice && seg.slice.length >= 10 ? seg.slice : df.slice(segStart, segEnd + 1), nRows, vaPct);
+    if (!vp) continue;
+    const { pocPrice:poc, vahPrice:vah, valPrice:val, priceStep:step } = vp;
+    const buf = step * 0.5, vaW = vah - val;
+
+    for (let i = segStart + 1; i <= segEnd; i++) {
+      if (i <= lastExit || i + 3 >= df.length) continue;
+      const close = df[i].close;
+      const dfTo = df.slice(0, i + 1);
+      // Clasificar SIN filtro RO: detectar la dirección "cruda" por posición
+      let dir = null, target = null;
+      const inVA = val <= close && close <= vah;
+      if (close > vah + buf) { dir = 'SHORT'; target = poc; }
+      else if (close < val - buf) { dir = 'LONG'; target = poc; }
+      else if (inVA && close < poc) { dir = 'RANGE_LONG'; target = poc; }
+      else if (inVA && close > poc) { dir = 'RANGE_SHORT'; target = poc; }
+      if (!dir) continue;
+
+      // Recalcular flags con classifySignal (nos da RO y tendencia aunque bloquee)
+      const probe = classifySignal(close, vp, dfTo);
+      const roUp = probe.diagRoBreakUp, roDn = probe.diagRoBreakDn, tb = probe.diagTrendBias;
+      const isLong = dir === 'LONG' || dir === 'RANGE_LONG';
+      const roWouldBlock = (isLong && roDn) || (!isLong && roUp);
+      const trendAgainst = (isLong && tb < 0) || (!isLong && tb > 0);
+
+      // Resolver el resultado con stop estructural (medida base, sin MAE)
+      const minStop = isLong ? close*(1-MIN_RISK_PCT/100) : close*(1+MIN_RISK_PCT/100);
+      const maxStop = isLong ? close*(1-MAX_RISK_PCT/100) : close*(1+MAX_RISK_PCT/100);
+      const rawStop = isLong ? val - vaW*0.25 : vah + vaW*0.25;
+      const stop = isLong ? Math.max(Math.min(rawStop,minStop),maxStop) : Math.min(Math.max(rawStop,minStop),maxStop);
+
+      let outcome = 'timeout', exitPrice = close, mae = 0, barsHeld = 0;
+      for (let fi = 1; fi <= 60 && i+fi < df.length; fi++) {
+        const bar = df[i+fi]; barsHeld = fi;
+        const dd = isLong ? (close-bar.low)/close*100 : (bar.high-close)/close*100;
+        if (dd > mae) mae = dd;
+        const stopHit = isLong ? bar.low <= stop : bar.high >= stop;
+        const tgtHit  = isLong ? bar.high >= target : bar.low <= target;
+        if (stopHit && tgtHit) { // empate: por proximidad de apertura
+          const o = bar.open;
+          if (Math.abs(o-target) <= Math.abs(o-stop)) { outcome='win'; exitPrice=target; }
+          else { outcome='loss'; exitPrice=stop; }
+          break;
+        }
+        if (stopHit) { outcome='loss'; exitPrice=stop; break; }
+        if (tgtHit)  { outcome='win';  exitPrice=target; break; }
+      }
+      const gross = isLong ? (exitPrice-close)/close*100 : (close-exitPrice)/close*100;
+      const pnl = +(gross - COST).toFixed(3);
+      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2),
+                 win: pnl>0, pnl, barsHeld, score: probe.diagScore ?? null });
+      lastExit = i + (barsHeld||1);
+    }
+  }
+
+  if (all.length < 5) return { total: all.length, insufficient: true };
+
+  // Helper: WR y PnL medio de un subconjunto
+  const stat = arr => {
+    if (!arr.length) return { n:0, wr:null, pnl:null };
+    const w = arr.filter(t=>t.win).length;
+    return { n:arr.length, wr:Math.round(w/arr.length*100),
+             pnl:+(arr.reduce((a,t)=>a+t.pnl,0)/arr.length).toFixed(2) };
+  };
+
+  const base = stat(all);
+  // Impacto del Range Oscillator: comparar las que bloquea vs las que deja pasar
+  const roBlocked = stat(all.filter(t=>t.roWouldBlock));
+  const roKept    = stat(all.filter(t=>!t.roWouldBlock));
+  // Impacto del filtro de tendencia
+  const trendBlocked = stat(all.filter(t=>t.trendAgainst));
+  const trendKept    = stat(all.filter(t=>!t.trendAgainst));
+  // Por tipo de señal
+  const bySig = {};
+  for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']) bySig[s] = stat(all.filter(t=>t.dir===s));
+  // Análisis del stop por MAE: ¿cuántas ganadoras retrocedieron MÁS que el stop
+  // que pondría el MAE? (esas las sacaría antes de tiempo)
+  const winners = all.filter(t=>t.win);
+  const maeArr = winners.map(t=>t.mae).sort((a,b)=>a-b);
+  const maeP75 = maeArr.length>=6 ? maeArr[Math.floor(maeArr.length*0.75)] : null;
+  const maeStopPct = maeP75!=null ? Math.min(Math.max(maeP75*1.2,1.5),5.0) : null;
+  const winnersStoppedByMae = maeStopPct!=null ? winners.filter(t=>t.mae > maeStopPct).length : null;
+
+  return {
+    total: all.length, base, roBlocked, roKept, trendBlocked, trendKept, bySig,
+    maeP75, maeStopPct, winnersStoppedByMae, winnersTotal: winners.length
+  };
+}
+
 
 
 
@@ -3764,6 +3883,141 @@ function renderTop3(data) {
 
   html += `<div style="font-family:var(--f-mono);font-size:8px;color:var(--dim);margin-top:10px">IOA = Kelly realizado × confianza estadística × (1+IC) × ajuste tendencia/drawdown</div></div>`;
   return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// PANEL DE DIAGNÓSTICO — agrega el diagnóstico de todos los símbolos escaneados
+// y produce un informe con conclusiones automáticas y exportable.
+// ════════════════════════════════════════════════════════════
+function aggStat() { return { n:0, w:0 }; }
+function runDiagnosisPanel() {
+  const tds = [];
+  for (const r of allResults) {
+    const td = r._td;
+    if (td && td.df && td.segs && td.df.length >= 60) tds.push({ sym:r.sym, tf:r.tf, td });
+  }
+  const content = document.getElementById('content');
+  if (!tds.length) {
+    content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--sub);font-family:var(--f-mono)">
+      No hay símbolos con datos cargados todavía. Lanza un escaneo primero (▶) y luego abre el diagnóstico.</div>`;
+    return;
+  }
+
+  const G = {
+    all:aggStat(), roBlocked:aggStat(), roKept:aggStat(),
+    trendBlocked:aggStat(), trendKept:aggStat(),
+    bySig:{LONG:aggStat(),SHORT:aggStat(),RANGE_LONG:aggStat(),RANGE_SHORT:aggStat()},
+    pnlSum:0, pnlN:0, winnersStoppedByMae:0, winnersTotal:0, maeWinners:[]
+  };
+  const pivLen = parseInt(document.querySelector('input[oninput*="vpl"]')?.value || 20);
+  const nRows  = parseInt(document.querySelector('input[oninput*="vrows"]')?.value || 25);
+  const vaPct  = parseInt(document.querySelector('input[oninput*="vva"]')?.value || 68) / 100;
+
+  let analyzed = 0;
+  for (const { td } of tds) {
+    let d; try { d = runDiagnostics(td.df, td.segs, pivLen, nRows, vaPct); } catch(e){ continue; }
+    if (!d || d.insufficient) continue;
+    analyzed++;
+    const add = (dst, src) => { if(src&&src.n){ dst.n+=src.n; dst.w+=Math.round(src.wr/100*src.n);} };
+    add(G.all, d.base);
+    add(G.roBlocked, d.roBlocked); add(G.roKept, d.roKept);
+    add(G.trendBlocked, d.trendBlocked); add(G.trendKept, d.trendKept);
+    for (const s in G.bySig) add(G.bySig[s], d.bySig[s]);
+    if (d.base && d.base.pnl!=null){ G.pnlSum += d.base.pnl*d.base.n; G.pnlN += d.base.n; }
+    if (d.winnersStoppedByMae!=null){ G.winnersStoppedByMae += d.winnersStoppedByMae; G.winnersTotal += d.winnersTotal; }
+    if (d.maeP75!=null) G.maeWinners.push(d.maeP75);
+  }
+
+  const wr = g => g.n ? Math.round(g.w/g.n*100) : null;
+  const fmt = g => g.n ? `${wr(g)}% <span style="color:var(--sub)">(${g.n} ops)</span>` : '—';
+  const avgPnl = G.pnlN ? +(G.pnlSum/G.pnlN).toFixed(2) : null;
+
+  const concl = [];
+  if (G.roBlocked.n >= 10) {
+    const wrB = wr(G.roBlocked), wrK = wr(G.roKept);
+    if (wrB > wrK + 3) concl.push(`⚠️ <b>El Range Oscillator te está PERJUDICANDO.</b> Las operaciones que bloquea tienen MEJOR win rate (${wrB}%) que las que deja pasar (${wrK}%). Está quitando ganadoras. Recomendación: <b>quitar o suavizar el filtro RO</b>.`);
+    else if (wrK > wrB + 3) concl.push(`✅ El Range Oscillator AYUDA: las que bloquea van peor (${wrB}%) que las que deja pasar (${wrK}%). Mantener.`);
+    else concl.push(`➖ El Range Oscillator es casi NEUTRO (bloquea ${wrB}% vs deja ${wrK}%). Podría quitarse para tener más señales sin perder calidad.`);
+  } else {
+    concl.push(`ℹ️ Pocas operaciones bloqueadas por el RO (${G.roBlocked.n}) para concluir con fiabilidad.`);
+  }
+  if (G.trendBlocked.n >= 10) {
+    const wrB = wr(G.trendBlocked), wrK = wr(G.trendKept);
+    if (wrK > wrB + 3) concl.push(`✅ Operar A FAVOR de la tendencia (EMA200) va mejor (${wrK}%) que en contra (${wrB}%).`);
+    else if (wrB > wrK + 3) concl.push(`⚠️ Las operaciones CONTRA tendencia van mejor (${wrB}%) que a favor (${wrK}%) en estos datos. La reversión funciona aquí incluso contra la EMA200.`);
+    else concl.push(`➖ La tendencia (EMA200) apenas discrimina (contra ${wrB}% vs favor ${wrK}%).`);
+  }
+  const sigEntries = Object.entries(G.bySig).filter(([s,g])=>g.n>=8).map(([s,g])=>({s,wr:wr(g),n:g.n}));
+  if (sigEntries.length) {
+    sigEntries.sort((a,b)=>b.wr-a.wr);
+    const best = sigEntries[0], worst = sigEntries[sigEntries.length-1];
+    if (best.wr > worst.wr + 8) concl.push(`📊 El mejor tipo es <b>${best.s}</b> (${best.wr}%) y el peor <b>${worst.s}</b> (${worst.wr}%). Podrías priorizar ${best.s} y ser más exigente con ${worst.s}.`);
+  }
+  if (G.winnersTotal >= 10) {
+    const pct = Math.round(G.winnersStoppedByMae/G.winnersTotal*100);
+    const maeAvg = G.maeWinners.length ? +(G.maeWinners.reduce((a,b)=>a+b,0)/G.maeWinners.length).toFixed(2) : null;
+    if (pct > 15) concl.push(`⚠️ <b>El stop por MAE te saca antes de tiempo en ~${pct}% de las ganadoras.</b> Acababan ganando pero retrocedían más que el stop. Recomendación: <b>ampliar el margen del stop MAE</b> (de ×1.2 a ×1.4, o subir el tope del 5%).`);
+    else concl.push(`✅ El stop por MAE solo corta ~${pct}% de las ganadoras (retroceso medio ${maeAvg}%). Bien dimensionado.`);
+  }
+  if (avgPnl!=null) {
+    if (avgPnl < 0) concl.push(`🔴 El PnL medio por operación (sin filtros, stop estructural) es NEGATIVO (${avgPnl}%). La estrategia base necesita mejor selección o mejor R:R.`);
+    else concl.push(`🟢 El PnL medio por operación base es ${avgPnl}%.`);
+  }
+
+  const row = (label, g, hint='') => `<tr>
+    <td style="padding:7px 10px;border-bottom:1px solid var(--rule2)">${label}</td>
+    <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);text-align:right;font-family:var(--f-mono)">${fmt(g)}</td>
+    <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);color:var(--sub);font-size:11px">${hint}</td></tr>`;
+
+  window.__lastDiag = {
+    fecha: new Date().toISOString(), version: 'r31',
+    simbolos_analizados: analyzed, operaciones_totales: G.all.n,
+    wr_base: wr(G.all), pnl_medio_op: avgPnl,
+    range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
+    tendencia_ema200: { contra_wr: wr(G.trendBlocked), contra_n: G.trendBlocked.n, favor_wr: wr(G.trendKept), favor_n: G.trendKept.n },
+    por_senal: Object.fromEntries(Object.entries(G.bySig).map(([s,g])=>[s,{wr:wr(g),n:g.n}])),
+    stop_mae: { ganadoras_cortadas_pct: G.winnersTotal?Math.round(G.winnersStoppedByMae/G.winnersTotal*100):null, mae_p75_medio: G.maeWinners.length?+(G.maeWinners.reduce((a,b)=>a+b,0)/G.maeWinners.length).toFixed(2):null },
+    conclusiones: concl.map(c=>c.replace(/<[^>]+>/g,''))
+  };
+
+  content.innerHTML = `
+  <div style="max-width:920px;margin:0 auto;padding:20px">
+    <h2 style="font-family:var(--f-display);font-size:22px;margin:0 0 4px">🔬 Diagnóstico de la operativa</h2>
+    <p style="color:var(--sub);font-size:13px;margin:0 0 18px">Analizadas <b>${analyzed}</b> acciones · <b>${G.all.n}</b> operaciones históricas posibles. Medido con stop estructural base, sin filtros, para ver el efecto REAL de cada uno.</p>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <tr style="color:var(--sub);font-size:11px;text-transform:uppercase;letter-spacing:.04em">
+          <td style="padding:7px 10px">Factor</td><td style="padding:7px 10px;text-align:right">Win Rate</td><td style="padding:7px 10px">Lectura</td></tr>
+        ${row('Base (todas las operaciones)', G.all, `PnL medio ${avgPnl}%`)}
+        ${row('RO bloquearía estas', G.roBlocked, 'si su WR es alto, el RO estorba')}
+        ${row('RO deja pasar estas', G.roKept, 'lo que sí operarías con RO')}
+        ${row('Contra tendencia (EMA200)', G.trendBlocked, '')}
+        ${row('A favor de tendencia', G.trendKept, '')}
+        ${row('LONG', G.bySig.LONG, '')}
+        ${row('SHORT', G.bySig.SHORT, '')}
+        ${row('RANGE_LONG', G.bySig.RANGE_LONG, '')}
+        ${row('RANGE_SHORT', G.bySig.RANGE_SHORT, '')}
+      </table>
+    </div>
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 10px">Conclusiones</h3>
+    <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px">
+      ${concl.map(c=>`<div style="background:var(--card);border:1px solid var(--rule2);border-left:3px solid var(--sapphire);border-radius:8px;padding:11px 14px;font-size:13px;line-height:1.5">${c}</div>`).join('')}
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="copyDiagnosis()" style="padding:10px 18px;border:1px solid var(--sapphire);background:var(--sapphire);color:#fff;border-radius:9px;cursor:pointer;font-family:var(--f-mono);font-size:12px;font-weight:600">📋 Copiar diagnóstico</button>
+      <button onclick="renderPanel()" style="padding:10px 18px;border:1px solid var(--rule2);background:transparent;color:var(--sub);border-radius:9px;cursor:pointer;font-family:var(--f-mono);font-size:12px">← Volver a la tabla</button>
+    </div>
+    <p style="color:var(--sub);font-size:11px;margin-top:14px;line-height:1.5">💡 Pulsa "Copiar diagnóstico", pégamelo en el chat y te digo exactamente qué ajustar, con datos.</p>
+  </div>`;
+}
+
+function copyDiagnosis() {
+  const txt = JSON.stringify(window.__lastDiag || {}, null, 2);
+  const ev = window.event;
+  navigator.clipboard?.writeText(txt).then(
+    () => { if(ev&&ev.target){ const b=ev.target, o=b.textContent; b.textContent='✅ Copiado'; setTimeout(()=>b.textContent=o,1500);} },
+    () => prompt('Copia este diagnóstico:', txt)
+  );
 }
 
 function renderPanel() {
