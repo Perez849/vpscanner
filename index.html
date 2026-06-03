@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v35</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r35 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v36</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r36 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -2025,6 +2025,15 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
       const isLong = dir === 'LONG' || dir === 'RANGE_LONG';
       const roWouldBlock = (isLong && roDn) || (!isLong && roUp);
       const trendAgainst = (isLong && tb < 0) || (!isLong && tb > 0);
+      // Distancia del precio al borde del VA cruzado, en % (para LONG/SHORT).
+      // Hipótesis: un LONG que entra MUY por debajo del VAL es un cuchillo
+      // cayendo y falla más que uno que apenas lo perdió.
+      let distEdge = null;
+      if (dir === 'LONG')  distEdge = (val - close) / close * 100;
+      if (dir === 'SHORT') distEdge = (close - vah) / close * 100;
+      // Score de confluencia (si está disponible)
+      let scoreVal = null;
+      try { const cf = calcConfluences(dfTo, vp, close, {...probe, signal:dir}); scoreVal = cf?.score ?? null; } catch(e){}
 
       // Resolver el resultado con stop estructural (medida base, sin MAE)
       const minStop = isLong ? close*(1-MIN_RISK_PCT/100) : close*(1+MIN_RISK_PCT/100);
@@ -2050,7 +2059,7 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
       }
       const gross = isLong ? (exitPrice-close)/close*100 : (close-exitPrice)/close*100;
       const pnl = +(gross - COST).toFixed(3);
-      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2), roOscAbs,
+      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2), roOscAbs, distEdge, scoreVal,
                  win: pnl>0, pnl, barsHeld, score: probe.diagScore ?? null });
       lastExit = i + (barsHeld||1);
     }
@@ -2134,9 +2143,24 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
     extrema: statFull(longOsc.filter(t=>t.roOscAbs >= 70))
   };
 
+  // ── ANÁLISIS PROFUNDO DE LOS LONG (donde está la rentabilidad) ──
+  // ¿Qué separa los LONG ganadores de los perdedores? Cruzamos por distancia al
+  // VAL (cuchillo cayendo vs pullback suave) y por score de confluencia.
+  const longs = all.filter(t=>t.dir==='LONG');
+  const longByDist = {
+    cerca:  statFull(longs.filter(t=>t.distEdge!=null && t.distEdge < 3)),    // <3% bajo el VAL
+    medio:  statFull(longs.filter(t=>t.distEdge!=null && t.distEdge >= 3 && t.distEdge < 8)),
+    lejos:  statFull(longs.filter(t=>t.distEdge!=null && t.distEdge >= 8))     // muy caído
+  };
+  const longByScore = {
+    bajo:  statFull(longs.filter(t=>t.scoreVal!=null && t.scoreVal < 4)),
+    medio: statFull(longs.filter(t=>t.scoreVal!=null && t.scoreVal >= 4 && t.scoreVal < 6)),
+    alto:  statFull(longs.filter(t=>t.scoreVal!=null && t.scoreVal >= 6))
+  };
+
   return {
     total: all.length, base, roBlocked, roKept, trendBlocked, trendKept, bySig,
-    deepBySig, maeBySig, oscZones, oscZonesLong,
+    deepBySig, maeBySig, oscZones, oscZonesLong, longByDist, longByScore,
     maeP75, maeStopPct, winnersStoppedByMae, winnersTotal: winners.length
   };
 }
@@ -4021,6 +4045,8 @@ function runDiagnosisPanel() {
   // Acumuladores de zonas del oscilador (todas las señales de borde, y solo LONG)
   const OZ = { suave:deepAcc(), media:deepAcc(), extrema:deepAcc() };
   const OZL = { suave:deepAcc(), media:deepAcc(), extrema:deepAcc() };
+  const LD = { cerca:deepAcc(), medio:deepAcc(), lejos:deepAcc() };   // LONG por distancia al VAL
+  const LS = { bajo:deepAcc(), medio:deepAcc(), alto:deepAcc() };     // LONG por score
   const addDeep = (dst, src) => {
     if (!src || !src.n) return;
     dst.n += src.n;
@@ -4056,6 +4082,8 @@ function runDiagnosisPanel() {
     if (d.maeBySig) for (const s in maeBySigAcc) if (d.maeBySig[s]!=null) maeBySigAcc[s].push(d.maeBySig[s]);
     if (d.oscZones) for (const z in OZ) addDeep(OZ[z], d.oscZones[z]);
     if (d.oscZonesLong) for (const z in OZL) addDeep(OZL[z], d.oscZonesLong[z]);
+    if (d.longByDist) for (const z in LD) addDeep(LD[z], d.longByDist[z]);
+    if (d.longByScore) for (const z in LS) addDeep(LS[z], d.longByScore[z]);
   }
   // Reducir el acumulador profundo a métricas legibles
   const deepFinal = {};
@@ -4078,6 +4106,8 @@ function runDiagnosisPanel() {
     avgWin:a.winN?+(a.winPnl/a.winN).toFixed(2):null } : { n:0, wr:null, pnl:null };
   const oscFinal = { suave:reduceZone(OZ.suave), media:reduceZone(OZ.media), extrema:reduceZone(OZ.extrema) };
   const oscLongFinal = { suave:reduceZone(OZL.suave), media:reduceZone(OZL.media), extrema:reduceZone(OZL.extrema) };
+  const longDistFinal = { cerca:reduceZone(LD.cerca), medio:reduceZone(LD.medio), lejos:reduceZone(LD.lejos) };
+  const longScoreFinal = { bajo:reduceZone(LS.bajo), medio:reduceZone(LS.medio), alto:reduceZone(LS.alto) };
 
   const wr = g => g.n ? Math.round(g.w/g.n*100) : null;
   const fmt = g => g.n ? `${wr(g)}% <span style="color:var(--sub)">(${g.n} ops)</span>` : '—';
@@ -4136,6 +4166,24 @@ function runDiagnosisPanel() {
     else
       concl.push(`➖ El grado del oscilador apenas discrimina (extrema ${ext.wr}% vs suave ${sua.wr}%). Mejor usarlo solo como filtro binario (rompe/no rompe), como ahora.`);
   }
+  // LONG por distancia al VAL — ¿los "cuchillos cayendo" fallan más?
+  if (longDistFinal.cerca.n >= 15 && longDistFinal.lejos.n >= 15) {
+    const ce = longDistFinal.cerca, le = longDistFinal.lejos;
+    if (ce.wr > le.wr + 6)
+      concl.push(`🔪 <b>Los LONG mejoran si entras CERCA del VAL.</b> LONG que apenas perdió el VAL (<3%): ${ce.wr}% WR, PnL ${ce.pnl}%. LONG muy caído (>8% bajo VAL): ${le.wr}% WR, PnL ${le.pnl}%. Recomendación: <b>priorizar LONG cerca del VAL</b> y desconfiar de los cuchillos cayendo.`);
+    else if (le.pnl > ce.pnl + 2)
+      concl.push(`📐 Los LONG muy caídos (>8% bajo VAL) aciertan menos (${le.wr}%) pero cuando pegan dan más PnL (${le.pnl}% vs ${ce.pnl}%). Es el clásico rebote violento. Mantenerlos, no penalizarlos.`);
+    else
+      concl.push(`➖ La distancia al VAL no separa claramente los LONG (cerca ${ce.wr}% vs lejos ${le.wr}%).`);
+  }
+  // LONG por score
+  if (longScoreFinal.alto.n >= 15 && longScoreFinal.bajo.n >= 15) {
+    const hi = longScoreFinal.alto, lo = longScoreFinal.bajo;
+    if (hi.wr > lo.wr + 6 || hi.pnl > lo.pnl + 2)
+      concl.push(`⭐ <b>El score SÍ separa los LONG buenos.</b> LONG con score alto (≥6): ${hi.wr}% WR, PnL ${hi.pnl}%. Score bajo (<4): ${lo.wr}% WR, PnL ${lo.pnl}%. Recomendación: <b>exigir score mínimo a los LONG</b>.`);
+    else
+      concl.push(`➖ El score no separa bien los LONG (alto ${hi.wr}% vs bajo ${lo.wr}%).`);
+  }
 
   const row = (label, g, hint='') => `<tr>
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2)">${label}</td>
@@ -4143,7 +4191,7 @@ function runDiagnosisPanel() {
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);color:var(--sub);font-size:11px">${hint}</td></tr>`;
 
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r35',
+    fecha: new Date().toISOString(), version: 'r36',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
@@ -4154,6 +4202,8 @@ function runDiagnosisPanel() {
     mae_por_senal: maeBySigFinal,
     oscilador_por_zona: oscFinal,
     oscilador_zona_LONG: oscLongFinal,
+    long_por_distancia_VAL: longDistFinal,
+    long_por_score: longScoreFinal,
     conclusiones: concl.map(c=>c.replace(/<[^>]+>/g,''))
   };
 
@@ -4214,6 +4264,33 @@ function runDiagnosisPanel() {
           return `<tr><td style="padding:6px 8px">${lbl}</td>
             <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
             <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>
+
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 4px">🎯 Análisis de los LONG (la mina de oro)</h3>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 10px">Los LONG dan +9-10%/op pero aciertan poco. ¿Qué los separa? Por distancia al VAL (cuchillo cayendo vs pullback) y por score de confluencia.</p>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:520px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
+          <td style="padding:6px 8px">Grupo de LONG</td><td style="padding:6px 8px;text-align:right">WR</td>
+          <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">Gan media</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${[['Cerca del VAL (<3%)','cerca'],['Medio (3-8%)','medio'],['Muy caído (>8%)','lejos']].map(([lbl,k])=>{
+          const g=longDistFinal[k]; if(!g||!g.n) return '';
+          return `<tr><td style="padding:6px 8px">${lbl}</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--emerald)">${g.avgWin!=null?'+'+g.avgWin+'%':'—'}</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`;
+        }).join('')}
+        <tr><td colspan="5" style="padding:3px 8px;border-top:1px solid var(--rule2)"></td></tr>
+        ${[['Score bajo (<4)','bajo'],['Score medio (4-6)','medio'],['Score alto (≥6)','alto']].map(([lbl,k])=>{
+          const g=longScoreFinal[k]; if(!g||!g.n) return '';
+          return `<tr><td style="padding:6px 8px">${lbl}</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--emerald)">${g.avgWin!=null?'+'+g.avgWin+'%':'—'}</td>
             <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`;
         }).join('')}
       </table>
