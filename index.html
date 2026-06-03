@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v29</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r29 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v30</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r30 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1384,7 +1384,7 @@ function calcVP(bars, nRows = 25, vaPct = 0.68) {
 const MIN_RISK_PCT = 1.5;   // riesgo mínimo por operación (%)
 const MAX_RISK_PCT = 8.0;   // riesgo máximo por operación (%) — swing acciones
 
-function classifySignal(close, vp, df) {
+function classifySignal(close, vp, df, maeStopPct = null) {
   const { pocPrice:poc, vahPrice:vah, valPrice:val,
           priceHigh:ph, priceLow:pl, priceStep:step } = vp;
 
@@ -1481,11 +1481,21 @@ function classifySignal(close, vp, df) {
   // rompe al alza; un LONG (esperas que suba) se bloquea si rompe a la baja.
   // Romper el rango = el movimiento es tendencia, no reversión → no te pongas
   // delante del tren. Si está en rango o rompe a tu favor, la señal sale normal.
+
+  // Stop: si nos pasan maeStopPct (retroceso real del activo), el stop se coloca
+  // a ESA distancia de la entrada — el dato manda sobre la estructura. Si no, se
+  // usa el stop estructural (ancho del VA) con cap al MAX_RISK_PCT.
+  const stopFromMae = (entry, isLong) => {
+    if (maeStopPct == null) return null;
+    const d = entry * (maeStopPct/100);
+    return isLong ? entry - d : entry + d;
+  };
+
   if (close > vah + buf && !roBreakUp) {
     const rawStop = vah + vaW * .25;
     const minStop = close * (1 + MIN_RISK_PCT/100);
     const maxStop = close * (1 + MAX_RISK_PCT/100);
-    const stop = Math.min(Math.max(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, false) ?? Math.min(Math.max(rawStop, minStop), maxStop);
     sig = {...sig, signal:'SHORT', label:'Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step * 2,
       scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
@@ -1493,7 +1503,7 @@ function classifySignal(close, vp, df) {
     const rawStop = val - vaW * .25;
     const minStop = close * (1 - MIN_RISK_PCT/100);
     const maxStop = close * (1 - MAX_RISK_PCT/100);
-    const stop = Math.max(Math.min(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, true) ?? Math.max(Math.min(rawStop, minStop), maxStop);
     sig = {...sig, signal:'LONG', label:'Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
       scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA). Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
@@ -1501,7 +1511,7 @@ function classifySignal(close, vp, df) {
     const rawStop = val - vaW * 0.15;
     const minStop = close * (1 - MIN_RISK_PCT/100);
     const maxStop = close * (1 - MAX_RISK_PCT/100);
-    const stop = Math.max(Math.min(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, true) ?? Math.max(Math.min(rawStop, minStop), maxStop);
     sig = {...sig, signal:'RANGE_LONG', label:'Range Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step,
       scenario:'Dentro del VA bajo el PoC. Sesgo alcista hacia el PoC.'};
@@ -1509,7 +1519,7 @@ function classifySignal(close, vp, df) {
     const rawStop = vah + vaW * 0.15;
     const minStop = close * (1 + MIN_RISK_PCT/100);
     const maxStop = close * (1 + MAX_RISK_PCT/100);
-    const stop = Math.min(Math.max(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, false) ?? Math.min(Math.max(rawStop, minStop), maxStop);
     sig = {...sig, signal:'RANGE_SHORT', label:'Range Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step,
       scenario:'Dentro del VA sobre el PoC. Sesgo bajista hacia el PoC.'};
@@ -1589,7 +1599,7 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
 
   // Procesa UNA entrada en la barra `entryI` con el perfil `vp` dado. Devuelve
   // true si registró un trade. Contiene toda la lógica de resolución honesta.
-  function processEntry(entryI, vp) {
+  function processEntry(entryI, vp, maeStopPct = null) {
     if (entryI >= df.length) return false;
     // Necesitamos al menos unas pocas velas futuras para que la operación pueda
     // resolverse de forma realista. Sin ellas, sería un trade "fantasma" que
@@ -1598,7 +1608,7 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     if (entryI + 3 >= df.length) return false;
     const entryClose = df[entryI].close;
     const dfUpToEntry = df.slice(0, entryI + 1);
-    const sig = classifySignal(entryClose, vp, dfUpToEntry);
+    const sig = classifySignal(entryClose, vp, dfUpToEntry, maeStopPct);
     if (sig.signal === 'NEUTRAL' || !sig.stop || !sig.target) return false;
     const rr = parseFloat(sig.rr);
     // El backtest mide TODO lo que la estrategia genera, sin filtrar por RR. En
@@ -1736,32 +1746,50 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     return true;
   }
 
-  // ── DETECCIÓN DE ENTRADAS — MISMA LÓGICA QUE EL VIVO ──────
-  // El backtest prueba classifySignal en CADA vela del segmento. Como
-  // classifySignal ya contiene toda la lógica de entrada (cruce de borde hacia
-  // dentro + rebote en PoC, mirando la vela previa), el backtest registra
-  // exactamente los mismos eventos que verías en vivo. Así no hay desajuste
-  // entre lo que el histórico mide y lo que el escáner muestra. No se solapan
-  // operaciones: una nueva entrada solo tras cerrar la anterior.
-  let lastExitBar = -1;
-  for (const seg of testSegs) {
-    const segStart = seg.startI, segEnd = Math.min(seg.endI, df.length - 2);
-    if (segEnd - segStart < 3) continue;
-    const vp = calcVP(seg.slice && seg.slice.length >= 10 ? seg.slice : df.slice(segStart, segEnd + 1), nRows, vaPct);
-    if (!vp) continue;
-
-    for (let i = segStart + 1; i <= segEnd; i++) {
-      const entryI = i;   // la señal se evalúa con el cierre de la vela i
-      if (entryI <= lastExitBar || entryI + 3 >= df.length) continue;
-      // classifySignal mira df[0..i] (incluye la vela previa para cruce/rebote)
-      const probe = classifySignal(df[i].close, vp, df.slice(0, i + 1));
-      if (probe.signal === 'NEUTRAL' || !probe.stop || !probe.target) continue;
-      const ok = processEntry(entryI, vp);
-      if (ok) {
-        const last = trades[trades.length - 1];
-        lastExitBar = entryI + (last.barsToRes || 1);
+  // ── DETECCIÓN DE ENTRADAS — DOS FASES ─────────────────────
+  // FASE 1: corre el backtest con stops estructurales para MEDIR cuánto retrocede
+  // de media una ganadora (MAE p75). FASE 2: vuelve a correrlo aplicando un stop
+  // colocado a esa distancia real + margen. Así las estadísticas reflejan el
+  // MISMO stop ajustado que verás en las alertas, y no el estructural al 8%.
+  // Esto arregla el problema de "el dato dice 1.5% pero pierdo 7%".
+  function runPass(maeStopPct) {
+    trades.length = 0; _allScores.length = 0;
+    let lastExitBar = -1;
+    for (const seg of testSegs) {
+      const segStart = seg.startI, segEnd = Math.min(seg.endI, df.length - 2);
+      if (segEnd - segStart < 3) continue;
+      const vp = calcVP(seg.slice && seg.slice.length >= 10 ? seg.slice : df.slice(segStart, segEnd + 1), nRows, vaPct);
+      if (!vp) continue;
+      for (let i = segStart + 1; i <= segEnd; i++) {
+        const entryI = i;
+        if (entryI <= lastExitBar || entryI + 3 >= df.length) continue;
+        const probe = classifySignal(df[i].close, vp, df.slice(0, i + 1), maeStopPct);
+        if (probe.signal === 'NEUTRAL' || !probe.stop || !probe.target) continue;
+        const ok = processEntry(entryI, vp, maeStopPct);
+        if (ok) {
+          const last = trades[trades.length - 1];
+          lastExitBar = entryI + (last.barsToRes || 1);
+        }
       }
     }
+  }
+
+  // FASE 1 — medir el retroceso real de las ganadoras
+  runPass(null);
+  let maeP75Phase1 = null;
+  {
+    const wd = trades.filter(t=>t.outcome==='win' && t.maxDrawdown!==null).map(t=>t.maxDrawdown);
+    if (wd.length >= 6) {
+      const s = wd.slice().sort((a,b)=>a-b);
+      maeP75Phase1 = +s[Math.min(s.length-1, Math.floor(s.length*0.75))].toFixed(2);
+    }
+  }
+  // FASE 2 — si hay MAE fiable, reejecutar con el stop ajustado (p75 ×1.2,
+  // piso 1.5%, tope 5%). Si no, nos quedamos con la pasada estructural.
+  let appliedMaeStop = null;
+  if (maeP75Phase1 != null) {
+    appliedMaeStop = Math.min(Math.max(maeP75Phase1 * 1.2, 1.5), 5.0);
+    runPass(appliedMaeStop);
   }
 
   const total = trades.length;
@@ -1824,12 +1852,10 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
   // el stop de futuras alertas: cubre 3 de cada 4 ganadoras, así el precio puede
   // retroceder lo normal sin sacarte, pero si va más allá de lo habitual, sales.
   // Requiere muestra suficiente (≥6 ganadoras) para ser fiable.
-  let maeP75Win = null;
-  if (winDrawdowns.length >= 6) {
-    const sorted = winDrawdowns.map(t=>t.maxDrawdown).sort((a,b)=>a-b);
-    const idx = Math.min(sorted.length-1, Math.floor(sorted.length * 0.75));
-    maeP75Win = +sorted[idx].toFixed(2);
-  }
+  // El MAE reportado es el de la FASE 1 (retroceso real medido con stops amplios,
+  // el dato honesto de cuánto retrocede una ganadora). appliedMaeStop es la
+  // distancia de stop que de hecho se ha usado en la fase 2 y que usará el vivo.
+  const maeP75Win = maeP75Phase1;
 
   // Score correlation (sobre resultado financiero neto)
   const hiScore = trades.filter(t=>t.score>=6);
@@ -1900,7 +1926,7 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     total, wins, losses, timeouts, wr, wrLevel, avgRR, realizedRR, avgWinPnl, avgLossPnl,
     avgPnl, totalPnl, compoundPnl, expectancy,
     t2HitRate, avgPnl5050, totalPnl5050,
-    avgBarsToRes, avgDrawdownWin, maeP75Win,
+    avgBarsToRes, avgDrawdownWin, maeP75Win, appliedMaeStop,
     costPerTrade: COST_ROUNDTRIP_PCT,
     hiScoreWR:hiWR, loScoreWR:loWR, scoreCorrPct, scoreCorrLabel, byScore,
     bySig, oldWR, recentWR, oos,
@@ -2232,33 +2258,15 @@ async function scanSymbol(sym, retries = 2) {
       if (!vp) continue;
 
       const close = df[df.length - 1].close;
-      const sig   = classifySignal(close, vp, devSlice);
-      const conf  = calcConfluences(df, vp, close, sig);
       const bt    = runBacktest(df, segs, pivLen, nRows, vaPct);
-
-      // ── STOP CALIBRADO POR EL RETROCESO HISTÓRICO (MAE) ───────
-      // Si hay muestra fiable, recolocamos el stop de la señal VIVA usando
-      // cuánto suele retroceder una ganadora en ESTE activo (percentil 75 del
-      // MAE) + un margen ×1.2, para no quedar justo en el borde. Así el stop se
-      // adapta al comportamiento real del valor y se va ajustando solo a medida
-      // que el histórico crece. Tope de seguridad al 5%, piso al 1.5%.
-      // No hay circularidad: el backtest ya midió el MAE con su propia lógica;
-      // aquí solo lo APLICAMOS a la alerta que vas a ver.
-      if (sig && sig.signal !== 'NEUTRAL' && sig.stop != null && bt && bt.maeP75Win != null) {
-        const isLong = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
-        let stopPct = bt.maeP75Win * 1.2;               // retroceso típico + margen
-        stopPct = Math.min(Math.max(stopPct, 1.5), 5.0); // piso 1.5%, tope 5%
-        const calibratedStop = isLong ? close * (1 - stopPct/100) : close * (1 + stopPct/100);
-        // Solo lo aplicamos si MEJORA (acerca) el stop respecto al estructural;
-        // nunca lo alejamos más de lo que ya estaba.
-        if (isLong  && calibratedStop > sig.stop) { sig.stop = +calibratedStop.toFixed(4); sig.stopSource = 'MAE'; }
-        if (!isLong && calibratedStop < sig.stop) { sig.stop = +calibratedStop.toFixed(4); sig.stopSource = 'MAE'; }
-        // Recalcular RR con el stop nuevo
-        if (sig.target) {
-          const risk = Math.abs(close - sig.stop), reward = Math.abs(sig.target - close);
-          sig.rr = risk > 0 ? +(reward / risk).toFixed(2) : sig.rr;
-        }
-      }
+      // La señal viva se calcula con el MISMO stop ajustado que usó el backtest
+      // (appliedMaeStop = retroceso real p75 ×1.2, capado a 5%). Así lo que ves
+      // en la alerta y lo que mide el histórico son idénticos: si el dato dice
+      // que el retroceso típico es 1.5%, el stop será ~2%, no el 7-8% de antes.
+      const maeStop = (bt && bt.appliedMaeStop != null) ? bt.appliedMaeStop : null;
+      const sig   = classifySignal(close, vp, devSlice, maeStop);
+      if (maeStop != null && sig.signal !== 'NEUTRAL') sig.stopSource = 'MAE';
+      const conf  = calcConfluences(df, vp, close, sig);
 
       result[tfKey] = { df, vp, sig, conf, close, segs, bt, devSlice,
                         signalStartTs: devSlice[0]?.ts ?? df[last.endI]?.ts ?? Date.now() };
