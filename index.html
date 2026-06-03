@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v28</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r28 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v29</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r29 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1429,20 +1429,42 @@ function classifySignal(close, vp, df) {
     }
     if (count > 0) atr = sumTR / count;
   }
+
+  // ── RANGE OSCILLATOR (Zeiierman) — detección de RANGO vs RUPTURA ──
+  // Portado del indicador de Pine. Calcula una media ponderada por volatilidad
+  // (da más peso a las velas con cambios grandes) y mide si el precio ROMPE
+  // fuera del rango ATR. Lo usamos como FILTRO DURO: si el precio está rompiendo
+  // en CONTRA de la reversión esperada, la señal no es fiable (es tendencia, no
+  // reversión) y se bloquea. Evita ponerse en contra de un movimiento fuerte.
+  let roBreakUp = false, roBreakDn = false;
+  if (df && df.length >= 50) {
+    const roLen = Math.min(50, df.length - 1);
+    const atrRaw = atr || 0;
+    const rangeATR = atrRaw * 2.0;   // mult=2.0 como en el original
+    // Media ponderada por volatilidad sobre las últimas roLen velas
+    let sumWC = 0, sumW = 0;
+    for (let i = 0; i < roLen; i++) {
+      const c0 = df[df.length-1-i].close;
+      const c1 = df[df.length-2-i].close;
+      if (c1 == null || c1 === 0) continue;
+      const w = Math.abs(c0 - c1) / c1;
+      sumWC += c0 * w; sumW += w;
+    }
+    const roMA = sumW !== 0 ? sumWC / sumW : null;
+    if (roMA != null && rangeATR > 0) {
+      // ¿El precio rompe el rango (deja de revertir, empieza a tender)?
+      roBreakUp = close > roMA + rangeATR;   // rompe al alza
+      roBreakDn = close < roMA - rangeATR;   // rompe a la baja
+    }
+  }
+
   let sig = {
     signal:'NEUTRAL', label:'En PoC — esperar', stop:null, target:null,
     target2:null, invalidation:null, rr:null, trendBias,
     scenario:'Precio en el PoC. Esperar ruptura del Value Area con volumen.'
   };
 
-  // RR mínimo exigido: el objetivo NO puede dar menos que esto respecto al
-  // riesgo. Si el nivel natural (PoC) queda demasiado cerca para el stop que
-  // toca, ampliamos el objetivo hasta cumplir el RR mínimo. Si para ello el
-  // objetivo tuviera que irse más allá del siguiente nivel estructural (VAH/VAL
-  // para los range, o el extremo del perfil), la operación no compensa y se
-  // descarta. Esto evita el sinsentido de arriesgar 8% para ganar 2%.
-  // Precio de la vela anterior — necesario para detectar CRUCES y REBOTES
-  // (no basta con dónde está hoy, hace falta de dónde viene).
+  // Precio de la vela anterior — necesario para detectar CRUCES y REBOTES.
   const prevClose = (df && df.length >= 2) ? df[df.length - 2].close : close;
 
   // ── DETECCIÓN DE ENTRADAS — LÓGICA ORIGINAL (la que funciona) ──
@@ -1454,7 +1476,12 @@ function classifySignal(close, vp, df) {
   // Objetivo SIEMPRE el PoC (ancla de volumen, lógica del Pine). El stop es
   // estructural (a 0.25× / 0.15× el ancho del VA del nivel) con mínimo 1.5% y
   // CAP al MAX_RISK_PCT (8%) para que no se descontrole en VA muy anchos.
-  if (close > vah + buf) {
+  // FILTRO DURO (Range Oscillator): una reversión NO se genera si el precio
+  // está rompiendo el rango EN CONTRA. Un SHORT (esperas que baje) se bloquea si
+  // rompe al alza; un LONG (esperas que suba) se bloquea si rompe a la baja.
+  // Romper el rango = el movimiento es tendencia, no reversión → no te pongas
+  // delante del tren. Si está en rango o rompe a tu favor, la señal sale normal.
+  if (close > vah + buf && !roBreakUp) {
     const rawStop = vah + vaW * .25;
     const minStop = close * (1 + MIN_RISK_PCT/100);
     const maxStop = close * (1 + MAX_RISK_PCT/100);
@@ -1462,7 +1489,7 @@ function classifySignal(close, vp, df) {
     sig = {...sig, signal:'SHORT', label:'Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step * 2,
       scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
-  } else if (close < val - buf) {
+  } else if (close < val - buf && !roBreakDn) {
     const rawStop = val - vaW * .25;
     const minStop = close * (1 - MIN_RISK_PCT/100);
     const maxStop = close * (1 - MAX_RISK_PCT/100);
