@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v33</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r33 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v34</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r34 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1437,7 +1437,7 @@ function classifySignal(close, vp, df, maeStopPct = null) {
   // fuera del rango ATR. Lo usamos como FILTRO DURO: si el precio está rompiendo
   // en CONTRA de la reversión esperada, la señal no es fiable (es tendencia, no
   // reversión) y se bloquea. Evita ponerse en contra de un movimiento fuerte.
-  let roBreakUp = false, roBreakDn = false;
+  let roBreakUp = false, roBreakDn = false, roOsc = null;
   if (df && df.length >= 50) {
     const roLen = Math.min(50, df.length - 1);
     const atrRaw = atr || 0;
@@ -1456,6 +1456,9 @@ function classifySignal(close, vp, df, maeStopPct = null) {
       // ¿El precio rompe el rango (deja de revertir, empieza a tender)?
       roBreakUp = close > roMA + rangeATR;   // rompe al alza
       roBreakDn = close < roMA - rangeATR;   // rompe a la baja
+      // Oscilador continuo: −100 (extremo bajo) a +100 (extremo alto). Mide cuán
+      // lejos del centro está el precio. Los extremos = reversión más probable.
+      roOsc = 100 * (close - roMA) / rangeATR;
     }
   }
 
@@ -1543,6 +1546,7 @@ function classifySignal(close, vp, df, maeStopPct = null) {
   // en el momento de la señal, para poder medir después qué filtro ayuda o no.
   sig.diagRoBreakUp = roBreakUp;
   sig.diagRoBreakDn = roBreakDn;
+  sig.diagRoOsc = roOsc;
   sig.diagTrendBias = trendBias;
   // ¿El Range Oscillator habría bloqueado esta dirección? (rompe en contra)
   const _isLongDir = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
@@ -2001,6 +2005,7 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
       // Recalcular flags con classifySignal (nos da RO y tendencia aunque bloquee)
       const probe = classifySignal(close, vp, dfTo);
       const roUp = probe.diagRoBreakUp, roDn = probe.diagRoBreakDn, tb = probe.diagTrendBias;
+      const roOscAbs = probe.diagRoOsc != null ? Math.abs(probe.diagRoOsc) : null;
       const isLong = dir === 'LONG' || dir === 'RANGE_LONG';
       const roWouldBlock = (isLong && roDn) || (!isLong && roUp);
       const trendAgainst = (isLong && tb < 0) || (!isLong && tb > 0);
@@ -2029,7 +2034,7 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
       }
       const gross = isLong ? (exitPrice-close)/close*100 : (close-exitPrice)/close*100;
       const pnl = +(gross - COST).toFixed(3);
-      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2),
+      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2), roOscAbs,
                  win: pnl>0, pnl, barsHeld, score: probe.diagScore ?? null });
       lastExit = i + (barsHeld||1);
     }
@@ -2094,9 +2099,28 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
     maeBySig[s] = w.length>=6 ? +w[Math.floor(w.length*0.75)].toFixed(2) : null;
   }
 
+  // ── ANÁLISIS DEL OSCILADOR POR ZONAS ──────────────────────
+  // ¿Acierta más una reversión cuando el precio está en un EXTREMO del rango
+  // (oscilador alto) que cuando apenas se ha movido del centro? Si los extremos
+  // ganan más, el valor del oscilador es información útil para afinar entradas.
+  // Solo para señales de borde (LONG/SHORT), que es donde la reversión cuenta.
+  const withOsc = all.filter(t=>t.roOscAbs != null);
+  const oscZones = {
+    suave:   statFull(withOsc.filter(t=>t.roOscAbs < 40)),
+    media:   statFull(withOsc.filter(t=>t.roOscAbs >= 40 && t.roOscAbs < 70)),
+    extrema: statFull(withOsc.filter(t=>t.roOscAbs >= 70))
+  };
+  // Lo mismo, pero solo LONG (el tipo más rentable)
+  const longOsc = all.filter(t=>t.roOscAbs != null && t.dir === 'LONG');
+  const oscZonesLong = {
+    suave:   statFull(longOsc.filter(t=>t.roOscAbs < 40)),
+    media:   statFull(longOsc.filter(t=>t.roOscAbs >= 40 && t.roOscAbs < 70)),
+    extrema: statFull(longOsc.filter(t=>t.roOscAbs >= 70))
+  };
+
   return {
     total: all.length, base, roBlocked, roKept, trendBlocked, trendKept, bySig,
-    deepBySig, maeBySig,
+    deepBySig, maeBySig, oscZones, oscZonesLong,
     maeP75, maeStopPct, winnersStoppedByMae, winnersTotal: winners.length
   };
 }
@@ -3978,6 +4002,9 @@ function runDiagnosisPanel() {
   for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT'])
     DG[s] = { overall:deepAcc(), trendFavor:deepAcc(), trendAgainst:deepAcc(), roFavor:deepAcc(), roBlocked:deepAcc(), cleanSetup:deepAcc() };
   const maeBySigAcc = { LONG:[], SHORT:[], RANGE_LONG:[], RANGE_SHORT:[] };
+  // Acumuladores de zonas del oscilador (todas las señales de borde, y solo LONG)
+  const OZ = { suave:deepAcc(), media:deepAcc(), extrema:deepAcc() };
+  const OZL = { suave:deepAcc(), media:deepAcc(), extrema:deepAcc() };
   const addDeep = (dst, src) => {
     if (!src || !src.n) return;
     dst.n += src.n;
@@ -4011,6 +4038,8 @@ function runDiagnosisPanel() {
       for (const v in DG[s]) addDeep(DG[s][v], src[v]);
     }
     if (d.maeBySig) for (const s in maeBySigAcc) if (d.maeBySig[s]!=null) maeBySigAcc[s].push(d.maeBySig[s]);
+    if (d.oscZones) for (const z in OZ) addDeep(OZ[z], d.oscZones[z]);
+    if (d.oscZonesLong) for (const z in OZL) addDeep(OZL[z], d.oscZonesLong[z]);
   }
   // Reducir el acumulador profundo a métricas legibles
   const deepFinal = {};
@@ -4029,6 +4058,10 @@ function runDiagnosisPanel() {
   }
   const maeBySigFinal = {};
   for (const s in maeBySigAcc) maeBySigFinal[s] = maeBySigAcc[s].length ? +(maeBySigAcc[s].reduce((a,b)=>a+b,0)/maeBySigAcc[s].length).toFixed(2) : null;
+  const reduceZone = a => a.n ? { n:a.n, wr:Math.round(a.wins/a.n*100), pnl:+(a.pnl/a.n).toFixed(2),
+    avgWin:a.winN?+(a.winPnl/a.winN).toFixed(2):null } : { n:0, wr:null, pnl:null };
+  const oscFinal = { suave:reduceZone(OZ.suave), media:reduceZone(OZ.media), extrema:reduceZone(OZ.extrema) };
+  const oscLongFinal = { suave:reduceZone(OZL.suave), media:reduceZone(OZL.media), extrema:reduceZone(OZL.extrema) };
 
   const wr = g => g.n ? Math.round(g.w/g.n*100) : null;
   const fmt = g => g.n ? `${wr(g)}% <span style="color:var(--sub)">(${g.n} ops)</span>` : '—';
@@ -4077,6 +4110,16 @@ function runDiagnosisPanel() {
     if (L.overall.avgWin > RL.overall.avgWin + 1)
       concl.push(`📏 Confirmado: los LONG capturan MÁS recorrido (+${L.overall.avgWin}% por ganadora, ${L.overall.avgBars} velas) que los RANGE_LONG (+${RL.overall.avgWin}%, ${RL.overall.avgBars} velas). Aunque acierten menos, valen más por operación — tiene sentido conservarlos.`);
   }
+  // ¿El GRADO del oscilador discrimina? Comparar extremo vs suave.
+  if (oscFinal.extrema.n >= 15 && oscFinal.suave.n >= 15) {
+    const ext = oscFinal.extrema, sua = oscFinal.suave;
+    if (ext.wr > sua.wr + 5 || ext.pnl > sua.pnl + 1)
+      concl.push(`🎯 <b>El GRADO del oscilador SÍ afina las entradas.</b> Señales en zona EXTREMA del rango: ${ext.wr}% WR / PnL ${ext.pnl}%. En zona SUAVE: ${sua.wr}% / ${sua.pnl}%. Recomendación: <b>dar más prioridad a las señales en extremos del oscilador</b> y ser más exigente con las suaves.`);
+    else if (sua.wr > ext.wr + 5)
+      concl.push(`🤔 Curiosamente, las señales en zona SUAVE del oscilador van mejor (${sua.wr}%) que en extrema (${ext.wr}%). El grado no ayuda como esperábamos.`);
+    else
+      concl.push(`➖ El grado del oscilador apenas discrimina (extrema ${ext.wr}% vs suave ${sua.wr}%). Mejor usarlo solo como filtro binario (rompe/no rompe), como ahora.`);
+  }
 
   const row = (label, g, hint='') => `<tr>
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2)">${label}</td>
@@ -4084,7 +4127,7 @@ function runDiagnosisPanel() {
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);color:var(--sub);font-size:11px">${hint}</td></tr>`;
 
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r33',
+    fecha: new Date().toISOString(), version: 'r34',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
@@ -4093,6 +4136,8 @@ function runDiagnosisPanel() {
     stop_mae: { ganadoras_cortadas_pct: G.winnersTotal?Math.round(G.winnersStoppedByMae/G.winnersTotal*100):null, mae_p75_medio: G.maeWinners.length?+(G.maeWinners.reduce((a,b)=>a+b,0)/G.maeWinners.length).toFixed(2):null },
     desglose_profundo: deepFinal,
     mae_por_senal: maeBySigFinal,
+    oscilador_por_zona: oscFinal,
+    oscilador_zona_LONG: oscLongFinal,
     conclusiones: concl.map(c=>c.replace(/<[^>]+>/g,''))
   };
 
@@ -4140,6 +4185,25 @@ function runDiagnosisPanel() {
         }).join('')}
       </table>
     </div>
+
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 4px">Oscilador: ¿afina las entradas?</h3>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 10px">Compara el resultado según cuán EXTREMO esté el precio en el rango (valor del oscilador). Si los extremos aciertan más, vale la pena priorizarlos.</p>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:520px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
+          <td style="padding:6px 8px">Zona oscilador</td><td style="padding:6px 8px;text-align:right">WR</td>
+          <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${[['Suave (|osc|<40)','suave'],['Media (40-70)','media'],['Extrema (>70)','extrema']].map(([lbl,k])=>{
+          const g=oscFinal[k]; if(!g||!g.n) return '';
+          return `<tr><td style="padding:6px 8px">${lbl}</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>
+
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 10px">Conclusiones</h3>
     <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px">
       ${concl.map(c=>`<div style="background:var(--card);border:1px solid var(--rule2);border-left:3px solid var(--sapphire);border-radius:8px;padding:11px 14px;font-size:13px;line-height:1.5">${c}</div>`).join('')}
     </div>
