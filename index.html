@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v27</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r27 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v28</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r28 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1793,6 +1793,16 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
   const avgDrawdownWin = winDrawdowns.length > 0
     ? +(winDrawdowns.reduce((a,t)=>a+t.maxDrawdown,0)/winDrawdowns.length).toFixed(1)
     : null;
+  // PERCENTIL 75 del retroceso de las ganadoras (MAE). Es la base para calibrar
+  // el stop de futuras alertas: cubre 3 de cada 4 ganadoras, así el precio puede
+  // retroceder lo normal sin sacarte, pero si va más allá de lo habitual, sales.
+  // Requiere muestra suficiente (≥6 ganadoras) para ser fiable.
+  let maeP75Win = null;
+  if (winDrawdowns.length >= 6) {
+    const sorted = winDrawdowns.map(t=>t.maxDrawdown).sort((a,b)=>a-b);
+    const idx = Math.min(sorted.length-1, Math.floor(sorted.length * 0.75));
+    maeP75Win = +sorted[idx].toFixed(2);
+  }
 
   // Score correlation (sobre resultado financiero neto)
   const hiScore = trades.filter(t=>t.score>=6);
@@ -1863,7 +1873,7 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     total, wins, losses, timeouts, wr, wrLevel, avgRR, realizedRR, avgWinPnl, avgLossPnl,
     avgPnl, totalPnl, compoundPnl, expectancy,
     t2HitRate, avgPnl5050, totalPnl5050,
-    avgBarsToRes, avgDrawdownWin,
+    avgBarsToRes, avgDrawdownWin, maeP75Win,
     costPerTrade: COST_ROUNDTRIP_PCT,
     hiScoreWR:hiWR, loScoreWR:loWR, scoreCorrPct, scoreCorrLabel, byScore,
     bySig, oldWR, recentWR, oos,
@@ -2198,6 +2208,30 @@ async function scanSymbol(sym, retries = 2) {
       const sig   = classifySignal(close, vp, devSlice);
       const conf  = calcConfluences(df, vp, close, sig);
       const bt    = runBacktest(df, segs, pivLen, nRows, vaPct);
+
+      // ── STOP CALIBRADO POR EL RETROCESO HISTÓRICO (MAE) ───────
+      // Si hay muestra fiable, recolocamos el stop de la señal VIVA usando
+      // cuánto suele retroceder una ganadora en ESTE activo (percentil 75 del
+      // MAE) + un margen ×1.2, para no quedar justo en el borde. Así el stop se
+      // adapta al comportamiento real del valor y se va ajustando solo a medida
+      // que el histórico crece. Tope de seguridad al 5%, piso al 1.5%.
+      // No hay circularidad: el backtest ya midió el MAE con su propia lógica;
+      // aquí solo lo APLICAMOS a la alerta que vas a ver.
+      if (sig && sig.signal !== 'NEUTRAL' && sig.stop != null && bt && bt.maeP75Win != null) {
+        const isLong = sig.signal === 'LONG' || sig.signal === 'RANGE_LONG';
+        let stopPct = bt.maeP75Win * 1.2;               // retroceso típico + margen
+        stopPct = Math.min(Math.max(stopPct, 1.5), 5.0); // piso 1.5%, tope 5%
+        const calibratedStop = isLong ? close * (1 - stopPct/100) : close * (1 + stopPct/100);
+        // Solo lo aplicamos si MEJORA (acerca) el stop respecto al estructural;
+        // nunca lo alejamos más de lo que ya estaba.
+        if (isLong  && calibratedStop > sig.stop) { sig.stop = +calibratedStop.toFixed(4); sig.stopSource = 'MAE'; }
+        if (!isLong && calibratedStop < sig.stop) { sig.stop = +calibratedStop.toFixed(4); sig.stopSource = 'MAE'; }
+        // Recalcular RR con el stop nuevo
+        if (sig.target) {
+          const risk = Math.abs(close - sig.stop), reward = Math.abs(sig.target - close);
+          sig.rr = risk > 0 ? +(reward / risk).toFixed(2) : sig.rr;
+        }
+      }
 
       result[tfKey] = { df, vp, sig, conf, close, segs, bt, devSlice,
                         signalStartTs: devSlice[0]?.ts ?? df[last.endI]?.ts ?? Date.now() };
