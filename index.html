@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r16 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r19 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1536,7 +1536,12 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     const sig = classifySignal(entryClose, vp, dfUpToEntry);
     if (sig.signal === 'NEUTRAL' || !sig.stop || !sig.target) return false;
     const rr = parseFloat(sig.rr);
-    if (!rr || rr < 0.3 || rr > 15) return false;
+    // RR mínimo 1:1 — coherente con el filtro en vivo. Una operación donde
+    // arriesgas más de lo que puedes ganar no se opera, así que tampoco debe
+    // contar en las estadísticas. Antes el mínimo era 0.3 (absurdamente bajo:
+    // dejaba pasar setups que arriesgaban 3x el objetivo), lo que metía en el
+    // backtest operaciones malas que tú nunca tomarías y ensuciaba el WR.
+    if (!rr || rr < 1.0 || rr > 15) return false;
     if (Math.abs(sig.target - entryClose) / entryClose < 0.005) return false;
 
     const conf  = calcConfluences(dfUpToEntry, vp, entryClose, sig);
@@ -3279,6 +3284,17 @@ function getFiltered() {
     } else {
       row.floatPnl = null;
     }
+    // RR COHERENTE CON LA ENTRADA REAL: el R:R se recalcula SIEMPRE desde el
+    // precio de entrada que el sistema marca (priceEntry), no desde el cierre
+    // actual de la vela. Antes el RR podía venir de un classifySignal posterior
+    // con un close distinto, mientras la entrada quedaba congelada → un RR que
+    // no correspondía a la entrada real (a menudo peor). Ahora cuadran siempre:
+    // el RR mide exactamente el recorrido/riesgo desde donde TÚ entras.
+    if (row.priceEntry != null && row.stop != null && row.t1 != null) {
+      const risk   = Math.abs(row.priceEntry - row.stop);
+      const reward = Math.abs(row.t1 - row.priceEntry);
+      row.rr = risk > 0 ? +(reward / risk).toFixed(2) : row.rr;
+    }
     row.close = row.priceNow;
   }
 
@@ -3310,7 +3326,33 @@ function getFiltered() {
       const targetDist = Math.abs(r.t1 - r.close) / r.close;
       if (targetDist < 0.005) return false;
     }
-    if (!r.tracked && r.rr && (parseFloat(r.rr) < 0.3 || parseFloat(r.rr) > 15)) return false;
+    // ── FILTRO DE VENTAJA MATEMÁTICA (expectancy) ─────────────
+    // Un objetivo cercano (+2%) con un stop lejano (−8%) es RR 1:0.25: pierdes
+    // 4x lo que ganas. Sin sentido. Pero el RR por sí solo no basta — lo que
+    // importa es la EXPECTANCY: WR×RR − (1−WR). Es la ganancia esperada por
+    // operación en unidades de riesgo. Si es ≤0, la operación pierde dinero a
+    // largo plazo aunque el RR "parezca" aceptable.
+    //   · Con WR histórico fiable (muestra ≥8): exigir expectancy > 0.
+    //   · Sin WR fiable: red de seguridad → RR mínimo 1:1 (nunca arriesgar más
+    //     de lo que puedes ganar) y descartar RR > 15 (datos anómalos).
+    // No se aplica a operaciones que YA tengas en seguimiento real (esas ya las
+    // decidiste tú y se siguen hasta su stop/target).
+    const alreadyOpen = r.tracked && r.trackerData && r.trackerData.status === 'active';
+    if (!alreadyOpen) {
+      const rrNum = parseFloat(r.rr);
+      if (!rrNum || rrNum > 15) return false;
+      const wr = r.bt?.wr;
+      const n  = r.bt?.total || 0;
+      if (wr != null && n >= 8) {
+        // Expectancy con WR real del valor
+        const p = wr / 100;
+        const expectancy = p * rrNum - (1 - p);
+        if (expectancy <= 0) return false;   // sin ventaja matemática → fuera
+      } else {
+        // Sin muestra fiable: exigir al menos RR 1:1
+        if (rrNum < 1.0) return false;
+      }
+    }
     return true;
   });
 
@@ -3708,11 +3750,16 @@ function renderPanel() {
 
       // ── Marcadores de seguimiento (usa los precios YA normalizados en la fila) ──
       const td = r.trackerData;
-      const isTracked = r.tracked && td;
-      const trackActive = isTracked && td.status === 'active';
+      // La chincheta marca que la señal está EN SEGUIMIENTO. Antes solo la
+      // llevaban las que tenían alerta guardada (cruce capturado), lo que hacía
+      // que unas filas activas la tuvieran y otras no, sin lógica aparente. Ahora
+      // es coherente: la lleva toda fila en seguimiento Y toda señal viva
+      // operable (con stop y objetivo válidos), porque de facto todas se siguen.
+      const isTracked = (r.tracked && td) || (r.liveToday && r.stop && r.t1 && r.sig !== 'NEUTRAL');
+      const trackActive = isTracked && (!td || td.status === 'active');
       const pin = `<span style="display:inline-block;width:14px;text-align:center;color:var(--sapphire)">${isTracked ? '📌' : ''}</span>`;
-      const stLabel = isTracked ? ({active:'● activa',hit_t1:'✅ T1',hit_t2:'🏆 T2',stopped:'❌ stop',expired:'⏳ exp'}[td.status]||td.status) : '';
-      const stColor = isTracked ? ({active:'var(--sapphire)',hit_t1:'var(--emerald)',hit_t2:'var(--emerald)',stopped:'var(--ember)',expired:'var(--dim)'}[td.status]||'var(--dim)') : '';
+      const stLabel = (isTracked && td) ? ({active:'● activa',hit_t1:'✅ T1',hit_t2:'🏆 T2',stopped:'❌ stop',expired:'⏳ exp'}[td.status]||td.status) : (isTracked ? '● activa' : '');
+      const stColor = (isTracked && td) ? ({active:'var(--sapphire)',hit_t1:'var(--emerald)',hit_t2:'var(--emerald)',stopped:'var(--ember)',expired:'var(--dim)'}[td.status]||'var(--dim)') : 'var(--sapphire)';
       // PRECIOS NORMALIZADOS (definidos una sola vez en getFiltered):
       const entryFrozen = r.priceEntry;     // FIJO de cuando saltó la alerta
       const priceNow    = r.priceNow;       // ACTUAL
