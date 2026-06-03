@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v31</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r31 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v32</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r32 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -2030,25 +2030,57 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
   };
 
   const base = stat(all);
-  // Impacto del Range Oscillator: comparar las que bloquea vs las que deja pasar
   const roBlocked = stat(all.filter(t=>t.roWouldBlock));
   const roKept    = stat(all.filter(t=>!t.roWouldBlock));
-  // Impacto del filtro de tendencia
   const trendBlocked = stat(all.filter(t=>t.trendAgainst));
   const trendKept    = stat(all.filter(t=>!t.trendAgainst));
-  // Por tipo de señal
   const bySig = {};
   for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']) bySig[s] = stat(all.filter(t=>t.dir===s));
-  // Análisis del stop por MAE: ¿cuántas ganadoras retrocedieron MÁS que el stop
-  // que pondría el MAE? (esas las sacaría antes de tiempo)
+
+  // ── DESGLOSE PROFUNDO POR TIPO DE SEÑAL ───────────────────
+  // stat ampliado: añade ganancia media de las GANADORAS (recorrido capturado)
+  // y la pérdida media de las perdedoras, para ver rentabilidad real, no solo WR.
+  const statFull = arr => {
+    if (!arr.length) return { n:0, wr:null, pnl:null, avgWin:null, avgLoss:null, expectancy:null, avgBars:null };
+    const wins = arr.filter(t=>t.win), losses = arr.filter(t=>!t.win);
+    const avgWin = wins.length ? +(wins.reduce((a,t)=>a+t.pnl,0)/wins.length).toFixed(2) : null;
+    const avgLoss = losses.length ? +(losses.reduce((a,t)=>a+t.pnl,0)/losses.length).toFixed(2) : null;
+    const pnl = +(arr.reduce((a,t)=>a+t.pnl,0)/arr.length).toFixed(2);
+    const avgBars = +(arr.reduce((a,t)=>a+t.barsHeld,0)/arr.length).toFixed(1);
+    return { n:arr.length, wr:Math.round(wins.length/arr.length*100), pnl, avgWin, avgLoss, expectancy:pnl, avgBars };
+  };
+
+  // Para cada tipo de señal, cruzar con tendencia y con RO
+  const deepBySig = {};
+  for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']) {
+    const sigArr = all.filter(t=>t.dir===s);
+    deepBySig[s] = {
+      overall:      statFull(sigArr),
+      trendFavor:   statFull(sigArr.filter(t=>!t.trendAgainst)),
+      trendAgainst: statFull(sigArr.filter(t=>t.trendAgainst)),
+      roFavor:      statFull(sigArr.filter(t=>!t.roWouldBlock)),
+      roBlocked:    statFull(sigArr.filter(t=>t.roWouldBlock)),
+      // Lo mejor de lo mejor: a favor de tendencia Y RO no bloquea
+      cleanSetup:   statFull(sigArr.filter(t=>!t.trendAgainst && !t.roWouldBlock))
+    };
+  }
+
+  // Análisis del stop por MAE
   const winners = all.filter(t=>t.win);
   const maeArr = winners.map(t=>t.mae).sort((a,b)=>a-b);
   const maeP75 = maeArr.length>=6 ? maeArr[Math.floor(maeArr.length*0.75)] : null;
   const maeStopPct = maeP75!=null ? Math.min(Math.max(maeP75*1.2,1.5),5.0) : null;
   const winnersStoppedByMae = maeStopPct!=null ? winners.filter(t=>t.mae > maeStopPct).length : null;
+  // MAE por tipo de señal (los LONG largos pueden necesitar más margen)
+  const maeBySig = {};
+  for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']) {
+    const w = all.filter(t=>t.dir===s && t.win).map(t=>t.mae).sort((a,b)=>a-b);
+    maeBySig[s] = w.length>=6 ? +w[Math.floor(w.length*0.75)].toFixed(2) : null;
+  }
 
   return {
     total: all.length, base, roBlocked, roKept, trendBlocked, trendKept, bySig,
+    deepBySig, maeBySig,
     maeP75, maeStopPct, winnersStoppedByMae, winnersTotal: winners.length
   };
 }
@@ -3909,6 +3941,23 @@ function runDiagnosisPanel() {
     bySig:{LONG:aggStat(),SHORT:aggStat(),RANGE_LONG:aggStat(),RANGE_SHORT:aggStat()},
     pnlSum:0, pnlN:0, winnersStoppedByMae:0, winnersTotal:0, maeWinners:[]
   };
+  // Acumulador profundo: para cada señal y cada variante, suma n, wins, pnlTotal,
+  // winPnlTotal, winN (para recorrido medio de ganadoras), barsTotal.
+  const deepAcc = () => ({ n:0, wins:0, pnl:0, winPnl:0, winN:0, lossPnl:0, lossN:0, bars:0 });
+  const DG = {};
+  for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT'])
+    DG[s] = { overall:deepAcc(), trendFavor:deepAcc(), trendAgainst:deepAcc(), roFavor:deepAcc(), roBlocked:deepAcc(), cleanSetup:deepAcc() };
+  const maeBySigAcc = { LONG:[], SHORT:[], RANGE_LONG:[], RANGE_SHORT:[] };
+  const addDeep = (dst, src) => {
+    if (!src || !src.n) return;
+    dst.n += src.n;
+    dst.wins += Math.round(src.wr/100*src.n);
+    dst.pnl += src.pnl * src.n;
+    if (src.avgWin!=null){ const wn=Math.round(src.wr/100*src.n); dst.winPnl += src.avgWin*wn; dst.winN += wn; }
+    if (src.avgLoss!=null){ const ln=src.n-Math.round(src.wr/100*src.n); dst.lossPnl += src.avgLoss*ln; dst.lossN += ln; }
+    if (src.avgBars!=null) dst.bars += src.avgBars * src.n;
+  };
+
   const pivLen = parseInt(document.querySelector('input[oninput*="vpl"]')?.value || 20);
   const nRows  = parseInt(document.querySelector('input[oninput*="vrows"]')?.value || 25);
   const vaPct  = parseInt(document.querySelector('input[oninput*="vva"]')?.value || 68) / 100;
@@ -3926,7 +3975,30 @@ function runDiagnosisPanel() {
     if (d.base && d.base.pnl!=null){ G.pnlSum += d.base.pnl*d.base.n; G.pnlN += d.base.n; }
     if (d.winnersStoppedByMae!=null){ G.winnersStoppedByMae += d.winnersStoppedByMae; G.winnersTotal += d.winnersTotal; }
     if (d.maeP75!=null) G.maeWinners.push(d.maeP75);
+    // Acumular desglose profundo
+    if (d.deepBySig) for (const s in DG) {
+      const src = d.deepBySig[s]; if (!src) continue;
+      for (const v in DG[s]) addDeep(DG[s][v], src[v]);
+    }
+    if (d.maeBySig) for (const s in maeBySigAcc) if (d.maeBySig[s]!=null) maeBySigAcc[s].push(d.maeBySig[s]);
   }
+  // Reducir el acumulador profundo a métricas legibles
+  const deepFinal = {};
+  for (const s in DG) {
+    deepFinal[s] = {};
+    for (const v in DG[s]) {
+      const a = DG[s][v];
+      deepFinal[s][v] = a.n ? {
+        n:a.n, wr:Math.round(a.wins/a.n*100),
+        pnl:+(a.pnl/a.n).toFixed(2),
+        avgWin:a.winN?+(a.winPnl/a.winN).toFixed(2):null,
+        avgLoss:a.lossN?+(a.lossPnl/a.lossN).toFixed(2):null,
+        avgBars:+(a.bars/a.n).toFixed(1)
+      } : { n:0, wr:null, pnl:null };
+    }
+  }
+  const maeBySigFinal = {};
+  for (const s in maeBySigAcc) maeBySigFinal[s] = maeBySigAcc[s].length ? +(maeBySigAcc[s].reduce((a,b)=>a+b,0)/maeBySigAcc[s].length).toFixed(2) : null;
 
   const wr = g => g.n ? Math.round(g.w/g.n*100) : null;
   const fmt = g => g.n ? `${wr(g)}% <span style="color:var(--sub)">(${g.n} ops)</span>` : '—';
@@ -3963,6 +4035,18 @@ function runDiagnosisPanel() {
     if (avgPnl < 0) concl.push(`🔴 El PnL medio por operación (sin filtros, stop estructural) es NEGATIVO (${avgPnl}%). La estrategia base necesita mejor selección o mejor R:R.`);
     else concl.push(`🟢 El PnL medio por operación base es ${avgPnl}%.`);
   }
+  // ¿Mejora el LONG si lo filtramos a "limpio" (a favor de tendencia)? ¿Y captura
+  // más recorrido que el RANGE? (la hipótesis de Daniel).
+  const L = deepFinal.LONG, RL = deepFinal.RANGE_LONG;
+  if (L && L.overall.n>=20 && L.cleanSetup.n>=10) {
+    const o=L.overall, c=L.cleanSetup;
+    if (c.wr > o.wr + 8) concl.push(`🎯 <b>Los LONG mejoran MUCHO filtrados.</b> El LONG en bruto acierta ${o.wr}%, pero el LONG LIMPIO (a favor de tendencia, sin ruptura en contra) sube a ${c.wr}% con ganancia media +${c.avgWin}%. <b>Recomendación: filtrar LONG contra-tendencia y conservar los limpios</b> — recuperas los LONG buenos sin la basura.`);
+    else concl.push(`➖ Filtrar los LONG por tendencia apenas mejora (${o.wr}%→${c.wr}%). El problema de los LONG no es solo la tendencia.`);
+  }
+  if (L && RL && L.overall.avgWin!=null && RL.overall.avgWin!=null) {
+    if (L.overall.avgWin > RL.overall.avgWin + 1)
+      concl.push(`📏 Confirmado: los LONG capturan MÁS recorrido (+${L.overall.avgWin}% por ganadora, ${L.overall.avgBars} velas) que los RANGE_LONG (+${RL.overall.avgWin}%, ${RL.overall.avgBars} velas). Aunque acierten menos, valen más por operación — tiene sentido conservarlos.`);
+  }
 
   const row = (label, g, hint='') => `<tr>
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2)">${label}</td>
@@ -3970,13 +4054,15 @@ function runDiagnosisPanel() {
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);color:var(--sub);font-size:11px">${hint}</td></tr>`;
 
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r31',
+    fecha: new Date().toISOString(), version: 'r32',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
     tendencia_ema200: { contra_wr: wr(G.trendBlocked), contra_n: G.trendBlocked.n, favor_wr: wr(G.trendKept), favor_n: G.trendKept.n },
     por_senal: Object.fromEntries(Object.entries(G.bySig).map(([s,g])=>[s,{wr:wr(g),n:g.n}])),
     stop_mae: { ganadoras_cortadas_pct: G.winnersTotal?Math.round(G.winnersStoppedByMae/G.winnersTotal*100):null, mae_p75_medio: G.maeWinners.length?+(G.maeWinners.reduce((a,b)=>a+b,0)/G.maeWinners.length).toFixed(2):null },
+    desglose_profundo: deepFinal,
+    mae_por_senal: maeBySigFinal,
     conclusiones: concl.map(c=>c.replace(/<[^>]+>/g,''))
   };
 
@@ -3999,7 +4085,31 @@ function runDiagnosisPanel() {
         ${row('RANGE_SHORT', G.bySig.RANGE_SHORT, '')}
       </table>
     </div>
-    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 10px">Conclusiones</h3>
+
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 4px">Desglose profundo por señal</h3>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 10px">WR = aciertos · Gan = ganancia media de las ganadoras (recorrido capturado) · Vel = velas que dura · "Limpio" = a favor de tendencia Y sin ruptura en contra.</p>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
+          <td style="padding:6px 8px">Señal / variante</td>
+          <td style="padding:6px 8px;text-align:right">WR</td>
+          <td style="padding:6px 8px;text-align:right">Gan media</td>
+          <td style="padding:6px 8px;text-align:right">PnL/op</td>
+          <td style="padding:6px 8px;text-align:right">Vel</td>
+          <td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${['LONG','SHORT','RANGE_LONG','RANGE_SHORT'].map(s=>{
+          const D=deepFinal[s]; if(!D) return '';
+          const r2=(lbl,g,strong)=>g&&g.n?`<tr style="${strong?'background:rgba(37,99,235,.05)':''}">
+            <td style="padding:6px 8px;${strong?'font-weight:600':'padding-left:20px;color:var(--sub)'}">${lbl}</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--emerald)">${g.avgWin!=null?'+'+g.avgWin+'%':'—'}</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.avgBars||'—'}</td>
+            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`:'';
+          return r2(s, D.overall, true)+r2('a favor tendencia', D.trendFavor)+r2('limpio (tend+RO)', D.cleanSetup);
+        }).join('')}
+      </table>
+    </div>
     <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px">
       ${concl.map(c=>`<div style="background:var(--card);border:1px solid var(--rule2);border-left:3px solid var(--sapphire);border-radius:8px;padding:11px 14px;font-size:13px;line-height:1.5">${c}</div>`).join('')}
     </div>
