@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r19 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r20 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1536,12 +1536,13 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     const sig = classifySignal(entryClose, vp, dfUpToEntry);
     if (sig.signal === 'NEUTRAL' || !sig.stop || !sig.target) return false;
     const rr = parseFloat(sig.rr);
-    // RR mínimo 1:1 — coherente con el filtro en vivo. Una operación donde
-    // arriesgas más de lo que puedes ganar no se opera, así que tampoco debe
-    // contar en las estadísticas. Antes el mínimo era 0.3 (absurdamente bajo:
-    // dejaba pasar setups que arriesgaban 3x el objetivo), lo que metía en el
-    // backtest operaciones malas que tú nunca tomarías y ensuciaba el WR.
-    if (!rr || rr < 1.0 || rr > 15) return false;
+    // El backtest mide TODO lo que la estrategia genera, sin filtrar por RR. En
+    // Volume Profile el objetivo (PoC) suele estar cerca y el stop más lejos, así
+    // que un RR bajo es lo NORMAL y, con WR alto, rentable (reversión a la media:
+    // aciertas mucho, ganas poco cada vez). Filtrar por RR aquí destruía la
+    // muestra y sesgaba el WR. Solo descartamos datos anómalos (RR nulo o >15) y
+    // objetivos pegados (<0.5%) que no son operables.
+    if (!rr || rr > 15) return false;
     if (Math.abs(sig.target - entryClose) / entryClose < 0.005) return false;
 
     const conf  = calcConfluences(dfUpToEntry, vp, entryClose, sig);
@@ -3327,16 +3328,16 @@ function getFiltered() {
       if (targetDist < 0.005) return false;
     }
     // ── FILTRO DE VENTAJA MATEMÁTICA (expectancy) ─────────────
-    // Un objetivo cercano (+2%) con un stop lejano (−8%) es RR 1:0.25: pierdes
-    // 4x lo que ganas. Sin sentido. Pero el RR por sí solo no basta — lo que
-    // importa es la EXPECTANCY: WR×RR − (1−WR). Es la ganancia esperada por
-    // operación en unidades de riesgo. Si es ≤0, la operación pierde dinero a
-    // largo plazo aunque el RR "parezca" aceptable.
-    //   · Con WR histórico fiable (muestra ≥8): exigir expectancy > 0.
-    //   · Sin WR fiable: red de seguridad → RR mínimo 1:1 (nunca arriesgar más
-    //     de lo que puedes ganar) y descartar RR > 15 (datos anómalos).
-    // No se aplica a operaciones que YA tengas en seguimiento real (esas ya las
-    // decidiste tú y se siguen hasta su stop/target).
+    // Lo que importa NO es el RR a secas, sino la expectancy: WR×RR − (1−WR).
+    // En Volume Profile el RR suele ser bajo (objetivo PoC cercano) pero con WR
+    // alto sale rentable — ese es el patrón bueno, no hay que penalizarlo.
+    //   · Con WR fiable (≥8 ops): descartar solo si la expectancy es NEGATIVA
+    //     (pierde dinero a largo plazo). Una expectancy positiva, por pequeña
+    //     que sea, es una operación con ventaja → se muestra.
+    //   · Sin WR fiable: somos permisivos (no penalizamos por RR bajo, que es
+    //     normal aquí); solo descartamos lo absurdo: RR < 0.5 (arriesgar más de
+    //     2x el objetivo sin datos que lo respalden) o RR anómalo > 15.
+    // No se aplica a operaciones que YA tengas en seguimiento real.
     const alreadyOpen = r.tracked && r.trackerData && r.trackerData.status === 'active';
     if (!alreadyOpen) {
       const rrNum = parseFloat(r.rr);
@@ -3344,13 +3345,11 @@ function getFiltered() {
       const wr = r.bt?.wr;
       const n  = r.bt?.total || 0;
       if (wr != null && n >= 8) {
-        // Expectancy con WR real del valor
         const p = wr / 100;
         const expectancy = p * rrNum - (1 - p);
-        if (expectancy <= 0) return false;   // sin ventaja matemática → fuera
+        if (expectancy < 0) return false;   // solo fuera si pierde dinero
       } else {
-        // Sin muestra fiable: exigir al menos RR 1:1
-        if (rrNum < 1.0) return false;
+        if (rrNum < 0.5) return false;      // sin datos: solo descartar lo absurdo
       }
     }
     return true;
