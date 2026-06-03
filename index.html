@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v38</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r38 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v39</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r39 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -2244,13 +2244,28 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
   const labRangeLong = lab(all.filter(t=>t.dir==='RANGE_LONG'));
   // Combos para LONG: pares de condiciones que juntas puedan disparar el WR
   const longArr = all.filter(t=>t.dir==='LONG');
+  const aFavor = t => !t.trendAgainst;   // a favor de tendencia
+  const frenando = t => t.ind?.accel > 0;
+  const rsiNeutro = t => t.ind?.rsi != null && t.ind.rsi >= 40 && t.ind.rsi <= 60;
+  const cercaVal = t => t.distEdge != null && t.distEdge < 3;
+  const verdes = t => t.ind?.greenStreak >= 2;
   const combos = {
-    'LONG muy caído + RSI<30':       longArr.filter(t=>t.distEdge>8 && t.ind?.rsi<30),
-    'LONG muy caído + vol>1.5x':     longArr.filter(t=>t.distEdge>8 && t.ind?.volRel>1.5),
-    'LONG muy caído + mecha>40%':    longArr.filter(t=>t.distEdge>8 && t.ind?.lowerWick>0.4),
-    'LONG muy caído + ≥2 verdes':    longArr.filter(t=>t.distEdge>8 && t.ind?.greenStreak>=2),
-    'LONG muy caído + accel>0':      longArr.filter(t=>t.distEdge>8 && t.ind?.accel>0),
-    'LONG + RSI<30 + vol>1.5x':      longArr.filter(t=>t.ind?.rsi<30 && t.ind?.volRel>1.5),
+    // — orientados a PnL (muy caído = bajo WR, alto pago) —
+    'caído + RSI<30':            longArr.filter(t=>t.distEdge>8 && t.ind?.rsi<30),
+    'caído + frenándose':        longArr.filter(t=>t.distEdge>8 && frenando(t)),
+    'caído + ≥2 verdes':         longArr.filter(t=>t.distEdge>8 && verdes(t)),
+    // — orientados a WR ALTO (combinar los factores buenos) —
+    'cerca VAL + frenándose':         longArr.filter(t=>cercaVal(t) && frenando(t)),
+    'cerca VAL + RSI neutro':         longArr.filter(t=>cercaVal(t) && rsiNeutro(t)),
+    'cerca VAL + a favor tend.':      longArr.filter(t=>cercaVal(t) && aFavor(t)),
+    'cerca VAL + frenándose + favor': longArr.filter(t=>cercaVal(t) && frenando(t) && aFavor(t)),
+    'RSI neutro + frenándose':        longArr.filter(t=>rsiNeutro(t) && frenando(t)),
+    'RSI neutro + a favor tend.':     longArr.filter(t=>rsiNeutro(t) && aFavor(t)),
+    'RSI neutro + frenándose + favor':longArr.filter(t=>rsiNeutro(t) && frenando(t) && aFavor(t)),
+    'cerca VAL + RSI neutro + favor': longArr.filter(t=>cercaVal(t) && rsiNeutro(t) && aFavor(t)),
+    'frenándose + a favor tend.':     longArr.filter(t=>frenando(t) && aFavor(t)),
+    '≥2 verdes + a favor tend.':      longArr.filter(t=>verdes(t) && aFavor(t)),
+    'cerca VAL + ≥2 verdes':          longArr.filter(t=>cercaVal(t) && verdes(t)),
   };
   const comboStats = {};
   for (const [name, sub] of Object.entries(combos)) comboStats[name] = statFull(sub);
@@ -4314,9 +4329,19 @@ function runDiagnosisPanel() {
     }
     const cb = [];
     for (const [name, g] of Object.entries(combosFinal)) if (g.n >= 15 && g.wr != null) cb.push({name, wr:g.wr, pnl:g.pnl, n:g.n});
-    cb.sort((a,b)=>(b.wr-a.wr)||(b.pnl-a.pnl));
-    if (cb.length && cb[0].wr > baseLongWR + 8)
-      concl.push(`🎯 <b>Mejor combinación para LONG:</b> ${cb[0].name} → ${cb[0].wr}% WR, +${cb[0].pnl}%/op (n=${cb[0].n}).`);
+    // Ordenar por WR para encontrar la receta de mayor acierto
+    const byWR = cb.slice().sort((a,b)=>b.wr-a.wr);
+    if (byWR.length) {
+      const best = byWR[0];
+      if (best.wr >= 50)
+        concl.push(`🏆 <b>¡Combo LONG con WR ≥50%!</b> "${best.name}" → <b>${best.wr}% WR</b>, +${best.pnl}%/op (n=${best.n}). Esta es la receta para LONG de alto acierto. Candidata directa para la versión final.`);
+      else
+        concl.push(`📈 Mejor combo LONG por WR: "${best.name}" → ${best.wr}% WR, +${best.pnl}%/op (n=${best.n}). No llega al 50%, pero es el más fiable. Top 3: ${byWR.slice(0,3).map(c=>`${c.name} (${c.wr}%)`).join(' · ')}.`);
+    }
+    // También el de mejor PnL (para los que priorizan rentabilidad)
+    const byPnl = cb.slice().sort((a,b)=>b.pnl-a.pnl);
+    if (byPnl.length && byPnl[0].name !== (byWR[0]?.name))
+      concl.push(`💰 Mejor combo LONG por PnL: "${byPnl[0].name}" → +${byPnl[0].pnl}%/op (${byPnl[0].wr}% WR, n=${byPnl[0].n}). Bajo acierto pero pago alto.`);
   }
 
   const row = (label, g, hint='') => `<tr>
@@ -4376,7 +4401,7 @@ function runDiagnosisPanel() {
     }).join('');
 
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r38',
+    fecha: new Date().toISOString(), version: 'r39',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
