@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v32</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r32 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v33</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r33 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1483,12 +1483,18 @@ function classifySignal(close, vp, df, maeStopPct = null) {
   // Romper el rango = el movimiento es tendencia, no reversión → no te pongas
   // delante del tren. Si está en rango o rompe a tu favor, la señal sale normal.
 
-  // Stop: si nos pasan maeStopPct (retroceso real del activo), el stop se coloca
-  // a ESA distancia de la entrada — el dato manda sobre la estructura. Si no, se
-  // usa el stop estructural (ancho del VA) con cap al MAX_RISK_PCT.
-  const stopFromMae = (entry, isLong) => {
+  // Stop: si nos pasan maeStopPct, el stop se coloca a esa distancia de la
+  // entrada — el dato manda sobre la estructura. Acepta un número (mismo stop
+  // para todo) o un objeto {edge, range}: las señales de borde (LONG/SHORT) usan
+  // 'edge' (retroceso pequeño) y las RANGE usan 'range' (retroceso mayor). Así
+  // cada tipo lleva el stop a la medida de cómo se mueve de verdad.
+  const stopFromMae = (entry, isLong, isRange) => {
     if (maeStopPct == null) return null;
-    const d = entry * (maeStopPct/100);
+    let pct;
+    if (typeof maeStopPct === 'number') pct = maeStopPct;
+    else pct = isRange ? maeStopPct.range : maeStopPct.edge;
+    if (pct == null) return null;
+    const d = entry * (pct/100);
     return isLong ? entry - d : entry + d;
   };
 
@@ -1496,7 +1502,7 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const rawStop = vah + vaW * .25;
     const minStop = close * (1 + MIN_RISK_PCT/100);
     const maxStop = close * (1 + MAX_RISK_PCT/100);
-    const stop = stopFromMae(close, false) ?? Math.min(Math.max(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, false, false) ?? Math.min(Math.max(rawStop, minStop), maxStop);
     sig = {...sig, signal:'SHORT', label:'Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step * 2,
       scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
@@ -1504,7 +1510,7 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const rawStop = val - vaW * .25;
     const minStop = close * (1 - MIN_RISK_PCT/100);
     const maxStop = close * (1 - MAX_RISK_PCT/100);
-    const stop = stopFromMae(close, true) ?? Math.max(Math.min(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, true, false) ?? Math.max(Math.min(rawStop, minStop), maxStop);
     sig = {...sig, signal:'LONG', label:'Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
       scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA). Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
@@ -1512,7 +1518,7 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const rawStop = val - vaW * 0.15;
     const minStop = close * (1 - MIN_RISK_PCT/100);
     const maxStop = close * (1 - MAX_RISK_PCT/100);
-    const stop = stopFromMae(close, true) ?? Math.max(Math.min(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, true, true) ?? Math.max(Math.min(rawStop, minStop), maxStop);
     sig = {...sig, signal:'RANGE_LONG', label:'Range Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step,
       scenario:'Dentro del VA bajo el PoC. Sesgo alcista hacia el PoC.'};
@@ -1520,7 +1526,7 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const rawStop = vah + vaW * 0.15;
     const minStop = close * (1 + MIN_RISK_PCT/100);
     const maxStop = close * (1 + MAX_RISK_PCT/100);
-    const stop = stopFromMae(close, false) ?? Math.min(Math.max(rawStop, minStop), maxStop);
+    const stop = stopFromMae(close, false, true) ?? Math.min(Math.max(rawStop, minStop), maxStop);
     sig = {...sig, signal:'RANGE_SHORT', label:'Range Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step,
       scenario:'Dentro del VA sobre el PoC. Sesgo bajista hacia el PoC.'};
@@ -1785,23 +1791,33 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     }
   }
 
-  // FASE 1 — medir el retroceso real de las ganadoras
+  // FASE 1 — medir el retroceso real de las ganadoras, SEPARADO por grupo.
+  // Los datos demuestran que las señales de borde (LONG/SHORT, fuera del VA)
+  // retroceden poco (~1%) mientras que las RANGE (dentro del VA) retroceden
+  // mucho más (~3.6%). Un stop único es malo para ambas: o ahoga a las de borde
+  // o asfixia a las range. Medimos y aplicamos un stop a la medida de cada grupo.
   runPass(null);
-  let maeP75Phase1 = null;
-  {
-    const wd = trades.filter(t=>t.outcome==='win' && t.maxDrawdown!==null).map(t=>t.maxDrawdown);
-    if (wd.length >= 6) {
-      const s = wd.slice().sort((a,b)=>a-b);
-      maeP75Phase1 = +s[Math.min(s.length-1, Math.floor(s.length*0.75))].toFixed(2);
-    }
-  }
-  // FASE 2 — si hay MAE fiable, reejecutar con el stop ajustado (p75 ×1.2,
-  // piso 1.5%, tope 5%). Si no, nos quedamos con la pasada estructural.
-  let appliedMaeStop = null;
-  if (maeP75Phase1 != null) {
-    appliedMaeStop = Math.min(Math.max(maeP75Phase1 * 1.2, 1.5), 5.0);
-    runPass(appliedMaeStop);
-  }
+  const p75 = arr => {
+    if (arr.length < 6) return null;
+    const s = arr.slice().sort((a,b)=>a-b);
+    return +s[Math.min(s.length-1, Math.floor(s.length*0.75))].toFixed(2);
+  };
+  const isEdge = sig => sig === 'LONG' || sig === 'SHORT';
+  const maeEdge  = p75(trades.filter(t=>t.outcome==='win' && t.maxDrawdown!==null && isEdge(t.signal)).map(t=>t.maxDrawdown));
+  const maeRange = p75(trades.filter(t=>t.outcome==='win' && t.maxDrawdown!==null && !isEdge(t.signal)).map(t=>t.maxDrawdown));
+  // Conservamos el global como fallback por si un grupo no tiene muestra
+  const maeP75Phase1 = p75(trades.filter(t=>t.outcome==='win' && t.maxDrawdown!==null).map(t=>t.maxDrawdown));
+
+  // Stop por grupo: retroceso p75 ×1.3 de margen (subido de 1.2 — el diagnóstico
+  // mostró que ×1.2 cortaba el 20% de ganadoras), piso 1.5%, tope 6% (subido de 5).
+  const toStop = mae => mae!=null ? Math.min(Math.max(mae*1.3, 1.5), 6.0) : null;
+  const stopEdge  = toStop(maeEdge  ?? maeP75Phase1);
+  const stopRange = toStop(maeRange ?? maeP75Phase1);
+  const maeStops = (stopEdge!=null || stopRange!=null) ? { edge:stopEdge, range:stopRange } : null;
+
+  // FASE 2 — reejecutar con los stops por tipo
+  let appliedMaeStop = maeStops;
+  if (maeStops) runPass(maeStops);
 
   const total = trades.length;
   if (total === 0) return empty;
@@ -3439,6 +3455,19 @@ const sigTxt = s => ({LONG:'↑ Long → PoC',SHORT:'↓ Short → PoC',RANGE_LO
 let sortBy = 'op'; // default: sort by opportunity score
 let sortDir = -1;
 
+// PnL esperado por operación: usa el WR y el PnL medio del backtest del símbolo.
+// Esto prioriza señales como los LONG, que aciertan menos pero ganan mucho más
+// por acierto, frente a los RANGE que aciertan mucho pero ganan poco. Es la
+// métrica honesta de "cuánto espero ganar por operar esto".
+function expectedPnl(r) {
+  // Si el backtest da el PnL medio por operación, usarlo directamente.
+  if (r.bt && r.bt.avgPnl != null) return r.bt.avgPnl;
+  // Fallback: estimar con WR y R:R si no hay avgPnl.
+  const wr = (r.bt?.wr ?? 0) / 100;
+  const rr = parseFloat(r.rr) || 0;
+  return wr * rr - (1 - wr);
+}
+
 function getFiltered() {
   // VISTA UNIFICADA: fusiona las señales del escaneo de HOY (allResults) con
   // las alertas GUARDADAS en el tracker (localStorage). Una fila por
@@ -3611,6 +3640,7 @@ function getFiltered() {
     else if (sortBy === 'wr')   { va = a.bt?.wr||0; vb = b.bt?.wr||0; }
     else if (sortBy === 'fiab') { va = a.bt?.scoreCorrPct??-999; vb = b.bt?.scoreCorrPct??-999; }
     else if (sortBy === 'op')   { va = calcOpScore(a).op; vb = calcOpScore(b).op; }
+    else if (sortBy === 'exp')  { va = expectedPnl(a); vb = expectedPnl(b); }
     else if (sortBy === 'sym') { va = a.sym; vb = b.sym; return sortDir * va.localeCompare(vb); }
     else if (sortBy === 'tf') { va = a.tf; vb = b.tf; return sortDir * va.localeCompare(vb); }
     else if (sortBy === 'sig') { va = a.sig; vb = b.sig; return sortDir * va.localeCompare(vb); }
@@ -4054,7 +4084,7 @@ function runDiagnosisPanel() {
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);color:var(--sub);font-size:11px">${hint}</td></tr>`;
 
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r32',
+    fecha: new Date().toISOString(), version: 'r33',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
@@ -4171,6 +4201,7 @@ function renderPanel() {
       <span class="sh" onclick="setSort('wr')" style="padding-left:4px">WR% <span id="sh-wr"></span></span>
       <span class="sh" onclick="setSort('fiab')" style="color:var(--cyan)">FIAB <span id="sh-fiab"></span></span>
       <span class="sh" onclick="setSort('op')" style="color:var(--emerald)">OP⭐ <span id="sh-op"></span></span>
+      <span class="sh" onclick="setSort('exp')" style="color:var(--violet)" title="PnL esperado por operación (prioriza los LONG rentables)">PnL✦ <span id="sh-exp"></span></span>
       <span style="text-align:center">📌</span>
     </div>
     <div id="tbl-body">`;
