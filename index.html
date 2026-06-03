@@ -712,7 +712,7 @@ canvas { width: 100% !important; height: 100% !important; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Stocks Volume Profile <span>Scanner</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r21 · Wall St</div>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r23 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1429,53 +1429,71 @@ function classifySignal(close, vp, df) {
     }
     if (count > 0) atr = sumTR / count;
   }
-  // Stop por ATR (2× ATR desde la entrada) limitado al rango de riesgo permitido.
-  // Devuelve el precio de stop para un long (resta) o short (suma).
-  const atrStop = (entry, isLong) => {
-    if (!atr || atr <= 0) return null;
-    const dist = 2 * atr;                         // 2×ATR: estándar swing
-    const minDist = entry * (MIN_RISK_PCT/100);
-    const maxDist = entry * (MAX_RISK_PCT/100);
-    const d = Math.min(Math.max(dist, minDist), maxDist);
-    return isLong ? entry - d : entry + d;
-  };
-
   let sig = {
     signal:'NEUTRAL', label:'En PoC — esperar', stop:null, target:null,
     target2:null, invalidation:null, rr:null, trendBias,
     scenario:'Precio en el PoC. Esperar ruptura del Value Area con volumen.'
   };
 
-  if (close > vah + buf) {
-    // SHORT: stop por ATR desde la entrada (volatilidad real), o estructural si
-    // no hay ATR. Se toma el MÁS AJUSTADO de ambos para no alejar el riesgo.
-    const structStop = Math.min(Math.max(vah + vaW * .25, close*(1+MIN_RISK_PCT/100)), close*(1+MAX_RISK_PCT/100));
-    const aStop = atrStop(close, false);
-    const stop = aStop ? Math.min(structStop, aStop) : structStop;
-    sig = {...sig, signal:'SHORT', label:'Short → PoC',
-      stop, target: poc, target2: val, invalidation: ph + step * 2,
-      scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
-  } else if (close < val - buf) {
-    const structStop = Math.max(Math.min(val - vaW * .25, close*(1-MIN_RISK_PCT/100)), close*(1-MAX_RISK_PCT/100));
-    const aStop = atrStop(close, true);
-    const stop = aStop ? Math.max(structStop, aStop) : structStop;  // long: el más cercano (mayor) limita riesgo
+  // RR mínimo exigido: el objetivo NO puede dar menos que esto respecto al
+  // riesgo. Si el nivel natural (PoC) queda demasiado cerca para el stop que
+  // toca, ampliamos el objetivo hasta cumplir el RR mínimo. Si para ello el
+  // objetivo tuviera que irse más allá del siguiente nivel estructural (VAH/VAL
+  // para los range, o el extremo del perfil), la operación no compensa y se
+  // descarta. Esto evita el sinsentido de arriesgar 8% para ganar 2%.
+  // Precio de la vela anterior — necesario para detectar CRUCES y REBOTES
+  // (no basta con dónde está hoy, hace falta de dónde viene).
+  const prevClose = (df && df.length >= 2) ? df[df.length - 2].close : close;
+
+  // Stop ajustado: distancia = min(1×ATR, estructura), limitada a [MIN,MAX]%.
+  // Usamos 1×ATR (no 2×) para que el stop no se dispare y el PnL por operación
+  // no quede aplastado por pérdidas grandes. El objetivo SIEMPRE es el PoC
+  // (ancla de mayor volumen, la lógica del Pine) — el stop es lo único que se
+  // dimensiona. Devuelve el precio de stop.
+  const makeStop = (entry, isLong) => {
+    let dist;
+    if (atr && atr > 0) dist = 1.0 * atr;          // 1×ATR: volatilidad real, ajustado
+    else dist = entry * (MIN_RISK_PCT/100) * 2;     // fallback si no hay ATR
+    const minDist = entry * (MIN_RISK_PCT/100);
+    const maxDist = entry * (MAX_RISK_PCT/100);
+    dist = Math.min(Math.max(dist, minDist), maxDist);
+    return isLong ? entry - dist : entry + dist;
+  };
+
+  // ── DETECCIÓN DE ENTRADAS (lógica del Pine) ───────────────
+  // 1) Cruce de borde hacia DENTRO del VA (reversión):
+  //    LONG  = venía bajo el VAL y entra al VA (recupera el VA).
+  //    SHORT = venía sobre el VAH y entra al VA (pierde el empuje).
+  // 2) Rebote en el PoC (según el lado desde el que lo toca):
+  //    LONG  = toca el PoC desde arriba y lo respeta como soporte.
+  //    SHORT = toca el PoC desde abajo y lo rechaza como resistencia.
+  // En todos los casos el objetivo es el PoC (o, en los rebotes, el borde).
+  const pocTol = (atr && atr > 0) ? atr * 0.5 : step;   // tolerancia de "toque" al PoC
+
+  if (prevClose < val - buf && close >= val - buf && close < poc) {
+    // LONG por recuperación del VAL (cruce de fuera hacia dentro)
+    const stop = makeStop(close, true);
     sig = {...sig, signal:'LONG', label:'Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
-      scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA). Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
-  } else if (inVA && close < poc) {
-    const structStop = Math.max(Math.min(val - vaW * 0.15, close*(1-MIN_RISK_PCT/100)), close*(1-MAX_RISK_PCT/100));
-    const aStop = atrStop(close, true);
-    const stop = aStop ? Math.max(structStop, aStop) : structStop;
-    sig = {...sig, signal:'RANGE_LONG', label:'Range Long → VAH',
-      stop, target: poc, target2: vah, invalidation: pl - step,
-      scenario:'Dentro del VA bajo el PoC. Stop por volatilidad (ATR) desde la entrada. LVN entre precio y PoC acelera el movimiento.'};
-  } else if (inVA && close > poc) {
-    const structStop = Math.min(Math.max(vah + vaW * 0.15, close*(1+MIN_RISK_PCT/100)), close*(1+MAX_RISK_PCT/100));
-    const aStop = atrStop(close, false);
-    const stop = aStop ? Math.min(structStop, aStop) : structStop;
-    sig = {...sig, signal:'RANGE_SHORT', label:'Range Short → VAL',
-      stop, target: poc, target2: val, invalidation: ph + step,
-      scenario:'Dentro del VA sobre el PoC. Stop por volatilidad (ATR) desde la entrada. Confirmar con volumen decreciente.'};
+      scenario:`Precio recupera el VA cruzando el VAL al alza. Sesgo alcista hacia el PoC (ancla de volumen).${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
+  } else if (prevClose > vah + buf && close <= vah + buf && close > poc) {
+    // SHORT por pérdida del VAH (cruce de fuera hacia dentro)
+    const stop = makeStop(close, false);
+    sig = {...sig, signal:'SHORT', label:'Short → PoC',
+      stop, target: poc, target2: val, invalidation: ph + step * 2,
+      scenario:`Precio pierde el VAH cruzando a la baja. Sesgo bajista hacia el PoC (ancla de volumen).${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
+  } else if (prevClose > poc + pocTol && Math.abs(close - poc) <= pocTol) {
+    // REBOTE en PoC desde ARRIBA → PoC como soporte → LONG hacia VAH
+    const stop = makeStop(close, true);
+    sig = {...sig, signal:'RANGE_LONG', label:'Long ← rebote PoC',
+      stop, target: vah, target2: vah, invalidation: poc - pocTol*2,
+      scenario:'Precio rebota en el PoC como soporte (lo toca desde arriba). Sesgo alcista hacia el VAH.'};
+  } else if (prevClose < poc - pocTol && Math.abs(close - poc) <= pocTol) {
+    // REBOTE en PoC desde ABAJO → PoC como resistencia → SHORT hacia VAL
+    const stop = makeStop(close, false);
+    sig = {...sig, signal:'RANGE_SHORT', label:'Short ← rechazo PoC',
+      stop, target: val, target2: val, invalidation: poc + pocTol*2,
+      scenario:'Precio rechazado en el PoC como resistencia (lo toca desde abajo). Sesgo bajista hacia el VAL.'};
   }
 
   // Final hierarchy check
@@ -1699,46 +1717,31 @@ function runBacktest(df, segs, pivLen, nRows, vaPct) {
     return true;
   }
 
-  // ── DETECCIÓN DE ENTRADAS: CADA CRUCE DEL VALUE AREA ──────
-  // Antes el backtest entraba UNA vez por segmento de pivote (≈ una cada 20+
-  // barras) → poquísimos trades, muy espaciados, sin parecido con lo que pasa
-  // de verdad en el gráfico. Ahora, dentro de cada segmento, calculamos su
-  // perfil de volumen y recorremos sus velas detectando CADA cruce nuevo del
-  // Value Area (mismo criterio `zoneOf` que el vivo). Cada cruce = una entrada
-  // potencial. Para no abrir dos trades del mismo tipo solapados, exigimos que
-  // el trade anterior haya cerrado (su ventana de resolución terminó) antes de
-  // registrar otro. Así el ritmo del histórico cuadra con el del vivo.
+  // ── DETECCIÓN DE ENTRADAS — MISMA LÓGICA QUE EL VIVO ──────
+  // El backtest prueba classifySignal en CADA vela del segmento. Como
+  // classifySignal ya contiene toda la lógica de entrada (cruce de borde hacia
+  // dentro + rebote en PoC, mirando la vela previa), el backtest registra
+  // exactamente los mismos eventos que verías en vivo. Así no hay desajuste
+  // entre lo que el histórico mide y lo que el escáner muestra. No se solapan
+  // operaciones: una nueva entrada solo tras cerrar la anterior.
   let lastExitBar = -1;
   for (const seg of testSegs) {
     const segStart = seg.startI, segEnd = Math.min(seg.endI, df.length - 2);
     if (segEnd - segStart < 3) continue;
-
-    // PERFIL DEL SEGMENTO — válido y estable, calculado con las velas del
-    // segmento, EXACTAMENTE como hace el sistema en vivo con su perfil. Un
-    // perfil necesita ~20 velas para tener sentido; calcularlo con 2-3 (como
-    // hacía la versión anterior) producía VAL/VAH/PoC disparatados y señales
-    // basura, hundiendo todos los win rates. El sesgo de look-ahead NO está
-    // aquí: lo evita el forward scan, que solo resuelve con velas POSTERIORES a
-    // la entrada. Usar las velas del propio segmento para el perfil es justo lo
-    // que define el indicador (perfil entre pivotes).
     const vp = calcVP(seg.slice && seg.slice.length >= 10 ? seg.slice : df.slice(segStart, segEnd + 1), nRows, vaPct);
     if (!vp) continue;
 
-    let prevZone = null;
     for (let i = segStart + 1; i <= segEnd; i++) {
-      const zone = zoneOf(df[i].close, vp);
-      // Cruce nuevo = la zona cambió respecto a la barra anterior
-      if (prevZone !== null && zone !== prevZone) {
-        const entryI = i + 1;   // entrar al cierre de la barra siguiente al cruce
-        if (entryI > lastExitBar && entryI + 3 < df.length) {
-          const ok = processEntry(entryI, vp);
-          if (ok) {
-            const last = trades[trades.length - 1];
-            lastExitBar = entryI + (last.barsToRes || 1);
-          }
-        }
+      const entryI = i;   // la señal se evalúa con el cierre de la vela i
+      if (entryI <= lastExitBar || entryI + 3 >= df.length) continue;
+      // classifySignal mira df[0..i] (incluye la vela previa para cruce/rebote)
+      const probe = classifySignal(df[i].close, vp, df.slice(0, i + 1));
+      if (probe.signal === 'NEUTRAL' || !probe.stop || !probe.target) continue;
+      const ok = processEntry(entryI, vp);
+      if (ok) {
+        const last = trades[trades.length - 1];
+        lastExitBar = entryI + (last.barsToRes || 1);
       }
-      prevZone = zone;
     }
   }
 
