@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v34</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r34 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v35</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r35 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1440,8 +1440,23 @@ function classifySignal(close, vp, df, maeStopPct = null) {
   let roBreakUp = false, roBreakDn = false, roOsc = null;
   if (df && df.length >= 50) {
     const roLen = Math.min(50, df.length - 1);
-    const atrRaw = atr || 0;
-    const rangeATR = atrRaw * 2.0;   // mult=2.0 como en el original
+    // ATR de horizonte LARGO como el Pine original: nz(ta.atr(2000), ta.atr(200)).
+    // El indicador mide el rango sobre una ventana muy larga, NO la volatilidad
+    // reciente. Usar el ATR(14) (como hacía antes) escalaba mal el oscilador y
+    // marcaba "ruptura" demasiado pronto. Usamos hasta 200 velas (o las que haya).
+    const roAtrLen = Math.min(200, df.length - 1);
+    let sumTRlong = 0, cntTR = 0;
+    for (let k = df.length - roAtrLen; k < df.length; k++) {
+      if (k < 1) continue;
+      const tr = Math.max(
+        df[k].high - df[k].low,
+        Math.abs(df[k].high - df[k-1].close),
+        Math.abs(df[k].low - df[k-1].close)
+      );
+      sumTRlong += tr; cntTR++;
+    }
+    const atrLong = cntTR > 0 ? sumTRlong / cntTR : (atr || 0);
+    const rangeATR = atrLong * 2.0;   // mult=2.0 sobre el ATR largo, como el Pine
     // Media ponderada por volatilidad sobre las últimas roLen velas
     let sumWC = 0, sumW = 0;
     for (let i = 0; i < roLen; i++) {
@@ -1453,11 +1468,12 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     }
     const roMA = sumW !== 0 ? sumWC / sumW : null;
     if (roMA != null && rangeATR > 0) {
-      // ¿El precio rompe el rango (deja de revertir, empieza a tender)?
-      roBreakUp = close > roMA + rangeATR;   // rompe al alza
-      roBreakDn = close < roMA - rangeATR;   // rompe a la baja
-      // Oscilador continuo: −100 (extremo bajo) a +100 (extremo alto). Mide cuán
-      // lejos del centro está el precio. Los extremos = reversión más probable.
+      // breakUp/breakDn = el precio sale del rango (como el verde/rojo FUERTE del
+      // indicador). Con el ATR largo bien escalado, esto solo salta en rupturas
+      // de verdad, no en oscilaciones normales dentro del rango.
+      roBreakUp = close > roMA + rangeATR;
+      roBreakDn = close < roMA - rangeATR;
+      // Oscilador continuo −100..+100 (igual fórmula que el Pine).
       roOsc = 100 * (close - roMA) / rangeATR;
     }
   }
@@ -4127,7 +4143,7 @@ function runDiagnosisPanel() {
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);color:var(--sub);font-size:11px">${hint}</td></tr>`;
 
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r34',
+    fecha: new Date().toISOString(), version: 'r35',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
