@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v36</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r36 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v38</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r38 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1530,9 +1530,14 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const minStop = close * (1 - MIN_RISK_PCT/100);
     const maxStop = close * (1 - MAX_RISK_PCT/100);
     const stop = stopFromMae(close, true, false) ?? Math.max(Math.min(rawStop, minStop), maxStop);
+    const distBelowVal = (val - close) / close * 100;
     sig = {...sig, signal:'LONG', label:'Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
-      scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA). Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
+      // LONG muy caído (>8% bajo el VAL): según el diagnóstico, baja tasa de
+      // acierto pero PnL por operación altísimo (rebote grande hacia el PoC).
+      // Lo marcamos como oportunidad asimétrica de alto valor.
+      deepValueLong: distBelowVal > 8,
+      scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA).${distBelowVal > 8 ? ' 💎 Muy caído: baja probabilidad pero rebote potencial grande hacia el PoC.' : ''} Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
   } else if (inVA && close < poc) {
     const rawStop = val - vaW * 0.15;
     const minStop = close * (1 - MIN_RISK_PCT/100);
@@ -2035,6 +2040,54 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
       let scoreVal = null;
       try { const cf = calcConfluences(dfTo, vp, close, {...probe, signal:dir}); scoreVal = cf?.score ?? null; } catch(e){}
 
+      // ── BATERÍA DE INDICADORES COMPLEMENTARIOS (sin look-ahead) ──
+      // Se calculan SOLO con velas hasta la entrada (i). El diagnóstico medirá
+      // si cada uno separa ganadores de perdedores, para decidir cuáles añadir.
+      const ind = {};
+      const N = df.length, ci = i; // índice de la vela de entrada
+      // RSI(14)
+      {
+        let gains=0, losses=0, cnt=0;
+        for (let k=ci-13; k<=ci; k++) { if(k<1) continue; const ch=df[k].close-df[k-1].close; if(ch>=0) gains+=ch; else losses-=ch; cnt++; }
+        const rs = losses>0 ? (gains/14)/(losses/14) : 100;
+        ind.rsi = cnt>0 ? 100 - 100/(1+rs) : null;
+      }
+      // Volumen relativo (vela actual vs media 20)
+      {
+        let v=0,c=0; for(let k=ci-19;k<=ci;k++){ if(k<0)continue; v+=(df[k].volume||0); c++; }
+        const avgV = c>0? v/c : 0;
+        ind.volRel = avgV>0 ? (df[ci].volume||0)/avgV : null;
+      }
+      // Mecha inferior relativa (rechazo de mínimos en la vela de entrada)
+      {
+        const o=df[ci].open, cl=df[ci].close, hi=df[ci].high, lo=df[ci].low;
+        const rng = hi-lo;
+        ind.lowerWick = rng>0 ? (Math.min(o,cl)-lo)/rng : null;   // 0..1, alto = mecha inferior larga
+      }
+      // Velas verdes consecutivas justo antes de la entrada (giro al alza)
+      {
+        let g=0; for(let k=ci;k>=Math.max(1,ci-5);k--){ if(df[k].close>df[k-1].close) g++; else break; }
+        ind.greenStreak = g;
+      }
+      // Distancia al mínimo de 20 velas (%) — ¿está rebotando desde suelo?
+      {
+        let mn=Infinity; for(let k=Math.max(0,ci-19);k<=ci;k++) mn=Math.min(mn,df[k].low);
+        ind.distLow20 = mn<Infinity && mn>0 ? (close-mn)/mn*100 : null;
+      }
+      // Bollinger: posición vs banda inferior (20, 2σ)
+      {
+        let s=0,c=0; for(let k=ci-19;k<=ci;k++){ if(k<0)continue; s+=df[k].close; c++; }
+        const mean=c>0?s/c:close;
+        let v=0; for(let k=ci-19;k<=ci;k++){ if(k<0)continue; v+=(df[k].close-mean)**2; }
+        const sd=c>0?Math.sqrt(v/c):0;
+        ind.bbPos = sd>0 ? (close-mean)/sd : null;   // -2 = en banda inferior
+      }
+      // Aceleración de la caída (2ª derivada): ¿se está frenando el desplome?
+      {
+        const c0=df[ci].close, c1=df[ci-1]?.close, c2=df[ci-2]?.close;
+        if(c1!=null && c2!=null){ const v1=c0-c1, v0=c1-c2; ind.accel = v1-v0; } else ind.accel=null;
+      }
+
       // Resolver el resultado con stop estructural (medida base, sin MAE)
       const minStop = isLong ? close*(1-MIN_RISK_PCT/100) : close*(1+MIN_RISK_PCT/100);
       const maxStop = isLong ? close*(1-MAX_RISK_PCT/100) : close*(1+MAX_RISK_PCT/100);
@@ -2059,7 +2112,7 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
       }
       const gross = isLong ? (exitPrice-close)/close*100 : (close-exitPrice)/close*100;
       const pnl = +(gross - COST).toFixed(3);
-      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2), roOscAbs, distEdge, scoreVal,
+      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2), roOscAbs, distEdge, scoreVal, ind,
                  win: pnl>0, pnl, barsHeld, score: probe.diagScore ?? null });
       lastExit = i + (barsHeld||1);
     }
@@ -2158,9 +2211,54 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
     alto:  statFull(longs.filter(t=>t.scoreVal!=null && t.scoreVal >= 6))
   };
 
+  // ── LABORATORIO DE INDICADORES COMPLEMENTARIOS ────────────
+  // Para cada indicador, comparamos el WR/PnL de las operaciones que CUMPLEN una
+  // condición frente al conjunto base. Si un indicador sube el WR de forma clara
+  // (sobre todo en LONG), es candidato para añadir a la lógica final. Probamos
+  // varias condiciones/umbrales por indicador. Medimos para LONG y para todo.
+  const lab = (arr) => {
+    const tests = {
+      'RSI<30 (sobreventa)':        t => t.ind?.rsi != null && t.ind.rsi < 30,
+      'RSI<40':                     t => t.ind?.rsi != null && t.ind.rsi < 40,
+      'RSI 40-60 (neutro)':         t => t.ind?.rsi != null && t.ind.rsi >= 40 && t.ind.rsi <= 60,
+      'Volumen >1.5x media':        t => t.ind?.volRel != null && t.ind.volRel > 1.5,
+      'Volumen >2x (capitulación)': t => t.ind?.volRel != null && t.ind.volRel > 2,
+      'Volumen <0.8x (calma)':      t => t.ind?.volRel != null && t.ind.volRel < 0.8,
+      'Mecha inferior >40% (rechazo)': t => t.ind?.lowerWick != null && t.ind.lowerWick > 0.4,
+      '≥2 velas verdes previas':    t => t.ind?.greenStreak != null && t.ind.greenStreak >= 2,
+      '≥3 velas verdes previas':    t => t.ind?.greenStreak != null && t.ind.greenStreak >= 3,
+      'Bollinger ≤-2 (banda inf)':  t => t.ind?.bbPos != null && t.ind.bbPos <= -2,
+      'Bollinger ≤-1.5':            t => t.ind?.bbPos != null && t.ind.bbPos <= -1.5,
+      'Caída frenándose (accel>0)': t => t.ind?.accel != null && t.ind.accel > 0,
+      'Cerca de mín20 (<5%)':       t => t.ind?.distLow20 != null && t.ind.distLow20 < 5,
+    };
+    const out = {};
+    for (const [name, fn] of Object.entries(tests)) {
+      const sub = arr.filter(fn);
+      out[name] = statFull(sub);
+    }
+    return out;
+  };
+  const labAll  = lab(all);
+  const labLong = lab(all.filter(t=>t.dir==='LONG'));
+  const labRangeLong = lab(all.filter(t=>t.dir==='RANGE_LONG'));
+  // Combos para LONG: pares de condiciones que juntas puedan disparar el WR
+  const longArr = all.filter(t=>t.dir==='LONG');
+  const combos = {
+    'LONG muy caído + RSI<30':       longArr.filter(t=>t.distEdge>8 && t.ind?.rsi<30),
+    'LONG muy caído + vol>1.5x':     longArr.filter(t=>t.distEdge>8 && t.ind?.volRel>1.5),
+    'LONG muy caído + mecha>40%':    longArr.filter(t=>t.distEdge>8 && t.ind?.lowerWick>0.4),
+    'LONG muy caído + ≥2 verdes':    longArr.filter(t=>t.distEdge>8 && t.ind?.greenStreak>=2),
+    'LONG muy caído + accel>0':      longArr.filter(t=>t.distEdge>8 && t.ind?.accel>0),
+    'LONG + RSI<30 + vol>1.5x':      longArr.filter(t=>t.ind?.rsi<30 && t.ind?.volRel>1.5),
+  };
+  const comboStats = {};
+  for (const [name, sub] of Object.entries(combos)) comboStats[name] = statFull(sub);
+
   return {
     total: all.length, base, roBlocked, roKept, trendBlocked, trendKept, bySig,
     deepBySig, maeBySig, oscZones, oscZonesLong, longByDist, longByScore,
+    labAll, labLong, labRangeLong, comboStats,
     maeP75, maeStopPct, winnersStoppedByMae, winnersTotal: winners.length
   };
 }
@@ -4047,6 +4145,15 @@ function runDiagnosisPanel() {
   const OZL = { suave:deepAcc(), media:deepAcc(), extrema:deepAcc() };
   const LD = { cerca:deepAcc(), medio:deepAcc(), lejos:deepAcc() };   // LONG por distancia al VAL
   const LS = { bajo:deepAcc(), medio:deepAcc(), alto:deepAcc() };     // LONG por score
+  // Laboratorio: acumuladores dinámicos por nombre de test
+  const LAB_ALL = {}, LAB_LONG = {}, LAB_RL = {}, COMBOS = {};
+  const accInto = (store, obj) => {
+    if (!obj) return;
+    for (const [name, st] of Object.entries(obj)) {
+      if (!store[name]) store[name] = deepAcc();
+      addDeep(store[name], st);
+    }
+  };
   const addDeep = (dst, src) => {
     if (!src || !src.n) return;
     dst.n += src.n;
@@ -4084,6 +4191,8 @@ function runDiagnosisPanel() {
     if (d.oscZonesLong) for (const z in OZL) addDeep(OZL[z], d.oscZonesLong[z]);
     if (d.longByDist) for (const z in LD) addDeep(LD[z], d.longByDist[z]);
     if (d.longByScore) for (const z in LS) addDeep(LS[z], d.longByScore[z]);
+    accInto(LAB_ALL, d.labAll); accInto(LAB_LONG, d.labLong);
+    accInto(LAB_RL, d.labRangeLong); accInto(COMBOS, d.comboStats);
   }
   // Reducir el acumulador profundo a métricas legibles
   const deepFinal = {};
@@ -4108,6 +4217,11 @@ function runDiagnosisPanel() {
   const oscLongFinal = { suave:reduceZone(OZL.suave), media:reduceZone(OZL.media), extrema:reduceZone(OZL.extrema) };
   const longDistFinal = { cerca:reduceZone(LD.cerca), medio:reduceZone(LD.medio), lejos:reduceZone(LD.lejos) };
   const longScoreFinal = { bajo:reduceZone(LS.bajo), medio:reduceZone(LS.medio), alto:reduceZone(LS.alto) };
+  const reduceLab = store => { const o={}; for(const k in store) o[k]=reduceZone(store[k]); return o; };
+  const labAllFinal = reduceLab(LAB_ALL), labLongFinal = reduceLab(LAB_LONG);
+  const labRLFinal = reduceLab(LAB_RL), combosFinal = reduceLab(COMBOS);
+  // baseWR para comparar: el WR base de LONG y de todo
+  const baseLongWR = G.bySig.LONG.n ? Math.round(G.bySig.LONG.w/G.bySig.LONG.n*100) : null;
 
   const wr = g => g.n ? Math.round(g.w/g.n*100) : null;
   const fmt = g => g.n ? `${wr(g)}% <span style="color:var(--sub)">(${g.n} ops)</span>` : '—';
@@ -4166,15 +4280,15 @@ function runDiagnosisPanel() {
     else
       concl.push(`➖ El grado del oscilador apenas discrimina (extrema ${ext.wr}% vs suave ${sua.wr}%). Mejor usarlo solo como filtro binario (rompe/no rompe), como ahora.`);
   }
-  // LONG por distancia al VAL — ¿los "cuchillos cayendo" fallan más?
+  // LONG por distancia al VAL — la clave es el PnL, no el WR.
   if (longDistFinal.cerca.n >= 15 && longDistFinal.lejos.n >= 15) {
     const ce = longDistFinal.cerca, le = longDistFinal.lejos;
-    if (ce.wr > le.wr + 6)
-      concl.push(`🔪 <b>Los LONG mejoran si entras CERCA del VAL.</b> LONG que apenas perdió el VAL (<3%): ${ce.wr}% WR, PnL ${ce.pnl}%. LONG muy caído (>8% bajo VAL): ${le.wr}% WR, PnL ${le.pnl}%. Recomendación: <b>priorizar LONG cerca del VAL</b> y desconfiar de los cuchillos cayendo.`);
-    else if (le.pnl > ce.pnl + 2)
-      concl.push(`📐 Los LONG muy caídos (>8% bajo VAL) aciertan menos (${le.wr}%) pero cuando pegan dan más PnL (${le.pnl}% vs ${ce.pnl}%). Es el clásico rebote violento. Mantenerlos, no penalizarlos.`);
+    if (le.pnl > ce.pnl + 3)
+      concl.push(`💎 <b>Los LONG MUY CAÍDOS son la mina de oro.</b> Cuanto más por debajo del VAL, menos aciertan pero MUCHO más ganan: LONG >8% bajo VAL → ${le.wr}% WR pero PnL <b>+${le.pnl}%/op</b> (ganadora media +${le.avgWin}%). LONG cerca del VAL (<3%) → ${ce.wr}% WR pero solo +${ce.pnl}%/op. Son apuestas asimétricas: pierdes poco muchas veces, pero cuando pegas es un pelotazo. <b>Recomendación: priorizar y destacar los LONG muy caídos, no esconderlos por su WR bajo.</b>`);
+    else if (ce.wr > le.wr + 6)
+      concl.push(`🔪 Los LONG cerca del VAL aciertan más (${ce.wr}% vs ${le.wr}%) pero ganan menos por operación. Si prefieres WR alto, prioriza los cercanos; si prefieres rentabilidad, los caídos.`);
     else
-      concl.push(`➖ La distancia al VAL no separa claramente los LONG (cerca ${ce.wr}% vs lejos ${le.wr}%).`);
+      concl.push(`➖ La distancia al VAL: cerca ${ce.wr}%/+${ce.pnl}% vs lejos ${le.wr}%/+${le.pnl}%.`);
   }
   // LONG por score
   if (longScoreFinal.alto.n >= 15 && longScoreFinal.bajo.n >= 15) {
@@ -4184,14 +4298,85 @@ function runDiagnosisPanel() {
     else
       concl.push(`➖ El score no separa bien los LONG (alto ${hi.wr}% vs bajo ${lo.wr}%).`);
   }
+  // ── LABORATORIO: detectar los mejores indicadores para LONG ──
+  if (baseLongWR != null) {
+    const cands = [];
+    for (const [name, g] of Object.entries(labLongFinal)) {
+      if (g.n >= 25 && g.wr != null && (g.wr - baseLongWR >= 8 || g.pnl >= 12))
+        cands.push({ name, wr:g.wr, pnl:g.pnl, n:g.n });
+    }
+    cands.sort((a,b)=>(b.wr-a.wr)||(b.pnl-a.pnl));
+    if (cands.length) {
+      const top = cands.slice(0,3).map(c=>`<b>${c.name}</b> (${c.wr}% WR, +${c.pnl}%/op, n=${c.n})`).join(' · ');
+      concl.push(`🔬 <b>Indicadores que MEJORAN los LONG</b> (base ${baseLongWR}%): ${top}. Candidatos para la versión final.`);
+    } else {
+      concl.push(`🔬 Ningún indicador individual sube el WR de los LONG de forma clara sobre el ${baseLongWR}% base. Mira los combos.`);
+    }
+    const cb = [];
+    for (const [name, g] of Object.entries(combosFinal)) if (g.n >= 15 && g.wr != null) cb.push({name, wr:g.wr, pnl:g.pnl, n:g.n});
+    cb.sort((a,b)=>(b.wr-a.wr)||(b.pnl-a.pnl));
+    if (cb.length && cb[0].wr > baseLongWR + 8)
+      concl.push(`🎯 <b>Mejor combinación para LONG:</b> ${cb[0].name} → ${cb[0].wr}% WR, +${cb[0].pnl}%/op (n=${cb[0].n}).`);
+  }
 
   const row = (label, g, hint='') => `<tr>
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2)">${label}</td>
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);text-align:right;font-family:var(--f-mono)">${fmt(g)}</td>
     <td style="padding:7px 10px;border-bottom:1px solid var(--rule2);color:var(--sub);font-size:11px">${hint}</td></tr>`;
 
+  // Filas de las tablas (desglose, oscilador, LONG, laboratorio, combos),
+  // construidas FUERA del template principal porque los .map con cuerpo de
+  // bloque o backticks anidados rompen el template literal.
+  const cell = (txt,col,bold)=>'<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)'+(col?';color:'+col:'')+(bold?';font-weight:700':'')+'">'+txt+'</td>';
+  const deepRowsHtml = ['LONG','SHORT','RANGE_LONG','RANGE_SHORT'].map(s=>{
+    const D=deepFinal[s]; if(!D) return '';
+    const r2=(lbl,g,strong)=>{ if(!g||!g.n) return '';
+      return '<tr style="'+(strong?'background:rgba(37,99,235,.05)':'')+'">'+
+        '<td style="padding:6px 8px;'+(strong?'font-weight:600':'padding-left:20px;color:var(--sub)')+'">'+lbl+'</td>'+
+        cell(g.wr+'%')+cell(g.avgWin!=null?'+'+g.avgWin+'%':'—','var(--emerald)')+
+        cell(g.pnl+'%',g.pnl>=0?'var(--emerald)':'var(--ember)')+cell(g.avgBars||'—','var(--sub)')+cell(g.n,'var(--sub)')+'</tr>';
+    };
+    return r2(s,D.overall,true)+r2('a favor tendencia',D.trendFavor)+r2('limpio (tend+RO)',D.cleanSetup);
+  }).join('');
+  const oscRowsHtml = [['Suave (|osc|<40)','suave'],['Media (40-70)','media'],['Extrema (>70)','extrema']].map(([lbl,k])=>{
+    const g=oscFinal[k]; if(!g||!g.n) return '';
+    return '<tr><td style="padding:6px 8px">'+lbl+'</td>'+cell(g.wr+'%')+
+      cell(g.pnl+'%',g.pnl>=0?'var(--emerald)':'var(--ember)')+cell(g.n,'var(--sub)')+'</tr>';
+  }).join('');
+  const longDistRowsHtml = [['Cerca del VAL (<3%)','cerca'],['Medio (3-8%)','medio'],['Muy caído (>8%)','lejos']].map(([lbl,k])=>{
+    const g=longDistFinal[k]; if(!g||!g.n) return '';
+    return '<tr><td style="padding:6px 8px">'+lbl+'</td>'+cell(g.wr+'%')+
+      cell(g.pnl+'%',g.pnl>=0?'var(--emerald)':'var(--ember)')+cell(g.avgWin!=null?'+'+g.avgWin+'%':'—','var(--emerald)')+cell(g.n,'var(--sub)')+'</tr>';
+  }).join('');
+  const longScoreRowsHtml = [['Score bajo (<4)','bajo'],['Score medio (4-6)','medio'],['Score alto (≥6)','alto']].map(([lbl,k])=>{
+    const g=longScoreFinal[k]; if(!g||!g.n) return '';
+    return '<tr><td style="padding:6px 8px">'+lbl+'</td>'+cell(g.wr+'%')+
+      cell(g.pnl+'%',g.pnl>=0?'var(--emerald)':'var(--ember)')+cell(g.avgWin!=null?'+'+g.avgWin+'%':'—','var(--emerald)')+cell(g.n,'var(--sub)')+'</tr>';
+  }).join('');
+
+  const labRowsHtml = Object.entries(labLongFinal).filter(([k,g])=>g.n>=20)
+    .sort((a,b)=>(b[1].wr||0)-(a[1].wr||0)).map(([k,g])=>{
+      const better = g.wr!=null && g.wr > baseLongWR;
+      const wrCol = better?'var(--emerald)':'var(--sub)';
+      const pnlCol = g.pnl>=0?'var(--emerald)':'var(--ember)';
+      return '<tr><td style="padding:6px 8px">'+k+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:'+wrCol+';font-weight:'+(better?'700':'400')+'">'+(g.wr!=null?g.wr+'%':'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:'+pnlCol+'">'+(g.pnl!=null?g.pnl+'%':'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">'+g.n+'</td></tr>';
+    }).join('');
+  const comboRowsHtml = Object.entries(combosFinal).filter(([k,g])=>g.n>=10)
+    .sort((a,b)=>(b[1].wr||0)-(a[1].wr||0)).map(([k,g])=>{
+      const better = g.wr!=null && g.wr > baseLongWR;
+      const wrCol = better?'var(--emerald)':'var(--sub)';
+      const pnlCol = g.pnl>=0?'var(--emerald)':'var(--ember)';
+      return '<tr><td style="padding:6px 8px">'+k+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:'+wrCol+';font-weight:'+(better?'700':'400')+'">'+(g.wr!=null?g.wr+'%':'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:'+pnlCol+'">'+(g.pnl!=null?g.pnl+'%':'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">'+g.n+'</td></tr>';
+    }).join('');
+
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r36',
+    fecha: new Date().toISOString(), version: 'r38',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
@@ -4204,6 +4389,11 @@ function runDiagnosisPanel() {
     oscilador_zona_LONG: oscLongFinal,
     long_por_distancia_VAL: longDistFinal,
     long_por_score: longScoreFinal,
+    laboratorio_TODO: labAllFinal,
+    laboratorio_LONG: labLongFinal,
+    laboratorio_RANGE_LONG: labRLFinal,
+    laboratorio_combos_LONG: combosFinal,
+    wr_base_LONG: baseLongWR,
     conclusiones: concl.map(c=>c.replace(/<[^>]+>/g,''))
   };
 
@@ -4238,17 +4428,7 @@ function runDiagnosisPanel() {
           <td style="padding:6px 8px;text-align:right">PnL/op</td>
           <td style="padding:6px 8px;text-align:right">Vel</td>
           <td style="padding:6px 8px;text-align:right">N</td></tr>
-        ${['LONG','SHORT','RANGE_LONG','RANGE_SHORT'].map(s=>{
-          const D=deepFinal[s]; if(!D) return '';
-          const r2=(lbl,g,strong)=>g&&g.n?`<tr style="${strong?'background:rgba(37,99,235,.05)':''}">
-            <td style="padding:6px 8px;${strong?'font-weight:600':'padding-left:20px;color:var(--sub)'}">${lbl}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--emerald)">${g.avgWin!=null?'+'+g.avgWin+'%':'—'}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.avgBars||'—'}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`:'';
-          return r2(s, D.overall, true)+r2('a favor tendencia', D.trendFavor)+r2('limpio (tend+RO)', D.cleanSetup);
-        }).join('')}
+        ${deepRowsHtml}
       </table>
     </div>
 
@@ -4259,13 +4439,7 @@ function runDiagnosisPanel() {
         <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
           <td style="padding:6px 8px">Zona oscilador</td><td style="padding:6px 8px;text-align:right">WR</td>
           <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
-        ${[['Suave (|osc|<40)','suave'],['Media (40-70)','media'],['Extrema (>70)','extrema']].map(([lbl,k])=>{
-          const g=oscFinal[k]; if(!g||!g.n) return '';
-          return `<tr><td style="padding:6px 8px">${lbl}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`;
-        }).join('')}
+        ${oscRowsHtml}
       </table>
     </div>
 
@@ -4276,23 +4450,29 @@ function runDiagnosisPanel() {
         <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
           <td style="padding:6px 8px">Grupo de LONG</td><td style="padding:6px 8px;text-align:right">WR</td>
           <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">Gan media</td><td style="padding:6px 8px;text-align:right">N</td></tr>
-        ${[['Cerca del VAL (<3%)','cerca'],['Medio (3-8%)','medio'],['Muy caído (>8%)','lejos']].map(([lbl,k])=>{
-          const g=longDistFinal[k]; if(!g||!g.n) return '';
-          return `<tr><td style="padding:6px 8px">${lbl}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--emerald)">${g.avgWin!=null?'+'+g.avgWin+'%':'—'}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`;
-        }).join('')}
+        ${longDistRowsHtml}
         <tr><td colspan="5" style="padding:3px 8px;border-top:1px solid var(--rule2)"></td></tr>
-        ${[['Score bajo (<4)','bajo'],['Score medio (4-6)','medio'],['Score alto (≥6)','alto']].map(([lbl,k])=>{
-          const g=longScoreFinal[k]; if(!g||!g.n) return '';
-          return `<tr><td style="padding:6px 8px">${lbl}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">${g.wr}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:${g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g.pnl}%</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--emerald)">${g.avgWin!=null?'+'+g.avgWin+'%':'—'}</td>
-            <td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">${g.n}</td></tr>`;
-        }).join('')}
+        ${longScoreRowsHtml}
+      </table>
+    </div>
+
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 4px">🔬 Laboratorio de indicadores (LONG)</h3>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 10px">Cada indicador probado sobre los LONG. Verde = mejora el WR base (${baseLongWR}%). Ordenado por WR. Los que destaquen entran en la versión final.</p>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:14px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:560px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
+          <td style="padding:6px 8px">Indicador (sobre LONG)</td><td style="padding:6px 8px;text-align:right">WR</td>
+          <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${labRowsHtml}
+      </table>
+    </div>
+    <h3 style="font-family:var(--f-display);font-size:15px;margin:0 0 4px">Combinaciones para LONG</h3>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:560px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
+          <td style="padding:6px 8px">Combinación</td><td style="padding:6px 8px;text-align:right">WR</td>
+          <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${comboRowsHtml}
       </table>
     </div>
 
@@ -4435,7 +4615,7 @@ function renderPanel() {
         <span class="n n-poc">${f(r.poc)}</span>
         <span class="n n-vah">${f(r.vah)}</span>
         <span class="n n-vah">${f(r.val)}</span>
-        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
+        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${r._td?.sig?.deepValueLong?'<span title="LONG muy caído: bajo WR pero PnL alto (rebote grande potencial)" style="margin-left:3px">💎</span>':''}${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
         <span class="n n-stop">${f(r.stop)}<span style="font-size:9px;color:var(--dim);margin-left:2px">${r.close&&r.stop?'('+((Math.abs(r.stop-r.close)/r.close*100).toFixed(1))+'%)':''}</span></span>
         <span class="n n-tgt">${f(r.t1)}<span style="font-size:9px;color:var(--emerald);margin-left:2px">${r.close&&r.t1?(()=>{const d=((r.t1-r.close)/r.close*100).toFixed(1);return '('+(parseFloat(d)>0?'+':'')+d+'%)'})():''}</span></span>
         <span class="n n-rr">${r.rr ? '1:'+r.rr : '—'}</span>
