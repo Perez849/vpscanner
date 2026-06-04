@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v41</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r41 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v43</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r43 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -738,7 +738,39 @@ canvas { width: 100% !important; height: 100% !important; }
 </main>
 </div>
 
-<!-- ── MODAL ── -->
+<!-- ── ANEXO: GUÍA DE ETIQUETAS ── -->
+<div style="max-width:900px;margin:30px auto 60px;padding:0 20px;font-family:var(--f-text,system-ui)">
+  <div style="background:var(--card,#fff);border:1px solid var(--rule2,#e2e2e2);border-radius:14px;padding:24px 26px">
+    <h2 style="font-family:var(--f-display,Georgia);font-size:20px;margin:0 0 4px">📖 Guía de las etiquetas</h2>
+    <p style="color:var(--sub,#666);font-size:13px;margin:0 0 20px;line-height:1.5">Las etiquetas marcan señales que, según el histórico (≈18.000 operaciones, 170+ acciones), se comportan mejor que la media de su tipo. No son garantías: son patrones estadísticos. Cada una responde a una estrategia distinta.</p>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-left:3px solid var(--emerald,#2ecc71);background:rgba(46,204,113,.06);border-radius:8px;padding:14px 16px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">⭐ Premium — máxima probabilidad de acierto</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--text,#222)">Solo en <b>RANGE_LONG</b>. Aparece cuando el precio está dentro del Value Area con momentum alcista fuerte (RSI en sobrecompra o empuje a favor de tendencia). <b>Es el win rate más alto del sistema: ~80% de acierto.</b> Ganancia modesta por operación (+1.8%) pero acierta casi siempre. Ideal si buscas constancia y dormir tranquilo.</div>
+      </div>
+
+      <div style="border-left:3px solid var(--sapphire,#2563eb);background:rgba(37,99,235,.06);border-radius:8px;padding:14px 16px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">🛡️ Seguro — alta probabilidad</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--text,#222)">Aparece en <b>LONG</b>, <b>SHORT</b> y <b>RANGE_SHORT</b>. Marca la variante de cada tipo que acierta más que su media: LONG/SHORT cerca del borde del VA con giro confirmado (~50% WR, frente al 36% del LONG o el 22% del SHORT normal), y RANGE_SHORT con sobreventa o tendencia a favor (~74% WR — el único contexto donde el RANGE_SHORT deja de perder dinero). El escudo = "esta acierta bastante para lo que suele ser su tipo".</div>
+      </div>
+
+      <div style="border-left:3px solid var(--amber,#f59e0b);background:rgba(245,158,11,.06);border-radius:8px;padding:14px 16px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">💎 Pelotazo — bajo acierto, gran recorrido</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--text,#222)">Solo en <b>LONG</b>. Marca los LONG muy caídos (&gt;8% bajo el VAL) o con giro al alza confirmado. <b>Acierta poco (~30%) pero cuando pega, la ganancia media es de +62%</b>, y el PnL por operación es +17% (el más alto del sistema). Apuesta asimétrica: pierdes poco muchas veces, ganas mucho de vez en cuando. Psicológicamente dura — hay que aguantar rachas de fallos.</div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--f-display,Georgia);font-size:16px;margin:22px 0 8px">¿Qué te conviene según lo que busques?</h3>
+    <div style="font-size:13px;line-height:1.7;color:var(--text,#222)">
+      <p style="margin:0 0 8px"><b>Si quieres acertar mucho y operar tranquilo</b> → busca las <b>⭐ RANGE_LONG premium</b>. Con ~80% de acierto histórico, es lo más fiable que tiene el sistema. También las 🛡️ RANGE_SHORT (~74%). Ganarás poco por operación, pero ganarás a menudo.</p>
+      <p style="margin:0 0 8px"><b>Si buscas un pelotazo y aguantas la presión</b> → las <b>💎 LONG</b> son tu sitio. Fallan el 70% de las veces, pero el 30% que acierta paga por todas y más: +17% por operación de media frente al +2% de un RANGE_LONG. Es donde está la rentabilidad de verdad, pero exige disciplina para no rendirte tras varios fallos seguidos.</p>
+      <p style="margin:0 0 8px"><b>El dato que lo resume todo:</b> operar SOLO señales etiquetadas habría dado <b>63% de acierto y +4.45% por operación</b>, frente al 54% y +0.91% de operar todas sin filtro. Las etiquetas casi quintuplican la rentabilidad por operación.</p>
+      <p style="margin:0;color:var(--sub,#666);font-size:12px">⚠️ El win rate engaña: un LONG 💎 al 30% es más rentable que un RANGE_LONG ⭐ al 80%, porque gana mucho más por acierto. Mira siempre el PnL por operación, no solo el porcentaje de aciertos. Y recuerda: esto son patrones del pasado, no promesas del futuro. Empieza con poco capital y comprueba que se cumplen en tu operativa real.</p>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
 <div class="modal">
   <div class="modal-hdr">
@@ -1580,7 +1612,7 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const stop = stopFromMae(close, true, true) ?? Math.max(Math.min(rawStop, minStop), maxStop);
     // RANGE_LONG premium ⭐ (según diagnóstico): RSI sobrecompra >70 (80% WR, el
     // más alto del sistema) o volumen alto (>1.5x) que confirma el empuje al PoC.
-    const rlPremium = (clsRsi!=null && clsRsi>70) || frenando && trendBias>=0;
+    const rlPremium = (clsRsi!=null && clsRsi>70) || (frenando && trendBias>=0);
     sig = {...sig, signal:'RANGE_LONG', label:'Range Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step,
       rangeClass: rlPremium ? 'premium' : null,
@@ -3217,6 +3249,7 @@ async function runScan() {
         sector: (SYM_META[sym]?.sector || ''),
         poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
         sig: td.sig.signal, label: td.sig.label,
+        sigLabelClass: td.sig.longClass || td.sig.shortClass || td.sig.rangeClass || null,
         stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2, inv: td.sig.invalidation,
         rr: td.sig.rr, score: td.conf.score,
         scorePct: scorePercentile(td.conf.score, td.bt?.allScores),
@@ -3755,11 +3788,12 @@ function isLabeled(sig) {
 }
 function labelIcon(sig) {
   if (!sig) return '';
-  if (sig.longClass === 'pelotazo') return '💎';
-  if (sig.longClass === 'seguro')   return '🛡️';
-  if (sig.shortClass === 'seguro')  return '🛡️';
-  if (sig.rangeClass === 'premium') return '⭐';
-  if (sig.rangeClass === 'rebote')  return '🛡️';
+  // Acepta un objeto señal o una clase string suelta (sigLabelClass).
+  const cls = typeof sig === 'string' ? sig : (sig.longClass || sig.shortClass || sig.rangeClass);
+  if (cls === 'pelotazo') return '💎';
+  if (cls === 'seguro')   return '🛡️';
+  if (cls === 'premium')  return '⭐';
+  if (cls === 'rebote')   return '🛡️';
   return '';
 }
 
@@ -3981,8 +4015,8 @@ function renderTop3(data) {
   if (!ranked.length) return '';
 
   // Dos rankings: con etiqueta de calidad y sin ella, para mostrar ambos Top 3.
-  const rankedLabeled   = ranked.filter(x => isLabeled(x.r._td?.sig));
-  const rankedUnlabeled = ranked.filter(x => !isLabeled(x.r._td?.sig));
+  const rankedLabeled   = ranked.filter(x => x.r.sigLabelClass || isLabeled(x.r._td?.sig));
+  const rankedUnlabeled = ranked.filter(x => !(x.r.sigLabelClass || isLabeled(x.r._td?.sig)));
   const top3 = ranked.slice(0, 3);                  // global (para la simulación histórica de abajo)
   const top3Lab   = rankedLabeled.slice(0, 3);
   const top3Unlab = rankedUnlabeled.slice(0, 3);
@@ -4083,7 +4117,7 @@ function renderTop3(data) {
     const tgtD     = (r.t1 && entryRef) ? ((r.t1-entryRef)/entryRef*100) : null;
     const flt      = (isTrk && r.floatPnl != null) ? r.floatPnl : null;
     const medal    = ['🥇','🥈','🥉'][i] || '•';
-    const ic       = labelIcon(r._td?.sig);
+    const ic       = labelIcon(r.sigLabelClass||r._td?.sig);
     return `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:var(--r);padding:13px 15px;cursor:pointer;border:1px solid ${i===0?'var(--emerald)':'var(--rule2)'}">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
         <span style="font-size:15px">${medal}</span>
@@ -4177,7 +4211,8 @@ function renderTop3(data) {
       const key = x.r.sym+'|'+x.r.tf;
       const inTop1 = top1Syms.has(key);
       const inTop3 = top3Syms.has(key);
-      return (x.r.bt?.list||[]).map(t => ({ ...t, inTop1, inTop3 }));
+      const inLabeled = !!(x.r.sigLabelClass || isLabeled(x.r._td?.sig));
+      return (x.r.bt?.list||[]).map(t => ({ ...t, inTop1, inTop3, inLabeled }));
     });
 
     function simStats(trades) {
@@ -4202,10 +4237,11 @@ function renderTop3(data) {
     const sT1  = simStats(allTradesTagged.filter(t => t.inTop1));
     const sT3  = simStats(allTradesTagged.filter(t => t.inTop3));
     const sAll = simStats(allTradesTagged);
+    const sLab = simStats(allTradesTagged.filter(t => t.inLabeled));
 
     if (sT1 && sT3 && sAll) {
-      const rowFn2 = (label, v1, v3, vA, fmt, hi=true) => {
-        const vals = [v1,v3,vA].filter(v=>v!=null);
+      const rowFn2 = (label, v1, v3, vA, vL, fmt, hi=true) => {
+        const vals = [v1,v3,vA,vL].filter(v=>v!=null);
         if (!vals.length) return '';
         const best = hi ? Math.max(...vals) : Math.min(...vals);
         const style = v => v!=null&&v===best ? 'font-weight:800;color:var(--emerald)' : 'color:var(--sub)';
@@ -4213,37 +4249,37 @@ function renderTop3(data) {
         return `<div style="color:var(--sub);font-size:9px;padding:3px 0;border-bottom:1px solid var(--rule)">${label}</div>
           <div style="text-align:right;${style(v1)};border-bottom:1px solid var(--rule);padding:3px 0">${f(v1)}</div>
           <div style="text-align:right;${style(v3)};border-bottom:1px solid var(--rule);padding:3px 0">${f(v3)}</div>
-          <div style="text-align:right;${style(vA)};border-bottom:1px solid var(--rule);padding:3px 0">${f(vA)}</div>`;
+          <div style="text-align:right;${style(vA)};border-bottom:1px solid var(--rule);padding:3px 0">${f(vA)}</div>
+          <div style="text-align:right;${style(vL)};border-bottom:1px solid var(--rule);padding:3px 0">${f(vL)}</div>`;
       };
 
       const ioaHelps = sT1.wr > sAll.wr || sT3.wr > sAll.wr;
+      const lv = k => sLab ? sLab[k] : null;
 
       html += `<div style="border-top:1px solid var(--rule);padding-top:14px">
         <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase">
-          📊 Distribución descriptiva por IOA (NO es validación predictiva)
+          📊 Comparativa de estrategias (descriptivo)
         </div>
         <div style="font-family:var(--f-mono);font-size:8px;color:var(--amber);margin-bottom:10px;line-height:1.6;background:rgba(255,181,71,.08);border:1px solid rgba(255,181,71,.25);border-radius:6px;padding:8px 10px">
-          ⚠️ Estos números son CIRCULARES: el IOA se calcula a partir de los mismos
-          trades que aquí se agrupan. Que el grupo de IOA alto luzca mejor es
-          tautológico, no prueba de poder predictivo. Sirve solo para ver la
-          dispersión, no para decidir. La única validación real sería out-of-sample.
+          ⚠️ Las 3 primeras columnas (IOA) son CIRCULARES: el IOA sale de los mismos trades que agrupa. La columna ETIQUETADAS ✦ es distinta: agrupa por reglas independientes (recetas de calidad), así que su comparación con TODOS sí es informativa.
         </div>
-        <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:0 8px;font-family:var(--f-mono);font-size:10px;align-items:center">
+        <div style="display:grid;grid-template-columns:auto repeat(4,1fr);gap:0 6px;font-family:var(--f-mono);font-size:10px;align-items:center">
           <div style="font-size:8px;color:var(--dim);padding-bottom:8px"></div>
-          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">🥇 SOLO EL MEJOR<br><span style="font-size:7px;color:var(--rule2)">${sT1.n} trades</span></div>
-          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TOP 3<br><span style="font-size:7px;color:var(--rule2)">${sT3.n} trades</span></div>
-          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TODOS<br><span style="font-size:7px;color:var(--rule2)">${sAll.n} trades</span></div>
-          ${rowFn2('% operaciones ganadoras (neto)', sT1.wr, sT3.wr, sAll.wr, v=>v+'%')}
-          ${rowFn2('Ganancia media por operación (neto)', sT1.avgPnl, sT3.avgPnl, sAll.avgPnl, v=>(v>=0?'+':'')+v+'%')}
-          ${rowFn2('Retorno geométrico por operación', sT1.cmpPnl, sT3.cmpPnl, sAll.cmpPnl, v=>(v>=0?'+':'')+v+'%')}
-          ${sT1.realRR!=null?rowFn2('Ratio ganancia/pérdida real', sT1.realRR, sT3.realRR, sAll.realRR, v=>'1:'+v):''}
-          ${sT1.halfK!=null?rowFn2('Tamaño sugerido (¼-Kelly)', sT1.halfK, sT3.halfK, sAll.halfK, v=>v+'% capital'):''}
+          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">🥇 MEJOR<br><span style="font-size:7px;color:var(--rule2)">${sT1.n}</span></div>
+          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TOP 3<br><span style="font-size:7px;color:var(--rule2)">${sT3.n}</span></div>
+          <div style="font-size:8px;color:var(--dim);text-align:right;padding-bottom:8px">TODAS<br><span style="font-size:7px;color:var(--rule2)">${sAll.n}</span></div>
+          <div style="font-size:8px;color:var(--emerald);text-align:right;padding-bottom:8px">✦ ETIQUET.<br><span style="font-size:7px;color:var(--rule2)">${sLab?sLab.n:0}</span></div>
+          ${rowFn2('% ganadoras (neto)', sT1.wr, sT3.wr, sAll.wr, lv('wr'), v=>v+'%')}
+          ${rowFn2('Ganancia media/op (neto)', sT1.avgPnl, sT3.avgPnl, sAll.avgPnl, lv('avgPnl'), v=>(v>=0?'+':'')+v+'%')}
+          ${rowFn2('Retorno geométrico/op', sT1.cmpPnl, sT3.cmpPnl, sAll.cmpPnl, lv('cmpPnl'), v=>(v>=0?'+':'')+v+'%')}
+          ${sT1.realRR!=null?rowFn2('Ratio ganancia/pérdida', sT1.realRR, sT3.realRR, sAll.realRR, lv('realRR'), v=>'1:'+v):''}
+          ${sT1.halfK!=null?rowFn2('Tamaño sugerido (¼-Kelly)', sT1.halfK, sT3.halfK, sAll.halfK, lv('halfK'), v=>v+'%'):''}
         </div>
+        ${sLab && sLab.reliable && sLab.wr>sAll.wr ? `<div style="font-family:var(--f-mono);font-size:8px;color:var(--emerald);margin-top:8px;padding:6px 8px;background:rgba(46,204,113,.08);border-radius:5px">✦ Operar SOLO las etiquetadas habría dado ${sLab.wr}% de acierto y ${sLab.avgPnl>=0?'+':''}${sLab.avgPnl}%/op, frente al ${sAll.wr}% y ${sAll.avgPnl>=0?'+':''}${sAll.avgPnl}%/op de operar todas.</div>`:''}
         ${(!sT1.reliable||!sT3.reliable)?`<div style="font-family:var(--f-mono);font-size:8px;color:var(--amber);margin-top:6px;padding:6px 8px;background:var(--ink3);border-radius:5px">⚠️ Muestra reducida (${sT1.n}/${sT3.n} trades). Con <30 trades cualquier diferencia es ruido.</div>`:''}
         <div style="margin-top:10px;background:var(--ink3);border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:8px;color:var(--dim);line-height:1.7">
           Todas las cifras son NETAS de costes (${COST_ROUNDTRIP_PCT.toFixed(2)}% round-trip por operación).
-          "Retorno geométrico" considera el efecto compuesto y es comparable entre estrategias con distinto nº de trades.
-          El "tamaño sugerido" es cuarto-Kelly, prudente con muestras pequeñas: con Kelly=0.4 → 10% del capital por trade.
+          "Retorno geométrico" considera el efecto compuesto. ETIQUETADAS = señales que cumplen una receta de calidad (💎🛡️⭐).
         </div>
       </div>`;
     }
@@ -4581,7 +4617,7 @@ function runDiagnosisPanel() {
   }
 
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r41',
+    fecha: new Date().toISOString(), version: 'r43',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
@@ -4860,7 +4896,7 @@ function renderPanel() {
         <span class="n n-poc">${f(r.poc)}</span>
         <span class="n n-vah">${f(r.vah)}</span>
         <span class="n n-vah">${f(r.val)}</span>
-        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${(()=>{const ic=labelIcon(r._td?.sig);return ic?`<span title="Señal etiquetada (receta de alto rendimiento)" style="margin-left:3px">${ic}</span>`:'';})()}${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
+        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${(()=>{const ic=labelIcon(r.sigLabelClass||r._td?.sig);return ic?`<span title="Señal etiquetada (receta de alto rendimiento): 💎 pelotazo · 🛡️ seguro · ⭐ premium" style="margin-left:3px">${ic}</span>`:'';})()}${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
         <span class="n n-stop">${f(r.stop)}<span style="font-size:9px;color:var(--dim);margin-left:2px">${r.close&&r.stop?'('+((Math.abs(r.stop-r.close)/r.close*100).toFixed(1))+'%)':''}</span></span>
         <span class="n n-tgt">${f(r.t1)}<span style="font-size:9px;color:var(--emerald);margin-left:2px">${r.close&&r.t1?(()=>{const d=((r.t1-r.close)/r.close*100).toFixed(1);return '('+(parseFloat(d)>0?'+':'')+d+'%)'})():''}</span></span>
         <span class="n n-rr">${r.rr ? '1:'+r.rr : '—'}</span>
@@ -4963,6 +4999,7 @@ async function openModal(symFull, tf) {
         sector: (SYM_META[symFull]?.sector || ''),
         poc: td.vp.pocPrice, vah: td.vp.vahPrice, val: td.vp.valPrice,
         sig: td.sig.signal, label: td.sig.label,
+        sigLabelClass: td.sig.longClass || td.sig.shortClass || td.sig.rangeClass || null,
         stop: td.sig.stop, t1: td.sig.target, t2: td.sig.target2, inv: td.sig.invalidation,
         rr: td.sig.rr, score: td.conf.score,
         scorePct: scorePercentile(td.conf.score, td.bt?.allScores),
