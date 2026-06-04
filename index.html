@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v39</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r39 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v40</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r40 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1411,6 +1411,24 @@ function classifySignal(close, vp, df, maeStopPct = null) {
 
   const inVA = val <= close && close <= vah;
 
+  // ── INDICADORES DE CLASIFICACIÓN (para etiquetar la calidad de la señal) ──
+  // Calculados sin look-ahead (solo con las velas hasta la actual). Sirven para
+  // las "recetas" que el diagnóstico identificó como ganadoras.
+  let clsRsi = null, clsAccel = null, clsGreen = 0;
+  if (df && df.length >= 15) {
+    const L = df.length;
+    let g=0, l=0;
+    for (let k=L-14; k<L; k++){ if(k<1) continue; const ch=df[k].close-df[k-1].close; if(ch>=0) g+=ch; else l-=ch; }
+    const rs = l>0 ? (g/14)/(l/14) : 100;
+    clsRsi = 100 - 100/(1+rs);
+    const c0=df[L-1].close, c1=df[L-2]?.close, c2=df[L-3]?.close;
+    if (c1!=null && c2!=null) clsAccel = (c0-c1) - (c1-c2);
+    for (let k=L-1; k>=Math.max(1,L-6); k--){ if(df[k].close>df[k-1].close) clsGreen++; else break; }
+  }
+  const rsiNeutro = clsRsi!=null && clsRsi>=40 && clsRsi<=60;
+  const frenando  = clsAccel!=null && clsAccel>0;
+  const dosVerdes = clsGreen>=2;
+
   // ── ATR (Average True Range) — volatilidad real del valor ──
   // El stop se mide desde la ENTRADA usando ATR, no desde un nivel fijo del
   // perfil. Así el riesgo se adapta a cada acción (ancho si es volátil, ajustado
@@ -1531,13 +1549,23 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const maxStop = close * (1 - MAX_RISK_PCT/100);
     const stop = stopFromMae(close, true, false) ?? Math.max(Math.min(rawStop, minStop), maxStop);
     const distBelowVal = (val - close) / close * 100;
+    const aFavorTend = trendBias >= 0;
+    // DOBLE ETIQUETA (recetas validadas por el diagnóstico, combos con n≥100):
+    //  • PELOTAZO 💎 (alto PnL): muy caído (>8% bajo VAL) → +17%/op; o
+    //    ≥2 verdes + a favor de tendencia → 50% WR y +16%/op.
+    //  • SEGURO 🛡️ (alto WR): cerca del VAL (<3%) + (RSI neutro o caída frenándose)
+    //    → 50-57% WR, aunque menor recorrido.
+    const isPelotazo = distBelowVal > 8 || (dosVerdes && aFavorTend);
+    const isSeguro   = distBelowVal < 3 && (rsiNeutro || frenando);
+    const longClass  = isPelotazo ? 'pelotazo' : (isSeguro ? 'seguro' : null);
     sig = {...sig, signal:'LONG', label:'Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step * 2,
-      // LONG muy caído (>8% bajo el VAL): según el diagnóstico, baja tasa de
-      // acierto pero PnL por operación altísimo (rebote grande hacia el PoC).
-      // Lo marcamos como oportunidad asimétrica de alto valor.
       deepValueLong: distBelowVal > 8,
-      scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA).${distBelowVal > 8 ? ' 💎 Muy caído: baja probabilidad pero rebote potencial grande hacia el PoC.' : ''} Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
+      longClass,
+      scenario:`Precio bajo VAL (${((val-close)/val*100).toFixed(1)}% bajo el VA).${
+        longClass==='pelotazo' ? ' 💎 LONG pelotazo: baja probabilidad pero recorrido grande hacia el PoC (alto PnL/op).' :
+        longClass==='seguro' ? ' 🛡️ LONG seguro: cerca del VAL con giro confirmado (mayor probabilidad de acierto).' : ''
+      } Sesgo alcista hacia el PoC.${trendBias < 0 ? ' ⚠️ Contra tendencia bajista (EMA200).' : ''}`};
   } else if (inVA && close < poc) {
     const rawStop = val - vaW * 0.15;
     const minStop = close * (1 - MIN_RISK_PCT/100);
@@ -2270,10 +2298,50 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
   const comboStats = {};
   for (const [name, sub] of Object.entries(combos)) comboStats[name] = statFull(sub);
 
+  // ── COMBOS PARA LOS OTROS TIPOS (para etiquetarlos en versión futura) ──
+  // Mismos factores, adaptados a cada tipo. SHORT espejo del LONG (sobrecompra,
+  // caída empezando). RANGE_* buscan qué sube su WR y su PnL.
+  const buildCombos = (arr, isShortDir) => {
+    const aFav = t => !t.trendAgainst;
+    const fren = t => t.ind?.accel != null && (isShortDir ? t.ind.accel < 0 : t.ind.accel > 0); // a favor del giro
+    const rsiN = t => t.ind?.rsi != null && t.ind.rsi >= 40 && t.ind.rsi <= 60;
+    const rsiHot = t => t.ind?.rsi != null && t.ind.rsi > 70;   // sobrecompra (para SHORT)
+    const rsiCold = t => t.ind?.rsi != null && t.ind.rsi < 30;  // sobreventa
+    const verde = t => t.ind?.greenStreak >= 2;
+    const volAlto = t => t.ind?.volRel != null && t.ind.volRel > 1.5;
+    const volBajo = t => t.ind?.volRel != null && t.ind.volRel < 0.8;
+    const mecha = t => t.ind?.lowerWick != null && t.ind.lowerWick > 0.4;
+    const cerca = t => t.distEdge != null && t.distEdge < 3;
+    const lejos = t => t.distEdge != null && t.distEdge > 8;
+    return {
+      'a favor tend.':              statFull(arr.filter(aFav)),
+      'RSI neutro':                 statFull(arr.filter(rsiN)),
+      'RSI neutro + a favor':       statFull(arr.filter(t=>rsiN(t)&&aFav(t))),
+      'a favor del giro (accel)':   statFull(arr.filter(fren)),
+      'a favor + giro':             statFull(arr.filter(t=>aFav(t)&&fren(t))),
+      'RSI neutro + giro + favor':  statFull(arr.filter(t=>rsiN(t)&&fren(t)&&aFav(t))),
+      'volumen >1.5x':              statFull(arr.filter(volAlto)),
+      'volumen <0.8x (calma)':      statFull(arr.filter(volBajo)),
+      'volumen alto + a favor':     statFull(arr.filter(t=>volAlto(t)&&aFav(t))),
+      'RSI sobrecompra >70':        statFull(arr.filter(rsiHot)),
+      'RSI sobreventa <30':         statFull(arr.filter(rsiCold)),
+      'mecha rechazo >40%':         statFull(arr.filter(mecha)),
+      '≥2 velas verdes':            statFull(arr.filter(verde)),
+      'cerca borde (<3%)':          statFull(arr.filter(cerca)),
+      'lejos borde (>8%)':          statFull(arr.filter(lejos)),
+      'cerca + RSI neutro':         statFull(arr.filter(t=>cerca(t)&&rsiN(t))),
+      'cerca + a favor':            statFull(arr.filter(t=>cerca(t)&&aFav(t))),
+    };
+  };
+  const combosShort     = buildCombos(all.filter(t=>t.dir==='SHORT'), true);
+  const combosRangeLong = buildCombos(all.filter(t=>t.dir==='RANGE_LONG'), false);
+  const combosRangeShort= buildCombos(all.filter(t=>t.dir==='RANGE_SHORT'), true);
+
   return {
     total: all.length, base, roBlocked, roKept, trendBlocked, trendKept, bySig,
     deepBySig, maeBySig, oscZones, oscZonesLong, longByDist, longByScore,
     labAll, labLong, labRangeLong, comboStats,
+    combosShort, combosRangeLong, combosRangeShort,
     maeP75, maeStopPct, winnersStoppedByMae, winnersTotal: winners.length
   };
 }
@@ -4162,6 +4230,7 @@ function runDiagnosisPanel() {
   const LS = { bajo:deepAcc(), medio:deepAcc(), alto:deepAcc() };     // LONG por score
   // Laboratorio: acumuladores dinámicos por nombre de test
   const LAB_ALL = {}, LAB_LONG = {}, LAB_RL = {}, COMBOS = {};
+  const CB_SHORT = {}, CB_RL = {}, CB_RS = {};
   const accInto = (store, obj) => {
     if (!obj) return;
     for (const [name, st] of Object.entries(obj)) {
@@ -4208,6 +4277,7 @@ function runDiagnosisPanel() {
     if (d.longByScore) for (const z in LS) addDeep(LS[z], d.longByScore[z]);
     accInto(LAB_ALL, d.labAll); accInto(LAB_LONG, d.labLong);
     accInto(LAB_RL, d.labRangeLong); accInto(COMBOS, d.comboStats);
+    accInto(CB_SHORT, d.combosShort); accInto(CB_RL, d.combosRangeLong); accInto(CB_RS, d.combosRangeShort);
   }
   // Reducir el acumulador profundo a métricas legibles
   const deepFinal = {};
@@ -4235,6 +4305,7 @@ function runDiagnosisPanel() {
   const reduceLab = store => { const o={}; for(const k in store) o[k]=reduceZone(store[k]); return o; };
   const labAllFinal = reduceLab(LAB_ALL), labLongFinal = reduceLab(LAB_LONG);
   const labRLFinal = reduceLab(LAB_RL), combosFinal = reduceLab(COMBOS);
+  const combosShortFinal = reduceLab(CB_SHORT), combosRLFinal = reduceLab(CB_RL), combosRSFinal = reduceLab(CB_RS);
   // baseWR para comparar: el WR base de LONG y de todo
   const baseLongWR = G.bySig.LONG.n ? Math.round(G.bySig.LONG.w/G.bySig.LONG.n*100) : null;
 
@@ -4400,8 +4471,24 @@ function runDiagnosisPanel() {
         '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">'+g.n+'</td></tr>';
     }).join('');
 
+  // Filas de combos para los otros tipos (SHORT, RANGE_LONG, RANGE_SHORT).
+  const wrSig = s => G.bySig[s] && G.bySig[s].n ? Math.round(G.bySig[s].w/G.bySig[s].n*100) : 0;
+  const comboRowsFor = (obj, baseWr) => Object.entries(obj).filter(([k,g])=>g.n>=15)
+    .sort((a,b)=>(b[1].wr||0)-(a[1].wr||0)).map(([k,g])=>{
+      const better = g.wr!=null && g.wr > baseWr;
+      const wrCol = better?'var(--emerald)':'var(--sub)';
+      const pnlCol = g.pnl>=0?'var(--emerald)':'var(--ember)';
+      return '<tr><td style="padding:6px 8px">'+k+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:'+wrCol+';font-weight:'+(better?'700':'400')+'">'+(g.wr!=null?g.wr+'%':'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:'+pnlCol+'">'+(g.pnl!=null?g.pnl+'%':'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">'+g.n+'</td></tr>';
+    }).join('');
+  const shortRowsHtml = comboRowsFor(combosShortFinal, wrSig('SHORT'));
+  const rlRowsHtml    = comboRowsFor(combosRLFinal, wrSig('RANGE_LONG'));
+  const rsRowsHtml    = comboRowsFor(combosRSFinal, wrSig('RANGE_SHORT'));
+
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r39',
+    fecha: new Date().toISOString(), version: 'r40',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
@@ -4418,6 +4505,9 @@ function runDiagnosisPanel() {
     laboratorio_LONG: labLongFinal,
     laboratorio_RANGE_LONG: labRLFinal,
     laboratorio_combos_LONG: combosFinal,
+    combos_SHORT: combosShortFinal,
+    combos_RANGE_LONG: combosRLFinal,
+    combos_RANGE_SHORT: combosRSFinal,
     wr_base_LONG: baseLongWR,
     conclusiones: concl.map(c=>c.replace(/<[^>]+>/g,''))
   };
@@ -4498,6 +4588,30 @@ function runDiagnosisPanel() {
           <td style="padding:6px 8px">Combinación</td><td style="padding:6px 8px;text-align:right">WR</td>
           <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
         ${comboRowsHtml}
+      </table>
+    </div>
+
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 4px">🧪 Combos para los OTROS tipos (para etiquetar en el futuro)</h3>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 10px">Mismo análisis que LONG, para SHORT, RANGE_LONG y RANGE_SHORT. Verde = supera el WR base del tipo. Mándame esto y les pongo su doble etiqueta.</p>
+    <h3 style="font-family:var(--f-display);font-size:14px;margin:0 0 4px;color:var(--sub)">SHORT (base ${wrSig('SHORT')}%)</h3>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:12px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:520px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase"><td style="padding:6px 8px">Combo</td><td style="padding:6px 8px;text-align:right">WR</td><td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${shortRowsHtml}
+      </table>
+    </div>
+    <h3 style="font-family:var(--f-display);font-size:14px;margin:0 0 4px;color:var(--sub)">RANGE_LONG (base ${wrSig('RANGE_LONG')}%)</h3>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:12px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:520px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase"><td style="padding:6px 8px">Combo</td><td style="padding:6px 8px;text-align:right">WR</td><td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${rlRowsHtml}
+      </table>
+    </div>
+    <h3 style="font-family:var(--f-display);font-size:14px;margin:0 0 4px;color:var(--sub)">RANGE_SHORT (base ${wrSig('RANGE_SHORT')}%)</h3>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:520px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase"><td style="padding:6px 8px">Combo</td><td style="padding:6px 8px;text-align:right">WR</td><td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${rsRowsHtml}
       </table>
     </div>
 
@@ -4640,7 +4754,7 @@ function renderPanel() {
         <span class="n n-poc">${f(r.poc)}</span>
         <span class="n n-vah">${f(r.vah)}</span>
         <span class="n n-vah">${f(r.val)}</span>
-        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${r._td?.sig?.deepValueLong?'<span title="LONG muy caído: bajo WR pero PnL alto (rebote grande potencial)" style="margin-left:3px">💎</span>':''}${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
+        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${r._td?.sig?.longClass==='pelotazo'?'<span title="LONG pelotazo: bajo WR pero PnL alto (rebote grande)" style="margin-left:3px">💎</span>':r._td?.sig?.longClass==='seguro'?'<span title="LONG seguro: alto WR, cerca del VAL con giro confirmado" style="margin-left:3px">🛡️</span>':''}${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
         <span class="n n-stop">${f(r.stop)}<span style="font-size:9px;color:var(--dim);margin-left:2px">${r.close&&r.stop?'('+((Math.abs(r.stop-r.close)/r.close*100).toFixed(1))+'%)':''}</span></span>
         <span class="n n-tgt">${f(r.t1)}<span style="font-size:9px;color:var(--emerald);margin-left:2px">${r.close&&r.t1?(()=>{const d=((r.t1-r.close)/r.close*100).toFixed(1);return '('+(parseFloat(d)>0?'+':'')+d+'%)'})():''}</span></span>
         <span class="n n-rr">${r.rr ? '1:'+r.rr : '—'}</span>
