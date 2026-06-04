@@ -711,8 +711,8 @@ canvas { width: 100% !important; height: 100% !important; }
 <main class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v40</span></h1>
-      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r40 · Wall St</div>
+      <h1>Stocks Volume Profile <span>Scanner</span> <span style="display:inline-block;background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;margin-left:8px;vertical-align:middle;letter-spacing:.02em">v41</span></h1>
+      <div class="topbar-meta" id="top-meta">Stooq · Yahoo · 1D + 1W · VP Scanner · v2026.05.31-r41 · Wall St</div>
     </div>
     <div class="tf-pills">
       <button class="tf-pill on" onclick="setTF('ALL',this)">ALL</button>
@@ -1540,9 +1540,16 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const minStop = close * (1 + MIN_RISK_PCT/100);
     const maxStop = close * (1 + MAX_RISK_PCT/100);
     const stop = stopFromMae(close, false, false) ?? Math.min(Math.max(rawStop, minStop), maxStop);
+    const distAboveVah = (close - vah) / close * 100;
+    const aFavorBaja = trendBias <= 0; // a favor de tendencia bajista
+    // SHORT seguro 🛡️ (según diagnóstico): cerca del borde (<3% sobre VAH) +
+    // (RSI neutro o a favor de tendencia) → ~48-51% WR vs 22% base. No hay clase
+    // 'pelotazo' fiable en SHORT (el SHORT lejos tiene WR ínfimo y PnL pobre).
+    const shortSeguro = distAboveVah < 3 && (rsiNeutro || aFavorBaja);
     sig = {...sig, signal:'SHORT', label:'Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step * 2,
-      scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA). Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
+      shortClass: shortSeguro ? 'seguro' : null,
+      scenario:`Precio sobre VAH (${((close-vah)/vah*100).toFixed(1)}% sobre el VA).${shortSeguro?' 🛡️ SHORT seguro: cerca del borde con giro/contexto bajista (mayor probabilidad).':''} Sesgo bajista hacia el PoC.${trendBias > 0 ? ' ⚠️ Contra tendencia alcista (EMA200).' : ''}`};
   } else if (close < val - buf && !roBreakDn) {
     const rawStop = val - vaW * .25;
     const minStop = close * (1 - MIN_RISK_PCT/100);
@@ -1571,17 +1578,26 @@ function classifySignal(close, vp, df, maeStopPct = null) {
     const minStop = close * (1 - MIN_RISK_PCT/100);
     const maxStop = close * (1 - MAX_RISK_PCT/100);
     const stop = stopFromMae(close, true, true) ?? Math.max(Math.min(rawStop, minStop), maxStop);
+    // RANGE_LONG premium ⭐ (según diagnóstico): RSI sobrecompra >70 (80% WR, el
+    // más alto del sistema) o volumen alto (>1.5x) que confirma el empuje al PoC.
+    const rlPremium = (clsRsi!=null && clsRsi>70) || frenando && trendBias>=0;
     sig = {...sig, signal:'RANGE_LONG', label:'Range Long → PoC',
       stop, target: poc, target2: vah, invalidation: pl - step,
-      scenario:'Dentro del VA bajo el PoC. Sesgo alcista hacia el PoC.'};
+      rangeClass: rlPremium ? 'premium' : null,
+      scenario:`Dentro del VA bajo el PoC.${rlPremium?' ⭐ Range premium: momentum/empuje que favorece llegar al PoC (WR muy alto).':''} Sesgo alcista hacia el PoC.`};
   } else if (inVA && close > poc) {
     const rawStop = vah + vaW * 0.15;
     const minStop = close * (1 + MIN_RISK_PCT/100);
     const maxStop = close * (1 + MAX_RISK_PCT/100);
     const stop = stopFromMae(close, false, true) ?? Math.min(Math.max(rawStop, minStop), maxStop);
+    // RANGE_SHORT rebote 🛡️ (según diagnóstico): el ÚNICO contexto con PnL
+    // positivo es RSI sobreventa <30 (74% WR) o a favor de tendencia bajista.
+    // Sin ello, RANGE_SHORT tiene PnL negativo de media → NO etiquetar.
+    const rsBueno = (clsRsi!=null && clsRsi<30) || (trendBias<=0 && frenando);
     sig = {...sig, signal:'RANGE_SHORT', label:'Range Short → PoC',
       stop, target: poc, target2: val, invalidation: ph + step,
-      scenario:'Dentro del VA sobre el PoC. Sesgo bajista hacia el PoC.'};
+      rangeClass: rsBueno ? 'rebote' : null,
+      scenario:`Dentro del VA sobre el PoC.${rsBueno?' 🛡️ Range con contexto favorable (sobreventa/tendencia) — el resto de RANGE_SHORT pierde de media.':''} Sesgo bajista hacia el PoC.`};
   }
 
   // Final hierarchy check
@@ -2140,7 +2156,19 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
       }
       const gross = isLong ? (exitPrice-close)/close*100 : (close-exitPrice)/close*100;
       const pnl = +(gross - COST).toFixed(3);
-      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2), roOscAbs, distEdge, scoreVal, ind,
+      // ¿Esta operación llevaría ETIQUETA con las reglas en vivo? Replicamos aquí
+      // las mismas condiciones que classifySignal aplica a cada tipo, para poder
+      // comparar "etiquetadas vs no" en las estadísticas.
+      const _rsiN = ind.rsi!=null && ind.rsi>=40 && ind.rsi<=60;
+      const _fren = ind.accel!=null && ind.accel>0;
+      const _verde = ind.greenStreak>=2;
+      const _aFav = !trendAgainst;
+      let labeled = false;
+      if (dir==='LONG')        labeled = (distEdge>8) || (_verde&&_aFav) || (distEdge<3 && (_rsiN||_fren));
+      else if (dir==='SHORT')  labeled = (distEdge!=null && distEdge<3) && (_rsiN || !trendAgainst);
+      else if (dir==='RANGE_LONG')  labeled = (ind.rsi!=null && ind.rsi>70) || (_fren && _aFav);
+      else if (dir==='RANGE_SHORT') labeled = (ind.rsi!=null && ind.rsi<30) || (!trendAgainst && _fren);
+      all.push({ dir, isLong, roWouldBlock, trendAgainst, mae:+mae.toFixed(2), roOscAbs, distEdge, scoreVal, ind, labeled,
                  win: pnl>0, pnl, barsHeld, score: probe.diagScore ?? null });
       lastExit = i + (barsHeld||1);
     }
@@ -2337,11 +2365,26 @@ function runDiagnostics(df, segs, pivLen, nRows, vaPct) {
   const combosRangeLong = buildCombos(all.filter(t=>t.dir==='RANGE_LONG'), false);
   const combosRangeShort= buildCombos(all.filter(t=>t.dir==='RANGE_SHORT'), true);
 
+  // ── COMPARATIVO: ETIQUETADAS vs NO ETIQUETADAS ────────────
+  // La 4ª forma de comparar: ¿qué habría pasado operando SOLO las señales que
+  // llevan etiqueta, frente a todas / no etiquetadas? Global y por tipo.
+  const etiquetadas   = statFull(all.filter(t=>t.labeled));
+  const noEtiquetadas = statFull(all.filter(t=>!t.labeled));
+  const etiqPorTipo = {};
+  for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']) {
+    const arr = all.filter(t=>t.dir===s);
+    etiqPorTipo[s] = {
+      etiquetada:   statFull(arr.filter(t=>t.labeled)),
+      noEtiquetada: statFull(arr.filter(t=>!t.labeled))
+    };
+  }
+
   return {
     total: all.length, base, roBlocked, roKept, trendBlocked, trendKept, bySig,
     deepBySig, maeBySig, oscZones, oscZonesLong, longByDist, longByScore,
     labAll, labLong, labRangeLong, comboStats,
     combosShort, combosRangeLong, combosRangeShort,
+    etiquetadas, noEtiquetadas, etiqPorTipo,
     maeP75, maeStopPct, winnersStoppedByMae, winnersTotal: winners.length
   };
 }
@@ -3704,6 +3747,22 @@ let sortDir = -1;
 // Esto prioriza señales como los LONG, que aciertan menos pero ganan mucho más
 // por acierto, frente a los RANGE que aciertan mucho pero ganan poco. Es la
 // métrica honesta de "cuánto espero ganar por operar esto".
+// ¿La señal lleva una etiqueta de calidad validada por el diagnóstico?
+// LONG: pelotazo/seguro · SHORT: seguro · RANGE_LONG: premium · RANGE_SHORT: rebote.
+function isLabeled(sig) {
+  if (!sig) return false;
+  return !!(sig.longClass || sig.shortClass || sig.rangeClass);
+}
+function labelIcon(sig) {
+  if (!sig) return '';
+  if (sig.longClass === 'pelotazo') return '💎';
+  if (sig.longClass === 'seguro')   return '🛡️';
+  if (sig.shortClass === 'seguro')  return '🛡️';
+  if (sig.rangeClass === 'premium') return '⭐';
+  if (sig.rangeClass === 'rebote')  return '🛡️';
+  return '';
+}
+
 function expectedPnl(r) {
   // Si el backtest da el PnL medio por operación, usarlo directamente.
   if (r.bt && r.bt.avgPnl != null) return r.bt.avgPnl;
@@ -3921,7 +3980,12 @@ function renderTop3(data) {
 
   if (!ranked.length) return '';
 
-  const top3 = ranked.slice(0, 3);
+  // Dos rankings: con etiqueta de calidad y sin ella, para mostrar ambos Top 3.
+  const rankedLabeled   = ranked.filter(x => isLabeled(x.r._td?.sig));
+  const rankedUnlabeled = ranked.filter(x => !isLabeled(x.r._td?.sig));
+  const top3 = ranked.slice(0, 3);                  // global (para la simulación histórica de abajo)
+  const top3Lab   = rankedLabeled.slice(0, 3);
+  const top3Unlab = rankedUnlabeled.slice(0, 3);
   const top1 = ranked.slice(0, 1);
   const allN = data.length;
 
@@ -3994,75 +4058,72 @@ function renderTop3(data) {
       <div style="text-align:right;${hi(vA)};border-bottom:1px solid var(--rule);padding:3px 0">${f(vA)}</div>`;
   };
 
-  let html = `<div style="background:var(--ink2);border:1px solid var(--rule2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
-    <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:12px;text-transform:uppercase">⭐ Top 3 — Mejores oportunidades según IOA</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:16px">`;
+  let html = `<div style="background:var(--ink2);border:1px solid var(--rule2);border-radius:12px;padding:14px 16px;margin-bottom:14px">`;
 
-  top3.forEach(({ r, ioa }, i) => {
+  const cardHtml = ({ r, ioa }, i) => {
     const ioaC     = ioa.ioa >= 65 ? 'var(--emerald)' : ioa.ioa >= 45 ? 'var(--cyan)' : 'var(--amber)';
     const wr       = r.bt?.wr;
     const wrTxt    = wr != null ? wr+'%' : '—';
     const wrC      = wr != null ? (wr>=60?'var(--emerald)':wr>=45?'var(--amber)':'var(--ember)') : 'var(--dim)';
     const ioaLbl   = ioa.ioa >= 65 ? 'Edge fuerte' : ioa.ioa >= 45 ? 'Edge moderado' : 'Edge débil';
-    const dw       = r.bt?.avgDrawdownWin;
-    const dwC      = dw > 5 ? 'var(--ember)' : dw > 2 ? 'var(--amber)' : 'var(--emerald)';
-    const rWR = r.bt?.recentWR, oWR = r.bt?.oldWR;
-    const tdiff    = (rWR != null && oWR != null) ? rWR - oWR : null;
-    const tTxt     = tdiff != null ? (tdiff>0?`↑ mejorando +${tdiff}pp`:tdiff<0?`↓ deterioro ${tdiff}pp`:'→ estable') : '';
-    const tC       = tdiff == null ? 'var(--dim)' : tdiff>0 ? 'var(--emerald)' : tdiff<0 ? 'var(--ember)' : 'var(--dim)';
     const kv       = ioa.kelly;
     const hk       = kv != null && kv > 0 ? +(kv/2*100).toFixed(0) : null;
     const kTxt     = kv == null ? '—' : kv <= 0 ? 'Sin edge' : `${hk}% del capital`;
     const kC       = kv != null && kv > 0 ? 'var(--cyan)' : 'var(--ember)';
     const avgPnl   = r.bt?.avgPnl;
-
-    // ── PRECIOS PARA MEDIR LA OPORTUNIDAD ──
-    // priceEntry: si ya está en seguimiento, la entrada FIJA real. Si es una
-    // señal nueva, el precio actual ES el precio de entrada propuesto (a lo que
-    // entrarías si la tomas ahora). Siempre mostramos algo medible.
+    const rWR = r.bt?.recentWR, oWR = r.bt?.oldWR;
+    const tdiff    = (rWR != null && oWR != null) ? rWR - oWR : null;
+    const tTxt     = tdiff != null ? (tdiff>0?`↑ mejorando +${tdiff}pp`:tdiff<0?`↓ deterioro ${tdiff}pp`:'→ estable') : '';
+    const tC       = tdiff == null ? 'var(--dim)' : tdiff>0 ? 'var(--emerald)' : tdiff<0 ? 'var(--ember)' : 'var(--dim)';
     const isTrk    = r.tracked && r.trackerData;
     const entryRef = (isTrk && r.priceEntry != null) ? r.priceEntry : r.priceNow;
     const entryLbl = (isTrk && r.priceEntry != null) ? 'Entrada FIJA' : 'Entrada (ahora)';
     const now      = r.priceNow;
-    const stopD    = (r.stop && entryRef) ? ((r.stop-entryRef)/entryRef*100) : null;   // distancia a stop %
-    const tgtD     = (r.t1 && entryRef) ? ((r.t1-entryRef)/entryRef*100) : null;       // recorrido a T1 %
+    const stopD    = (r.stop && entryRef) ? ((r.stop-entryRef)/entryRef*100) : null;
+    const tgtD     = (r.t1 && entryRef) ? ((r.t1-entryRef)/entryRef*100) : null;
     const flt      = (isTrk && r.floatPnl != null) ? r.floatPnl : null;
-
-    html += `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:var(--r);padding:13px 15px;cursor:pointer;border:1px solid ${i===0?'var(--emerald)':'var(--rule2)'}">
+    const medal    = ['🥇','🥈','🥉'][i] || '•';
+    const ic       = labelIcon(r._td?.sig);
+    return `<div onclick="openModal('${r.sym}','${r.tf}')" style="background:var(--ink3);border-radius:var(--r);padding:13px 15px;cursor:pointer;border:1px solid ${i===0?'var(--emerald)':'var(--rule2)'}">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
-        <span style="font-size:15px">${['🥇','🥈','🥉'][i]}</span>
+        <span style="font-size:15px">${medal}</span>
         <span style="font-family:var(--f-display);font-size:14px;font-weight:700">${r.sym}</span>
+        ${ic?`<span style="font-size:11px">${ic}</span>`:''}
         <span style="font-family:var(--f-mono);font-size:8px;background:var(--ink2);padding:1px 5px;border-radius:4px">${r.tf}</span>
         <span style="font-family:var(--f-mono);font-size:8px;color:${sigColor(r.sig)};font-weight:700;margin-left:auto">${sigFull(r.sig)}</span>
       </div>
       <div style="font-family:var(--f-mono);font-size:22px;font-weight:800;color:${ioaC};line-height:1">${ioa.ioa}<span style="font-size:9px;font-weight:400;color:var(--dim)">/100</span></div>
       <div style="font-family:var(--f-mono);font-size:8px;color:${ioaC};margin-bottom:9px">${ioaLbl}</div>
-
-      <!-- PRECIOS — lo primero para medir la oportunidad -->
       <div style="background:var(--ink2);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-family:var(--f-mono);font-size:10px;line-height:1.7">
         <div style="display:flex;justify-content:space-between"><span style="color:${isTrk&&r.priceEntry!=null?'var(--sapphire)':'var(--sub)'}">${isTrk&&r.priceEntry!=null?'📌 ':''}${entryLbl}</span><span style="font-weight:700;color:${isTrk&&r.priceEntry!=null?'var(--sapphire)':'var(--text)'}">${f(entryRef)}</span></div>
         ${flt!=null?`<div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Precio actual</span><span>${f(now)} <span style="color:${flt>=0?'var(--emerald)':'var(--ember)'}">${flt>=0?'+':''}${flt}%</span></span></div>`:''}
         <div style="display:flex;justify-content:space-between"><span style="color:var(--emerald)">🎯 Objetivo T1</span><span style="color:var(--emerald)">${f(r.t1)} ${tgtD!=null?`<span style="font-size:8px">(${tgtD>=0?'+':''}${tgtD.toFixed(1)}%)</span>`:''}</span></div>
         <div style="display:flex;justify-content:space-between"><span style="color:var(--amber)">◆ Stop</span><span style="color:var(--amber)">${f(r.stop)} ${stopD!=null?`<span style="font-size:8px">(${stopD.toFixed(1)}%)</span>`:''}</span></div>
       </div>
-
       <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-family:var(--f-mono);font-size:9px;line-height:1.5">
-        <span style="color:var(--dim)">Acierto hist.</span>
-        <span style="color:${wrC};font-weight:700">${wrTxt} (${r.bt?.total??0} ops)</span>
-        <span style="color:var(--dim)">Ganancia/op</span>
-        <span>${avgPnl!=null?(avgPnl>=0?'+':'')+avgPnl+'%':'—'}</span>
-        <span style="color:var(--dim)">Ratio R:R</span>
-        <span style="color:var(--violet)">${r.rr?'1:'+r.rr:'—'}</span>
-        <span style="color:var(--dim)">Tamaño op.</span>
-        <span style="color:${kC}">${kTxt}</span>
+        <span style="color:var(--dim)">Acierto hist.</span><span style="color:${wrC};font-weight:700">${wrTxt} (${r.bt?.total??0} ops)</span>
+        <span style="color:var(--dim)">Ganancia/op</span><span>${avgPnl!=null?(avgPnl>=0?'+':'')+avgPnl+'%':'—'}</span>
+        <span style="color:var(--dim)">Ratio R:R</span><span style="color:var(--violet)">${r.rr?'1:'+r.rr:'—'}</span>
+        <span style="color:var(--dim)">Tamaño op.</span><span style="color:${kC}">${kTxt}</span>
         ${tTxt?`<span style="color:var(--dim)">Tendencia</span><span style="color:${tC}">${tTxt}</span>`:''}
       </div>
-      <div style="margin-top:8px;font-family:var(--f-mono);font-size:8px;color:var(--dim);border-top:1px solid var(--rule);padding-top:6px">
-        Confianza ${(ioa.confianza*100).toFixed(1)}% <span style="opacity:.7">(${r.bt?.total??0} ops)</span> · Score VP ${r.score}/10
-      </div>
     </div>`;
-  });
+  };
 
+  // Top 3 CON etiqueta (recetas de calidad)
+  html += `<div style="font-family:var(--f-mono);font-size:9px;color:var(--emerald);letter-spacing:.12em;margin-bottom:10px;text-transform:uppercase">✦ Top 3 ETIQUETADAS — recetas de alto rendimiento</div>`;
+  if (top3Lab.length) {
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:16px">`;
+    top3Lab.forEach((x,i)=>{ html += cardHtml(x,i); });
+    html += `</div>`;
+  } else {
+    html += `<div style="color:var(--sub);font-size:11px;font-family:var(--f-mono);margin-bottom:16px">Ninguna señal etiquetada ahora mismo. Las etiquetas aparecen cuando se cumple una receta de calidad (💎🛡️⭐).</div>`;
+  }
+
+  // Top 3 SIN etiqueta (mejores por IOA sin distintivo)
+  html += `<div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);letter-spacing:.12em;margin-bottom:10px;text-transform:uppercase">⭐ Top 3 SIN etiqueta — mejores por IOA</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:16px">`;
+  (top3Unlab.length?top3Unlab:top3).forEach((x,i)=>{ html += cardHtml(x,i); });
   html += `</div>`;
 
   // ── Simulación histórica retrospectiva ───────────────────
@@ -4231,6 +4292,10 @@ function runDiagnosisPanel() {
   // Laboratorio: acumuladores dinámicos por nombre de test
   const LAB_ALL = {}, LAB_LONG = {}, LAB_RL = {}, COMBOS = {};
   const CB_SHORT = {}, CB_RL = {}, CB_RS = {};
+  // Comparativo etiquetadas vs no (global y por tipo)
+  const ETIQ = deepAcc(), NOETIQ = deepAcc();
+  const ETIQ_TIPO = {};
+  for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']) ETIQ_TIPO[s] = { e:deepAcc(), n:deepAcc() };
   const accInto = (store, obj) => {
     if (!obj) return;
     for (const [name, st] of Object.entries(obj)) {
@@ -4278,6 +4343,9 @@ function runDiagnosisPanel() {
     accInto(LAB_ALL, d.labAll); accInto(LAB_LONG, d.labLong);
     accInto(LAB_RL, d.labRangeLong); accInto(COMBOS, d.comboStats);
     accInto(CB_SHORT, d.combosShort); accInto(CB_RL, d.combosRangeLong); accInto(CB_RS, d.combosRangeShort);
+    if (d.etiquetadas) addDeep(ETIQ, d.etiquetadas);
+    if (d.noEtiquetadas) addDeep(NOETIQ, d.noEtiquetadas);
+    if (d.etiqPorTipo) for (const s in ETIQ_TIPO) { addDeep(ETIQ_TIPO[s].e, d.etiqPorTipo[s]?.etiquetada); addDeep(ETIQ_TIPO[s].n, d.etiqPorTipo[s]?.noEtiquetada); }
   }
   // Reducir el acumulador profundo a métricas legibles
   const deepFinal = {};
@@ -4306,6 +4374,9 @@ function runDiagnosisPanel() {
   const labAllFinal = reduceLab(LAB_ALL), labLongFinal = reduceLab(LAB_LONG);
   const labRLFinal = reduceLab(LAB_RL), combosFinal = reduceLab(COMBOS);
   const combosShortFinal = reduceLab(CB_SHORT), combosRLFinal = reduceLab(CB_RL), combosRSFinal = reduceLab(CB_RS);
+  const etiqFinal = reduceZone(ETIQ), noEtiqFinal = reduceZone(NOETIQ);
+  const etiqTipoFinal = {};
+  for (const s in ETIQ_TIPO) etiqTipoFinal[s] = { etiquetada:reduceZone(ETIQ_TIPO[s].e), noEtiquetada:reduceZone(ETIQ_TIPO[s].n) };
   // baseWR para comparar: el WR base de LONG y de todo
   const baseLongWR = G.bySig.LONG.n ? Math.round(G.bySig.LONG.w/G.bySig.LONG.n*100) : null;
 
@@ -4487,8 +4558,30 @@ function runDiagnosisPanel() {
   const rlRowsHtml    = comboRowsFor(combosRLFinal, wrSig('RANGE_LONG'));
   const rsRowsHtml    = comboRowsFor(combosRSFinal, wrSig('RANGE_SHORT'));
 
+  // Comparativa de 4 formas: Todas / No etiquetadas / Etiquetadas / por tipo.
+  // Es el resumen que responde "¿y si solo opero las etiquetadas?".
+  const g4 = (lbl,g,strong) => {
+    if(!g||!g.n) return '<tr><td style="padding:6px 8px'+(strong?';font-weight:700':';padding-left:20px;color:var(--sub)')+'">'+lbl+'</td><td colspan="4" style="padding:6px 8px;color:var(--dim);text-align:center">sin datos</td></tr>';
+    const pnlCol=g.pnl>=0?'var(--emerald)':'var(--ember)';
+    return '<tr'+(strong?' style="background:rgba(37,99,235,.05)"':'')+'>'+
+      '<td style="padding:6px 8px'+(strong?';font-weight:700':';padding-left:20px;color:var(--sub)')+'">'+lbl+'</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono)">'+g.wr+'%</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:'+pnlCol+'">'+g.pnl+'%</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--emerald)">'+(g.avgWin!=null?'+'+g.avgWin+'%':'—')+'</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-family:var(--f-mono);color:var(--sub)">'+g.n+'</td></tr>';
+  };
+  let compRowsHtml =
+    g4('① TODAS las señales', {n:G.all.n, wr:wr(G.all), pnl:avgPnl, avgWin:null}, true) +
+    g4('② Solo NO etiquetadas', noEtiqFinal, true) +
+    g4('③ Solo ETIQUETADAS ✦', etiqFinal, true);
+  // Desglose por tipo de las etiquetadas
+  for (const s of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']) {
+    const e = etiqTipoFinal[s]?.etiquetada;
+    if (e && e.n) compRowsHtml += g4('└ '+s+' etiquetada', e, false);
+  }
+
   window.__lastDiag = {
-    fecha: new Date().toISOString(), version: 'r40',
+    fecha: new Date().toISOString(), version: 'r41',
     simbolos_analizados: analyzed, operaciones_totales: G.all.n,
     wr_base: wr(G.all), pnl_medio_op: avgPnl,
     range_oscillator: { bloqueadas_wr: wr(G.roBlocked), bloqueadas_n: G.roBlocked.n, dejadas_wr: wr(G.roKept), dejadas_n: G.roKept.n },
@@ -4508,6 +4601,7 @@ function runDiagnosisPanel() {
     combos_SHORT: combosShortFinal,
     combos_RANGE_LONG: combosRLFinal,
     combos_RANGE_SHORT: combosRSFinal,
+    comparativa_etiquetadas: { etiquetadas: etiqFinal, no_etiquetadas: noEtiqFinal, por_tipo: etiqTipoFinal },
     wr_base_LONG: baseLongWR,
     conclusiones: concl.map(c=>c.replace(/<[^>]+>/g,''))
   };
@@ -4516,6 +4610,18 @@ function runDiagnosisPanel() {
   <div style="max-width:920px;margin:0 auto;padding:20px">
     <h2 style="font-family:var(--f-display);font-size:22px;margin:0 0 4px">🔬 Diagnóstico de la operativa</h2>
     <p style="color:var(--sub);font-size:13px;margin:0 0 18px">Analizadas <b>${analyzed}</b> acciones · <b>${G.all.n}</b> operaciones históricas posibles. Medido con stop estructural base, sin filtros, para ver el efecto REAL de cada uno.</p>
+
+    <h3 style="font-family:var(--f-display);font-size:17px;margin:0 0 4px">⚖️ Las 4 formas de comparar</h3>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 10px">Qué habría pasado operando todas, solo las NO etiquetadas, o solo las ETIQUETADAS (las recetas de calidad). Abajo, el desglose por tipo de las etiquetadas.</p>
+    <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:560px">
+        <tr style="color:var(--sub);font-size:10px;text-transform:uppercase;letter-spacing:.03em">
+          <td style="padding:6px 8px">Forma de operar</td><td style="padding:6px 8px;text-align:right">WR</td>
+          <td style="padding:6px 8px;text-align:right">PnL/op</td><td style="padding:6px 8px;text-align:right">Gan media</td><td style="padding:6px 8px;text-align:right">N</td></tr>
+        ${compRowsHtml}
+      </table>
+    </div>
+
     <div style="background:var(--card);border:1px solid var(--rule2);border-radius:12px;padding:4px 0;margin-bottom:18px">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <tr style="color:var(--sub);font-size:11px;text-transform:uppercase;letter-spacing:.04em">
@@ -4754,7 +4860,7 @@ function renderPanel() {
         <span class="n n-poc">${f(r.poc)}</span>
         <span class="n n-vah">${f(r.vah)}</span>
         <span class="n n-vah">${f(r.val)}</span>
-        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${r._td?.sig?.longClass==='pelotazo'?'<span title="LONG pelotazo: bajo WR pero PnL alto (rebote grande)" style="margin-left:3px">💎</span>':r._td?.sig?.longClass==='seguro'?'<span title="LONG seguro: alto WR, cerca del VAL con giro confirmado" style="margin-left:3px">🛡️</span>':''}${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
+        <span><span class="badge ${bCls(r.sig)}">${sigTxt(r.sig)}</span>${(()=>{const ic=labelIcon(r._td?.sig);return ic?`<span title="Señal etiquetada (receta de alto rendimiento)" style="margin-left:3px">${ic}</span>`:'';})()}${isTracked?`<span style="display:block;font-size:7px;color:${stColor}">${stLabel}</span>`:''}</span>
         <span class="n n-stop">${f(r.stop)}<span style="font-size:9px;color:var(--dim);margin-left:2px">${r.close&&r.stop?'('+((Math.abs(r.stop-r.close)/r.close*100).toFixed(1))+'%)':''}</span></span>
         <span class="n n-tgt">${f(r.t1)}<span style="font-size:9px;color:var(--emerald);margin-left:2px">${r.close&&r.t1?(()=>{const d=((r.t1-r.close)/r.close*100).toFixed(1);return '('+(parseFloat(d)>0?'+':'')+d+'%)'})():''}</span></span>
         <span class="n n-rr">${r.rr ? '1:'+r.rr : '—'}</span>
