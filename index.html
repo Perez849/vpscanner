@@ -105,8 +105,8 @@ const BASE='https://raw.githubusercontent.com/Perez849/vpscanner/main/scanner/da
 const bust=()=>'?t='+Math.floor(Date.now()/60000);
 const SIG_COLOR={LONG:'var(--emerald)',SHORT:'var(--ember)',RANGE_LONG:'var(--cyan)',RANGE_SHORT:'var(--amber)'};
 const SIG_BG={LONG:'#e7f6ee',SHORT:'#fdeaea',RANGE_LONG:'#e6f6fa',RANGE_SHORT:'#fcf3e0'};
-const LABEL_ICON={pelotazo:'💎',seguro:'🛡️',premium:'⭐',rebote:'🛡️'};
-const LABEL_NAME={pelotazo:'Pelotazo',seguro:'Seguro',premium:'Premium',rebote:'Rebote'};
+const LABEL_ICON={pelotazo_max:'💎💎',pelotazo:'💎',seguro:'🛡️',premium:'⭐',rebote:'🛡️'};
+const LABEL_NAME={pelotazo_max:'Pelotazo máximo',pelotazo:'Pelotazo',seguro:'Seguro',premium:'Premium',rebote:'Rebote'};
 const TYPE_NAME={LONG:'LONG · reversión bajo VAL',SHORT:'SHORT · reversión sobre VAH',RANGE_LONG:'RANGE LONG · dentro del VA, al alza',RANGE_SHORT:'RANGE SHORT · dentro del VA, a la baja'};
 let STATE={signals:{},history:{},stats:null,meta:null,tf:'1d',q:'',sort:'wr',dir:-1};
 let MODAL={key:null,filter:'all'};
@@ -243,6 +243,29 @@ function renderModal(){
     +bs((bt.avgPnl!=null?(bt.avgPnl>=0?'+':'')+bt.avgPnl+'%':'—'),'Gan/op',bt.avgPnl>=0?'var(--emerald)':'var(--ember)')
     +bs(bt.total??0,'Operaciones')+bs((bt.totalPnl!=null?(bt.totalPnl>=0?'+':'')+bt.totalPnl+'%':'—'),'PnL total',bt.totalPnl>=0?'var(--emerald)':'var(--ember)')
     +bs(bt.avgRR?'1:'+bt.avgRR:'—','R:R medio','var(--violet)');
+
+  // Detalle individualizado: cómo rinde CADA tipo de etiqueta en ESTE activo.
+  const stOf=arr=>{if(!arr.length)return null;const w=arr.filter(t=>t.outcome==='win').length;let a=0;for(const t of arr)a+=t.pnlPct;const wp=arr.filter(t=>t.pnlPct>0).map(t=>t.pnlPct);return{n:arr.length,wr:Math.round(w/arr.length*100),pnl:+(a/arr.length).toFixed(2),avgWin:wp.length?+(wp.reduce((x,y)=>x+y,0)/wp.length).toFixed(2):0};};
+  const byLabel=[
+    ['💎💎 Pelotazo máximo', stOf(trades.filter(t=>t.labelClass==='pelotazo_max'))],
+    ['💎 Pelotazo', stOf(trades.filter(t=>t.labelClass==='pelotazo'))],
+    ['🛡️ Seguro/Rebote', stOf(trades.filter(t=>t.labelClass==='seguro'||t.labelClass==='rebote'))],
+    ['⭐ Premium', stOf(trades.filter(t=>t.labelClass==='premium'))],
+    ['Sin etiqueta', stOf(trades.filter(t=>!t.labelClass))],
+  ].filter(([,s])=>s&&s.n>0);
+  let labBreakHtml='';
+  if(byLabel.length){
+    labBreakHtml=`<div style="display:grid;grid-template-columns:auto repeat(4,1fr);gap:0 8px;font-family:var(--f-mono);font-size:11px;align-items:center">
+      <div></div><div class="hd" style="font-size:8px;color:var(--dim);text-align:right;text-transform:uppercase">Acierto</div><div class="hd" style="font-size:8px;color:var(--dim);text-align:right;text-transform:uppercase">Gan/op</div><div class="hd" style="font-size:8px;color:var(--dim);text-align:right;text-transform:uppercase">Gan media</div><div class="hd" style="font-size:8px;color:var(--dim);text-align:right;text-transform:uppercase">Ops</div>`;
+    for(const [lbl,st] of byLabel){
+      labBreakHtml+=`<div style="color:var(--sub);font-size:10px;padding:4px 0;border-bottom:1px solid var(--rule)">${lbl}</div>
+        <div style="text-align:right;padding:4px 0;border-bottom:1px solid var(--rule);font-weight:700">${st.wr}%</div>
+        <div style="text-align:right;padding:4px 0;border-bottom:1px solid var(--rule);color:${st.pnl>=0?'var(--emerald)':'var(--ember)'}">${st.pnl>=0?'+':''}${st.pnl}%</div>
+        <div style="text-align:right;padding:4px 0;border-bottom:1px solid var(--rule);color:var(--emerald)">+${st.avgWin}%</div>
+        <div style="text-align:right;padding:4px 0;border-bottom:1px solid var(--rule);color:var(--dim)">${st.n}</div>`;
+    }
+    labBreakHtml+=`</div>`;
+  } else labBreakHtml='<div style="color:var(--dim);font-size:12px;font-family:var(--f-mono)">Sin operaciones etiquetadas en este valor.</div>';
   let tr=trades;
   if(MODAL.filter==='win')tr=trades.filter(t=>t.outcome==='win');
   else if(MODAL.filter==='loss')tr=trades.filter(t=>t.outcome!=='win');
@@ -275,6 +298,7 @@ function renderModal(){
       <div class="m-sec">Niveles y objetivos</div><div class="lvls">${lvlsHtml}</div>
       <div class="m-sec">Contexto (indicadores)</div><div class="lvls">${indHtml}</div>
       <div class="m-sec">Rendimiento histórico de ${s.sym} (${(s.tf||'').toUpperCase()})</div><div class="btstats">${btHtml}</div>
+      <div class="m-sec">Rendimiento por tipo de alerta en ${s.sym}</div>${labBreakHtml}
       <div class="m-sec">Operaciones históricas (${trades.length})</div>${trHtml}
     </div>`;
 }
