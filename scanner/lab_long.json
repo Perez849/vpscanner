@@ -1,0 +1,265 @@
+{
+  "base": {
+    "n": 779,
+    "wr": 51,
+    "pnl": 6.28,
+    "avgWin": 14.92
+  },
+  "dimensions": {
+    "A. Profundidad bajo VAL": {
+      "<3% (cerca)": {
+        "n": 393,
+        "wr": 52,
+        "pnl": 2.46,
+        "avgWin": 7.24
+      },
+      "3-5%": {
+        "n": 162,
+        "wr": 48,
+        "pnl": 6.8,
+        "avgWin": 17.27
+      },
+      "5-8%": {
+        "n": 123,
+        "wr": 45,
+        "pnl": 6.88,
+        "avgWin": 18.65
+      },
+      "8-12% (muy caído)": {
+        "n": 62,
+        "wr": 63,
+        "pnl": 17.26,
+        "avgWin": 29.68
+      },
+      "12-20% (desplome)": {
+        "n": 32,
+        "wr": 59,
+        "pnl": 20.89,
+        "avgWin": 37.14
+      },
+      ">20% (capitulación)": {
+        "n": 7,
+        "wr": 57,
+        "pnl": 33.81,
+        "avgWin": 64.23
+      }
+    },
+    "A2. Recorrido potencial al PoC": {
+      "PoC <3%": {
+        "n": 57,
+        "wr": 74,
+        "pnl": 0.92,
+        "avgWin": 1.9
+      },
+      "PoC 3-8%": {
+        "n": 228,
+        "wr": 52,
+        "pnl": 1.61,
+        "avgWin": 5.3
+      },
+      "PoC 8-15%": {
+        "n": 247,
+        "wr": 42,
+        "pnl": 3.24,
+        "avgWin": 11.23
+      },
+      "PoC >15% (gran recorrido)": {
+        "n": 247,
+        "wr": 55,
+        "pnl": 14.86,
+        "avgWin": 30.1
+      }
+    },
+    "B. Confirmación de giro": {
+      "frenando (accel>0)": {
+        "n": 413,
+        "wr": 56,
+        "pnl": 8.88,
+        "avgWin": 18.15
+      },
+      "1+ vela verde": {
+        "n": 346,
+        "wr": 59,
+        "pnl": 11.38,
+        "avgWin": 21.38
+      },
+      "2+ verdes": {
+        "n": 133,
+        "wr": 63,
+        "pnl": 16.54,
+        "avgWin": 27.97
+      },
+      "3+ verdes": {
+        "n": 57,
+        "wr": 68,
+        "pnl": 20.57,
+        "avgWin": 31.8
+      },
+      "mecha rechazo >40%": {
+        "n": 178,
+        "wr": 55,
+        "pnl": 6.44,
+        "avgWin": 13.91
+      },
+      "verde fuerte (cierra arriba)": {
+        "n": 235,
+        "wr": 58,
+        "pnl": 10.66,
+        "avgWin": 20.49
+      },
+      "recupera VAL": {
+        "n": 34,
+        "wr": 62,
+        "pnl": 1.86,
+        "avgWin": 4.83
+      },
+      "RSI saliendo sobreventa": {
+        "n": 186,
+        "wr": 52,
+        "pnl": 5.43,
+        "avgWin": 12.92
+      },
+      "rebotó del mín20 (>3%)": {
+        "n": 497,
+        "wr": 54,
+        "pnl": 8.68,
+        "avgWin": 18.72
+      },
+      "aún en el suelo (<1% del mín20)": {
+        "n": 101,
+        "wr": 45,
+        "pnl": 1.42,
+        "avgWin": 6.05
+      }
+    },
+    "C. Estructura del Value Area": {
+      "VAL con mucho volumen (>10%)": {
+        "n": 651,
+        "wr": 53,
+        "pnl": 6.21,
+        "avgWin": 14.35
+      },
+      "VAL volumen medio (5-10%)": {
+        "n": 109,
+        "wr": 45,
+        "pnl": 6.51,
+        "avgWin": 18.34
+      },
+      "VA estrecho (<10%)": {
+        "n": 263,
+        "wr": 57,
+        "pnl": 1.89,
+        "avgWin": 4.94
+      },
+      "VA ancho (>25%)": {
+        "n": 174,
+        "wr": 59,
+        "pnl": 17.25,
+        "avgWin": 32.6
+      },
+      "PoC alto en el VA (>0.6)": {
+        "n": 289,
+        "wr": 50,
+        "pnl": 8.41,
+        "avgWin": 19.83
+      },
+      "volumen fiable": {
+        "n": 779,
+        "wr": 51,
+        "pnl": 6.28,
+        "avgWin": 14.92
+      }
+    },
+    "D. Tendencia y régimen": {
+      "a favor tendencia": {
+        "n": 479,
+        "wr": 53,
+        "pnl": 7.08,
+        "avgWin": 15.76
+      },
+      "contra tendencia": {
+        "n": 300,
+        "wr": 48,
+        "pnl": 4.99,
+        "avgWin": 13.41
+      },
+      "RO no bloquea": {
+        "n": 779,
+        "wr": 51,
+        "pnl": 6.28,
+        "avgWin": 14.92
+      }
+    }
+  },
+  "combos": {
+    "caído + frenando": {
+      "n": 77,
+      "wr": 58,
+      "pnl": 18.16,
+      "avgWin": 33.61
+    },
+    "caído + 2 verdes": {
+      "n": 43,
+      "wr": 70,
+      "pnl": 27.3,
+      "avgWin": 40.55
+    },
+    "caído + recupera VAL": null,
+    "caído + mecha rechazo": {
+      "n": 20,
+      "wr": 60,
+      "pnl": 18.29,
+      "avgWin": 32.14
+    },
+    "caído + RSI saliendo": {
+      "n": 25,
+      "wr": 64,
+      "pnl": 13.51,
+      "avgWin": 22.17
+    },
+    "caído + rebotó mín20": {
+      "n": 87,
+      "wr": 62,
+      "pnl": 21.46,
+      "avgWin": 36.77
+    },
+    "caído + verde fuerte": {
+      "n": 55,
+      "wr": 60,
+      "pnl": 21.29,
+      "avgWin": 37.68
+    },
+    "caído + VAL alto volumen": {
+      "n": 77,
+      "wr": 61,
+      "pnl": 20.21,
+      "avgWin": 35.62
+    },
+    "caído + frenando + VAL volumen": {
+      "n": 63,
+      "wr": 59,
+      "pnl": 19.78,
+      "avgWin": 36.38
+    },
+    "caído + 2verdes + a favor": {
+      "n": 30,
+      "wr": 70,
+      "pnl": 29.18,
+      "avgWin": 43.07
+    },
+    "caído + recupera VAL + frenando": null,
+    "caído + PoC lejos + giro": {
+      "n": 90,
+      "wr": 62,
+      "pnl": 20.61,
+      "avgWin": 35.26
+    },
+    "caído + recupera VAL + PoC lejos": null,
+    "desplome>12 + giro": {
+      "n": 38,
+      "wr": 58,
+      "pnl": 23.41,
+      "avgWin": 43.04
+    }
+  }
+}
