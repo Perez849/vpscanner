@@ -316,29 +316,29 @@ def classify_signal(close: float, vp: Dict[str, Any], df: List[Dict[str, Any]],
                 lo = max(0, val_level - 1); hi = min(n_rows - 1, val_level + 1)
                 edge_vol = sum(vol_by_level[lo:hi+1]) / total_vol * 100
             if deep and c2 and a_favor:
-                elite, elite_class = True, 'pelotazo_max'      # 74% WR, +32%/op
+                elite, elite_class = True, 'caida_giro'         # 74% WR, +32%/op
             elif deep and c2:
-                elite, elite_class = True, 'pelotazo_max'      # 74% WR, +30%/op
+                elite, elite_class = True, 'caida_giro'         # 74% WR, +30%/op
             elif (dist_to_poc > 10 and c2) or (deep and edge_vol > 10):
-                elite, elite_class = True, 'pelotazo'          # 65% WR, +18-22%/op
+                elite, elite_class = True, 'caida_recorrido'    # 65% WR, +18-22%/op
         elif st == 'RANGE_LONG':
             if a_favor and c2:
-                elite, elite_class = True, 'premium'           # 79% WR, +4.6%/op
+                elite, elite_class = True, 'empuje_favor'       # 79% WR, +4.6%/op
             else:
                 extended = (close < val) or dist_to_poc > 10
                 if extended and c2:
-                    elite, elite_class = True, 'pelotazo'      # 58% WR, +11.5%/op (PnL)
+                    elite, elite_class = True, 'rango_extendido'  # 58% WR, +11.5%/op (PnL)
         elif st == 'RANGE_SHORT':
             # SOLO a favor de tendencia + 2 velas a favor (rojas). Resto = veneno.
             if a_favor and c2:
-                elite, elite_class = True, 'rebote'            # 77% WR, +2.2%/op
+                elite, elite_class = True, 'corto_favor'        # 77% WR, +2.2%/op
         elif st == 'SHORT':
             dist_above_vah = (close - vah) / close * 100
             recovered = False
             if len(df) >= 2:
                 recovered = (df[-2]['close'] > vah) and (close <= vah * 1.01)
             if va_width_pct < 10 or recovered:
-                elite, elite_class = True, 'seguro'            # 57-67% WR, +2.5%/op
+                elite, elite_class = True, 'corto_estrecho'     # 57-67% WR, +2.5%/op
 
     sig['isElite'] = elite
     sig['eliteClass'] = elite_class

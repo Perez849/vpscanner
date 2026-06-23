@@ -236,7 +236,7 @@ def main():
         arr = [t for t in all_trades if t['signal'] == s]
         by_type[s] = {'all': stat_block(arr)}
     by_class = {}
-    for c in ('pelotazo_max', 'pelotazo', 'premium', 'rebote', 'seguro'):
+    for c in ('caida_giro', 'caida_recorrido', 'empuje_favor', 'rango_extendido', 'corto_favor', 'corto_estrecho'):
         arr = [t for t in all_trades if t['labelClass'] == c]
         if arr:
             by_class[c] = stat_block(arr)
