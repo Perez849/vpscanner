@@ -16,34 +16,25 @@
     --r:10px;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-text);
-    -webkit-font-smoothing:antialiased;line-height:1.5}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-text);-webkit-font-smoothing:antialiased;line-height:1.5}
   .wrap{max-width:1180px;margin:0 auto;padding:20px 18px 80px}
-
-  /* Cabecera */
   header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:8px 0 18px;border-bottom:2px solid var(--ink)}
   h1{font-family:var(--f-display);font-size:26px;font-weight:800;margin:0;letter-spacing:-.01em}
   .badge-ver{font-family:var(--f-mono);font-size:11px;background:var(--sapphire);color:#fff;padding:2px 8px;border-radius:5px;font-weight:700}
   .meta{font-family:var(--f-mono);font-size:11px;color:var(--sub);margin-left:auto}
   .meta b{color:var(--emerald)}
-
-  /* Estado de carga */
   .loading{text-align:center;padding:80px 20px;color:var(--sub);font-family:var(--f-mono);font-size:13px}
   .err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:var(--r);padding:16px 18px;font-size:13px;margin:20px 0;line-height:1.6}
-
-  /* Controles */
   .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:18px 0 14px}
-  .controls input,.controls select{font-family:var(--f-text);font-size:13px;padding:7px 11px;border:1px solid var(--rule2);border-radius:8px;background:var(--card);color:var(--ink)}
-  .controls input{flex:1;min-width:180px}
+  .controls input{flex:1;min-width:180px;font-family:var(--f-text);font-size:13px;padding:7px 11px;border:1px solid var(--rule2);border-radius:8px;background:var(--card);color:var(--ink)}
   .seg{display:flex;border:1px solid var(--rule2);border-radius:8px;overflow:hidden}
   .seg button{font-family:var(--f-mono);font-size:11px;padding:7px 12px;border:0;background:var(--card);color:var(--sub);cursor:pointer}
   .seg button.on{background:var(--ink);color:#fff;font-weight:700}
-
-  /* Top */
   .toplbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin:18px 0 8px}
   .toplbl.lab{color:var(--emerald)} .toplbl.unl{color:var(--dim)}
   .topgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:8px}
-  .tcard{background:var(--card);border:1px solid var(--rule2);border-radius:var(--r);padding:13px 15px}
+  .tcard{background:var(--card);border:1px solid var(--rule2);border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:border-color .12s}
+  .tcard:hover{border-color:var(--sapphire)}
   .tcard.best{border-color:var(--emerald)}
   .tc-head{display:flex;align-items:center;gap:6px;margin-bottom:8px}
   .tc-sym{font-family:var(--f-display);font-weight:700;font-size:15px}
@@ -53,126 +44,108 @@
   .tc-box .row{display:flex;justify-content:space-between}
   .tc-grid{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-family:var(--f-mono);font-size:9px;line-height:1.5}
   .tc-grid .k{color:var(--dim)}
-
-  /* Tabla */
   table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
   thead td{font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);padding:8px 10px;border-bottom:2px solid var(--rule2);cursor:pointer;user-select:none}
   tbody td{padding:9px 10px;border-bottom:1px solid var(--rule)}
-  tbody tr:hover{background:var(--ink3)}
+  tbody tr{cursor:pointer} tbody tr:hover{background:var(--ink3)}
   .sym{font-family:var(--f-display);font-weight:700}
   .mono{font-family:var(--f-mono);font-size:12px}
   .sig-badge{font-family:var(--f-mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px}
-  .pill{font-family:var(--f-mono);font-size:9px;padding:2px 7px;border-radius:10px;background:var(--ink2);color:var(--sub)}
-
-  /* Stats */
   .stats{background:var(--card);border:1px solid var(--rule2);border-radius:var(--r);padding:16px 18px;margin:22px 0}
-  .stats h2{font-family:var(--f-display);font-size:17px;margin:0 0 12px}
+  .stats h2{font-family:var(--f-display);font-size:17px;margin:0 0 4px}
   .stable{display:grid;grid-template-columns:auto repeat(3,1fr);gap:0 10px;font-family:var(--f-mono);font-size:12px;align-items:center}
   .stable .hd{font-size:9px;color:var(--dim);text-transform:uppercase;text-align:right;padding-bottom:8px}
   .stable .lb{color:var(--sub);font-size:10px;padding:5px 0;border-bottom:1px solid var(--rule)}
   .stable .vl{text-align:right;padding:5px 0;border-bottom:1px solid var(--rule)}
   .good{color:var(--emerald);font-weight:700}
-
+  .typehd{font-family:var(--f-mono);font-size:11px;font-weight:700;margin:16px 0 4px;padding-top:10px;border-top:1px solid var(--rule)}
+  .overlay{position:fixed;inset:0;background:rgba(20,22,28,.55);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:30px 16px;overflow-y:auto}
+  .overlay.on{display:flex}
+  .modal{background:var(--card);border-radius:14px;max-width:760px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+  .m-hd{display:flex;align-items:center;gap:10px;padding:18px 22px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+  .m-hd .x{margin-left:auto;cursor:pointer;font-size:22px;color:var(--dim);line-height:1;border:0;background:0}
+  .m-body{padding:18px 22px;max-height:70vh;overflow-y:auto}
+  .m-sec{font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:18px 0 8px}
+  .m-sec:first-child{margin-top:0}
+  .lvls{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+  .lvl{background:var(--ink2);border-radius:8px;padding:9px 11px}
+  .lvl .lk{font-family:var(--f-mono);font-size:8px;color:var(--sub);text-transform:uppercase}
+  .lvl .lv{font-family:var(--f-mono);font-size:14px;font-weight:700;margin-top:2px}
+  .scn{background:var(--ink3);border-left:3px solid var(--sapphire);border-radius:6px;padding:10px 12px;font-size:12.5px;line-height:1.55}
+  .btstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px}
+  .bs{background:var(--ink2);border-radius:8px;padding:9px;text-align:center}
+  .bs .bn{font-family:var(--f-mono);font-size:17px;font-weight:800}
+  .bs .bl{font-family:var(--f-mono);font-size:8px;color:var(--sub);text-transform:uppercase;margin-top:2px}
+  .thist{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--f-mono)}
+  .thist td{padding:5px 7px;border-bottom:1px solid var(--rule)}
+  .thist .h td{font-size:8px;color:var(--dim);text-transform:uppercase}
+  .tfilt{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+  .tfilt button{font-family:var(--f-mono);font-size:10px;padding:4px 10px;border:1px solid var(--rule2);border-radius:14px;background:var(--card);color:var(--sub);cursor:pointer}
+  .tfilt button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .foot{font-family:var(--f-mono);font-size:10px;color:var(--dim);text-align:center;margin-top:30px;line-height:1.7}
-  @media(max-width:640px){
-    .hide-sm{display:none}
-    h1{font-size:21px}
-  }
+  @media(max-width:640px){ .hide-sm{display:none} h1{font-size:21px} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>VP Scanner</h1>
-    <span class="badge-ver">visor v1</span>
+    <span class="badge-ver">visor v2</span>
     <span class="meta" id="meta">cargando…</span>
   </header>
-
-  <div id="app">
-    <div class="loading">Leyendo datos del servidor…</div>
-  </div>
-
+  <div id="app"><div class="loading">Leyendo datos del servidor…</div></div>
   <div class="foot">
     Datos generados por el robot diario en GitHub · El navegador solo lee, no calcula<br>
-    Las cifras del backtest son NETAS de costes (0.30% por operación)
+    Cifras del backtest NETAS de costes (0.30% por operación) · Pincha cualquier señal para ver su detalle
   </div>
 </div>
-
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <script>
-// ── CONFIG: tu repo ───────────────────────────────────────────
-const BASE = 'https://raw.githubusercontent.com/Perez849/vpscanner/main/scanner/data/';
-// Cache-buster: añade ?t=timestamp para que el navegador no sirva un JSON viejo
-const bust = () => '?t=' + Math.floor(Date.now()/60000);  // cambia cada minuto
-
-const SIG_COLOR = { LONG:'var(--emerald)', SHORT:'var(--ember)', RANGE_LONG:'var(--cyan)', RANGE_SHORT:'var(--amber)' };
-const SIG_BG    = { LONG:'#e7f6ee', SHORT:'#fdeaea', RANGE_LONG:'#e6f6fa', RANGE_SHORT:'#fcf3e0' };
-const LABEL_ICON = { pelotazo:'💎', seguro:'🛡️', premium:'⭐', rebote:'🛡️' };
-const LABEL_NAME = { pelotazo:'Pelotazo', seguro:'Seguro', premium:'Premium', rebote:'Rebote' };
-
-let STATE = { signals:{}, stats:null, meta:null, tf:'1d', q:'', sort:'wr', dir:-1 };
-
-const f = (x,d=2) => x==null ? '—' : Number(x).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
-const icon = c => c ? (LABEL_ICON[c]||'') : '';
+const BASE='https://raw.githubusercontent.com/Perez849/vpscanner/main/scanner/data/';
+const bust=()=>'?t='+Math.floor(Date.now()/60000);
+const SIG_COLOR={LONG:'var(--emerald)',SHORT:'var(--ember)',RANGE_LONG:'var(--cyan)',RANGE_SHORT:'var(--amber)'};
+const SIG_BG={LONG:'#e7f6ee',SHORT:'#fdeaea',RANGE_LONG:'#e6f6fa',RANGE_SHORT:'#fcf3e0'};
+const LABEL_ICON={pelotazo:'💎',seguro:'🛡️',premium:'⭐',rebote:'🛡️'};
+const LABEL_NAME={pelotazo:'Pelotazo',seguro:'Seguro',premium:'Premium',rebote:'Rebote'};
+const TYPE_NAME={LONG:'LONG · reversión bajo VAL',SHORT:'SHORT · reversión sobre VAH',RANGE_LONG:'RANGE LONG · dentro del VA, al alza',RANGE_SHORT:'RANGE SHORT · dentro del VA, a la baja'};
+let STATE={signals:{},history:{},stats:null,meta:null,tf:'1d',q:'',sort:'wr',dir:-1};
+let MODAL={key:null,filter:'all'};
+const f=(x,d=2)=>x==null?'—':Number(x).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+const icon=c=>c?(LABEL_ICON[c]||''):'';
+const sigTxt=s=>(s||'').replace('_',' ');
 
 async function loadAll(){
   try{
-    const [sig, st, mt] = await Promise.all([
-      fetch(BASE+'signals.json'+bust()).then(r=>{ if(!r.ok) throw new Error('signals '+r.status); return r.json(); }),
-      fetch(BASE+'stats.json'+bust()).then(r=> r.ok ? r.json() : null).catch(()=>null),
-      fetch(BASE+'meta.json'+bust()).then(r=> r.ok ? r.json() : null).catch(()=>null),
+    const [sig,his,st,mt]=await Promise.all([
+      fetch(BASE+'signals.json'+bust()).then(r=>{if(!r.ok)throw new Error('signals '+r.status);return r.json();}),
+      fetch(BASE+'history.json'+bust()).then(r=>r.ok?r.json():{}).catch(()=>({})),
+      fetch(BASE+'stats.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch(BASE+'meta.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
     ]);
-    STATE.signals = sig; STATE.stats = st; STATE.meta = mt;
-    render();
+    STATE.signals=sig;STATE.history=his;STATE.stats=st;STATE.meta=mt;render();
   }catch(e){
-    document.getElementById('app').innerHTML =
-      '<div class="err"><b>No pude leer los datos.</b><br>'+
-      'Comprueba que el robot ha corrido al menos una vez y que el archivo existe en:<br>'+
-      '<span style="font-family:var(--f-mono);font-size:11px">'+BASE+'signals.json</span><br><br>'+
-      'Detalle técnico: '+e.message+'</div>';
+    document.getElementById('app').innerHTML='<div class="err"><b>No pude leer los datos.</b><br>Comprueba que el robot ha corrido y existe:<br><span style="font-family:var(--f-mono);font-size:11px">'+BASE+'signals.json</span><br><br>Detalle: '+e.message+'</div>';
   }
 }
-
-function fmtDate(iso){
-  if(!iso) return '—';
-  try{ const d=new Date(iso); return d.toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
-  catch{ return iso; }
-}
+function fmtDate(iso){if(!iso)return'—';try{return new Date(iso).toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch{return iso;}}
+function fmtTs(ts){if(!ts)return'—';try{return new Date(ts).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'});}catch{return'—';}}
 
 function rows(){
-  const arr = Object.entries(STATE.signals).map(([key,s])=>({key, ...s}));
-  let out = arr.filter(s => (s.tf||'').toLowerCase() === STATE.tf);
-  if(STATE.q){
-    const q = STATE.q.toLowerCase();
-    out = out.filter(s => (s.sym||'').toLowerCase().includes(q) || (s.sector||'').toLowerCase().includes(q));
-  }
-  const val = s => {
-    if(STATE.sort==='wr')   return s.bt?.wr ?? -1;
-    if(STATE.sort==='pnl')  return s.bt?.avgPnl ?? -999;
-    if(STATE.sort==='rr')   return s.rr ?? -1;
-    if(STATE.sort==='sym')  return s.sym;
-    return s.bt?.wr ?? -1;
-  };
-  out.sort((a,b)=>{
-    const va=val(a), vb=val(b);
-    if(typeof va==='string') return STATE.dir*va.localeCompare(vb);
-    return STATE.dir*(va-vb);
-  });
+  let out=Object.entries(STATE.signals).map(([key,s])=>({key,...s})).filter(s=>(s.tf||'').toLowerCase()===STATE.tf);
+  if(STATE.q){const q=STATE.q.toLowerCase();out=out.filter(s=>(s.sym||'').toLowerCase().includes(q)||(s.sector||'').toLowerCase().includes(q));}
+  const val=s=>STATE.sort==='wr'?(s.bt?.wr??-1):STATE.sort==='pnl'?(s.bt?.avgPnl??-999):STATE.sort==='rr'?(s.rr??-1):STATE.sort==='sym'?s.sym:(s.bt?.wr??-1);
+  out.sort((a,b)=>{const va=val(a),vb=val(b);return typeof va==='string'?STATE.dir*va.localeCompare(vb):STATE.dir*(va-vb);});
   return out;
 }
-
-function cardHtml(s, i, medal){
-  const col = SIG_COLOR[s.signal]||'var(--sub)';
-  const ic = icon(s.labelClass);
-  const tgtPct = (s.target&&s.entry)? ((s.target-s.entry)/s.entry*100) : null;
-  const stopPct = (s.stop&&s.entry)? ((s.stop-s.entry)/s.entry*100) : null;
-  return `<div class="tcard ${i===0?'best':''}">
-    <div class="tc-head">
-      <span>${medal||''}</span>
-      <span class="tc-sym">${s.sym}</span>
+function cardHtml(s,i,medal){
+  const col=SIG_COLOR[s.signal]||'var(--sub)',ic=icon(s.labelClass);
+  const tgtPct=(s.target&&s.entry)?((s.target-s.entry)/s.entry*100):null;
+  const stopPct=(s.stop&&s.entry)?((s.stop-s.entry)/s.entry*100):null;
+  return `<div class="tcard ${i===0?'best':''}" onclick="openModal('${s.key}')">
+    <div class="tc-head"><span>${medal||''}</span><span class="tc-sym">${s.sym}</span>
       ${ic?`<span title="${LABEL_NAME[s.labelClass]}">${ic}</span>`:''}
       <span class="tc-tf">${(s.tf||'').toUpperCase()}</span>
-      <span class="tc-sig" style="color:${col}">${(s.signal||'').replace('_',' ')}</span>
-    </div>
+      <span class="tc-sig" style="color:${col}">${sigTxt(s.signal)}</span></div>
     <div class="tc-box">
       <div class="row"><span style="color:var(--sub)">Entrada</span><span style="font-weight:700">${f(s.entry)}</span></div>
       <div class="row"><span style="color:var(--emerald)">🎯 Objetivo</span><span style="color:var(--emerald)">${f(s.target)} ${tgtPct!=null?`<span style="font-size:8px">(${tgtPct>=0?'+':''}${tgtPct.toFixed(1)}%)</span>`:''}</span></div>
@@ -182,114 +155,137 @@ function cardHtml(s, i, medal){
       <span class="k">Acierto hist.</span><span class="good">${s.bt?.wr??'—'}% <span style="color:var(--dim);font-weight:400">(${s.bt?.total??0} ops)</span></span>
       <span class="k">Ganancia/op</span><span>${s.bt?.avgPnl!=null?(s.bt.avgPnl>=0?'+':'')+s.bt.avgPnl+'%':'—'}</span>
       <span class="k">Ratio R:R</span><span style="color:var(--violet)">${s.rr?'1:'+s.rr:'—'}</span>
-    </div>
-  </div>`;
+    </div></div>`;
 }
-
 function render(){
-  const m = STATE.meta;
-  document.getElementById('meta').innerHTML = m
-    ? `<b>${m.symbolsOK}</b> símbolos · ${m.totalTrades?.toLocaleString('es-ES')||'—'} ops · act. ${fmtDate(m.generatedAt)}`
-    : '';
-
-  const list = rows();
-  // Top 3 etiquetadas y sin etiqueta (de la vista actual, por WR)
-  const byWr = [...list].sort((a,b)=>(b.bt?.wr??-1)-(a.bt?.wr??-1));
-  const lab  = byWr.filter(s=>s.labelClass).slice(0,3);
-  const unl  = byWr.filter(s=>!s.labelClass).slice(0,3);
+  const m=STATE.meta;
+  document.getElementById('meta').innerHTML=m?`<b>${m.symbolsOK}</b> símbolos · ${m.totalTrades?.toLocaleString('es-ES')||'—'} ops · act. ${fmtDate(m.generatedAt)}`:'';
+  const list=rows();
+  const byWr=[...list].sort((a,b)=>(b.bt?.wr??-1)-(a.bt?.wr??-1));
+  const lab=byWr.filter(s=>s.labelClass).slice(0,3),unl=byWr.filter(s=>!s.labelClass).slice(0,3);
   const medals=['🥇','🥈','🥉'];
-
-  let html = `
-    <div class="controls">
-      <input id="q" type="text" placeholder="Buscar símbolo o sector…" value="${STATE.q}">
-      <div class="seg">
-        <button data-tf="1d" class="${STATE.tf==='1d'?'on':''}">1D</button>
-        <button data-tf="1w" class="${STATE.tf==='1w'?'on':''}">1W</button>
-      </div>
-    </div>`;
-
-  // Top etiquetadas
-  html += `<div class="toplbl lab">✦ Top 3 etiquetadas — recetas de calidad</div>`;
-  if(lab.length){
-    html += `<div class="topgrid">`+lab.map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
-  } else {
-    html += `<div style="color:var(--sub);font-size:12px;font-family:var(--f-mono);margin-bottom:8px">Ninguna señal etiquetada en ${STATE.tf.toUpperCase()} ahora mismo.</div>`;
-  }
-  // Top sin etiqueta
-  html += `<div class="toplbl unl">⭐ Top 3 sin etiqueta — mejores por acierto</div>`;
-  html += `<div class="topgrid">`+(unl.length?unl:byWr.slice(0,3)).map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
-
-  // Tabla completa
-  const arrow = k => STATE.sort===k ? (STATE.dir<0?' ▼':' ▲') : '';
-  html += `<h2 style="font-family:var(--f-display);font-size:17px;margin:24px 0 4px">Todas las señales (${list.length})</h2>
-    <table>
-      <thead><tr>
-        <td data-s="sym">Símbolo${arrow('sym')}</td>
-        <td>Señal</td>
-        <td class="hide-sm">Etiqueta</td>
-        <td style="text-align:right">Entrada</td>
-        <td style="text-align:right" class="hide-sm">Objetivo</td>
-        <td style="text-align:right" class="hide-sm">Stop</td>
-        <td style="text-align:right" data-s="rr">R:R${arrow('rr')}</td>
-        <td style="text-align:right" data-s="wr">Acierto${arrow('wr')}</td>
-        <td style="text-align:right" data-s="pnl">Gan/op${arrow('pnl')}</td>
-      </tr></thead>
-      <tbody>`;
+  let html=`<div class="controls"><input id="q" type="text" placeholder="Buscar símbolo o sector…" value="${STATE.q}">
+    <div class="seg"><button data-tf="1d" class="${STATE.tf==='1d'?'on':''}">1D</button><button data-tf="1w" class="${STATE.tf==='1w'?'on':''}">1W</button></div></div>`;
+  html+=`<div class="toplbl lab">✦ Top 3 etiquetadas — recetas de calidad</div>`;
+  html+=lab.length?`<div class="topgrid">`+lab.map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`:`<div style="color:var(--sub);font-size:12px;font-family:var(--f-mono);margin-bottom:8px">Ninguna etiquetada en ${STATE.tf.toUpperCase()} ahora.</div>`;
+  html+=`<div class="toplbl unl">⭐ Top 3 sin etiqueta — mejores por acierto</div>`;
+  html+=`<div class="topgrid">`+(unl.length?unl:byWr.slice(0,3)).map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
+  const arrow=k=>STATE.sort===k?(STATE.dir<0?' ▼':' ▲'):'';
+  html+=`<h2 style="font-family:var(--f-display);font-size:17px;margin:24px 0 4px">Todas las señales (${list.length}) <span style="font-size:11px;color:var(--dim);font-family:var(--f-mono)">· pincha una fila</span></h2>
+    <table><thead><tr>
+      <td data-s="sym">Símbolo${arrow('sym')}</td><td>Señal</td><td class="hide-sm">Etiqueta</td>
+      <td style="text-align:right">Entrada</td><td style="text-align:right" class="hide-sm">Objetivo</td><td style="text-align:right" class="hide-sm">Stop</td>
+      <td style="text-align:right" data-s="rr">R:R${arrow('rr')}</td><td style="text-align:right" data-s="wr">Acierto${arrow('wr')}</td><td style="text-align:right" data-s="pnl">Gan/op${arrow('pnl')}</td>
+    </tr></thead><tbody>`;
   for(const s of list){
-    const col=SIG_COLOR[s.signal]||'var(--sub)', bg=SIG_BG[s.signal]||'var(--ink2)';
-    const ic=icon(s.labelClass);
-    html += `<tr>
+    const col=SIG_COLOR[s.signal]||'var(--sub)',bg=SIG_BG[s.signal]||'var(--ink2)',ic=icon(s.labelClass);
+    html+=`<tr onclick="openModal('${s.key}')">
       <td class="sym">${s.sym} <span style="color:var(--dim);font-weight:400;font-size:10px">${s.sector||''}</span></td>
-      <td><span class="sig-badge" style="color:${col};background:${bg}">${(s.signal||'').replace('_',' ')}</span></td>
+      <td><span class="sig-badge" style="color:${col};background:${bg}">${sigTxt(s.signal)}</span></td>
       <td class="hide-sm">${ic?`${ic} <span style="font-size:11px;color:var(--sub)">${LABEL_NAME[s.labelClass]}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
       <td style="text-align:right" class="mono">${f(s.entry)}</td>
-      <td style="text-align:right" class="mono hide-sm" style="color:var(--emerald)">${f(s.target)}</td>
-      <td style="text-align:right" class="mono hide-sm" style="color:var(--amber)">${f(s.stop)}</td>
-      <td style="text-align:right" class="mono" style="color:var(--violet)">${s.rr?'1:'+s.rr:'—'}</td>
+      <td style="text-align:right;color:var(--emerald)" class="mono hide-sm">${f(s.target)}</td>
+      <td style="text-align:right;color:var(--amber)" class="mono hide-sm">${f(s.stop)}</td>
+      <td style="text-align:right;color:var(--violet)" class="mono">${s.rr?'1:'+s.rr:'—'}</td>
       <td style="text-align:right" class="mono"><b>${s.bt?.wr??'—'}%</b> <span style="color:var(--dim);font-size:10px">(${s.bt?.total??0})</span></td>
-      <td style="text-align:right" class="mono" style="color:${(s.bt?.avgPnl??0)>=0?'var(--emerald)':'var(--ember)'}">${s.bt?.avgPnl!=null?(s.bt.avgPnl>=0?'+':'')+s.bt.avgPnl+'%':'—'}</td>
+      <td style="text-align:right;color:${(s.bt?.avgPnl??0)>=0?'var(--emerald)':'var(--ember)'}" class="mono">${s.bt?.avgPnl!=null?(s.bt.avgPnl>=0?'+':'')+s.bt.avgPnl+'%':'—'}</td>
     </tr>`;
   }
-  html += `</tbody></table>`;
-
-  // Estadísticas globales (etiquetadas vs no)
-  if(STATE.stats){
-    const st=STATE.stats;
-    const block=(lbl,g,strong)=>`
-      <div class="lb" style="${strong?'font-weight:700;color:var(--ink)':''}">${lbl}</div>
-      <div class="vl ${g&&g.wr!=null&&strong?'good':''}">${g&&g.wr!=null?g.wr+'%':'—'}</div>
-      <div class="vl" style="color:${g&&g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g&&g.pnl!=null?(g.pnl>=0?'+':'')+g.pnl+'%':'—'}</div>
-      <div class="vl" style="color:var(--dim)">${g&&g.n!=null?g.n:'—'}</div>`;
-    html += `<div class="stats">
-      <h2>📊 ¿Funcionan las etiquetas? (todo el histórico)</h2>
-      <p style="color:var(--sub);font-size:12px;margin:0 0 12px">Comparación de operar todas las señales vs solo las etiquetadas (💎🛡️⭐), sobre las ${st.global?.n?.toLocaleString('es-ES')||'—'} operaciones del backtest.</p>
-      <div class="stable">
-        <div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
-        ${block('① Todas las señales', st.global, true)}
-        ${block('② Sin etiqueta', st.unlabeled, true)}
-        ${block('③ Solo etiquetadas ✦', st.labeled, true)}
-      </div>
-      ${st.labeled && st.unlabeled && st.labeled.pnl>st.unlabeled.pnl
-        ? `<div style="margin-top:12px;background:#e7f6ee;border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:11px;color:var(--emerald)">✦ Operar solo etiquetadas habría dado ${st.labeled.wr}% de acierto y ${st.labeled.pnl>=0?'+':''}${st.labeled.pnl}%/op, frente al ${st.unlabeled.wr}% y ${st.unlabeled.pnl>=0?'+':''}${st.unlabeled.pnl}%/op de las no etiquetadas.</div>`
-        : ''}
-    </div>`;
-  }
-
-  document.getElementById('app').innerHTML = html;
+  html+=`</tbody></table>`+statsHtml();
+  document.getElementById('app').innerHTML=html;
   wire();
 }
-
+function statsHtml(){
+  if(!STATE.stats)return'';
+  const st=STATE.stats;
+  const cell=(g,hi)=>`<div class="vl ${hi&&g&&g.wr!=null?'good':''}">${g&&g.wr!=null?g.wr+'%':'—'}</div>
+    <div class="vl" style="color:${g&&g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g&&g.pnl!=null?(g.pnl>=0?'+':'')+g.pnl+'%':'—'}</div>
+    <div class="vl" style="color:var(--dim)">${g&&g.n!=null?g.n.toLocaleString('es-ES'):'—'}</div>`;
+  const row=(lbl,g,strong,hi)=>`<div class="lb" style="${strong?'font-weight:700;color:var(--ink)':''}">${lbl}</div>`+cell(g,hi);
+  let h=`<div class="stats"><h2>📊 ¿Funcionan las etiquetas? (todo el histórico)</h2>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 12px">Sobre las ${st.global?.n?.toLocaleString('es-ES')||'—'} operaciones del backtest. Operar todas vs solo etiquetadas (💎🛡️⭐), global y por tipo.</p>
+    <div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
+      ${row('① Todas las señales',st.global,true)}${row('② Sin etiqueta',st.unlabeled,true)}${row('③ Solo etiquetadas ✦',st.labeled,true,true)}</div>`;
+  if(st.labeled&&st.unlabeled&&st.labeled.pnl>st.unlabeled.pnl)
+    h+=`<div style="margin-top:12px;background:#e7f6ee;border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:11px;color:var(--emerald)">✦ Solo etiquetadas: ${st.labeled.wr}% acierto y ${st.labeled.pnl>=0?'+':''}${st.labeled.pnl}%/op, frente al ${st.unlabeled.wr}% y ${st.unlabeled.pnl>=0?'+':''}${st.unlabeled.pnl}%/op sin etiqueta.</div>`;
+  if(st.byType){
+    h+=`<div style="margin-top:6px">`;
+    for(const t of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']){
+      const bt=st.byType[t];if(!bt)continue;
+      h+=`<div class="typehd" style="color:${SIG_COLOR[t]}">${TYPE_NAME[t]}</div>
+        <div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
+          ${row('Todas',bt.all,false)}${row('Sin etiqueta',bt.unlabeled,false)}${row('Etiquetadas ✦',bt.labeled,false,true)}</div>`;
+    }
+    h+=`</div>`;
+  }
+  return h+`</div>`;
+}
+function openModal(key){MODAL.key=key;MODAL.filter='all';renderModal();document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
+function closeModal(){document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
+function setFilter(fl){MODAL.filter=fl;renderModal();}
+function renderModal(){
+  const s=STATE.signals[MODAL.key];if(!s){closeModal();return;}
+  const col=SIG_COLOR[s.signal]||'var(--sub)',ic=icon(s.labelClass);
+  const hist=STATE.history[MODAL.key];const trades=(hist&&hist.trades)?hist.trades:[];
+  const lvl=(k,v,c)=>`<div class="lvl"><div class="lk">${k}</div><div class="lv" style="${c?'color:'+c:''}">${v}</div></div>`;
+  const tgtPct=(s.target&&s.entry)?((s.target-s.entry)/s.entry*100):null;
+  const stopPct=(s.stop&&s.entry)?((s.stop-s.entry)/s.entry*100):null;
+  let lvlsHtml=lvl('Entrada',f(s.entry))+lvl('PoC',f(s.poc),'var(--emerald)')+lvl('VAH',f(s.vah))+lvl('VAL',f(s.val))
+    +lvl('Stop',f(s.stop)+(stopPct!=null?` <span style="font-size:9px">(${stopPct.toFixed(1)}%)</span>`:''),'var(--amber)')
+    +lvl('Objetivo',f(s.target)+(tgtPct!=null?` <span style="font-size:9px">(${tgtPct>=0?'+':''}${tgtPct.toFixed(1)}%)</span>`:''),'var(--emerald)')
+    +lvl('Objetivo 2',f(s.target2),'var(--emerald)')+lvl('R:R',s.rr?'1:'+s.rr:'—','var(--violet)');
+  const trend=s.trendBias>0?'Alcista ↑':s.trendBias<0?'Bajista ↓':'Neutra';
+  let indHtml=lvl('RSI',s.clsRsi!=null?s.clsRsi.toFixed(0):'—')+lvl('Aceleración',s.clsAccel!=null?(s.clsAccel>0?'frenando ↑':'cayendo ↓'):'—')
+    +lvl('Velas verdes',s.clsGreen??'—')+lvl('Tendencia',trend)+lvl('¿Cruce nuevo?',s.isNewCross?'Sí':'No');
+  const bt=s.bt||{};
+  const bs=(n,l,c)=>`<div class="bs"><div class="bn" style="${c?'color:'+c:''}">${n}</div><div class="bl">${l}</div></div>`;
+  let btHtml=bs((bt.wr??'—')+'%','Acierto',bt.wr>=55?'var(--emerald)':bt.wr>=45?'var(--amber)':'var(--ember)')
+    +bs((bt.avgPnl!=null?(bt.avgPnl>=0?'+':'')+bt.avgPnl+'%':'—'),'Gan/op',bt.avgPnl>=0?'var(--emerald)':'var(--ember)')
+    +bs(bt.total??0,'Operaciones')+bs((bt.totalPnl!=null?(bt.totalPnl>=0?'+':'')+bt.totalPnl+'%':'—'),'PnL total',bt.totalPnl>=0?'var(--emerald)':'var(--ember)')
+    +bs(bt.avgRR?'1:'+bt.avgRR:'—','R:R medio','var(--violet)');
+  let tr=trades;
+  if(MODAL.filter==='win')tr=trades.filter(t=>t.outcome==='win');
+  else if(MODAL.filter==='loss')tr=trades.filter(t=>t.outcome!=='win');
+  else if(MODAL.filter==='labeled')tr=trades.filter(t=>t.labeled);
+  tr=[...tr].sort((a,b)=>(b.entryTs||0)-(a.entryTs||0));
+  const wins=trades.filter(t=>t.outcome==='win').length;
+  const fbtn=(k,l)=>`<button class="${MODAL.filter===k?'on':''}" onclick="setFilter('${k}')">${l}</button>`;
+  let trHtml=`<div class="tfilt">${fbtn('all','Todas ('+trades.length+')')}${fbtn('win','Ganan ('+wins+')')}${fbtn('loss','Pierden ('+(trades.length-wins)+')')}${fbtn('labeled','Etiquetadas ('+trades.filter(t=>t.labeled).length+')')}</div>`;
+  if(tr.length){
+    trHtml+=`<div style="max-height:300px;overflow-y:auto"><table class="thist">
+      <tr class="h"><td>Fecha</td><td>Señal</td><td>Et.</td><td style="text-align:right">Entrada</td><td style="text-align:right">Salida</td><td style="text-align:center">Res.</td><td style="text-align:right">PnL</td><td style="text-align:right">Velas</td></tr>`;
+    for(const t of tr){
+      const c=SIG_COLOR[t.signal]||'var(--sub)',win=t.outcome==='win';
+      trHtml+=`<tr><td>${fmtTs(t.entryTs)}</td><td style="color:${c}">${sigTxt(t.signal)}</td><td>${icon(t.labelClass)||'·'}</td>
+        <td style="text-align:right">${f(t.entry)}</td><td style="text-align:right">${f(t.exitPrice)}</td><td style="text-align:center">${win?'✅':'❌'}</td>
+        <td style="text-align:right;color:${t.pnlPct>=0?'var(--emerald)':'var(--ember)'};font-weight:700">${t.pnlPct>=0?'+':''}${t.pnlPct.toFixed(2)}%</td>
+        <td style="text-align:right;color:var(--dim)">${t.barsToRes??'—'}</td></tr>`;
+    }
+    trHtml+=`</table></div>`;
+  }else trHtml+=`<div style="color:var(--dim);font-size:12px;font-family:var(--f-mono);padding:12px 0">Sin operaciones en este filtro.</div>`;
+  document.getElementById('modal').innerHTML=`
+    <div class="m-hd"><span style="font-family:var(--f-display);font-size:20px;font-weight:800">${s.sym}</span>
+      ${ic?`<span style="font-size:16px" title="${LABEL_NAME[s.labelClass]}">${ic}</span>`:''}
+      <span class="tc-tf">${(s.tf||'').toUpperCase()}</span>
+      <span style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:${col}">${sigTxt(s.signal)}</span>
+      <span style="font-size:11px;color:var(--dim)">${s.sector||''}</span>
+      <button class="x" onclick="closeModal()">×</button></div>
+    <div class="m-body">
+      <div class="m-sec">Escenario</div><div class="scn">${s.scenario||'—'}</div>
+      <div class="m-sec">Niveles y objetivos</div><div class="lvls">${lvlsHtml}</div>
+      <div class="m-sec">Contexto (indicadores)</div><div class="lvls">${indHtml}</div>
+      <div class="m-sec">Rendimiento histórico de ${s.sym} (${(s.tf||'').toUpperCase()})</div><div class="btstats">${btHtml}</div>
+      <div class="m-sec">Operaciones históricas (${trades.length})</div>${trHtml}
+    </div>`;
+}
 function wire(){
   const q=document.getElementById('q');
-  if(q) q.oninput = e => { STATE.q=e.target.value; const p=q.selectionStart; render(); const nq=document.getElementById('q'); if(nq){nq.focus();nq.setSelectionRange(p,p);} };
-  document.querySelectorAll('[data-tf]').forEach(b=> b.onclick=()=>{ STATE.tf=b.dataset.tf; render(); });
-  document.querySelectorAll('[data-s]').forEach(td=> td.onclick=()=>{
-    const k=td.dataset.s;
-    if(STATE.sort===k) STATE.dir*=-1; else { STATE.sort=k; STATE.dir = k==='sym'?1:-1; }
-    render();
-  });
+  if(q)q.oninput=e=>{STATE.q=e.target.value;const p=q.selectionStart;render();const nq=document.getElementById('q');if(nq){nq.focus();nq.setSelectionRange(p,p);}};
+  document.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{STATE.tf=b.dataset.tf;render();});
+  document.querySelectorAll('[data-s]').forEach(td=>td.onclick=()=>{const k=td.dataset.s;if(STATE.sort===k)STATE.dir*=-1;else{STATE.sort=k;STATE.dir=k==='sym'?1:-1;}render();});
 }
-
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 loadAll();
 </script>
 </body>
