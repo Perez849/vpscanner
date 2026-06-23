@@ -103,72 +103,23 @@ def long_features(df_up: List[Dict], vp: Dict, sig: Dict) -> Dict[str, Any]:
 # Recolección: corre el motor y captura (features, resultado) de cada LONG
 # ──────────────────────────────────────────────────────────────────────────
 def collect_long_trades(df: List[Dict], n_rows: int, va_pct: float, piv_len: int) -> List[Dict]:
-    """Replica el forward-scan del backtest (fase única con stop estructural,
-    suficiente para el análisis de selección), capturando features de cada LONG."""
+    """Captura los LONG usando EXACTAMENTE el motor real (run_backtest), para que
+    WR/PnL coincidan 1:1 con lo que opera el sistema. feature_fn adjunta las
+    dimensiones VP de cada entrada."""
+    from backtest import run_backtest
     segs = get_pivot_segments(df, piv_len)
+    bt = run_backtest(df, segs, piv_len, n_rows, va_pct, calc_vp,
+                      conf_fn=None, feature_fn=long_features)
     out = []
-    last_exit = -1
-    for seg in segs:
-        seg_start = seg['startI']; seg_end = min(seg['endI'], len(df) - 2)
-        if seg_end - seg_start < 3:
+    for tr in bt.get('list', []):
+        if tr['signal'] != 'LONG':
             continue
-        sl = seg['slice'] if (seg.get('slice') and len(seg['slice']) >= 10) else df[seg_start:seg_end+1]
-        vp = calc_vp(sl, n_rows, va_pct)
-        if not vp:
-            continue
-        for i in range(seg_start + 1, seg_end + 1):
-            if i <= last_exit or i + 3 >= len(df):
-                continue
-            df_up = df[:i+1]
-            sig = classify_signal(df[i]['close'], vp, df_up)
-            if sig['signal'] != 'LONG' or not sig['stop'] or not sig['target']:
-                continue
-            rr = sig['rr']
-            if not rr or rr > 15:
-                continue
-            entry = df[i]['close']
-            if abs(sig['target'] - entry) / entry < 0.005:
-                continue
-            # Resolver el trade (forward, sin look-ahead) — misma lógica que backtest
-            outcome, exit_price, bars = resolve(df, i, sig, True)
-            gross = (exit_price - entry) / entry * 100 if exit_price else 0
-            pnl = to_fixed(gross - COST_ROUNDTRIP_PCT, 3)
-            feat = long_features(df_up, vp, sig)
-            feat['win'] = pnl > 0
-            feat['pnl'] = pnl
-            feat['bars'] = bars
-            out.append(feat)
-            last_exit = i + (bars or 1)
+        feat = dict(tr['feats']) if tr.get('feats') else {}
+        feat['win'] = tr['pnlPct'] > 0
+        feat['pnl'] = tr['pnlPct']
+        feat['bars'] = tr['barsToRes']
+        out.append(feat)
     return out
-
-
-def resolve(df, entry_i, sig, is_long):
-    """Resolución forward idéntica al backtest (gaps, empate, T2 omitido por brevedad
-    de análisis; usa target1). Devuelve (outcome, exit_price, bars)."""
-    entry = df[entry_i]['close']
-    last_close = entry; last_bar = 0
-    fi = 1
-    while fi <= 60 and entry_i + fi < len(df):
-        bar = df[entry_i + fi]
-        last_close = bar['close']; last_bar = fi
-        stop_hit = bar['low'] <= sig['stop'] if is_long else bar['high'] >= sig['stop']
-        tgt_hit = bar['high'] >= sig['target'] if is_long else bar['low'] <= sig['target']
-        o = bar['open']
-        gap_stop = o <= sig['stop'] if is_long else o >= sig['stop']
-        gap_tgt = o >= sig['target'] if is_long else o <= sig['target']
-        if gap_stop:
-            return 'loss', o, fi
-        if gap_tgt:
-            return 'win', o, fi
-        if stop_hit and tgt_hit:
-            dist_s = abs(o - sig['stop']); dist_t = abs(o - sig['target'])
-            return ('win', sig['target'], fi) if dist_t <= dist_s else ('loss', sig['stop'], fi)
-        if stop_hit:
-            return 'loss', sig['stop'], fi
-        if tgt_hit:
-            return 'win', sig['target'], fi
-        fi += 1
-    return 'timeout', last_close, last_bar
 
 
 # ──────────────────────────────────────────────────────────────────────────
