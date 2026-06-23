@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-06-23T11:15:26.367399+00:00",
+  "symbolsOK": 190,
+  "symbolsFailed": 2,
+  "failed": [
+    "SILV|1d",
+    "SILV|1w"
+  ],
+  "totalTrades": 19372
+}
