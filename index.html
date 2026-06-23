@@ -105,8 +105,11 @@ const BASE='https://raw.githubusercontent.com/Perez849/vpscanner/main/scanner/da
 const bust=()=>'?t='+Math.floor(Date.now()/60000);
 const SIG_COLOR={LONG:'var(--emerald)',SHORT:'var(--ember)',RANGE_LONG:'var(--cyan)',RANGE_SHORT:'var(--amber)'};
 const SIG_BG={LONG:'#e7f6ee',SHORT:'#fdeaea',RANGE_LONG:'#e6f6fa',RANGE_SHORT:'#fcf3e0'};
-const LABEL_ICON={pelotazo_max:'💎💎',pelotazo:'💎',seguro:'🛡️',premium:'⭐',rebote:'🛡️'};
-const LABEL_NAME={pelotazo_max:'Pelotazo máximo',pelotazo:'Pelotazo',seguro:'Seguro',premium:'Premium',rebote:'Rebote'};
+const LABEL_ICON={caida_giro:'💎💎',caida_recorrido:'💎',empuje_favor:'⭐',rango_extendido:'🚀',corto_favor:'🛡️',corto_estrecho:'🎯',
+  // compatibilidad con claves antiguas por si quedan JSON viejos:
+  pelotazo_max:'💎💎',pelotazo:'💎',seguro:'🛡️',premium:'⭐',rebote:'🛡️'};
+const LABEL_NAME={caida_giro:'Caída + giro fuerte',caida_recorrido:'Caída con recorrido',empuje_favor:'Empuje a favor',rango_extendido:'Rango extendido',corto_favor:'Corto a favor de tendencia',corto_estrecho:'Corto en rango estrecho',
+  pelotazo_max:'Pelotazo máximo',pelotazo:'Pelotazo',seguro:'Seguro',premium:'Premium',rebote:'Rebote'};
 const TYPE_NAME={LONG:'LONG · reversión bajo VAL',SHORT:'SHORT · reversión sobre VAH',RANGE_LONG:'RANGE LONG · dentro del VA, al alza',RANGE_SHORT:'RANGE SHORT · dentro del VA, a la baja'};
 let STATE={signals:{},history:{},stats:null,meta:null,tf:'1d',q:'',sort:'wr',dir:-1};
 let MODAL={key:null,filter:'all'};
@@ -131,7 +134,7 @@ function fmtDate(iso){if(!iso)return'—';try{return new Date(iso).toLocaleStrin
 function fmtTs(ts){if(!ts)return'—';try{return new Date(ts).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'});}catch{return'—';}}
 
 function rows(){
-  let out=Object.entries(STATE.signals).map(([key,s])=>({key,...s})).filter(s=>(s.tf||'').toLowerCase()===STATE.tf);
+  let out=Object.entries(STATE.signals).map(([key,s])=>({key,...s}));
   if(STATE.q){const q=STATE.q.toLowerCase();out=out.filter(s=>(s.sym||'').toLowerCase().includes(q)||(s.sector||'').toLowerCase().includes(q));}
   const val=s=>STATE.sort==='wr'?(s.bt?.wr??-1):STATE.sort==='pnl'?(s.bt?.avgPnl??-999):STATE.sort==='rr'?(s.rr??-1):STATE.sort==='sym'?s.sym:(s.bt?.wr??-1);
   out.sort((a,b)=>{const va=val(a),vb=val(b);return typeof va==='string'?STATE.dir*va.localeCompare(vb):STATE.dir*(va-vb);});
@@ -159,21 +162,23 @@ function cardHtml(s,i,medal){
 }
 function render(){
   const m=STATE.meta;
-  document.getElementById('meta').innerHTML=m?`<b>${m.symbolsOK}</b> símbolos · ${m.totalTrades?.toLocaleString('es-ES')||'—'} ops · act. ${fmtDate(m.generatedAt)}`:'';
+  document.getElementById('meta').innerHTML=m?`<b>${m.symbolsOK}</b> símbolos · ${m.totalTrades?.toLocaleString('es-ES')||'—'} ops élite · act. ${fmtDate(m.generatedAt)}`:'';
   const list=rows();
   const byWr=[...list].sort((a,b)=>(b.bt?.wr??-1)-(a.bt?.wr??-1));
-  const lab=byWr.filter(s=>s.labelClass).slice(0,3),unl=byWr.filter(s=>!s.labelClass).slice(0,3);
+  const top=byWr.slice(0,3);
   const medals=['🥇','🥈','🥉'];
-  let html=`<div class="controls"><input id="q" type="text" placeholder="Buscar símbolo o sector…" value="${STATE.q}">
-    <div class="seg"><button data-tf="1d" class="${STATE.tf==='1d'?'on':''}">1D</button><button data-tf="1w" class="${STATE.tf==='1w'?'on':''}">1W</button></div></div>`;
-  html+=`<div class="toplbl lab">✦ Top 3 etiquetadas — recetas de calidad</div>`;
-  html+=lab.length?`<div class="topgrid">`+lab.map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`:`<div style="color:var(--sub);font-size:12px;font-family:var(--f-mono);margin-bottom:8px">Ninguna etiquetada en ${STATE.tf.toUpperCase()} ahora.</div>`;
-  html+=`<div class="toplbl unl">⭐ Top 3 sin etiqueta — mejores por acierto</div>`;
-  html+=`<div class="topgrid">`+(unl.length?unl:byWr.slice(0,3)).map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
+  let html=`<div class="controls"><input id="q" type="text" placeholder="Buscar símbolo o sector…" value="${STATE.q}"></div>`;
+  if(list.length){
+    html+=`<div class="toplbl lab">🏆 Mejores alertas de élite ahora mismo</div>`;
+    html+=`<div class="topgrid">`+top.map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
+  } else {
+    html+=`<div style="background:var(--card);border:1px solid var(--rule2);border-radius:var(--r);padding:24px;text-align:center;color:var(--sub);font-family:var(--f-mono);font-size:13px;margin:14px 0">
+      No hay alertas de élite ahora mismo.<br><span style="font-size:11px;color:var(--dim)">El sistema solo muestra los nichos validados — es normal que algunos días no haya ninguna.</span></div>`;
+  }
   const arrow=k=>STATE.sort===k?(STATE.dir<0?' ▼':' ▲'):'';
-  html+=`<h2 style="font-family:var(--f-display);font-size:17px;margin:24px 0 4px">Todas las señales (${list.length}) <span style="font-size:11px;color:var(--dim);font-family:var(--f-mono)">· pincha una fila</span></h2>
+  html+=`<h2 style="font-family:var(--f-display);font-size:17px;margin:24px 0 4px">Alertas de élite (${list.length}) <span style="font-size:11px;color:var(--dim);font-family:var(--f-mono)">· pincha una fila</span></h2>
     <table><thead><tr>
-      <td data-s="sym">Símbolo${arrow('sym')}</td><td>Señal</td><td class="hide-sm">Etiqueta</td>
+      <td data-s="sym">Símbolo${arrow('sym')}</td><td>Señal</td><td>Tipo de alerta</td>
       <td style="text-align:right">Entrada</td><td style="text-align:right" class="hide-sm">Objetivo</td><td style="text-align:right" class="hide-sm">Stop</td>
       <td style="text-align:right" data-s="rr">R:R${arrow('rr')}</td><td style="text-align:right" data-s="wr">Acierto${arrow('wr')}</td><td style="text-align:right" data-s="pnl">Gan/op${arrow('pnl')}</td>
     </tr></thead><tbody>`;
@@ -182,7 +187,7 @@ function render(){
     html+=`<tr onclick="openModal('${s.key}')">
       <td class="sym">${s.sym} <span style="color:var(--dim);font-weight:400;font-size:10px">${s.sector||''}</span></td>
       <td><span class="sig-badge" style="color:${col};background:${bg}">${sigTxt(s.signal)}</span></td>
-      <td class="hide-sm">${ic?`${ic} <span style="font-size:11px;color:var(--sub)">${LABEL_NAME[s.labelClass]}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
+      <td>${ic?`${ic} <span style="font-size:11px;color:var(--sub)">${LABEL_NAME[s.labelClass]||''}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
       <td style="text-align:right" class="mono">${f(s.entry)}</td>
       <td style="text-align:right;color:var(--emerald)" class="mono hide-sm">${f(s.target)}</td>
       <td style="text-align:right;color:var(--amber)" class="mono hide-sm">${f(s.stop)}</td>
@@ -211,8 +216,8 @@ function statsHtml(){
         ${row('Sistema élite (todo)',st.global,true,true)}</div>`;
     if(st.byClass){
       h+=`<div class="typehd" style="color:var(--ink)">Por tipo de alerta</div><div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>`;
-      const CN={pelotazo_max:'💎💎 Pelotazo máximo',pelotazo:'💎 Pelotazo',premium:'⭐ Premium',rebote:'🛡️ Rebote',seguro:'🛡️ Seguro'};
-      for(const c of ['pelotazo_max','pelotazo','premium','rebote','seguro']){
+      const CN={caida_giro:'💎💎 Caída + giro fuerte',caida_recorrido:'💎 Caída con recorrido',empuje_favor:'⭐ Empuje a favor',rango_extendido:'🚀 Rango extendido',corto_favor:'🛡️ Corto a favor de tendencia',corto_estrecho:'🎯 Corto en rango estrecho'};
+      for(const c of ['caida_giro','caida_recorrido','empuje_favor','rango_extendido','corto_favor','corto_estrecho']){
         if(st.byClass[c]) h+=row(CN[c],st.byClass[c],false,true);
       }
       h+=`</div>`;
@@ -261,11 +266,12 @@ function renderModal(){
   // Detalle individualizado: cómo rinde CADA tipo de etiqueta en ESTE activo.
   const stOf=arr=>{if(!arr.length)return null;const w=arr.filter(t=>t.outcome==='win').length;let a=0;for(const t of arr)a+=t.pnlPct;const wp=arr.filter(t=>t.pnlPct>0).map(t=>t.pnlPct);return{n:arr.length,wr:Math.round(w/arr.length*100),pnl:+(a/arr.length).toFixed(2),avgWin:wp.length?+(wp.reduce((x,y)=>x+y,0)/wp.length).toFixed(2):0};};
   const byLabel=[
-    ['💎💎 Pelotazo máximo', stOf(trades.filter(t=>t.labelClass==='pelotazo_max'))],
-    ['💎 Pelotazo', stOf(trades.filter(t=>t.labelClass==='pelotazo'))],
-    ['🛡️ Seguro/Rebote', stOf(trades.filter(t=>t.labelClass==='seguro'||t.labelClass==='rebote'))],
-    ['⭐ Premium', stOf(trades.filter(t=>t.labelClass==='premium'))],
-    ['Sin etiqueta', stOf(trades.filter(t=>!t.labelClass))],
+    ['💎💎 Caída + giro fuerte', stOf(trades.filter(t=>t.labelClass==='caida_giro'))],
+    ['💎 Caída con recorrido', stOf(trades.filter(t=>t.labelClass==='caida_recorrido'))],
+    ['⭐ Empuje a favor', stOf(trades.filter(t=>t.labelClass==='empuje_favor'))],
+    ['🚀 Rango extendido', stOf(trades.filter(t=>t.labelClass==='rango_extendido'))],
+    ['🛡️ Corto a favor', stOf(trades.filter(t=>t.labelClass==='corto_favor'))],
+    ['🎯 Corto en rango estrecho', stOf(trades.filter(t=>t.labelClass==='corto_estrecho'))],
   ].filter(([,s])=>s&&s.n>0);
   let labBreakHtml='';
   if(byLabel.length){
@@ -287,7 +293,7 @@ function renderModal(){
   tr=[...tr].sort((a,b)=>(b.entryTs||0)-(a.entryTs||0));
   const wins=trades.filter(t=>t.outcome==='win').length;
   const fbtn=(k,l)=>`<button class="${MODAL.filter===k?'on':''}" onclick="setFilter('${k}')">${l}</button>`;
-  let trHtml=`<div class="tfilt">${fbtn('all','Todas ('+trades.length+')')}${fbtn('win','Ganan ('+wins+')')}${fbtn('loss','Pierden ('+(trades.length-wins)+')')}${fbtn('labeled','Etiquetadas ('+trades.filter(t=>t.labeled).length+')')}</div>`;
+  let trHtml=`<div class="tfilt">${fbtn('all','Todas ('+trades.length+')')}${fbtn('win','Ganan ('+wins+')')}${fbtn('loss','Pierden ('+(trades.length-wins)+')')}</div>`;
   if(tr.length){
     trHtml+=`<div style="max-height:300px;overflow-y:auto"><table class="thist">
       <tr class="h"><td>Fecha</td><td>Señal</td><td>Et.</td><td style="text-align:right">Entrada</td><td style="text-align:right">Salida</td><td style="text-align:center">Res.</td><td style="text-align:right">PnL</td><td style="text-align:right">Velas</td></tr>`;
@@ -319,7 +325,6 @@ function renderModal(){
 function wire(){
   const q=document.getElementById('q');
   if(q)q.oninput=e=>{STATE.q=e.target.value;const p=q.selectionStart;render();const nq=document.getElementById('q');if(nq){nq.focus();nq.setSelectionRange(p,p);}};
-  document.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{STATE.tf=b.dataset.tf;render();});
   document.querySelectorAll('[data-s]').forEach(td=>td.onclick=()=>{const k=td.dataset.s;if(STATE.sort===k)STATE.dir*=-1;else{STATE.sort=k;STATE.dir=k==='sym'?1:-1;}render();});
 }
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
