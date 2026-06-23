@@ -143,31 +143,45 @@ def process_symbol(sym: str, meta: Dict[str, Any], interval_key: str) -> Optiona
     if vp_now:
         applied = bt.get('appliedMaeStop')
         s = classify_signal(df[-1]['close'], vp_now, df, applied)
-        if s['signal'] != 'NEUTRAL':
+        # MODO FILTRADO TOTAL: solo se publica la señal si es ÉLITE.
+        if s['signal'] != 'NEUTRAL' and s.get('isElite'):
             sig_now = {
                 'signal': s['signal'], 'entry': df[-1]['close'],
                 'stop': s['stop'], 'target': s['target'], 'target2': s['target2'],
-                'rr': s['rr'], 'labelClass': s.get('longClass') or s.get('shortClass') or s.get('rangeClass'),
+                'rr': s['rr'], 'labelClass': s.get('eliteClass'),
                 'isNewCross': s['isNewCross'], 'trendBias': s['trendBias'],
                 'poc': vp_now['pocPrice'], 'vah': vp_now['vahPrice'], 'val': vp_now['valPrice'],
                 'clsRsi': s['clsRsi'], 'clsAccel': s['clsAccel'], 'clsGreen': s['clsGreen'],
                 'scenario': s['scenario'],
             }
 
-    # Histórico: las operaciones cerradas del backtest (sin el df entero).
+    # Histórico: SOLO operaciones élite (las que el sistema de verdad operaría).
+    elite_trades = [t for t in bt.get('list', []) if t.get('isElite')]
     trades = [{
         'signal': t['signal'], 'entry': t['entry'], 'stop': t['stop'],
         'target': t['target'], 'exitPrice': t['exitPrice'], 'outcome': t['outcome'],
-        'pnlPct': t['pnlPct'], 'labeled': t['labeled'], 'labelClass': t['labelClass'],
+        'pnlPct': t['pnlPct'], 'labeled': True, 'labelClass': t.get('eliteClass'),
         'barsToRes': t['barsToRes'], 'entryTs': t['entryTs'], 'exitTs': t['exitTs'],
-    } for t in bt.get('list', [])]
+    } for t in elite_trades]
+
+    # Backtest del activo recalculado SOLO con élites (lo que verás es lo que opera).
+    def _agg(ts):
+        n = len(ts)
+        if n == 0:
+            return {'total': 0, 'wr': None, 'avgPnl': None, 'totalPnl': None, 'avgRR': None}
+        wins = sum(1 for t in ts if t['pnlPct'] > 0)
+        tot = 0.0; rr = 0.0
+        for t in ts:
+            tot += t['pnlPct']; rr += (t.get('rr') or 0)
+        return {'total': n, 'wr': round(wins / n * 100), 'avgPnl': round(tot / n, 2),
+                'totalPnl': round(tot, 2), 'avgRR': round(rr / n, 2)}
+    bt_elite = _agg(elite_trades)
 
     return {
         'sym': sym, 'tf': INTERVALS[interval_key].get('label', interval_key),
         'sector': meta.get('sector', ''),
         'signal': sig_now,
-        'bt': {'total': bt['total'], 'wr': bt['wr'], 'avgPnl': bt['avgPnl'],
-               'totalPnl': bt['totalPnl'], 'avgRR': bt['avgRR']},
+        'bt': bt_elite,
         'trades': trades,
     }
 
@@ -190,7 +204,7 @@ def main():
     all_trades: List[Dict[str, Any]] = []
     ok, failed = [], []
 
-    interval_keys = ['1d', '1w']
+    interval_keys = ['1d']   # SOLO diario (decisión del usuario)
     total_jobs = len(SYMBOLS) * len(interval_keys)
     done = 0
 
@@ -216,21 +230,21 @@ def main():
             if done % 20 == 0:
                 print(f'  ... {done}/{total_jobs}', flush=True)
 
-    labeled = [t for t in all_trades if t['labeled']]
-    unlabeled = [t for t in all_trades if not t['labeled']]
+    # Todo all_trades ya es ÉLITE (el sistema filtrado). Desglose por tipo y clase.
     by_type = {}
     for s in ('LONG', 'SHORT', 'RANGE_LONG', 'RANGE_SHORT'):
         arr = [t for t in all_trades if t['signal'] == s]
-        by_type[s] = {
-            'all': stat_block(arr),
-            'labeled': stat_block([t for t in arr if t['labeled']]),
-            'unlabeled': stat_block([t for t in arr if not t['labeled']]),
-        }
+        by_type[s] = {'all': stat_block(arr)}
+    by_class = {}
+    for c in ('pelotazo_max', 'pelotazo', 'premium', 'rebote', 'seguro'):
+        arr = [t for t in all_trades if t['labelClass'] == c]
+        if arr:
+            by_class[c] = stat_block(arr)
     stats_out = {
         'global': stat_block(all_trades),
-        'labeled': stat_block(labeled),
-        'unlabeled': stat_block(unlabeled),
+        'elite': True,
         'byType': by_type,
+        'byClass': by_class,
     }
 
     now = datetime.now(timezone.utc).isoformat()

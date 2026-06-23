@@ -281,4 +281,66 @@ def classify_signal(close: float, vp: Dict[str, Any], df: List[Dict[str, Any]],
             return 'poc'
         sig['isNewCross'] = zone_of(close) != zone_of(prev_close)
 
+    # ════════════════════════════════════════════════════════════════════
+    # FILTRO ÉLITE — solo los nichos validados en el laboratorio (1d).
+    # isElite=True → la señal "cuenta" (se muestra, entra en histórico y stats).
+    # eliteClass → etiqueta de élite. Lo que no es élite, para el sistema NO existe.
+    # ════════════════════════════════════════════════════════════════════
+    st = sig['signal']
+    elite = False
+    elite_class = None
+    if st != 'NEUTRAL' and df and len(df) >= 2:
+        # Velas ROJAS consecutivas (para señales bajistas), espejo de cls_green
+        red = 0
+        for k in range(len(df) - 1, max(0, len(df) - 7), -1):
+            if k < 1:
+                break
+            if df[k]['close'] < df[k - 1]['close']:
+                red += 1
+            else:
+                break
+        confirm = cls_green if st in ('LONG', 'RANGE_LONG') else red
+        c2 = confirm >= 2
+        va_width_pct = (vah - val) / close * 100 if close else 0
+        dist_to_poc = abs(poc - close) / close * 100 if close else 0
+        a_favor = (trend_bias >= 0) if st in ('LONG', 'RANGE_LONG') else (trend_bias <= 0)
+
+        if st == 'LONG':
+            dist_below_val = (val - close) / close * 100
+            deep = dist_below_val > 8
+            # borde con volumen alto (suelo fuerte) en el VAL
+            edge_vol = 0
+            vol_by_level = vp.get('volByLevel'); total_vol = vp.get('totalVol', 0)
+            val_level = vp.get('valLevel', 0); n_rows = vp.get('nRows', 25)
+            if vol_by_level and total_vol and total_vol > 0:
+                lo = max(0, val_level - 1); hi = min(n_rows - 1, val_level + 1)
+                edge_vol = sum(vol_by_level[lo:hi+1]) / total_vol * 100
+            if deep and c2 and a_favor:
+                elite, elite_class = True, 'pelotazo_max'      # 74% WR, +32%/op
+            elif deep and c2:
+                elite, elite_class = True, 'pelotazo_max'      # 74% WR, +30%/op
+            elif (dist_to_poc > 10 and c2) or (deep and edge_vol > 10):
+                elite, elite_class = True, 'pelotazo'          # 65% WR, +18-22%/op
+        elif st == 'RANGE_LONG':
+            if a_favor and c2:
+                elite, elite_class = True, 'premium'           # 79% WR, +4.6%/op
+            else:
+                extended = (close < val) or dist_to_poc > 10
+                if extended and c2:
+                    elite, elite_class = True, 'pelotazo'      # 58% WR, +11.5%/op (PnL)
+        elif st == 'RANGE_SHORT':
+            # SOLO a favor de tendencia + 2 velas a favor (rojas). Resto = veneno.
+            if a_favor and c2:
+                elite, elite_class = True, 'rebote'            # 77% WR, +2.2%/op
+        elif st == 'SHORT':
+            dist_above_vah = (close - vah) / close * 100
+            recovered = False
+            if len(df) >= 2:
+                recovered = (df[-2]['close'] > vah) and (close <= vah * 1.01)
+            if va_width_pct < 10 or recovered:
+                elite, elite_class = True, 'seguro'            # 57-67% WR, +2.5%/op
+
+    sig['isElite'] = elite
+    sig['eliteClass'] = elite_class
+
     return sig
