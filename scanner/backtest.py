@@ -28,7 +28,8 @@ def _round3(x):
 
 def run_backtest(df: List[Dict[str, Any]], segs: List[Dict[str, Any]],
                  piv_len: int, n_rows: int, va_pct: float,
-                 calc_vp: Callable, conf_fn: Optional[Callable] = None) -> Dict[str, Any]:
+                 calc_vp: Callable, conf_fn: Optional[Callable] = None,
+                 feature_fn: Optional[Callable] = None) -> Dict[str, Any]:
     trades: List[Dict[str, Any]] = []
     test_segs = segs
     empty = {
@@ -59,6 +60,7 @@ def run_backtest(df: List[Dict[str, Any]], segs: List[Dict[str, Any]],
             return False
 
         score = conf_fn(df_up, vp, entry_close, sig) if conf_fn else 0
+        feats = feature_fn(df_up, vp, sig) if feature_fn else None
         all_scores.append(score)
         is_long = sig['signal'] in ('LONG', 'RANGE_LONG')
 
@@ -175,6 +177,7 @@ def run_backtest(df: List[Dict[str, Any]], segs: List[Dict[str, Any]],
             'barsToRes': bars_to_res, 'barsHeld': bars_to_res,
             'maxDrawdown': to_fixed(worst_in_win, 2) if outcome == 'win' else None,
             'ts': entry_ts, 'entryTs': entry_ts, 'exitTs': exit_ts,
+            'feats': feats,
         })
         return True
 
