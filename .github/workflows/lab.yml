@@ -1,0 +1,33 @@
+name: Laboratorio LONG
+
+# Solo a mano: pestaña Actions → "Laboratorio LONG" → Run workflow.
+# Analiza todos los LONG del histórico y guarda lab_long.json + imprime la tabla.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Correr el laboratorio
+        run: |
+          cd scanner
+          python lab_long.py --fetch
+      - name: Guardar resultados
+        run: |
+          git config user.name  "vp-scanner-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add scanner/lab_long.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "lab: análisis LONG $(date -u +%Y-%m-%d)"
+            git push
+          fi
