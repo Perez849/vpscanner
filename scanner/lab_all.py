@@ -295,12 +295,11 @@ def main():
     if args.fetch:
         import scanner as sc
         data = {}; syms = CFG['symbols']; done = 0
-        print(f'Descargando {len(syms)} símbolos (1d+1w)…')
+        print(f'Descargando {len(syms)} símbolos (SOLO 1d)…')
         for sym, meta in syms.items():
-            for tf in ['1d', '1w']:
-                df = sc.fetch_ohlcv(sym, meta, tf)
-                if df and len(df) >= 50:
-                    data.setdefault(sym, {})[tf] = df
+            df = sc.fetch_ohlcv(sym, meta, '1d')
+            if df and len(df) >= 50:
+                data.setdefault(sym, {})['1d'] = df
             done += 1
             if done % 20 == 0: print(f'  ... {done}/{len(syms)}')
         print(f'Descargados {len(data)} símbolos.')
@@ -312,6 +311,8 @@ def main():
     agg = {t: [] for t in TYPES}
     for sym, tfd in data.items():
         for tf, df in tfd.items():
+            if tf != '1d':         # SOLO diario
+                continue
             if len(df) < 50: continue
             bt = collect(df, n_rows, va_pct, piv_len)
             for t in TYPES:
