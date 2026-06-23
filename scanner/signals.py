@@ -191,16 +191,35 @@ def classify_signal(close: float, vp: Dict[str, Any], df: List[Dict[str, Any]],
         if stop is None:
             stop = max(min(raw_stop, min_stop), max_stop)
         dist_below_val = (val - close) / close * 100
+        dist_to_poc = (poc - close) / close * 100 if close else 0
         a_favor_tend = trend_bias >= 0
-        is_pelotazo = dist_below_val > 8 or (dos_verdes and a_favor_tend)
+        deep = dist_below_val > 8
+        giro = dos_verdes or frenando or cls_green >= 1   # giro confirmado (acción de precio)
+        # DOS NIVELES DE PELOTAZO (validados en el laboratorio sobre el histórico):
+        #  💎💎 pelotazo_max: caído + ≥2 verdes + a favor de tendencia → 70% WR, +29%/op
+        #  💎   pelotazo:     caído + PoC lejos (>10%) + giro            → 62% WR, +21%/op
+        # El caído SIN giro (cuchillo cayendo) ya NO es pelotazo.
+        is_pelotazo_max = deep and dos_verdes and a_favor_tend
+        is_pelotazo = deep and dist_to_poc > 10 and giro
         is_seguro = dist_below_val < 3 and (rsi_neutro or frenando)
-        long_class = 'pelotazo' if is_pelotazo else ('seguro' if is_seguro else None)
+        if is_pelotazo_max:
+            long_class = 'pelotazo_max'
+        elif is_pelotazo:
+            long_class = 'pelotazo'
+        elif is_seguro:
+            long_class = 'seguro'
+        else:
+            long_class = None
+        _scn_lbl = {
+            'pelotazo_max': ' 💎💎 LONG pelotazo máximo: muy caído + giro confirmado (2 verdes a favor). La receta más potente (alto WR y PnL).',
+            'pelotazo': ' 💎 LONG pelotazo: muy caído + gran recorrido al PoC + giro. Alto PnL/op con buena probabilidad.',
+            'seguro': ' 🛡️ LONG seguro: cerca del VAL con giro confirmado (mayor probabilidad de acierto).',
+        }.get(long_class, '')
         sig.update({'signal': 'LONG', 'label': 'Long → PoC',
                     'stop': stop, 'target': poc, 'target2': vah, 'invalidation': pl - step * 2,
-                    'deepValueLong': dist_below_val > 8, 'longClass': long_class,
+                    'deepValueLong': deep, 'longClass': long_class,
                     'scenario': f"Precio bajo VAL ({_fmt1((val-close)/val*100)}% bajo el VA)."
-                                + (' 💎 LONG pelotazo: baja probabilidad pero recorrido grande hacia el PoC (alto PnL/op).' if long_class == 'pelotazo'
-                                   else ' 🛡️ LONG seguro: cerca del VAL con giro confirmado (mayor probabilidad de acierto).' if long_class == 'seguro' else '')
+                                + _scn_lbl
                                 + ' Sesgo alcista hacia el PoC.'
                                 + (' ⚠️ Contra tendencia bajista (EMA200).' if trend_bias < 0 else '')})
     elif in_va and close < poc:
