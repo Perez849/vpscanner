@@ -133,12 +133,9 @@ def process_symbol(sym: str, meta: Dict[str, Any], interval_key: str) -> Optiona
     bt = run_backtest(df, segs, piv_len, n_rows, va_pct, calc_vp, conf_fn=None)
 
     # Señal viva de HOY: VP del último tramo (igual criterio que el HTML).
-    # Señal de HOY: perfil EN DESARROLLO (último pivote→hoy), igual que el Pine
-    # en pantalla. Así VAH/VAL coinciden con TradingView.
-    from vp_core import developing_slice
-    dev = developing_slice(df, piv_len)
-    if dev and len(dev) >= 10:
-        vp_now = calc_vp(dev, n_rows, va_pct)
+    last_seg = segs[-1] if segs else None
+    if last_seg and last_seg.get('slice') and len(last_seg['slice']) >= 10:
+        vp_now = calc_vp(last_seg['slice'], n_rows, va_pct)
     else:
         vp_now = calc_vp(df, n_rows, va_pct)
 
