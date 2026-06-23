@@ -139,55 +139,25 @@ def features(df_up: List[Dict], vp: Dict, sig: Dict) -> Dict[str, Any]:
     return f
 
 
-def resolve(df, entry_i, sig, is_long):
-    entry = df[entry_i]['close']; last_close = entry; last_bar = 0; fi = 1
-    while fi <= 60 and entry_i + fi < len(df):
-        bar = df[entry_i + fi]; last_close = bar['close']; last_bar = fi
-        stop_hit = bar['low'] <= sig['stop'] if is_long else bar['high'] >= sig['stop']
-        tgt_hit = bar['high'] >= sig['target'] if is_long else bar['low'] <= sig['target']
-        o = bar['open']
-        gap_stop = o <= sig['stop'] if is_long else o >= sig['stop']
-        gap_tgt = o >= sig['target'] if is_long else o <= sig['target']
-        if gap_stop: return 'loss', o, fi
-        if gap_tgt: return 'win', o, fi
-        if stop_hit and tgt_hit:
-            ds = abs(o - sig['stop']); dt = abs(o - sig['target'])
-            return ('win', sig['target'], fi) if dt <= ds else ('loss', sig['stop'], fi)
-        if stop_hit: return 'loss', sig['stop'], fi
-        if tgt_hit: return 'win', sig['target'], fi
-        fi += 1
-    return 'timeout', last_close, last_bar
-
-
 def collect(df, n_rows, va_pct, piv_len):
-    """Captura (features, resultado) de TODAS las señales, agrupadas por tipo."""
+    """Captura (features, resultado) usando EXACTAMENTE el motor real (run_backtest),
+    para que los WR/PnL del laboratorio coincidan 1:1 con lo que opera el sistema.
+    El backtest resuelve cada trade con su lógica completa (dos fases, T2, stop MAE,
+    costes) y, vía feature_fn, adjunta las dimensiones VP de cada entrada."""
+    from backtest import run_backtest
     segs = get_pivot_segments(df, piv_len)
+    bt = run_backtest(df, segs, piv_len, n_rows, va_pct, calc_vp,
+                      conf_fn=None, feature_fn=features)
     by_type = {t: [] for t in TYPES}
-    last_exit = -1
-    for seg in segs:
-        ss = seg['startI']; se = min(seg['endI'], len(df) - 2)
-        if se - ss < 3: continue
-        sl = seg['slice'] if (seg.get('slice') and len(seg['slice']) >= 10) else df[ss:se+1]
-        vp = calc_vp(sl, n_rows, va_pct)
-        if not vp: continue
-        for i in range(ss + 1, se + 1):
-            if i <= last_exit or i + 3 >= len(df): continue
-            df_up = df[:i+1]
-            sig = classify_signal(df[i]['close'], vp, df_up)
-            st = sig['signal']
-            if st not in TYPES or not sig['stop'] or not sig['target']: continue
-            rr = sig['rr']
-            if not rr or rr > 15: continue
-            entry = df[i]['close']
-            if abs(sig['target'] - entry) / entry < 0.005: continue
-            is_long = IS_LONG_DIR[st]
-            outcome, exitp, bars = resolve(df, i, sig, is_long)
-            gross = ((exitp - entry) if is_long else (entry - exitp)) / entry * 100 if exitp else 0
-            pnl = to_fixed(gross - COST_ROUNDTRIP_PCT, 3)
-            f = features(df_up, vp, sig)
-            f['win'] = pnl > 0; f['pnl'] = pnl; f['bars'] = bars
-            by_type[st].append(f)
-            last_exit = i + (bars or 1)
+    for tr in bt.get('list', []):
+        st = tr['signal']
+        if st not in TYPES:
+            continue
+        f = dict(tr['feats']) if tr.get('feats') else {}
+        f['win'] = tr['pnlPct'] > 0      # mismo criterio que el sistema (net de coste)
+        f['pnl'] = tr['pnlPct']          # PnL real del backtest
+        f['bars'] = tr['barsToRes']
+        by_type[st].append(f)
     return by_type
 
 
