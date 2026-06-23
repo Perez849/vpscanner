@@ -90,13 +90,13 @@
 <div class="wrap">
   <header>
     <h1>VP Scanner</h1>
-    <span class="badge-ver">visor v2</span>
+    <span class="badge-ver">élite · 1d</span>
     <span class="meta" id="meta">cargando…</span>
   </header>
   <div id="app"><div class="loading">Leyendo datos del servidor…</div></div>
   <div class="foot">
     Datos generados por el robot diario en GitHub · El navegador solo lee, no calcula<br>
-    Cifras del backtest NETAS de costes (0.30% por operación) · Pincha cualquier señal para ver su detalle
+    Cifras del backtest NETAS de costes (0.30% por operación) · Solo alertas de élite (nichos validados) · Pincha para el detalle
   </div>
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
@@ -202,22 +202,36 @@ function statsHtml(){
     <div class="vl" style="color:${g&&g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g&&g.pnl!=null?(g.pnl>=0?'+':'')+g.pnl+'%':'—'}</div>
     <div class="vl" style="color:var(--dim)">${g&&g.n!=null?g.n.toLocaleString('es-ES'):'—'}</div>`;
   const row=(lbl,g,strong,hi)=>`<div class="lb" style="${strong?'font-weight:700;color:var(--ink)':''}">${lbl}</div>`+cell(g,hi);
-  let h=`<div class="stats"><h2>📊 ¿Funcionan las etiquetas? (todo el histórico)</h2>
-    <p style="color:var(--sub);font-size:12px;margin:0 0 12px">Sobre las ${st.global?.n?.toLocaleString('es-ES')||'—'} operaciones del backtest. Operar todas vs solo etiquetadas (💎🛡️⭐), global y por tipo.</p>
-    <div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
-      ${row('① Todas las señales',st.global,true)}${row('② Sin etiqueta',st.unlabeled,true)}${row('③ Solo etiquetadas ✦',st.labeled,true,true)}</div>`;
-  if(st.labeled&&st.unlabeled&&st.labeled.pnl>st.unlabeled.pnl)
-    h+=`<div style="margin-top:12px;background:#e7f6ee;border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:11px;color:var(--emerald)">✦ Solo etiquetadas: ${st.labeled.wr}% acierto y ${st.labeled.pnl>=0?'+':''}${st.labeled.pnl}%/op, frente al ${st.unlabeled.wr}% y ${st.unlabeled.pnl>=0?'+':''}${st.unlabeled.pnl}%/op sin etiqueta.</div>`;
-  if(st.byType){
-    h+=`<div style="margin-top:6px">`;
-    for(const t of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']){
-      const bt=st.byType[t];if(!bt)continue;
-      h+=`<div class="typehd" style="color:${SIG_COLOR[t]}">${TYPE_NAME[t]}</div>
-        <div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
-          ${row('Todas',bt.all,false)}${row('Sin etiqueta',bt.unlabeled,false)}${row('Etiquetadas ✦',bt.labeled,false,true)}</div>`;
+
+  // MODO ÉLITE: si stats.elite, mostramos solo el rendimiento de los nichos buenos.
+  if(st.elite){
+    let h=`<div class="stats"><h2>🏆 Rendimiento del sistema élite (solo 1d)</h2>
+      <p style="color:var(--sub);font-size:12px;margin:0 0 12px">El sistema solo opera los nichos validados. Estas son las ${st.global?.n?.toLocaleString('es-ES')||'—'} operaciones de élite del histórico — el resto se descarta por completo.</p>
+      <div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
+        ${row('Sistema élite (todo)',st.global,true,true)}</div>`;
+    if(st.byClass){
+      h+=`<div class="typehd" style="color:var(--ink)">Por tipo de alerta</div><div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>`;
+      const CN={pelotazo_max:'💎💎 Pelotazo máximo',pelotazo:'💎 Pelotazo',premium:'⭐ Premium',rebote:'🛡️ Rebote',seguro:'🛡️ Seguro'};
+      for(const c of ['pelotazo_max','pelotazo','premium','rebote','seguro']){
+        if(st.byClass[c]) h+=row(CN[c],st.byClass[c],false,true);
+      }
+      h+=`</div>`;
     }
-    h+=`</div>`;
+    if(st.byType){
+      h+=`<div class="typehd" style="color:var(--ink)">Por tipo de señal</div><div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>`;
+      for(const t of ['LONG','SHORT','RANGE_LONG','RANGE_SHORT']){
+        const bt=st.byType[t]; if(bt&&bt.all&&bt.all.n) h+=`<div class="lb" style="color:${SIG_COLOR[t]};font-weight:700">${sigTxt(t)}</div>`+cell(bt.all,true);
+      }
+      h+=`</div>`;
+    }
+    return h+`</div>`;
   }
+
+  // (Compatibilidad con JSON antiguo, antes de re-escanear en modo élite)
+  let h=`<div class="stats"><h2>📊 ¿Funcionan las etiquetas? (histórico)</h2>
+    <p style="color:var(--sub);font-size:12px;margin:0 0 12px">Datos del formato anterior. Re-escanea para ver el sistema élite.</p>
+    <div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
+      ${row('Todas',st.global,true)}${st.unlabeled?row('Sin etiqueta',st.unlabeled,true):''}${st.labeled?row('Etiquetadas ✦',st.labeled,true,true):''}</div>`;
   return h+`</div>`;
 }
 function openModal(key){MODAL.key=key;MODAL.filter='all';renderModal();document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
