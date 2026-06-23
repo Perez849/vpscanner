@@ -1,0 +1,939 @@
+{
+  "LONG": {
+    "base": {
+      "n": 1099,
+      "wr": 49,
+      "pnl": 7.53,
+      "avgWin": 18.59
+    },
+    "dimensions": {
+      "Distancia al borde": {
+        "<3%": {
+          "n": 420,
+          "wr": 53,
+          "pnl": 2.92,
+          "avgWin": 8.36
+        },
+        "3-5%": {
+          "n": 251,
+          "wr": 45,
+          "pnl": 5.87,
+          "avgWin": 16.59
+        },
+        "5-8%": {
+          "n": 214,
+          "wr": 48,
+          "pnl": 8.5,
+          "avgWin": 21.53
+        },
+        "8-12%": {
+          "n": 117,
+          "wr": 50,
+          "pnl": 13.21,
+          "avgWin": 30.13
+        },
+        "12-20%": {
+          "n": 77,
+          "wr": 55,
+          "pnl": 22.19,
+          "avgWin": 44.06
+        },
+        ">20%": {
+          "n": 20,
+          "wr": 40,
+          "pnl": 25.42,
+          "avgWin": 74.4
+        }
+      },
+      "Recorrido al PoC": {
+        "<3%": {
+          "n": 44,
+          "wr": 70,
+          "pnl": 0.83,
+          "avgWin": 1.95
+        },
+        "3-8%": {
+          "n": 223,
+          "wr": 55,
+          "pnl": 1.99,
+          "avgWin": 5.54
+        },
+        "8-15%": {
+          "n": 348,
+          "wr": 43,
+          "pnl": 3.38,
+          "avgWin": 11.22
+        },
+        ">15%": {
+          "n": 484,
+          "wr": 49,
+          "pnl": 13.68,
+          "avgWin": 32.18
+        }
+      },
+      "Confirmación de giro": {
+        "frenando": {
+          "n": 699,
+          "wr": 53,
+          "pnl": 8.94,
+          "avgWin": 19.72
+        },
+        "1+ vela a favor": {
+          "n": 626,
+          "wr": 54,
+          "pnl": 10.68,
+          "avgWin": 22.9
+        },
+        "2+ a favor": {
+          "n": 241,
+          "wr": 56,
+          "pnl": 15.15,
+          "avgWin": 30.05
+        },
+        "3+ a favor": {
+          "n": 125,
+          "wr": 54,
+          "pnl": 15.97,
+          "avgWin": 32.87
+        },
+        "mecha rechazo": {
+          "n": 260,
+          "wr": 50,
+          "pnl": 6.36,
+          "avgWin": 15.52
+        },
+        "vela fuerte": {
+          "n": 410,
+          "wr": 57,
+          "pnl": 11.21,
+          "avgWin": 22.51
+        },
+        "RSI saliendo extremo": {
+          "n": 326,
+          "wr": 51,
+          "pnl": 6.41,
+          "avgWin": 15.47
+        },
+        "rebotó del extremo20 >3%": {
+          "n": 840,
+          "wr": 50,
+          "pnl": 8.98,
+          "avgWin": 21.31
+        },
+        "recupera el borde": {
+          "n": 48,
+          "wr": 60,
+          "pnl": 2.55,
+          "avgWin": 6.04
+        }
+      },
+      "Estructura del VA": {
+        "borde alto volumen >10%": {
+          "n": 901,
+          "wr": 51,
+          "pnl": 7.83,
+          "avgWin": 18.47
+        },
+        "VA estrecho <10%": {
+          "n": 206,
+          "wr": 58,
+          "pnl": 2.18,
+          "avgWin": 5.27
+        },
+        "VA ancho >25%": {
+          "n": 380,
+          "wr": 52,
+          "pnl": 15.34,
+          "avgWin": 34.28
+        }
+      },
+      "Tendencia": {
+        "a favor": {
+          "n": 641,
+          "wr": 53,
+          "pnl": 8.35,
+          "avgWin": 18.94
+        },
+        "contra": {
+          "n": 458,
+          "wr": 45,
+          "pnl": 6.39,
+          "avgWin": 18.02
+        }
+      }
+    },
+    "combos": {
+      "extendido + 2 a favor": {
+        "n": 92,
+        "wr": 54,
+        "pnl": 21.34,
+        "avgWin": 43.02
+      },
+      "extendido + 2 a favor + a favor tend": {
+        "n": 61,
+        "wr": 61,
+        "pnl": 24.85,
+        "avgWin": 43.94
+      },
+      "extendido + frenando": {
+        "n": 148,
+        "wr": 51,
+        "pnl": 17.69,
+        "avgWin": 38.46
+      },
+      "extendido + rebotó extremo20": {
+        "n": 189,
+        "wr": 50,
+        "pnl": 18.58,
+        "avgWin": 41.26
+      },
+      "extendido + PoC lejos + giro": {
+        "n": 183,
+        "wr": 51,
+        "pnl": 17.93,
+        "avgWin": 38.89
+      },
+      "extendido + vela fuerte": {
+        "n": 115,
+        "wr": 54,
+        "pnl": 19.39,
+        "avgWin": 39.89
+      },
+      "extendido + borde volumen": {
+        "n": 168,
+        "wr": 52,
+        "pnl": 19.56,
+        "avgWin": 40.94
+      },
+      "extendido + RSI saliendo": {
+        "n": 47,
+        "wr": 55,
+        "pnl": 15.19,
+        "avgWin": 30.12
+      },
+      "muy extendido>12 + giro": {
+        "n": 83,
+        "wr": 52,
+        "pnl": 22.61,
+        "avgWin": 48.37
+      },
+      "PoC lejos + 2 a favor": {
+        "n": 232,
+        "wr": 56,
+        "pnl": 15.63,
+        "avgWin": 31.22
+      },
+      "PoC lejos + RSI extremo": {
+        "n": 185,
+        "wr": 47,
+        "pnl": 10.51,
+        "avgWin": 26.38
+      },
+      "a favor + 2 a favor velas": {
+        "n": 154,
+        "wr": 61,
+        "pnl": 17.57,
+        "avgWin": 31.43
+      }
+    }
+  },
+  "SHORT": {
+    "base": {
+      "n": 1007,
+      "wr": 41,
+      "pnl": 3.77,
+      "avgWin": 13.66
+    },
+    "dimensions": {
+      "Distancia al borde": {
+        "<3%": {
+          "n": 430,
+          "wr": 46,
+          "pnl": 2.46,
+          "avgWin": 9.06
+        },
+        "3-5%": {
+          "n": 263,
+          "wr": 37,
+          "pnl": 4.06,
+          "avgWin": 16.55
+        },
+        "5-8%": {
+          "n": 191,
+          "wr": 32,
+          "pnl": 3.94,
+          "avgWin": 17.76
+        },
+        "8-12%": {
+          "n": 93,
+          "wr": 40,
+          "pnl": 6.79,
+          "avgWin": 21.13
+        },
+        "12-20%": {
+          "n": 30,
+          "wr": 57,
+          "pnl": 9.44,
+          "avgWin": 18.82
+        },
+        ">20%": null
+      },
+      "Recorrido al PoC": {
+        "<3%": {
+          "n": 25,
+          "wr": 64,
+          "pnl": 0.6,
+          "avgWin": 1.98
+        },
+        "3-8%": {
+          "n": 214,
+          "wr": 53,
+          "pnl": 1.97,
+          "avgWin": 5.56
+        },
+        "8-15%": {
+          "n": 324,
+          "wr": 38,
+          "pnl": 2.76,
+          "avgWin": 11.05
+        },
+        ">15%": {
+          "n": 444,
+          "wr": 35,
+          "pnl": 5.55,
+          "avgWin": 22.85
+        }
+      },
+      "Confirmación de giro": {
+        "frenando": {
+          "n": 641,
+          "wr": 42,
+          "pnl": 4.47,
+          "avgWin": 14.74
+        },
+        "1+ vela a favor": {
+          "n": 513,
+          "wr": 44,
+          "pnl": 5.26,
+          "avgWin": 16.09
+        },
+        "2+ a favor": {
+          "n": 174,
+          "wr": 44,
+          "pnl": 5.62,
+          "avgWin": 17.67
+        },
+        "3+ a favor": {
+          "n": 70,
+          "wr": 41,
+          "pnl": 4.58,
+          "avgWin": 16.69
+        },
+        "mecha rechazo": {
+          "n": 223,
+          "wr": 39,
+          "pnl": 3.32,
+          "avgWin": 13.11
+        },
+        "vela fuerte": {
+          "n": 376,
+          "wr": 41,
+          "pnl": 4.83,
+          "avgWin": 16.57
+        },
+        "RSI saliendo extremo": {
+          "n": 278,
+          "wr": 44,
+          "pnl": 4.24,
+          "avgWin": 13.12
+        },
+        "rebotó del extremo20 >3%": {
+          "n": 748,
+          "wr": 41,
+          "pnl": 4.36,
+          "avgWin": 15.59
+        },
+        "recupera el borde": {
+          "n": 54,
+          "wr": 63,
+          "pnl": 3.38,
+          "avgWin": 7.08
+        }
+      },
+      "Estructura del VA": {
+        "borde alto volumen >10%": {
+          "n": 838,
+          "wr": 42,
+          "pnl": 3.64,
+          "avgWin": 12.89
+        },
+        "VA estrecho <10%": {
+          "n": 239,
+          "wr": 54,
+          "pnl": 2.51,
+          "avgWin": 6.36
+        },
+        "VA ancho >25%": {
+          "n": 224,
+          "wr": 33,
+          "pnl": 5.98,
+          "avgWin": 28.27
+        }
+      },
+      "Tendencia": {
+        "a favor": {
+          "n": 345,
+          "wr": 42,
+          "pnl": 3.81,
+          "avgWin": 13.39
+        },
+        "contra": {
+          "n": 662,
+          "wr": 40,
+          "pnl": 3.74,
+          "avgWin": 13.81
+        }
+      }
+    },
+    "combos": {
+      "extendido + 2 a favor": {
+        "n": 28,
+        "wr": 39,
+        "pnl": 7.38,
+        "avgWin": 23.33
+      },
+      "extendido + 2 a favor + a favor tend": {
+        "n": 8,
+        "wr": 25,
+        "pnl": 2.35,
+        "avgWin": 20.13
+      },
+      "extendido + frenando": {
+        "n": 82,
+        "wr": 46,
+        "pnl": 8.41,
+        "avgWin": 21.56
+      },
+      "extendido + rebotó extremo20": {
+        "n": 95,
+        "wr": 41,
+        "pnl": 7.38,
+        "avgWin": 22.14
+      },
+      "extendido + PoC lejos + giro": {
+        "n": 94,
+        "wr": 44,
+        "pnl": 7.89,
+        "avgWin": 21.79
+      },
+      "extendido + vela fuerte": {
+        "n": 50,
+        "wr": 38,
+        "pnl": 6.62,
+        "avgWin": 22.29
+      },
+      "extendido + borde volumen": {
+        "n": 92,
+        "wr": 43,
+        "pnl": 6.89,
+        "avgWin": 19.43
+      },
+      "extendido + RSI saliendo": {
+        "n": 35,
+        "wr": 54,
+        "pnl": 11.32,
+        "avgWin": 23.26
+      },
+      "muy extendido>12 + giro": {
+        "n": 23,
+        "wr": 61,
+        "pnl": 10.51,
+        "avgWin": 19.26
+      },
+      "PoC lejos + 2 a favor": {
+        "n": 153,
+        "wr": 39,
+        "pnl": 5.85,
+        "avgWin": 20.83
+      },
+      "PoC lejos + RSI extremo": {
+        "n": 127,
+        "wr": 29,
+        "pnl": 2.66,
+        "avgWin": 16.28
+      },
+      "a favor + 2 a favor velas": {
+        "n": 54,
+        "wr": 44,
+        "pnl": 5.85,
+        "avgWin": 18.05
+      }
+    }
+  },
+  "RANGE_LONG": {
+    "base": {
+      "n": 7204,
+      "wr": 75,
+      "pnl": 2.01,
+      "avgWin": 5.0
+    },
+    "dimensions": {
+      "Distancia al borde": {
+        "<3%": {
+          "n": 3505,
+          "wr": 88,
+          "pnl": 0.52,
+          "avgWin": 1.45
+        },
+        "3-5%": {
+          "n": 1225,
+          "wr": 75,
+          "pnl": 1.2,
+          "avgWin": 3.76
+        },
+        "5-8%": {
+          "n": 908,
+          "wr": 69,
+          "pnl": 2.12,
+          "avgWin": 6.17
+        },
+        "8-12%": {
+          "n": 587,
+          "wr": 59,
+          "pnl": 2.7,
+          "avgWin": 9.53
+        },
+        "12-20%": {
+          "n": 495,
+          "wr": 48,
+          "pnl": 3.3,
+          "avgWin": 15.09
+        },
+        ">20%": {
+          "n": 484,
+          "wr": 43,
+          "pnl": 12.54,
+          "avgWin": 40.52
+        }
+      },
+      "Recorrido al PoC": {
+        "<3%": {
+          "n": 3505,
+          "wr": 88,
+          "pnl": 0.52,
+          "avgWin": 1.45
+        },
+        "3-8%": {
+          "n": 2133,
+          "wr": 72,
+          "pnl": 1.59,
+          "avgWin": 4.74
+        },
+        "8-15%": {
+          "n": 813,
+          "wr": 58,
+          "pnl": 2.92,
+          "avgWin": 10.46
+        },
+        ">15%": {
+          "n": 753,
+          "wr": 43,
+          "pnl": 9.18,
+          "avgWin": 31.98
+        }
+      },
+      "Confirmación de giro": {
+        "frenando": {
+          "n": 3395,
+          "wr": 74,
+          "pnl": 2.64,
+          "avgWin": 6.13
+        },
+        "1+ vela a favor": {
+          "n": 2239,
+          "wr": 74,
+          "pnl": 3.83,
+          "avgWin": 7.59
+        },
+        "2+ a favor": {
+          "n": 619,
+          "wr": 75,
+          "pnl": 5.24,
+          "avgWin": 9.33
+        },
+        "3+ a favor": {
+          "n": 263,
+          "wr": 76,
+          "pnl": 5.22,
+          "avgWin": 9.06
+        },
+        "mecha rechazo": {
+          "n": 1653,
+          "wr": 78,
+          "pnl": 1.59,
+          "avgWin": 4.0
+        },
+        "vela fuerte": {
+          "n": 1434,
+          "wr": 74,
+          "pnl": 3.98,
+          "avgWin": 7.76
+        },
+        "RSI saliendo extremo": {
+          "n": 1305,
+          "wr": 69,
+          "pnl": 2.37,
+          "avgWin": 6.61
+        },
+        "rebotó del extremo20 >3%": {
+          "n": 6226,
+          "wr": 76,
+          "pnl": 2.22,
+          "avgWin": 5.15
+        },
+        "recupera el borde": null
+      },
+      "Estructura del VA": {
+        "borde alto volumen >10%": {
+          "n": 5504,
+          "wr": 74,
+          "pnl": 1.68,
+          "avgWin": 4.67
+        },
+        "VA estrecho <10%": {
+          "n": 957,
+          "wr": 79,
+          "pnl": 0.55,
+          "avgWin": 1.57
+        },
+        "VA ancho >25%": {
+          "n": 3410,
+          "wr": 72,
+          "pnl": 3.23,
+          "avgWin": 7.84
+        }
+      },
+      "Tendencia": {
+        "a favor": {
+          "n": 4410,
+          "wr": 78,
+          "pnl": 1.94,
+          "avgWin": 4.56
+        },
+        "contra": {
+          "n": 2794,
+          "wr": 72,
+          "pnl": 2.12,
+          "avgWin": 5.75
+        }
+      }
+    },
+    "combos": {
+      "extendido + 2 a favor": {
+        "n": 247,
+        "wr": 58,
+        "pnl": 11.16,
+        "avgWin": 24.47
+      },
+      "extendido + 2 a favor + a favor tend": {
+        "n": 139,
+        "wr": 63,
+        "pnl": 11.93,
+        "avgWin": 23.05
+      },
+      "extendido + frenando": {
+        "n": 977,
+        "wr": 51,
+        "pnl": 6.46,
+        "avgWin": 20.45
+      },
+      "extendido + rebotó extremo20": {
+        "n": 1353,
+        "wr": 52,
+        "pnl": 6.69,
+        "avgWin": 19.88
+      },
+      "extendido + PoC lejos + giro": {
+        "n": 891,
+        "wr": 49,
+        "pnl": 7.72,
+        "avgWin": 23.97
+      },
+      "extendido + vela fuerte": {
+        "n": 504,
+        "wr": 55,
+        "pnl": 8.55,
+        "avgWin": 21.88
+      },
+      "extendido + borde volumen": {
+        "n": 1139,
+        "wr": 47,
+        "pnl": 4.88,
+        "avgWin": 18.94
+      },
+      "extendido + RSI saliendo": {
+        "n": 430,
+        "wr": 47,
+        "pnl": 5.23,
+        "avgWin": 19.69
+      },
+      "muy extendido>12 + giro": {
+        "n": 737,
+        "wr": 47,
+        "pnl": 8.59,
+        "avgWin": 27.57
+      },
+      "PoC lejos + 2 a favor": {
+        "n": 247,
+        "wr": 58,
+        "pnl": 11.16,
+        "avgWin": 24.47
+      },
+      "PoC lejos + RSI extremo": {
+        "n": 392,
+        "wr": 51,
+        "pnl": 7.0,
+        "avgWin": 21.65
+      },
+      "a favor + 2 a favor velas": {
+        "n": 374,
+        "wr": 79,
+        "pnl": 5.33,
+        "avgWin": 8.66
+      }
+    }
+  },
+  "RANGE_SHORT": {
+    "base": {
+      "n": 8320,
+      "wr": 65,
+      "pnl": -0.1,
+      "avgWin": 3.88
+    },
+    "dimensions": {
+      "Distancia al borde": {
+        "<3%": {
+          "n": 3752,
+          "wr": 85,
+          "pnl": 0.23,
+          "avgWin": 1.44
+        },
+        "3-5%": {
+          "n": 1275,
+          "wr": 71,
+          "pnl": 0.79,
+          "avgWin": 3.74
+        },
+        "5-8%": {
+          "n": 1050,
+          "wr": 61,
+          "pnl": 1.04,
+          "avgWin": 6.04
+        },
+        "8-12%": {
+          "n": 666,
+          "wr": 48,
+          "pnl": 0.96,
+          "avgWin": 9.56
+        },
+        "12-20%": {
+          "n": 724,
+          "wr": 30,
+          "pnl": -1.01,
+          "avgWin": 14.74
+        },
+        ">20%": {
+          "n": 853,
+          "wr": 11,
+          "pnl": -4.35,
+          "avgWin": 29.18
+        }
+      },
+      "Recorrido al PoC": {
+        "<3%": {
+          "n": 3752,
+          "wr": 85,
+          "pnl": 0.23,
+          "avgWin": 1.44
+        },
+        "3-8%": {
+          "n": 2325,
+          "wr": 67,
+          "pnl": 0.91,
+          "avgWin": 4.7
+        },
+        "8-15%": {
+          "n": 1013,
+          "wr": 44,
+          "pnl": 0.57,
+          "avgWin": 10.56
+        },
+        ">15%": {
+          "n": 1230,
+          "wr": 15,
+          "pnl": -3.56,
+          "avgWin": 23.1
+        }
+      },
+      "Confirmación de giro": {
+        "frenando": {
+          "n": 4145,
+          "wr": 60,
+          "pnl": -0.37,
+          "avgWin": 4.37
+        },
+        "1+ vela a favor": {
+          "n": 2842,
+          "wr": 59,
+          "pnl": 0.2,
+          "avgWin": 5.34
+        },
+        "2+ a favor": {
+          "n": 807,
+          "wr": 59,
+          "pnl": 1.02,
+          "avgWin": 6.66
+        },
+        "3+ a favor": {
+          "n": 302,
+          "wr": 63,
+          "pnl": 2.08,
+          "avgWin": 7.55
+        },
+        "mecha rechazo": {
+          "n": 1939,
+          "wr": 66,
+          "pnl": -0.14,
+          "avgWin": 3.56
+        },
+        "vela fuerte": {
+          "n": 1970,
+          "wr": 58,
+          "pnl": 0.22,
+          "avgWin": 5.64
+        },
+        "RSI saliendo extremo": {
+          "n": 1527,
+          "wr": 55,
+          "pnl": -0.69,
+          "avgWin": 4.69
+        },
+        "rebotó del extremo20 >3%": {
+          "n": 6650,
+          "wr": 67,
+          "pnl": 0.26,
+          "avgWin": 4.08
+        },
+        "recupera el borde": null
+      },
+      "Estructura del VA": {
+        "borde alto volumen >10%": {
+          "n": 6329,
+          "wr": 62,
+          "pnl": -0.31,
+          "avgWin": 3.84
+        },
+        "VA estrecho <10%": {
+          "n": 1057,
+          "wr": 77,
+          "pnl": 0.47,
+          "avgWin": 1.54
+        },
+        "VA ancho >25%": {
+          "n": 4022,
+          "wr": 54,
+          "pnl": -0.79,
+          "avgWin": 5.64
+        }
+      },
+      "Tendencia": {
+        "a favor": {
+          "n": 2348,
+          "wr": 74,
+          "pnl": 0.86,
+          "avgWin": 3.61
+        },
+        "contra": {
+          "n": 5972,
+          "wr": 61,
+          "pnl": -0.48,
+          "avgWin": 4.01
+        }
+      }
+    },
+    "combos": {
+      "extendido + 2 a favor": {
+        "n": 367,
+        "wr": 34,
+        "pnl": 0.78,
+        "avgWin": 17.44
+      },
+      "extendido + 2 a favor + a favor tend": {
+        "n": 73,
+        "wr": 47,
+        "pnl": 4.91,
+        "avgWin": 19.06
+      },
+      "extendido + frenando": {
+        "n": 1490,
+        "wr": 25,
+        "pnl": -2.22,
+        "avgWin": 14.62
+      },
+      "extendido + rebotó extremo20": {
+        "n": 1764,
+        "wr": 32,
+        "pnl": -0.72,
+        "avgWin": 14.54
+      },
+      "extendido + PoC lejos + giro": {
+        "n": 1406,
+        "wr": 22,
+        "pnl": -2.24,
+        "avgWin": 17.51
+      },
+      "extendido + vela fuerte": {
+        "n": 832,
+        "wr": 30,
+        "pnl": -0.6,
+        "avgWin": 15.96
+      },
+      "extendido + borde volumen": {
+        "n": 1758,
+        "wr": 25,
+        "pnl": -2.24,
+        "avgWin": 14.4
+      },
+      "extendido + RSI saliendo": {
+        "n": 601,
+        "wr": 24,
+        "pnl": -2.46,
+        "avgWin": 13.96
+      },
+      "muy extendido>12 + giro": {
+        "n": 1211,
+        "wr": 19,
+        "pnl": -2.63,
+        "avgWin": 19.74
+      },
+      "PoC lejos + 2 a favor": {
+        "n": 367,
+        "wr": 34,
+        "pnl": 0.78,
+        "avgWin": 17.44
+      },
+      "PoC lejos + RSI extremo": {
+        "n": 731,
+        "wr": 16,
+        "pnl": -4.77,
+        "avgWin": 14.2
+      },
+      "a favor + 2 a favor velas": {
+        "n": 192,
+        "wr": 72,
+        "pnl": 2.85,
+        "avgWin": 6.78
+      }
+    }
+  }
+}
