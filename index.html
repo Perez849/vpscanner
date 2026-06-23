@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VP Scanner · Visor</title>
+<style>
+  :root{
+    --bg:#fbfbf9; --card:#ffffff; --ink:#1a1d23; --sub:#6b7280; --dim:#9ca3af;
+    --rule:#eceae4; --rule2:#e2e0d8; --ink2:#f5f4f0; --ink3:#fafaf8;
+    --emerald:#0f9d58; --ember:#d93838; --amber:#d99000; --cyan:#0891b2;
+    --sapphire:#2563eb; --violet:#7c3aed;
+    --f-display:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --f-text:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --f-mono:'SF Mono','Roboto Mono',Menlo,Consolas,monospace;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-text);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 18px 80px}
+
+  /* Cabecera */
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:8px 0 18px;border-bottom:2px solid var(--ink)}
+  h1{font-family:var(--f-display);font-size:26px;font-weight:800;margin:0;letter-spacing:-.01em}
+  .badge-ver{font-family:var(--f-mono);font-size:11px;background:var(--sapphire);color:#fff;padding:2px 8px;border-radius:5px;font-weight:700}
+  .meta{font-family:var(--f-mono);font-size:11px;color:var(--sub);margin-left:auto}
+  .meta b{color:var(--emerald)}
+
+  /* Estado de carga */
+  .loading{text-align:center;padding:80px 20px;color:var(--sub);font-family:var(--f-mono);font-size:13px}
+  .err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:var(--r);padding:16px 18px;font-size:13px;margin:20px 0;line-height:1.6}
+
+  /* Controles */
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:18px 0 14px}
+  .controls input,.controls select{font-family:var(--f-text);font-size:13px;padding:7px 11px;border:1px solid var(--rule2);border-radius:8px;background:var(--card);color:var(--ink)}
+  .controls input{flex:1;min-width:180px}
+  .seg{display:flex;border:1px solid var(--rule2);border-radius:8px;overflow:hidden}
+  .seg button{font-family:var(--f-mono);font-size:11px;padding:7px 12px;border:0;background:var(--card);color:var(--sub);cursor:pointer}
+  .seg button.on{background:var(--ink);color:#fff;font-weight:700}
+
+  /* Top */
+  .toplbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin:18px 0 8px}
+  .toplbl.lab{color:var(--emerald)} .toplbl.unl{color:var(--dim)}
+  .topgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:8px}
+  .tcard{background:var(--card);border:1px solid var(--rule2);border-radius:var(--r);padding:13px 15px}
+  .tcard.best{border-color:var(--emerald)}
+  .tc-head{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .tc-sym{font-family:var(--f-display);font-weight:700;font-size:15px}
+  .tc-tf{font-family:var(--f-mono);font-size:8px;background:var(--ink2);padding:1px 5px;border-radius:4px;color:var(--sub)}
+  .tc-sig{font-family:var(--f-mono);font-size:8px;font-weight:700;margin-left:auto}
+  .tc-box{background:var(--ink2);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-family:var(--f-mono);font-size:10px;line-height:1.7}
+  .tc-box .row{display:flex;justify-content:space-between}
+  .tc-grid{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-family:var(--f-mono);font-size:9px;line-height:1.5}
+  .tc-grid .k{color:var(--dim)}
+
+  /* Tabla */
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  thead td{font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);padding:8px 10px;border-bottom:2px solid var(--rule2);cursor:pointer;user-select:none}
+  tbody td{padding:9px 10px;border-bottom:1px solid var(--rule)}
+  tbody tr:hover{background:var(--ink3)}
+  .sym{font-family:var(--f-display);font-weight:700}
+  .mono{font-family:var(--f-mono);font-size:12px}
+  .sig-badge{font-family:var(--f-mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px}
+  .pill{font-family:var(--f-mono);font-size:9px;padding:2px 7px;border-radius:10px;background:var(--ink2);color:var(--sub)}
+
+  /* Stats */
+  .stats{background:var(--card);border:1px solid var(--rule2);border-radius:var(--r);padding:16px 18px;margin:22px 0}
+  .stats h2{font-family:var(--f-display);font-size:17px;margin:0 0 12px}
+  .stable{display:grid;grid-template-columns:auto repeat(3,1fr);gap:0 10px;font-family:var(--f-mono);font-size:12px;align-items:center}
+  .stable .hd{font-size:9px;color:var(--dim);text-transform:uppercase;text-align:right;padding-bottom:8px}
+  .stable .lb{color:var(--sub);font-size:10px;padding:5px 0;border-bottom:1px solid var(--rule)}
+  .stable .vl{text-align:right;padding:5px 0;border-bottom:1px solid var(--rule)}
+  .good{color:var(--emerald);font-weight:700}
+
+  .foot{font-family:var(--f-mono);font-size:10px;color:var(--dim);text-align:center;margin-top:30px;line-height:1.7}
+  @media(max-width:640px){
+    .hide-sm{display:none}
+    h1{font-size:21px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>VP Scanner</h1>
+    <span class="badge-ver">visor v1</span>
+    <span class="meta" id="meta">cargando…</span>
+  </header>
+
+  <div id="app">
+    <div class="loading">Leyendo datos del servidor…</div>
+  </div>
+
+  <div class="foot">
+    Datos generados por el robot diario en GitHub · El navegador solo lee, no calcula<br>
+    Las cifras del backtest son NETAS de costes (0.30% por operación)
+  </div>
+</div>
+
+<script>
+// ── CONFIG: tu repo ───────────────────────────────────────────
+const BASE = 'https://raw.githubusercontent.com/Perez849/vpscanner/main/scanner/data/';
+// Cache-buster: añade ?t=timestamp para que el navegador no sirva un JSON viejo
+const bust = () => '?t=' + Math.floor(Date.now()/60000);  // cambia cada minuto
+
+const SIG_COLOR = { LONG:'var(--emerald)', SHORT:'var(--ember)', RANGE_LONG:'var(--cyan)', RANGE_SHORT:'var(--amber)' };
+const SIG_BG    = { LONG:'#e7f6ee', SHORT:'#fdeaea', RANGE_LONG:'#e6f6fa', RANGE_SHORT:'#fcf3e0' };
+const LABEL_ICON = { pelotazo:'💎', seguro:'🛡️', premium:'⭐', rebote:'🛡️' };
+const LABEL_NAME = { pelotazo:'Pelotazo', seguro:'Seguro', premium:'Premium', rebote:'Rebote' };
+
+let STATE = { signals:{}, stats:null, meta:null, tf:'1d', q:'', sort:'wr', dir:-1 };
+
+const f = (x,d=2) => x==null ? '—' : Number(x).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+const icon = c => c ? (LABEL_ICON[c]||'') : '';
+
+async function loadAll(){
+  try{
+    const [sig, st, mt] = await Promise.all([
+      fetch(BASE+'signals.json'+bust()).then(r=>{ if(!r.ok) throw new Error('signals '+r.status); return r.json(); }),
+      fetch(BASE+'stats.json'+bust()).then(r=> r.ok ? r.json() : null).catch(()=>null),
+      fetch(BASE+'meta.json'+bust()).then(r=> r.ok ? r.json() : null).catch(()=>null),
+    ]);
+    STATE.signals = sig; STATE.stats = st; STATE.meta = mt;
+    render();
+  }catch(e){
+    document.getElementById('app').innerHTML =
+      '<div class="err"><b>No pude leer los datos.</b><br>'+
+      'Comprueba que el robot ha corrido al menos una vez y que el archivo existe en:<br>'+
+      '<span style="font-family:var(--f-mono);font-size:11px">'+BASE+'signals.json</span><br><br>'+
+      'Detalle técnico: '+e.message+'</div>';
+  }
+}
+
+function fmtDate(iso){
+  if(!iso) return '—';
+  try{ const d=new Date(iso); return d.toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+  catch{ return iso; }
+}
+
+function rows(){
+  const arr = Object.entries(STATE.signals).map(([key,s])=>({key, ...s}));
+  let out = arr.filter(s => (s.tf||'').toLowerCase() === STATE.tf);
+  if(STATE.q){
+    const q = STATE.q.toLowerCase();
+    out = out.filter(s => (s.sym||'').toLowerCase().includes(q) || (s.sector||'').toLowerCase().includes(q));
+  }
+  const val = s => {
+    if(STATE.sort==='wr')   return s.bt?.wr ?? -1;
+    if(STATE.sort==='pnl')  return s.bt?.avgPnl ?? -999;
+    if(STATE.sort==='rr')   return s.rr ?? -1;
+    if(STATE.sort==='sym')  return s.sym;
+    return s.bt?.wr ?? -1;
+  };
+  out.sort((a,b)=>{
+    const va=val(a), vb=val(b);
+    if(typeof va==='string') return STATE.dir*va.localeCompare(vb);
+    return STATE.dir*(va-vb);
+  });
+  return out;
+}
+
+function cardHtml(s, i, medal){
+  const col = SIG_COLOR[s.signal]||'var(--sub)';
+  const ic = icon(s.labelClass);
+  const tgtPct = (s.target&&s.entry)? ((s.target-s.entry)/s.entry*100) : null;
+  const stopPct = (s.stop&&s.entry)? ((s.stop-s.entry)/s.entry*100) : null;
+  return `<div class="tcard ${i===0?'best':''}">
+    <div class="tc-head">
+      <span>${medal||''}</span>
+      <span class="tc-sym">${s.sym}</span>
+      ${ic?`<span title="${LABEL_NAME[s.labelClass]}">${ic}</span>`:''}
+      <span class="tc-tf">${(s.tf||'').toUpperCase()}</span>
+      <span class="tc-sig" style="color:${col}">${(s.signal||'').replace('_',' ')}</span>
+    </div>
+    <div class="tc-box">
+      <div class="row"><span style="color:var(--sub)">Entrada</span><span style="font-weight:700">${f(s.entry)}</span></div>
+      <div class="row"><span style="color:var(--emerald)">🎯 Objetivo</span><span style="color:var(--emerald)">${f(s.target)} ${tgtPct!=null?`<span style="font-size:8px">(${tgtPct>=0?'+':''}${tgtPct.toFixed(1)}%)</span>`:''}</span></div>
+      <div class="row"><span style="color:var(--amber)">◆ Stop</span><span style="color:var(--amber)">${f(s.stop)} ${stopPct!=null?`<span style="font-size:8px">(${stopPct.toFixed(1)}%)</span>`:''}</span></div>
+    </div>
+    <div class="tc-grid">
+      <span class="k">Acierto hist.</span><span class="good">${s.bt?.wr??'—'}% <span style="color:var(--dim);font-weight:400">(${s.bt?.total??0} ops)</span></span>
+      <span class="k">Ganancia/op</span><span>${s.bt?.avgPnl!=null?(s.bt.avgPnl>=0?'+':'')+s.bt.avgPnl+'%':'—'}</span>
+      <span class="k">Ratio R:R</span><span style="color:var(--violet)">${s.rr?'1:'+s.rr:'—'}</span>
+    </div>
+  </div>`;
+}
+
+function render(){
+  const m = STATE.meta;
+  document.getElementById('meta').innerHTML = m
+    ? `<b>${m.symbolsOK}</b> símbolos · ${m.totalTrades?.toLocaleString('es-ES')||'—'} ops · act. ${fmtDate(m.generatedAt)}`
+    : '';
+
+  const list = rows();
+  // Top 3 etiquetadas y sin etiqueta (de la vista actual, por WR)
+  const byWr = [...list].sort((a,b)=>(b.bt?.wr??-1)-(a.bt?.wr??-1));
+  const lab  = byWr.filter(s=>s.labelClass).slice(0,3);
+  const unl  = byWr.filter(s=>!s.labelClass).slice(0,3);
+  const medals=['🥇','🥈','🥉'];
+
+  let html = `
+    <div class="controls">
+      <input id="q" type="text" placeholder="Buscar símbolo o sector…" value="${STATE.q}">
+      <div class="seg">
+        <button data-tf="1d" class="${STATE.tf==='1d'?'on':''}">1D</button>
+        <button data-tf="1w" class="${STATE.tf==='1w'?'on':''}">1W</button>
+      </div>
+    </div>`;
+
+  // Top etiquetadas
+  html += `<div class="toplbl lab">✦ Top 3 etiquetadas — recetas de calidad</div>`;
+  if(lab.length){
+    html += `<div class="topgrid">`+lab.map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
+  } else {
+    html += `<div style="color:var(--sub);font-size:12px;font-family:var(--f-mono);margin-bottom:8px">Ninguna señal etiquetada en ${STATE.tf.toUpperCase()} ahora mismo.</div>`;
+  }
+  // Top sin etiqueta
+  html += `<div class="toplbl unl">⭐ Top 3 sin etiqueta — mejores por acierto</div>`;
+  html += `<div class="topgrid">`+(unl.length?unl:byWr.slice(0,3)).map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
+
+  // Tabla completa
+  const arrow = k => STATE.sort===k ? (STATE.dir<0?' ▼':' ▲') : '';
+  html += `<h2 style="font-family:var(--f-display);font-size:17px;margin:24px 0 4px">Todas las señales (${list.length})</h2>
+    <table>
+      <thead><tr>
+        <td data-s="sym">Símbolo${arrow('sym')}</td>
+        <td>Señal</td>
+        <td class="hide-sm">Etiqueta</td>
+        <td style="text-align:right">Entrada</td>
+        <td style="text-align:right" class="hide-sm">Objetivo</td>
+        <td style="text-align:right" class="hide-sm">Stop</td>
+        <td style="text-align:right" data-s="rr">R:R${arrow('rr')}</td>
+        <td style="text-align:right" data-s="wr">Acierto${arrow('wr')}</td>
+        <td style="text-align:right" data-s="pnl">Gan/op${arrow('pnl')}</td>
+      </tr></thead>
+      <tbody>`;
+  for(const s of list){
+    const col=SIG_COLOR[s.signal]||'var(--sub)', bg=SIG_BG[s.signal]||'var(--ink2)';
+    const ic=icon(s.labelClass);
+    html += `<tr>
+      <td class="sym">${s.sym} <span style="color:var(--dim);font-weight:400;font-size:10px">${s.sector||''}</span></td>
+      <td><span class="sig-badge" style="color:${col};background:${bg}">${(s.signal||'').replace('_',' ')}</span></td>
+      <td class="hide-sm">${ic?`${ic} <span style="font-size:11px;color:var(--sub)">${LABEL_NAME[s.labelClass]}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
+      <td style="text-align:right" class="mono">${f(s.entry)}</td>
+      <td style="text-align:right" class="mono hide-sm" style="color:var(--emerald)">${f(s.target)}</td>
+      <td style="text-align:right" class="mono hide-sm" style="color:var(--amber)">${f(s.stop)}</td>
+      <td style="text-align:right" class="mono" style="color:var(--violet)">${s.rr?'1:'+s.rr:'—'}</td>
+      <td style="text-align:right" class="mono"><b>${s.bt?.wr??'—'}%</b> <span style="color:var(--dim);font-size:10px">(${s.bt?.total??0})</span></td>
+      <td style="text-align:right" class="mono" style="color:${(s.bt?.avgPnl??0)>=0?'var(--emerald)':'var(--ember)'}">${s.bt?.avgPnl!=null?(s.bt.avgPnl>=0?'+':'')+s.bt.avgPnl+'%':'—'}</td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+
+  // Estadísticas globales (etiquetadas vs no)
+  if(STATE.stats){
+    const st=STATE.stats;
+    const block=(lbl,g,strong)=>`
+      <div class="lb" style="${strong?'font-weight:700;color:var(--ink)':''}">${lbl}</div>
+      <div class="vl ${g&&g.wr!=null&&strong?'good':''}">${g&&g.wr!=null?g.wr+'%':'—'}</div>
+      <div class="vl" style="color:${g&&g.pnl>=0?'var(--emerald)':'var(--ember)'}">${g&&g.pnl!=null?(g.pnl>=0?'+':'')+g.pnl+'%':'—'}</div>
+      <div class="vl" style="color:var(--dim)">${g&&g.n!=null?g.n:'—'}</div>`;
+    html += `<div class="stats">
+      <h2>📊 ¿Funcionan las etiquetas? (todo el histórico)</h2>
+      <p style="color:var(--sub);font-size:12px;margin:0 0 12px">Comparación de operar todas las señales vs solo las etiquetadas (💎🛡️⭐), sobre las ${st.global?.n?.toLocaleString('es-ES')||'—'} operaciones del backtest.</p>
+      <div class="stable">
+        <div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
+        ${block('① Todas las señales', st.global, true)}
+        ${block('② Sin etiqueta', st.unlabeled, true)}
+        ${block('③ Solo etiquetadas ✦', st.labeled, true)}
+      </div>
+      ${st.labeled && st.unlabeled && st.labeled.pnl>st.unlabeled.pnl
+        ? `<div style="margin-top:12px;background:#e7f6ee;border-radius:7px;padding:10px 12px;font-family:var(--f-mono);font-size:11px;color:var(--emerald)">✦ Operar solo etiquetadas habría dado ${st.labeled.wr}% de acierto y ${st.labeled.pnl>=0?'+':''}${st.labeled.pnl}%/op, frente al ${st.unlabeled.wr}% y ${st.unlabeled.pnl>=0?'+':''}${st.unlabeled.pnl}%/op de las no etiquetadas.</div>`
+        : ''}
+    </div>`;
+  }
+
+  document.getElementById('app').innerHTML = html;
+  wire();
+}
+
+function wire(){
+  const q=document.getElementById('q');
+  if(q) q.oninput = e => { STATE.q=e.target.value; const p=q.selectionStart; render(); const nq=document.getElementById('q'); if(nq){nq.focus();nq.setSelectionRange(p,p);} };
+  document.querySelectorAll('[data-tf]').forEach(b=> b.onclick=()=>{ STATE.tf=b.dataset.tf; render(); });
+  document.querySelectorAll('[data-s]').forEach(td=> td.onclick=()=>{
+    const k=td.dataset.s;
+    if(STATE.sort===k) STATE.dir*=-1; else { STATE.sort=k; STATE.dir = k==='sym'?1:-1; }
+    render();
+  });
+}
+
+loadAll();
+</script>
+</body>
+</html>
