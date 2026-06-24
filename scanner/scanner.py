@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from vp_core import get_pivot_segments, calc_vp
 from signals import classify_signal
 from backtest import run_backtest
+import seguimiento as sg
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, 'data')
@@ -183,6 +184,9 @@ def process_symbol(sym: str, meta: Dict[str, Any], interval_key: str) -> Optiona
         'signal': sig_now,
         'bt': bt_elite,
         'trades': trades,
+        # cola de precios para el seguimiento en vivo (cubre el timeout de 60 sesiones)
+        'priceTail': [{'ts': b['ts'], 'open': b['open'], 'high': b['high'],
+                       'low': b['low'], 'close': b['close']} for b in df[-70:]],
     }
 
 
@@ -202,6 +206,7 @@ def main():
     signals_out: Dict[str, Any] = {}
     history_out: Dict[str, Any] = {}
     all_trades: List[Dict[str, Any]] = []
+    price_tails: Dict[str, List[Dict[str, Any]]] = {}
     ok, failed = [], []
 
     interval_keys = ['1d']   # SOLO diario (decisión del usuario)
@@ -227,6 +232,8 @@ def main():
             history_out[key] = {'sym': sym, 'tf': r['tf'], 'sector': r['sector'],
                                 'bt': r['bt'], 'trades': r['trades']}
             all_trades.extend(r['trades'])
+            if r.get('priceTail'):
+                price_tails[sym] = r['priceTail']
             if done % 20 == 0:
                 print(f'  ... {done}/{total_jobs}', flush=True)
 
@@ -255,6 +262,25 @@ def main():
     json.dump(history_out, open(os.path.join(DATA_DIR, 'history.json'), 'w'), ensure_ascii=False)
     json.dump(stats_out, open(os.path.join(DATA_DIR, 'stats.json'), 'w'), ensure_ascii=False)
     json.dump(meta_out, open(os.path.join(DATA_DIR, 'meta.json'), 'w'), ensure_ascii=False, indent=2)
+
+    # ── Seguimiento EN VIVO de las alertas élite ──────────────────────────
+    # Registra las alertas de hoy, sigue las vivas y recalcula stats reales.
+    seg_path = os.path.join(DATA_DIR, 'seguimiento_vivo.json')
+    try:
+        prev = json.load(open(seg_path, encoding='utf-8')) if os.path.exists(seg_path) else None
+    except Exception:
+        prev = None
+    # timestamp de hoy: el de la última barra disponible
+    today_ts = 0
+    for tail in price_tails.values():
+        if tail:
+            today_ts = max(today_ts, tail[-1]['ts'])
+    if today_ts:
+        seg = sg.update(prev, signals_out, price_tails, today_ts)
+        json.dump(seg, open(seg_path, 'w'), ensure_ascii=False)
+        st = seg['stats']['global']
+        print(f"Seguimiento vivo: {st['open']} abiertas · {st['n']} cerradas · WR {st['wr']}%" if st['n'] else
+              f"Seguimiento vivo: {st['open']} abiertas · sin cierres aún", flush=True)
 
     print(f'\nOK: {len(ok)} · Fallidos: {len(failed)} · Trades: {len(all_trades)}', flush=True)
     print(f'Señales vivas: {len(signals_out)}', flush=True)

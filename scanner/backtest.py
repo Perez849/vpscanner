@@ -69,6 +69,7 @@ def run_backtest(df: List[Dict[str, Any]], segs: List[Dict[str, Any]],
         t2_hit = False
         bars_to_res = 0
         worst_in_win = 0.0
+        ambiguous = False  # día en que la vela tocó stop Y objetivo (desempate por apertura)
         last_seen_close = entry_close
         last_bar_idx = 0
 
@@ -107,6 +108,7 @@ def run_backtest(df: List[Dict[str, Any]], segs: List[Dict[str, Any]],
                 break
 
             if stop_hit and target_hit:
+                ambiguous = True  # ambos tocados el mismo día — resuelto por proximidad a la apertura
                 dist_to_stop = abs(o - sig['stop'])
                 dist_to_target = abs(o - sig['target'])
                 if dist_to_target <= dist_to_stop:
@@ -177,7 +179,7 @@ def run_backtest(df: List[Dict[str, Any]], segs: List[Dict[str, Any]],
             'barsToRes': bars_to_res, 'barsHeld': bars_to_res,
             'maxDrawdown': to_fixed(worst_in_win, 2) if outcome == 'win' else None,
             'ts': entry_ts, 'entryTs': entry_ts, 'exitTs': exit_ts,
-            'feats': feats,
+            'feats': feats, 'ambiguous': ambiguous,
         })
         return True
 
