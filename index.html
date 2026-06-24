@@ -113,10 +113,10 @@ const BASE='https://raw.githubusercontent.com/Perez849/vpscanner/main/scanner/da
 const bust=()=>'?t='+Math.floor(Date.now()/60000);
 const SIG_COLOR={LONG:'var(--emerald)',SHORT:'var(--ember)',RANGE_LONG:'var(--cyan)',RANGE_SHORT:'var(--amber)'};
 const SIG_BG={LONG:'#e7f6ee',SHORT:'#fdeaea',RANGE_LONG:'#e6f6fa',RANGE_SHORT:'#fcf3e0'};
-const LABEL_ICON={caida_giro:'💎💎',caida_recorrido:'💎',empuje_favor:'⭐',rango_extendido:'🚀',corto_favor:'🛡️',corto_estrecho:'🎯',
+const LABEL_ICON={caida_giro:'💎💎',caida_recorrido:'💎',empuje_favor:'⭐',corto_favor:'🛡️',corto_estrecho:'🎯',corto_extendido:'📉',
   // compatibilidad con claves antiguas por si quedan JSON viejos:
   pelotazo_max:'💎💎',pelotazo:'💎',seguro:'🛡️',premium:'⭐',rebote:'🛡️'};
-const LABEL_NAME={caida_giro:'Caída + giro fuerte',caida_recorrido:'Caída con recorrido',empuje_favor:'Empuje a favor',rango_extendido:'Rango extendido',corto_favor:'Corto a favor de tendencia',corto_estrecho:'Corto en rango estrecho',
+const LABEL_NAME={caida_giro:'Caída + giro fuerte',caida_recorrido:'Caída con recorrido',empuje_favor:'Empuje a favor',corto_favor:'Corto a favor de tendencia',corto_estrecho:'Corto en rango estrecho',corto_extendido:'Corto extendido con giro',
   pelotazo_max:'Pelotazo máximo',pelotazo:'Pelotazo',seguro:'Seguro',premium:'Premium',rebote:'Rebote'};
 const TYPE_NAME={LONG:'LONG · reversión bajo VAL',SHORT:'SHORT · reversión sobre VAH',RANGE_LONG:'RANGE LONG · dentro del VA, al alza',RANGE_SHORT:'RANGE SHORT · dentro del VA, a la baja'};
 let STATE={signals:{},history:{},stats:null,meta:null,seg:null,view:'alertas',tf:'1d',q:'',sort:'wr',dir:-1};
@@ -235,8 +235,8 @@ function statsHtml(){
         ${row('Sistema élite (todo)',st.global,true,true)}</div>`;
     if(st.byClass){
       h+=`<div class="typehd" style="color:var(--ink)">Por tipo de alerta</div><div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>`;
-      const CN={caida_giro:'💎💎 Caída + giro fuerte',caida_recorrido:'💎 Caída con recorrido',empuje_favor:'⭐ Empuje a favor',rango_extendido:'🚀 Rango extendido',corto_favor:'🛡️ Corto a favor de tendencia',corto_estrecho:'🎯 Corto en rango estrecho'};
-      for(const c of ['caida_giro','caida_recorrido','empuje_favor','rango_extendido','corto_favor','corto_estrecho']){
+      const CN={caida_giro:'💎💎 Caída + giro fuerte',caida_recorrido:'💎 Caída con recorrido',empuje_favor:'⭐ Empuje a favor',corto_favor:'🛡️ Corto a favor de tendencia',corto_estrecho:'🎯 Corto en rango estrecho',corto_extendido:'📉 Corto extendido con giro'};
+      for(const c of ['caida_giro','caida_recorrido','empuje_favor','corto_favor','corto_estrecho','corto_extendido']){
         if(st.byClass[c]) h+=row(CN[c],st.byClass[c],false,true);
       }
       h+=`</div>`;
@@ -318,7 +318,7 @@ function segHtml(){
   if(seg.stats.byClass&&Object.keys(seg.stats.byClass).length){
     h+=`<h2 style="font-family:var(--f-display);font-size:16px;margin:22px 0 6px">Por tipo de alerta (real)</h2>
       <table><thead><tr><td>Tipo</td><td style="text-align:right">Acierto</td><td style="text-align:right">Gan/op</td><td style="text-align:right">Cerradas</td><td style="text-align:right">Abiertas</td></tr></thead><tbody>`;
-    for(const c of ['caida_giro','caida_recorrido','empuje_favor','rango_extendido','corto_favor','corto_estrecho']){
+    for(const c of ['caida_giro','caida_recorrido','empuje_favor','corto_favor','corto_estrecho','corto_extendido']){
       const b=seg.stats.byClass[c]; if(!b)continue;
       h+=`<tr><td>${icon(c)} ${LABEL_NAME[c]||c}</td>
         <td style="text-align:right" class="mono">${b.wr!=null?b.wr+'%':'—'}</td>
@@ -404,7 +404,7 @@ function renderModal(){
     ['💎💎 Caída + giro fuerte', stOf(trades.filter(t=>t.labelClass==='caida_giro'))],
     ['💎 Caída con recorrido', stOf(trades.filter(t=>t.labelClass==='caida_recorrido'))],
     ['⭐ Empuje a favor', stOf(trades.filter(t=>t.labelClass==='empuje_favor'))],
-    ['🚀 Rango extendido', stOf(trades.filter(t=>t.labelClass==='rango_extendido'))],
+    ['📉 Corto extendido', stOf(trades.filter(t=>t.labelClass==='corto_extendido'))],
     ['🛡️ Corto a favor', stOf(trades.filter(t=>t.labelClass==='corto_favor'))],
     ['🎯 Corto en rango estrecho', stOf(trades.filter(t=>t.labelClass==='corto_estrecho'))],
   ].filter(([,s])=>s&&s.n>0);
