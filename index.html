@@ -280,14 +280,16 @@ function segHtml(){
   // Abiertas
   h+=`<h2 style="font-family:var(--f-display);font-size:16px;margin:18px 0 6px">Operaciones abiertas (${abiertas.length})</h2>`;
   if(abiertas.length){
-    h+=`<table><thead><tr><td>Símbolo</td><td>Tipo</td><td style="text-align:right">Entrada</td><td style="text-align:right">Actual</td><td style="text-align:right">Flotante</td><td style="text-align:right" class="hide-sm">Objetivo</td><td style="text-align:right" class="hide-sm">Stop</td><td style="text-align:right">Días</td></tr></thead><tbody>`;
+    h+=`<table><thead><tr><td>Símbolo</td><td>Tipo</td><td style="text-align:right" class="hide-sm">Entró</td><td style="text-align:right">Entrada</td><td style="text-align:right">Actual</td><td style="text-align:right">Flotante</td><td style="text-align:right" class="hide-sm">Objetivo</td><td style="text-align:right" class="hide-sm">Stop</td><td style="text-align:right">Días</td></tr></thead><tbody>`;
     for(const t of abiertas){
-      h+=`<tr><td class="sym">${t.sym}</td>
+      const tgtPct=t.target&&t.entry?((t.target/t.entry-1)*100*(t.signal==='LONG'||t.signal==='RANGE_LONG'?1:-1)):null;
+      h+=`<tr style="cursor:pointer" onclick="openSegModal('${t.id}')"><td class="sym">${t.sym}</td>
         <td><span style="color:${SIG_COLOR[t.signal]}">${sigTxt(t.signal)}</span> ${icon(t.eliteClass)}</td>
+        <td style="text-align:right;font-size:11px;color:var(--dim)" class="hide-sm">${fmtTs(t.entryTs)}</td>
         <td style="text-align:right" class="mono">${f(t.entry)}</td>
         <td style="text-align:right" class="mono">${t.curPrice!=null?f(t.curPrice):'—'}</td>
         <td style="text-align:right;color:${pnlCol(t.curPnlPct||0)}" class="mono">${t.curPnlPct!=null?(t.curPnlPct>=0?'+':'')+t.curPnlPct+'%':'—'}</td>
-        <td style="text-align:right;color:var(--emerald)" class="mono hide-sm">${f(t.target)}</td>
+        <td style="text-align:right;color:var(--emerald)" class="mono hide-sm">${f(t.target)}${tgtPct!=null?` <span style="font-size:8px;color:var(--dim)">(${tgtPct>=0?'+':''}${tgtPct.toFixed(0)}%)</span>`:''}</td>
         <td style="text-align:right;color:var(--amber)" class="mono hide-sm">${f(t.stop)}</td>
         <td style="text-align:right" class="mono">${t.barsSeen||0}</td></tr>`;
     }
@@ -297,11 +299,12 @@ function segHtml(){
   // Cerradas
   h+=`<h2 style="font-family:var(--f-display);font-size:16px;margin:22px 0 6px">Operaciones cerradas (${cerradas.length})</h2>`;
   if(cerradas.length){
-    h+=`<table><thead><tr><td>Símbolo</td><td>Tipo</td><td style="text-align:right">Entrada</td><td style="text-align:right">Salida</td><td style="text-align:right">Result.</td><td>Motivo</td><td style="text-align:right" class="hide-sm">Cerrada</td></tr></thead><tbody>`;
+    h+=`<table><thead><tr><td>Símbolo</td><td>Tipo</td><td style="text-align:right" class="hide-sm">Entró</td><td style="text-align:right">Entrada</td><td style="text-align:right">Salida</td><td style="text-align:right">Result.</td><td>Motivo</td><td style="text-align:right" class="hide-sm">Cerró</td></tr></thead><tbody>`;
     for(const t of cerradas){
       const amb=t.ambiguous?` <span title="La vela tocó stop y objetivo el mismo día — resuelto por proximidad, revisar" style="color:var(--amber);cursor:help">⚠</span>`:'';
-      h+=`<tr><td class="sym">${t.sym}</td>
+      h+=`<tr style="cursor:pointer" onclick="openSegModal('${t.id}')"><td class="sym">${t.sym}</td>
         <td><span style="color:${SIG_COLOR[t.signal]}">${sigTxt(t.signal)}</span> ${icon(t.eliteClass)}</td>
+        <td style="text-align:right;font-size:11px;color:var(--dim)" class="hide-sm">${fmtTs(t.entryTs)}</td>
         <td style="text-align:right" class="mono">${f(t.entry)}</td>
         <td style="text-align:right" class="mono">${f(t.exitPrice)}</td>
         <td style="text-align:right;color:${pnlCol(t.pnlPct)};font-weight:700" class="mono">${t.pnlPct>=0?'+':''}${t.pnlPct}%${amb}</td>
@@ -326,6 +329,50 @@ function segHtml(){
     h+=`</tbody></table>`;
   }
   return h;
+}
+function openSegModal(id){
+  const t=(STATE.seg?.trades||[]).find(x=>x.id===id);
+  if(!t)return;
+  const isLong=t.signal==='LONG'||t.signal==='RANGE_LONG';
+  const tgtPct=t.target&&t.entry?((t.target/t.entry-1)*100*(isLong?1:-1)):null;
+  const stopPct=t.stop&&t.entry?((t.stop/t.entry-1)*100*(isLong?1:-1)):null;
+  const rr=(t.target&&t.stop&&t.entry)?Math.abs(t.target-t.entry)/Math.abs(t.entry-t.stop):null;
+  const pnlCol=v=>v>=0?'var(--emerald)':'var(--ember)';
+  const estado=t.status==='abierta'
+    ? `<span style="color:var(--sapphire);font-weight:700">● Abierta</span> · ${t.barsSeen||0} días · flotante <b style="color:${pnlCol(t.curPnlPct||0)}">${t.curPnlPct!=null?(t.curPnlPct>=0?'+':'')+t.curPnlPct+'%':'—'}</b>`
+    : `<span style="color:${t.closeReason==='objetivo'?'var(--emerald)':t.closeReason==='stop'?'var(--ember)':'var(--dim)'};font-weight:700">● Cerrada (${t.closeReason})</span> · resultado <b style="color:${pnlCol(t.pnlPct)}">${t.pnlPct>=0?'+':''}${t.pnlPct}%</b>${t.ambiguous?' <span style="color:var(--amber)">⚠ día ambiguo</span>':''}`;
+  const row=(k,v)=>`<div class="row"><span class="k">${k}</span><span>${v}</span></div>`;
+  const html=`<div class="m-head"><div><span class="sig-badge" style="color:${SIG_COLOR[t.signal]};background:${SIG_BG[t.signal]}">${sigTxt(t.signal)}</span>
+      <span style="font-family:var(--f-display);font-size:18px;font-weight:800;margin-left:8px">${t.sym}</span>
+      <span style="margin-left:6px">${icon(t.eliteClass)} <span style="font-size:12px;color:var(--sub)">${LABEL_NAME[t.eliteClass]||''}</span></span></div>
+      <button class="x" onclick="closeModal()">×</button></div>
+    <div class="m-body">
+      <div style="font-family:var(--f-mono);font-size:12px;margin-bottom:14px;padding:10px;background:var(--ink2);border-radius:8px">${estado}</div>
+      <div class="m-sec">Niveles y objetivos</div>
+      <div class="lvls">
+        ${row('Entrada (congelada)',f(t.entry))}
+        ${row('🎯 Objetivo',`${f(t.target)} ${tgtPct!=null?`<span style="color:var(--emerald)">(${tgtPct>=0?'+':''}${tgtPct.toFixed(1)}%)</span>`:''}`)}
+        ${t.target2?row('🎯 Objetivo 2',f(t.target2)):''}
+        ${row('◆ Stop',`${f(t.stop)} ${stopPct!=null?`<span style="color:var(--amber)">(${stopPct.toFixed(1)}%)</span>`:''}`)}
+        ${row('Ratio R:R',rr?'1:'+rr.toFixed(1):'—')}
+        ${t.curPrice!=null?row('Precio actual',f(t.curPrice)):''}
+        ${t.exitPrice!=null?row('Precio de salida',f(t.exitPrice)):''}
+      </div>
+      <div class="m-sec">Perfil de volumen (congelado a la entrada)</div>
+      <div class="lvls">
+        ${row('VAH',f(t.vah))}
+        ${row('PoC',f(t.poc))}
+        ${row('VAL',f(t.val))}
+      </div>
+      <div class="m-sec">Fechas</div>
+      <div class="lvls">
+        ${row('Entró',fmtTs(t.entryTs))}
+        ${t.closedAt?row('Cerró',fmtTs(t.closedAt)):row('Días abierta',t.barsSeen||0)}
+      </div>
+    </div>`;
+  document.getElementById('modal').innerHTML=html;
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow='hidden';
 }
 function openModal(key){MODAL.key=key;MODAL.filter='all';renderModal();document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
