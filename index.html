@@ -84,6 +84,14 @@
   .tfilt button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .foot{font-family:var(--f-mono);font-size:10px;color:var(--dim);text-align:center;margin-top:30px;line-height:1.7}
   @media(max-width:640px){ .hide-sm{display:none} h1{font-size:21px} }
+  .tabs{display:flex;gap:6px;margin:4px 0 16px}
+  .tabs button{flex:0 0 auto;padding:8px 16px;border:1px solid var(--rule2);background:var(--card);color:var(--sub);border-radius:9px;font-family:var(--f-text);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tabs .pill{background:var(--sapphire);color:#fff;font-family:var(--f-mono);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700}
+  .seg-head{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0}
+  .seg-card{background:var(--card);border:1px solid var(--rule2);border-radius:11px;padding:14px 10px;text-align:center}
+  .seg-n{font-family:var(--f-display);font-size:22px;font-weight:800;color:var(--ink)}
+  .seg-l{font-family:var(--f-mono);font-size:10px;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -111,7 +119,7 @@ const LABEL_ICON={caida_giro:'💎💎',caida_recorrido:'💎',empuje_favor:'⭐
 const LABEL_NAME={caida_giro:'Caída + giro fuerte',caida_recorrido:'Caída con recorrido',empuje_favor:'Empuje a favor',rango_extendido:'Rango extendido',corto_favor:'Corto a favor de tendencia',corto_estrecho:'Corto en rango estrecho',
   pelotazo_max:'Pelotazo máximo',pelotazo:'Pelotazo',seguro:'Seguro',premium:'Premium',rebote:'Rebote'};
 const TYPE_NAME={LONG:'LONG · reversión bajo VAL',SHORT:'SHORT · reversión sobre VAH',RANGE_LONG:'RANGE LONG · dentro del VA, al alza',RANGE_SHORT:'RANGE SHORT · dentro del VA, a la baja'};
-let STATE={signals:{},history:{},stats:null,meta:null,tf:'1d',q:'',sort:'wr',dir:-1};
+let STATE={signals:{},history:{},stats:null,meta:null,seg:null,view:'alertas',tf:'1d',q:'',sort:'wr',dir:-1};
 let MODAL={key:null,filter:'all'};
 const f=(x,d=2)=>x==null?'—':Number(x).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 const icon=c=>c?(LABEL_ICON[c]||''):'';
@@ -119,13 +127,14 @@ const sigTxt=s=>(s||'').replace('_',' ');
 
 async function loadAll(){
   try{
-    const [sig,his,st,mt]=await Promise.all([
+    const [sig,his,st,mt,seg]=await Promise.all([
       fetch(BASE+'signals.json'+bust()).then(r=>{if(!r.ok)throw new Error('signals '+r.status);return r.json();}),
       fetch(BASE+'history.json'+bust()).then(r=>r.ok?r.json():{}).catch(()=>({})),
       fetch(BASE+'stats.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch(BASE+'meta.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch(BASE+'seguimiento_vivo.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
     ]);
-    STATE.signals=sig;STATE.history=his;STATE.stats=st;STATE.meta=mt;render();
+    STATE.signals=sig;STATE.history=his;STATE.stats=st;STATE.meta=mt;STATE.seg=seg;render();
   }catch(e){
     document.getElementById('app').innerHTML='<div class="err"><b>No pude leer los datos.</b><br>Comprueba que el robot ha corrido y existe:<br><span style="font-family:var(--f-mono);font-size:11px">'+BASE+'signals.json</span><br><br>Detalle: '+e.message+'</div>';
   }
@@ -163,11 +172,21 @@ function cardHtml(s,i,medal){
 function render(){
   const m=STATE.meta;
   document.getElementById('meta').innerHTML=m?`<b>${m.symbolsOK}</b> símbolos · ${m.totalTrades?.toLocaleString('es-ES')||'—'} ops élite · act. ${fmtDate(m.generatedAt)}`:'';
+  // Conmutador de pestañas
+  const segOpen=STATE.seg?.stats?.global?.open||0;
+  const tabs=`<div class="tabs">
+    <button class="${STATE.view==='alertas'?'on':''}" onclick="STATE.view='alertas';render()">📡 Alertas de hoy</button>
+    <button class="${STATE.view==='seguimiento'?'on':''}" onclick="STATE.view='seguimiento';render()">📈 Seguimiento en vivo${segOpen?` <span class="pill">${segOpen}</span>`:''}</button>
+  </div>`;
+  if(STATE.view==='seguimiento'){
+    document.getElementById('app').innerHTML=tabs+segHtml();
+    return;
+  }
   const list=rows();
   const byWr=[...list].sort((a,b)=>(b.bt?.wr??-1)-(a.bt?.wr??-1));
   const top=byWr.slice(0,3);
   const medals=['🥇','🥈','🥉'];
-  let html=`<div class="controls"><input id="q" type="text" placeholder="Buscar símbolo o sector…" value="${STATE.q}"></div>`;
+  let html=tabs+`<div class="controls"><input id="q" type="text" placeholder="Buscar símbolo o sector…" value="${STATE.q}"></div>`;
   if(list.length){
     html+=`<div class="toplbl lab">🏆 Mejores alertas de élite ahora mismo</div>`;
     html+=`<div class="topgrid">`+top.map((s,i)=>cardHtml(s,i,medals[i])).join('')+`</div>`;
@@ -238,6 +257,75 @@ function statsHtml(){
     <div class="stable"><div></div><div class="hd">Acierto</div><div class="hd">Gan/op</div><div class="hd">Ops</div>
       ${row('Todas',st.global,true)}${st.unlabeled?row('Sin etiqueta',st.unlabeled,true):''}${st.labeled?row('Etiquetadas ✦',st.labeled,true,true):''}</div>`;
   return h+`</div>`;
+}
+function segHtml(){
+  const seg=STATE.seg;
+  if(!seg||!seg.trades){
+    return `<div style="background:var(--card);border:1px solid var(--rule2);border-radius:var(--r);padding:24px;text-align:center;color:var(--sub);font-family:var(--f-mono);font-size:13px;margin:14px 0">
+      El seguimiento en vivo aún no tiene datos.<br><span style="font-size:11px;color:var(--dim)">El robot empieza a registrar alertas en su próxima ejecución. Vuelve en unos días.</span></div>`;
+  }
+  const g=seg.stats.global;
+  const abiertas=seg.trades.filter(t=>t.status==='abierta');
+  const cerradas=seg.trades.filter(t=>t.status==='cerrada').sort((a,b)=>(b.closedAt||0)-(a.closedAt||0));
+  const pnlCol=v=>v>=0?'var(--emerald)':'var(--ember)';
+  // Resumen
+  let h=`<div class="seg-head">
+    <div class="seg-card"><div class="seg-n">${g.wr??'—'}${g.wr!=null?'%':''}</div><div class="seg-l">Acierto real</div></div>
+    <div class="seg-card"><div class="seg-n" style="color:${pnlCol(g.pnl||0)}">${g.pnl!=null?(g.pnl>=0?'+':'')+g.pnl+'%':'—'}</div><div class="seg-l">Ganancia/op real</div></div>
+    <div class="seg-card"><div class="seg-n">${g.n||0}</div><div class="seg-l">Cerradas</div></div>
+    <div class="seg-card"><div class="seg-n" style="color:var(--sapphire)">${g.open||0}</div><div class="seg-l">Abiertas</div></div>
+  </div>
+  <p style="color:var(--sub);font-size:12px;margin:4px 2px 16px">Cada alerta élite que sale se registra automáticamente con su entrada de ese día y se sigue hasta tocar stop u objetivo. Esto es el rendimiento <b>real en vivo</b>, medido igual que el backtest.${g.ambiguous?` <span style="color:var(--amber)">⚠ ${g.ambiguous} cierre(s) ambiguo(s) — la vela tocó stop y objetivo el mismo día (revisar).</span>`:''}</p>`;
+
+  // Abiertas
+  h+=`<h2 style="font-family:var(--f-display);font-size:16px;margin:18px 0 6px">Operaciones abiertas (${abiertas.length})</h2>`;
+  if(abiertas.length){
+    h+=`<table><thead><tr><td>Símbolo</td><td>Tipo</td><td style="text-align:right">Entrada</td><td style="text-align:right">Actual</td><td style="text-align:right">Flotante</td><td style="text-align:right" class="hide-sm">Objetivo</td><td style="text-align:right" class="hide-sm">Stop</td><td style="text-align:right">Días</td></tr></thead><tbody>`;
+    for(const t of abiertas){
+      h+=`<tr><td class="sym">${t.sym}</td>
+        <td><span style="color:${SIG_COLOR[t.signal]}">${sigTxt(t.signal)}</span> ${icon(t.eliteClass)}</td>
+        <td style="text-align:right" class="mono">${f(t.entry)}</td>
+        <td style="text-align:right" class="mono">${t.curPrice!=null?f(t.curPrice):'—'}</td>
+        <td style="text-align:right;color:${pnlCol(t.curPnlPct||0)}" class="mono">${t.curPnlPct!=null?(t.curPnlPct>=0?'+':'')+t.curPnlPct+'%':'—'}</td>
+        <td style="text-align:right;color:var(--emerald)" class="mono hide-sm">${f(t.target)}</td>
+        <td style="text-align:right;color:var(--amber)" class="mono hide-sm">${f(t.stop)}</td>
+        <td style="text-align:right" class="mono">${t.barsSeen||0}</td></tr>`;
+    }
+    h+=`</tbody></table>`;
+  } else { h+=`<p style="color:var(--dim);font-size:12px;font-family:var(--f-mono)">Ninguna abierta ahora.</p>`; }
+
+  // Cerradas
+  h+=`<h2 style="font-family:var(--f-display);font-size:16px;margin:22px 0 6px">Operaciones cerradas (${cerradas.length})</h2>`;
+  if(cerradas.length){
+    h+=`<table><thead><tr><td>Símbolo</td><td>Tipo</td><td style="text-align:right">Entrada</td><td style="text-align:right">Salida</td><td style="text-align:right">Result.</td><td>Motivo</td><td style="text-align:right" class="hide-sm">Cerrada</td></tr></thead><tbody>`;
+    for(const t of cerradas){
+      const amb=t.ambiguous?` <span title="La vela tocó stop y objetivo el mismo día — resuelto por proximidad, revisar" style="color:var(--amber);cursor:help">⚠</span>`:'';
+      h+=`<tr><td class="sym">${t.sym}</td>
+        <td><span style="color:${SIG_COLOR[t.signal]}">${sigTxt(t.signal)}</span> ${icon(t.eliteClass)}</td>
+        <td style="text-align:right" class="mono">${f(t.entry)}</td>
+        <td style="text-align:right" class="mono">${f(t.exitPrice)}</td>
+        <td style="text-align:right;color:${pnlCol(t.pnlPct)};font-weight:700" class="mono">${t.pnlPct>=0?'+':''}${t.pnlPct}%${amb}</td>
+        <td style="font-size:11px;color:${t.closeReason==='objetivo'?'var(--emerald)':t.closeReason==='stop'?'var(--ember)':'var(--dim)'}">${t.closeReason||'—'}</td>
+        <td style="text-align:right;font-size:11px;color:var(--dim)" class="hide-sm">${fmtTs(t.closedAt)}</td></tr>`;
+    }
+    h+=`</tbody></table>`;
+  } else { h+=`<p style="color:var(--dim);font-size:12px;font-family:var(--f-mono)">Aún no se ha cerrado ninguna. Necesita días para acumular.</p>`; }
+
+  // Por clase
+  if(seg.stats.byClass&&Object.keys(seg.stats.byClass).length){
+    h+=`<h2 style="font-family:var(--f-display);font-size:16px;margin:22px 0 6px">Por tipo de alerta (real)</h2>
+      <table><thead><tr><td>Tipo</td><td style="text-align:right">Acierto</td><td style="text-align:right">Gan/op</td><td style="text-align:right">Cerradas</td><td style="text-align:right">Abiertas</td></tr></thead><tbody>`;
+    for(const c of ['caida_giro','caida_recorrido','empuje_favor','rango_extendido','corto_favor','corto_estrecho']){
+      const b=seg.stats.byClass[c]; if(!b)continue;
+      h+=`<tr><td>${icon(c)} ${LABEL_NAME[c]||c}</td>
+        <td style="text-align:right" class="mono">${b.wr!=null?b.wr+'%':'—'}</td>
+        <td style="text-align:right;color:${pnlCol(b.pnl||0)}" class="mono">${b.pnl!=null?(b.pnl>=0?'+':'')+b.pnl+'%':'—'}</td>
+        <td style="text-align:right" class="mono">${b.n||0}</td>
+        <td style="text-align:right;color:var(--sapphire)" class="mono">${b.open||0}</td></tr>`;
+    }
+    h+=`</tbody></table>`;
+  }
+  return h;
 }
 function openModal(key){MODAL.key=key;MODAL.filter='all';renderModal();document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
