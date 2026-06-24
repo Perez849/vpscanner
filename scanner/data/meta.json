@@ -1,9 +1,32 @@
 {
-  "generatedAt": "2026-06-24T06:55:31.095535+00:00",
-  "symbolsOK": 95,
-  "symbolsFailed": 1,
+  "generatedAt": "2026-06-24T07:11:13.534802+00:00",
+  "symbolsOK": 380,
+  "symbolsFailed": 24,
   "failed": [
-    "SILV|1d"
+    "SILV|1d",
+    "NGD|1d",
+    "SAND|1d",
+    "MAG|1d",
+    "GATO|1d",
+    "CS|1d",
+    "X|1d",
+    "LAAC|1d",
+    "PLL|1d",
+    "LITM|1d",
+    "GRPH|1d",
+    "MRO|1d",
+    "HES|1d",
+    "CYBR|1d",
+    "BITF|1d",
+    "CXB|1d",
+    "MTAL|1d",
+    "JNPR|1d",
+    "INFN|1d",
+    "SDIG|1d",
+    "BTCM|1d",
+    "ZK|1d",
+    "LEV|1d",
+    "EXAS|1d"
   ],
-  "totalTrades": 624
+  "totalTrades": 2652
 }
