@@ -316,29 +316,42 @@ def classify_signal(close: float, vp: Dict[str, Any], df: List[Dict[str, Any]],
                 lo = max(0, val_level - 1); hi = min(n_rows - 1, val_level + 1)
                 edge_vol = sum(vol_by_level[lo:hi+1]) / total_vol * 100
             if deep and c2 and a_favor:
-                elite, elite_class = True, 'caida_giro'         # 74% WR, +32%/op
+                elite, elite_class = True, 'caida_giro'         # 61% WR, +23%/op (n=88)
             elif deep and c2:
-                elite, elite_class = True, 'caida_giro'         # 74% WR, +30%/op
+                elite, elite_class = True, 'caida_giro'         # 59% WR, +20%/op (n=138)
             elif (dist_to_poc > 10 and c2) or (deep and edge_vol > 10):
-                elite, elite_class = True, 'caida_recorrido'    # 65% WR, +18-22%/op
+                elite, elite_class = True, 'caida_recorrido'    # 57% WR, +13.7%/op (n=319, fiable)
         elif st == 'RANGE_LONG':
+            # Universo 404: SOLO a favor + 2 velas funciona (65% WR). El antiguo
+            # 'rango_extendido' cayó a 43% WR con muestra grande → ELIMINADO.
             if a_favor and c2:
-                elite, elite_class = True, 'empuje_favor'       # 79% WR, +4.6%/op
-            else:
-                extended = (close < val) or dist_to_poc > 10
-                if extended and c2:
-                    elite, elite_class = True, 'rango_extendido'  # 58% WR, +11.5%/op (PnL)
+                elite, elite_class = True, 'empuje_favor'       # 65% WR, +3.84%/op (n=675)
         elif st == 'RANGE_SHORT':
-            # SOLO a favor de tendencia + 2 velas a favor (rojas). Resto = veneno.
+            # SOLO a favor de tendencia + 2 velas a favor (rojas). Resto = veneno
+            # (extendido >20% = 7% WR, -2.98%/op, confirmado con n=1266).
             if a_favor and c2:
-                elite, elite_class = True, 'corto_favor'        # 77% WR, +2.2%/op
+                elite, elite_class = True, 'corto_favor'        # 64% WR, +1.42%/op (n=380)
         elif st == 'SHORT':
+            # Universo 404: SHORT mejora. VA estrecho sólido + extendido con giro
+            # (RSI saliendo / borde volumen) ahora dan 57-58% WR.
             dist_above_vah = (close - vah) / close * 100
             recovered = False
             if len(df) >= 2:
                 recovered = (df[-2]['close'] > vah) and (close <= vah * 1.01)
+            dist_below_poc = (poc - close) / close * 100  # SHORT extendido: lejos del PoC
+            extended_short = dist_to_poc > 8
+            # volumen en el borde superior (VAH), suelo de resistencia
+            edge_vol_top = 0
+            vbl = vp.get('volByLevel'); tv = vp.get('totalVol', 0)
+            vahl = vp.get('vahLevel', 0); nr = vp.get('nRows', 25)
+            if vbl and tv and tv > 0:
+                loi = max(0, vahl - 1); hii = min(nr - 1, vahl + 1)
+                edge_vol_top = sum(vbl[loi:hii+1]) / tv * 100
+            rsi_saliendo = cls_rsi is not None and cls_rsi > 60  # sobrecompra (techo)
             if va_width_pct < 10 or recovered:
-                elite, elite_class = True, 'corto_estrecho'     # 57-67% WR, +2.5%/op
+                elite, elite_class = True, 'corto_estrecho'     # 59% WR VA estrecho (n=829)
+            elif extended_short and c2 and (rsi_saliendo or edge_vol_top > 10):
+                elite, elite_class = True, 'corto_extendido'    # 57-58% WR, +13-16%/op
 
     sig['isElite'] = elite
     sig['eliteClass'] = elite_class
