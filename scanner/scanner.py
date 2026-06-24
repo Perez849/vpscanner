@@ -133,12 +133,20 @@ def process_symbol(sym: str, meta: Dict[str, Any], interval_key: str) -> Optiona
     segs = get_pivot_segments(df, piv_len)
     bt = run_backtest(df, segs, piv_len, n_rows, va_pct, calc_vp, conf_fn=None)
 
-    # Señal viva de HOY: VP del último tramo (igual criterio que el HTML).
+    # Señal viva de HOY: VP del tramo EN FORMACIÓN, desde el último pivote
+    # confirmado hasta la barra actual. Así el precio de hoy cae DENTRO del rango
+    # de su propio perfil — igual que en el backtest cada entrada se evalúa con el
+    # VP de su segmento. (Usar el último segmento CERRADO daba niveles desfasados
+    # porque ese tramo termina ~pivLen barras antes de hoy → objetivos desorbitados.)
     last_seg = segs[-1] if segs else None
-    if last_seg and last_seg.get('slice') and len(last_seg['slice']) >= 10:
-        vp_now = calc_vp(last_seg['slice'], n_rows, va_pct)
+    if last_seg:
+        live_start = last_seg['endI']           # último pivote confirmado
+        live_slice = df[live_start:]            # de ahí hasta hoy
+        if len(live_slice) < 10:                # tramo muy corto: ampliar hacia atrás
+            live_slice = df[max(0, len(df) - 30):]
+        vp_now = calc_vp(live_slice, n_rows, va_pct)
     else:
-        vp_now = calc_vp(df, n_rows, va_pct)
+        vp_now = calc_vp(df[max(0, len(df) - 30):], n_rows, va_pct)
 
     sig_now = None
     if vp_now:
