@@ -496,6 +496,1546 @@
       "stooq": "ero.us",
       "yahoo": "ERO",
       "sector": "Cobre"
+    },
+    "NGD": {
+      "stooq": "ngd.us",
+      "yahoo": "NGD",
+      "sector": "Oro"
+    },
+    "IAG": {
+      "stooq": "iag.us",
+      "yahoo": "IAG",
+      "sector": "Oro"
+    },
+    "OR": {
+      "stooq": "or.us",
+      "yahoo": "OR",
+      "sector": "Oro (royalty)"
+    },
+    "RGLD": {
+      "stooq": "rgld.us",
+      "yahoo": "RGLD",
+      "sector": "Oro (royalty)"
+    },
+    "SAND": {
+      "stooq": "sand.us",
+      "yahoo": "SAND",
+      "sector": "Oro (royalty)"
+    },
+    "AGI": {
+      "stooq": "agi.us",
+      "yahoo": "AGI",
+      "sector": "Oro"
+    },
+    "BVN": {
+      "stooq": "bvn.us",
+      "yahoo": "BVN",
+      "sector": "Plata/Oro"
+    },
+    "EXK": {
+      "stooq": "exk.us",
+      "yahoo": "EXK",
+      "sector": "Plata"
+    },
+    "MAG": {
+      "stooq": "mag.us",
+      "yahoo": "MAG",
+      "sector": "Plata"
+    },
+    "GATO": {
+      "stooq": "gato.us",
+      "yahoo": "GATO",
+      "sector": "Plata"
+    },
+    "SVM": {
+      "stooq": "svm.us",
+      "yahoo": "SVM",
+      "sector": "Plata"
+    },
+    "ASM": {
+      "stooq": "asm.us",
+      "yahoo": "ASM",
+      "sector": "Plata"
+    },
+    "DRD": {
+      "stooq": "drd.us",
+      "yahoo": "DRD",
+      "sector": "Oro"
+    },
+    "SBSW": {
+      "stooq": "sbsw.us",
+      "yahoo": "SBSW",
+      "sector": "Platino/PGM"
+    },
+    "PLG": {
+      "stooq": "plg.us",
+      "yahoo": "PLG",
+      "sector": "Platino/PGM"
+    },
+    "GORO": {
+      "stooq": "goro.us",
+      "yahoo": "GORO",
+      "sector": "Oro"
+    },
+    "SA": {
+      "stooq": "sa.us",
+      "yahoo": "SA",
+      "sector": "Oro"
+    },
+    "AUMN": {
+      "stooq": "aumn.us",
+      "yahoo": "AUMN",
+      "sector": "Oro/Plata"
+    },
+    "USAS": {
+      "stooq": "usas.us",
+      "yahoo": "USAS",
+      "sector": "Plata"
+    },
+    "NG": {
+      "stooq": "ng.us",
+      "yahoo": "NG",
+      "sector": "Oro/Cobre"
+    },
+    "SILJ": {
+      "stooq": "silj.us",
+      "yahoo": "SILJ",
+      "sector": "Plata (ETF jr)"
+    },
+    "GOAU": {
+      "stooq": "goau.us",
+      "yahoo": "GOAU",
+      "sector": "Oro (ETF)"
+    },
+    "RING": {
+      "stooq": "ring.us",
+      "yahoo": "RING",
+      "sector": "Oro (ETF)"
+    },
+    "GLDM": {
+      "stooq": "gldm.us",
+      "yahoo": "GLDM",
+      "sector": "Oro (ETF)"
+    },
+    "UROY": {
+      "stooq": "uroy.us",
+      "yahoo": "UROY",
+      "sector": "Uranio (royalty)"
+    },
+    "URG": {
+      "stooq": "urg.us",
+      "yahoo": "URG",
+      "sector": "Uranio"
+    },
+    "EU": {
+      "stooq": "eu.us",
+      "yahoo": "EU",
+      "sector": "Uranio/Tierras raras"
+    },
+    "LTBR": {
+      "stooq": "ltbr.us",
+      "yahoo": "LTBR",
+      "sector": "Nuclear/Combustible"
+    },
+    "ASPI": {
+      "stooq": "aspi.us",
+      "yahoo": "ASPI",
+      "sector": "Nuclear/Isótopos"
+    },
+    "NNE": {
+      "stooq": "nne.us",
+      "yahoo": "NNE",
+      "sector": "Nuclear SMR"
+    },
+    "NLR": {
+      "stooq": "nlr.us",
+      "yahoo": "NLR",
+      "sector": "Nuclear (ETF)"
+    },
+    "URNJ": {
+      "stooq": "urnj.us",
+      "yahoo": "URNJ",
+      "sector": "Uranio (ETF jr)"
+    },
+    "SRUUF": {
+      "stooq": "sruuf.us",
+      "yahoo": "SRUUF",
+      "sector": "Uranio (físico)"
+    },
+    "BWXT": {
+      "stooq": "bwxt.us",
+      "yahoo": "BWXT",
+      "sector": "Nuclear/Defensa"
+    },
+    "HBM": {
+      "stooq": "hbm.us",
+      "yahoo": "HBM",
+      "sector": "Cobre"
+    },
+    "CS": {
+      "stooq": "cs.us",
+      "yahoo": "CS",
+      "sector": "Cobre"
+    },
+    "TGB": {
+      "stooq": "tgb.us",
+      "yahoo": "TGB",
+      "sector": "Cobre"
+    },
+    "WRN": {
+      "stooq": "wrn.us",
+      "yahoo": "WRN",
+      "sector": "Cobre/Oro"
+    },
+    "NEXA": {
+      "stooq": "nexa.us",
+      "yahoo": "NEXA",
+      "sector": "Zinc/Diversif"
+    },
+    "VALE": {
+      "stooq": "vale.us",
+      "yahoo": "VALE",
+      "sector": "Diversificada"
+    },
+    "BHP": {
+      "stooq": "bhp.us",
+      "yahoo": "BHP",
+      "sector": "Diversificada"
+    },
+    "AA": {
+      "stooq": "aa.us",
+      "yahoo": "AA",
+      "sector": "Aluminio"
+    },
+    "CENX": {
+      "stooq": "cenx.us",
+      "yahoo": "CENX",
+      "sector": "Aluminio"
+    },
+    "X": {
+      "stooq": "x.us",
+      "yahoo": "X",
+      "sector": "Acero"
+    },
+    "CLF": {
+      "stooq": "clf.us",
+      "yahoo": "CLF",
+      "sector": "Acero"
+    },
+    "NUE": {
+      "stooq": "nue.us",
+      "yahoo": "NUE",
+      "sector": "Acero"
+    },
+    "STLD": {
+      "stooq": "stld.us",
+      "yahoo": "STLD",
+      "sector": "Acero"
+    },
+    "MTRN": {
+      "stooq": "mtrn.us",
+      "yahoo": "MTRN",
+      "sector": "Metales especiales"
+    },
+    "TMQ": {
+      "stooq": "tmq.us",
+      "yahoo": "TMQ",
+      "sector": "Cobre/Diversif"
+    },
+    "CMCL": {
+      "stooq": "cmcl.us",
+      "yahoo": "CMCL",
+      "sector": "Oro/Diversif"
+    },
+    "COPX": {
+      "stooq": "copx.us",
+      "yahoo": "COPX",
+      "sector": "Cobre (ETF)"
+    },
+    "PICK": {
+      "stooq": "pick.us",
+      "yahoo": "PICK",
+      "sector": "Minería (ETF)"
+    },
+    "XME": {
+      "stooq": "xme.us",
+      "yahoo": "XME",
+      "sector": "Minería (ETF)"
+    },
+    "UAMY": {
+      "stooq": "uamy.us",
+      "yahoo": "UAMY",
+      "sector": "Antimonio"
+    },
+    "USAR": {
+      "stooq": "usar.us",
+      "yahoo": "USAR",
+      "sector": "Tierras raras"
+    },
+    "ARRT": {
+      "stooq": "arrt.us",
+      "yahoo": "ARRT",
+      "sector": "Tierras raras"
+    },
+    "REEMF": {
+      "stooq": "reemf.us",
+      "yahoo": "REEMF",
+      "sector": "Tierras raras"
+    },
+    "SGML": {
+      "stooq": "sgml.us",
+      "yahoo": "SGML",
+      "sector": "Litio"
+    },
+    "LAC": {
+      "stooq": "lac.us",
+      "yahoo": "LAC",
+      "sector": "Litio"
+    },
+    "LAAC": {
+      "stooq": "laac.us",
+      "yahoo": "LAAC",
+      "sector": "Litio"
+    },
+    "PLL": {
+      "stooq": "pll.us",
+      "yahoo": "PLL",
+      "sector": "Litio"
+    },
+    "SLI": {
+      "stooq": "sli.us",
+      "yahoo": "SLI",
+      "sector": "Litio"
+    },
+    "ATLX": {
+      "stooq": "atlx.us",
+      "yahoo": "ATLX",
+      "sector": "Litio"
+    },
+    "LITM": {
+      "stooq": "litm.us",
+      "yahoo": "LITM",
+      "sector": "Litio/Grafito"
+    },
+    "NMG": {
+      "stooq": "nmg.us",
+      "yahoo": "NMG",
+      "sector": "Grafito"
+    },
+    "GRPH": {
+      "stooq": "grph.us",
+      "yahoo": "GRPH",
+      "sector": "Grafeno"
+    },
+    "LIT": {
+      "stooq": "lit.us",
+      "yahoo": "LIT",
+      "sector": "Litio (ETF)"
+    },
+    "REMX": {
+      "stooq": "remx.us",
+      "yahoo": "REMX",
+      "sector": "Tierras raras (ETF)"
+    },
+    "BATT": {
+      "stooq": "batt.us",
+      "yahoo": "BATT",
+      "sector": "Baterías (ETF)"
+    },
+    "COP": {
+      "stooq": "cop.us",
+      "yahoo": "COP",
+      "sector": "Petróleo"
+    },
+    "EOG": {
+      "stooq": "eog.us",
+      "yahoo": "EOG",
+      "sector": "Petróleo"
+    },
+    "DVN": {
+      "stooq": "dvn.us",
+      "yahoo": "DVN",
+      "sector": "Petróleo"
+    },
+    "FANG": {
+      "stooq": "fang.us",
+      "yahoo": "FANG",
+      "sector": "Petróleo"
+    },
+    "MRO": {
+      "stooq": "mro.us",
+      "yahoo": "MRO",
+      "sector": "Petróleo"
+    },
+    "APA": {
+      "stooq": "apa.us",
+      "yahoo": "APA",
+      "sector": "Petróleo"
+    },
+    "HES": {
+      "stooq": "hes.us",
+      "yahoo": "HES",
+      "sector": "Petróleo"
+    },
+    "MPC": {
+      "stooq": "mpc.us",
+      "yahoo": "MPC",
+      "sector": "Refino"
+    },
+    "VLO": {
+      "stooq": "vlo.us",
+      "yahoo": "VLO",
+      "sector": "Refino"
+    },
+    "PSX": {
+      "stooq": "psx.us",
+      "yahoo": "PSX",
+      "sector": "Refino"
+    },
+    "SLB": {
+      "stooq": "slb.us",
+      "yahoo": "SLB",
+      "sector": "Servicios petróleo"
+    },
+    "HAL": {
+      "stooq": "hal.us",
+      "yahoo": "HAL",
+      "sector": "Servicios petróleo"
+    },
+    "BKR": {
+      "stooq": "bkr.us",
+      "yahoo": "BKR",
+      "sector": "Servicios petróleo"
+    },
+    "FTI": {
+      "stooq": "fti.us",
+      "yahoo": "FTI",
+      "sector": "Servicios petróleo"
+    },
+    "AR": {
+      "stooq": "ar.us",
+      "yahoo": "AR",
+      "sector": "Gas"
+    },
+    "RRC": {
+      "stooq": "rrc.us",
+      "yahoo": "RRC",
+      "sector": "Gas"
+    },
+    "LNG": {
+      "stooq": "lng.us",
+      "yahoo": "LNG",
+      "sector": "GNL"
+    },
+    "CTRA": {
+      "stooq": "ctra.us",
+      "yahoo": "CTRA",
+      "sector": "Gas"
+    },
+    "TPL": {
+      "stooq": "tpl.us",
+      "yahoo": "TPL",
+      "sector": "Petróleo/Royalty"
+    },
+    "XLE": {
+      "stooq": "xle.us",
+      "yahoo": "XLE",
+      "sector": "Energía (ETF)"
+    },
+    "OIH": {
+      "stooq": "oih.us",
+      "yahoo": "OIH",
+      "sector": "Servicios petróleo (ETF)"
+    },
+    "GD": {
+      "stooq": "gd.us",
+      "yahoo": "GD",
+      "sector": "Defensa"
+    },
+    "NOC": {
+      "stooq": "noc.us",
+      "yahoo": "NOC",
+      "sector": "Defensa"
+    },
+    "GE": {
+      "stooq": "ge.us",
+      "yahoo": "GE",
+      "sector": "Aeroespacial"
+    },
+    "HWM": {
+      "stooq": "hwm.us",
+      "yahoo": "HWM",
+      "sector": "Aeroespacial"
+    },
+    "TDG": {
+      "stooq": "tdg.us",
+      "yahoo": "TDG",
+      "sector": "Aeroespacial"
+    },
+    "HII": {
+      "stooq": "hii.us",
+      "yahoo": "HII",
+      "sector": "Defensa naval"
+    },
+    "LHX": {
+      "stooq": "lhx.us",
+      "yahoo": "LHX",
+      "sector": "Defensa"
+    },
+    "AXON": {
+      "stooq": "axon.us",
+      "yahoo": "AXON",
+      "sector": "Defensa/Seguridad"
+    },
+    "LDOS": {
+      "stooq": "ldos.us",
+      "yahoo": "LDOS",
+      "sector": "Defensa/IT"
+    },
+    "BAH": {
+      "stooq": "bah.us",
+      "yahoo": "BAH",
+      "sector": "Defensa/IT"
+    },
+    "CW": {
+      "stooq": "cw.us",
+      "yahoo": "CW",
+      "sector": "Defensa"
+    },
+    "MRCY": {
+      "stooq": "mrcy.us",
+      "yahoo": "MRCY",
+      "sector": "Defensa/Electrónica"
+    },
+    "PKE": {
+      "stooq": "pke.us",
+      "yahoo": "PKE",
+      "sector": "Defensa/Materiales"
+    },
+    "ITA": {
+      "stooq": "ita.us",
+      "yahoo": "ITA",
+      "sector": "Defensa (ETF)"
+    },
+    "POWW": {
+      "stooq": "poww.us",
+      "yahoo": "POWW",
+      "sector": "Munición"
+    },
+    "DRS": {
+      "stooq": "drs.us",
+      "yahoo": "DRS",
+      "sector": "Defensa"
+    },
+    "EH": {
+      "stooq": "eh.us",
+      "yahoo": "EH",
+      "sector": "eVTOL"
+    },
+    "PL": {
+      "stooq": "pl.us",
+      "yahoo": "PL",
+      "sector": "Espacio/Satélite"
+    },
+    "BKSY": {
+      "stooq": "bksy.us",
+      "yahoo": "BKSY",
+      "sector": "Espacio/Satélite"
+    },
+    "SATS": {
+      "stooq": "sats.us",
+      "yahoo": "SATS",
+      "sector": "Satélite"
+    },
+    "GSAT": {
+      "stooq": "gsat.us",
+      "yahoo": "GSAT",
+      "sector": "Satélite"
+    },
+    "SPIR": {
+      "stooq": "spir.us",
+      "yahoo": "SPIR",
+      "sector": "Espacio/Datos"
+    },
+    "KULR": {
+      "stooq": "kulr.us",
+      "yahoo": "KULR",
+      "sector": "Espacio/Térmico"
+    },
+    "MNTS": {
+      "stooq": "mnts.us",
+      "yahoo": "MNTS",
+      "sector": "Espacio"
+    },
+    "VSAT": {
+      "stooq": "vsat.us",
+      "yahoo": "VSAT",
+      "sector": "Satélite"
+    },
+    "IRDM": {
+      "stooq": "irdm.us",
+      "yahoo": "IRDM",
+      "sector": "Satélite"
+    },
+    "DPRO": {
+      "stooq": "dpro.us",
+      "yahoo": "DPRO",
+      "sector": "Drones"
+    },
+    "UAVS": {
+      "stooq": "uavs.us",
+      "yahoo": "UAVS",
+      "sector": "Drones"
+    },
+    "UMAC": {
+      "stooq": "umac.us",
+      "yahoo": "UMAC",
+      "sector": "Drones"
+    },
+    "RCAT": {
+      "stooq": "rcat.us",
+      "yahoo": "RCAT",
+      "sector": "Drones"
+    },
+    "MCHP": {
+      "stooq": "mchp.us",
+      "yahoo": "MCHP",
+      "sector": "Semis"
+    },
+    "ADI": {
+      "stooq": "adi.us",
+      "yahoo": "ADI",
+      "sector": "Semis"
+    },
+    "TXN": {
+      "stooq": "txn.us",
+      "yahoo": "TXN",
+      "sector": "Semis"
+    },
+    "NXPI": {
+      "stooq": "nxpi.us",
+      "yahoo": "NXPI",
+      "sector": "Semis"
+    },
+    "ON": {
+      "stooq": "on.us",
+      "yahoo": "ON",
+      "sector": "Semis"
+    },
+    "SWKS": {
+      "stooq": "swks.us",
+      "yahoo": "SWKS",
+      "sector": "Semis"
+    },
+    "QRVO": {
+      "stooq": "qrvo.us",
+      "yahoo": "QRVO",
+      "sector": "Semis"
+    },
+    "MPWR": {
+      "stooq": "mpwr.us",
+      "yahoo": "MPWR",
+      "sector": "Semis"
+    },
+    "KLAC": {
+      "stooq": "klac.us",
+      "yahoo": "KLAC",
+      "sector": "Semis/Equipos"
+    },
+    "TER": {
+      "stooq": "ter.us",
+      "yahoo": "TER",
+      "sector": "Semis/Equipos"
+    },
+    "ENTG": {
+      "stooq": "entg.us",
+      "yahoo": "ENTG",
+      "sector": "Semis/Materiales"
+    },
+    "ACLS": {
+      "stooq": "acls.us",
+      "yahoo": "ACLS",
+      "sector": "Semis/Equipos"
+    },
+    "COHR": {
+      "stooq": "coher.us",
+      "yahoo": "COHR",
+      "sector": "Fotónica/IA"
+    },
+    "CRDO": {
+      "stooq": "crdo.us",
+      "yahoo": "CRDO",
+      "sector": "IA/Conectividad"
+    },
+    "ALAB": {
+      "stooq": "alab.us",
+      "yahoo": "ALAB",
+      "sector": "IA/Conectividad"
+    },
+    "AMKR": {
+      "stooq": "amkr.us",
+      "yahoo": "AMKR",
+      "sector": "Semis/Packaging"
+    },
+    "UCTT": {
+      "stooq": "uctt.us",
+      "yahoo": "UCTT",
+      "sector": "Semis/Equipos"
+    },
+    "FORM": {
+      "stooq": "form.us",
+      "yahoo": "FORM",
+      "sector": "Semis/Equipos"
+    },
+    "SITM": {
+      "stooq": "sitm.us",
+      "yahoo": "SITM",
+      "sector": "Semis"
+    },
+    "RMBS": {
+      "stooq": "rmbs.us",
+      "yahoo": "RMBS",
+      "sector": "Semis/Memoria"
+    },
+    "SOXX": {
+      "stooq": "soxx.us",
+      "yahoo": "SOXX",
+      "sector": "Semis (ETF)"
+    },
+    "SMH": {
+      "stooq": "smh.us",
+      "yahoo": "SMH",
+      "sector": "Semis (ETF)"
+    },
+    "LAES": {
+      "stooq": "laes.us",
+      "yahoo": "LAES",
+      "sector": "Cuántica/Cripto"
+    },
+    "ARQQ": {
+      "stooq": "arqq.us",
+      "yahoo": "ARQQ",
+      "sector": "Cuántica"
+    },
+    "QSI": {
+      "stooq": "qsi.us",
+      "yahoo": "QSI",
+      "sector": "Cuántica/Bio"
+    },
+    "SOUN": {
+      "stooq": "soun.us",
+      "yahoo": "SOUN",
+      "sector": "IA/Voz"
+    },
+    "BBAI": {
+      "stooq": "bbai.us",
+      "yahoo": "BBAI",
+      "sector": "IA/Analytics"
+    },
+    "AI": {
+      "stooq": "ai.us",
+      "yahoo": "AI",
+      "sector": "IA/Software"
+    },
+    "PATH": {
+      "stooq": "path.us",
+      "yahoo": "PATH",
+      "sector": "IA/Automatización"
+    },
+    "SNOW": {
+      "stooq": "snow.us",
+      "yahoo": "SNOW",
+      "sector": "Datos/IA"
+    },
+    "NBIS": {
+      "stooq": "nbis.us",
+      "yahoo": "NBIS",
+      "sector": "IA/Datacenter"
+    },
+    "CRWV": {
+      "stooq": "crwv.us",
+      "yahoo": "CRWV",
+      "sector": "IA/Datacenter"
+    },
+    "APLD": {
+      "stooq": "apld.us",
+      "yahoo": "APLD",
+      "sector": "IA/Datacenter"
+    },
+    "IREN": {
+      "stooq": "iren.us",
+      "yahoo": "IREN",
+      "sector": "IA/Datacenter"
+    },
+    "CORZ": {
+      "stooq": "corz.us",
+      "yahoo": "CORZ",
+      "sector": "IA/Datacenter"
+    },
+    "WULF": {
+      "stooq": "wulf.us",
+      "yahoo": "WULF",
+      "sector": "IA/Datacenter"
+    },
+    "GDS": {
+      "stooq": "gds.us",
+      "yahoo": "GDS",
+      "sector": "Datacenter"
+    },
+    "DDOG": {
+      "stooq": "ddog.us",
+      "yahoo": "DDOG",
+      "sector": "Software/Cloud"
+    },
+    "NET": {
+      "stooq": "net.us",
+      "yahoo": "NET",
+      "sector": "Ciberseguridad"
+    },
+    "ZS": {
+      "stooq": "zs.us",
+      "yahoo": "ZS",
+      "sector": "Ciberseguridad"
+    },
+    "S": {
+      "stooq": "s.us",
+      "yahoo": "S",
+      "sector": "Ciberseguridad"
+    },
+    "FTNT": {
+      "stooq": "ftnt.us",
+      "yahoo": "FTNT",
+      "sector": "Ciberseguridad"
+    },
+    "OKTA": {
+      "stooq": "okta.us",
+      "yahoo": "OKTA",
+      "sector": "Ciberseguridad"
+    },
+    "CYBR": {
+      "stooq": "cybr.us",
+      "yahoo": "CYBR",
+      "sector": "Ciberseguridad"
+    },
+    "VRNS": {
+      "stooq": "vrns.us",
+      "yahoo": "VRNS",
+      "sector": "Ciberseguridad"
+    },
+    "TENB": {
+      "stooq": "tenb.us",
+      "yahoo": "TENB",
+      "sector": "Ciberseguridad"
+    },
+    "FSLR": {
+      "stooq": "fslr.us",
+      "yahoo": "FSLR",
+      "sector": "Solar"
+    },
+    "ENPH": {
+      "stooq": "enph.us",
+      "yahoo": "ENPH",
+      "sector": "Solar"
+    },
+    "SEDG": {
+      "stooq": "sedg.us",
+      "yahoo": "SEDG",
+      "sector": "Solar"
+    },
+    "RUN": {
+      "stooq": "run.us",
+      "yahoo": "RUN",
+      "sector": "Solar"
+    },
+    "NXT": {
+      "stooq": "nxt.us",
+      "yahoo": "NXT",
+      "sector": "Solar"
+    },
+    "ARRY": {
+      "stooq": "array.us",
+      "yahoo": "ARRY",
+      "sector": "Solar"
+    },
+    "SHLS": {
+      "stooq": "shls.us",
+      "yahoo": "SHLS",
+      "sector": "Solar"
+    },
+    "FLNC": {
+      "stooq": "flnc.us",
+      "yahoo": "FLNC",
+      "sector": "Almacenamiento"
+    },
+    "STEM": {
+      "stooq": "stem.us",
+      "yahoo": "STEM",
+      "sector": "Almacenamiento/IA"
+    },
+    "PLUG": {
+      "stooq": "plug.us",
+      "yahoo": "PLUG",
+      "sector": "Hidrógeno"
+    },
+    "BE": {
+      "stooq": "be.us",
+      "yahoo": "BE",
+      "sector": "Hidrógeno"
+    },
+    "BLDP": {
+      "stooq": "bldp.us",
+      "yahoo": "BLDP",
+      "sector": "Hidrógeno"
+    },
+    "EOSE": {
+      "stooq": "eose.us",
+      "yahoo": "EOSE",
+      "sector": "Almacenamiento"
+    },
+    "AMSC": {
+      "stooq": "amsc.us",
+      "yahoo": "AMSC",
+      "sector": "Red/Energía"
+    },
+    "PWR": {
+      "stooq": "pwr.us",
+      "yahoo": "PWR",
+      "sector": "Infra/Red"
+    },
+    "TAN": {
+      "stooq": "tan.us",
+      "yahoo": "TAN",
+      "sector": "Solar (ETF)"
+    },
+    "ICLN": {
+      "stooq": "icln.us",
+      "yahoo": "ICLN",
+      "sector": "Limpia (ETF)"
+    },
+    "RIVN": {
+      "stooq": "rivn.us",
+      "yahoo": "RIVN",
+      "sector": "EV"
+    },
+    "LCID": {
+      "stooq": "lcid.us",
+      "yahoo": "LCID",
+      "sector": "EV"
+    },
+    "NIO": {
+      "stooq": "nio.us",
+      "yahoo": "NIO",
+      "sector": "EV"
+    },
+    "XPEV": {
+      "stooq": "xpev.us",
+      "yahoo": "XPEV",
+      "sector": "EV"
+    },
+    "LI": {
+      "stooq": "li.us",
+      "yahoo": "LI",
+      "sector": "EV"
+    },
+    "QS": {
+      "stooq": "qs.us",
+      "yahoo": "QS",
+      "sector": "Baterías"
+    },
+    "CHPT": {
+      "stooq": "chpt.us",
+      "yahoo": "CHPT",
+      "sector": "EV/Carga"
+    },
+    "BLNK": {
+      "stooq": "blnk.us",
+      "yahoo": "BLNK",
+      "sector": "EV/Carga"
+    },
+    "DRIV": {
+      "stooq": "driv.us",
+      "yahoo": "DRIV",
+      "sector": "EV (ETF)"
+    },
+    "MRNA": {
+      "stooq": "mrna.us",
+      "yahoo": "MRNA",
+      "sector": "Biotech"
+    },
+    "BNTX": {
+      "stooq": "bntx.us",
+      "yahoo": "BNTX",
+      "sector": "Biotech"
+    },
+    "CRSP": {
+      "stooq": "crsp.us",
+      "yahoo": "CRSP",
+      "sector": "Biotech/Genómica"
+    },
+    "NTLA": {
+      "stooq": "ntla.us",
+      "yahoo": "NTLA",
+      "sector": "Biotech/Genómica"
+    },
+    "BEAM": {
+      "stooq": "beam.us",
+      "yahoo": "BEAM",
+      "sector": "Biotech/Genómica"
+    },
+    "VKTX": {
+      "stooq": "vktx.us",
+      "yahoo": "VKTX",
+      "sector": "Biotech"
+    },
+    "RXRX": {
+      "stooq": "rxrx.us",
+      "yahoo": "RXRX",
+      "sector": "Biotech/IA"
+    },
+    "TEM": {
+      "stooq": "tem.us",
+      "yahoo": "TEM",
+      "sector": "Salud/IA"
+    },
+    "HIMS": {
+      "stooq": "hims.us",
+      "yahoo": "HIMS",
+      "sector": "Salud/Consumo"
+    },
+    "XBI": {
+      "stooq": "xbi.us",
+      "yahoo": "XBI",
+      "sector": "Biotech (ETF)"
+    },
+    "COIN": {
+      "stooq": "coin.us",
+      "yahoo": "COIN",
+      "sector": "Cripto/Exchange"
+    },
+    "MSTR": {
+      "stooq": "mstr.us",
+      "yahoo": "MSTR",
+      "sector": "Cripto/BTC"
+    },
+    "MARA": {
+      "stooq": "mara.us",
+      "yahoo": "MARA",
+      "sector": "Cripto/Minería"
+    },
+    "RIOT": {
+      "stooq": "riot.us",
+      "yahoo": "RIOT",
+      "sector": "Cripto/Minería"
+    },
+    "CLSK": {
+      "stooq": "clsk.us",
+      "yahoo": "CLSK",
+      "sector": "Cripto/Minería"
+    },
+    "HUT": {
+      "stooq": "hut.us",
+      "yahoo": "HUT",
+      "sector": "Cripto/Minería"
+    },
+    "BITF": {
+      "stooq": "bitf.us",
+      "yahoo": "BITF",
+      "sector": "Cripto/Minería"
+    },
+    "CIFR": {
+      "stooq": "cifr.us",
+      "yahoo": "CIFR",
+      "sector": "Cripto/Minería"
+    },
+    "BTDR": {
+      "stooq": "btdr.us",
+      "yahoo": "BTDR",
+      "sector": "Cripto/Minería"
+    },
+    "HOOD": {
+      "stooq": "hood.us",
+      "yahoo": "HOOD",
+      "sector": "Fintech/Trading"
+    },
+    "BITX": {
+      "stooq": "bitx.us",
+      "yahoo": "BITX",
+      "sector": "Cripto (ETF 2x)"
+    },
+    "IBIT": {
+      "stooq": "ibit.us",
+      "yahoo": "IBIT",
+      "sector": "BTC (ETF)"
+    },
+    "SOFI": {
+      "stooq": "sofi.us",
+      "yahoo": "SOFI",
+      "sector": "Fintech"
+    },
+    "AFRM": {
+      "stooq": "afrm.us",
+      "yahoo": "AFRM",
+      "sector": "Fintech"
+    },
+    "UPST": {
+      "stooq": "upst.us",
+      "yahoo": "UPST",
+      "sector": "Fintech/IA"
+    },
+    "SQ": {
+      "stooq": "xyz.us",
+      "yahoo": "XYZ",
+      "sector": "Fintech"
+    },
+    "PYPL": {
+      "stooq": "pypl.us",
+      "yahoo": "PYPL",
+      "sector": "Fintech"
+    },
+    "NU": {
+      "stooq": "nu.us",
+      "yahoo": "NU",
+      "sector": "Fintech"
+    },
+    "DAVE": {
+      "stooq": "dave.us",
+      "yahoo": "DAVE",
+      "sector": "Fintech"
+    },
+    "XLF": {
+      "stooq": "xlf.us",
+      "yahoo": "XLF",
+      "sector": "Financiero (ETF)"
+    },
+    "XLI": {
+      "stooq": "xli.us",
+      "yahoo": "XLI",
+      "sector": "Industrial (ETF)"
+    },
+    "XLK": {
+      "stooq": "xlk.us",
+      "yahoo": "XLK",
+      "sector": "Tech (ETF)"
+    },
+    "XLB": {
+      "stooq": "xlb.us",
+      "yahoo": "XLB",
+      "sector": "Materiales (ETF)"
+    },
+    "GDXU": {
+      "stooq": "gdxu.us",
+      "yahoo": "GDXU",
+      "sector": "Oro mineras (ETF 2x)"
+    },
+    "NUGT": {
+      "stooq": "nugt.us",
+      "yahoo": "NUGT",
+      "sector": "Oro mineras (ETF 2x)"
+    },
+    "JNUG": {
+      "stooq": "jnug.us",
+      "yahoo": "JNUG",
+      "sector": "Oro jr (ETF 2x)"
+    },
+    "BOIL": {
+      "stooq": "boil.us",
+      "yahoo": "BOIL",
+      "sector": "Gas (ETF 2x)"
+    },
+    "UNG": {
+      "stooq": "ung.us",
+      "yahoo": "UNG",
+      "sector": "Gas (ETF)"
+    },
+    "USO": {
+      "stooq": "uso.us",
+      "yahoo": "USO",
+      "sector": "Petróleo (ETF)"
+    },
+    "CXB": {
+      "stooq": "cxb.us",
+      "yahoo": "CXB",
+      "sector": "Oro"
+    },
+    "ORLA": {
+      "stooq": "orla.us",
+      "yahoo": "ORLA",
+      "sector": "Oro"
+    },
+    "SKE": {
+      "stooq": "ske.us",
+      "yahoo": "SKE",
+      "sector": "Oro"
+    },
+    "AGQ": {
+      "stooq": "agq.us",
+      "yahoo": "AGQ",
+      "sector": "Plata (ETF 2x)"
+    },
+    "AGX": {
+      "stooq": "agx.us",
+      "yahoo": "AGX",
+      "sector": "Energía/Infra"
+    },
+    "PHYS": {
+      "stooq": "phys.us",
+      "yahoo": "PHYS",
+      "sector": "Oro (físico)"
+    },
+    "PSLV": {
+      "stooq": "pslv.us",
+      "yahoo": "PSLV",
+      "sector": "Plata (físico)"
+    },
+    "CMC": {
+      "stooq": "cmc.us",
+      "yahoo": "CMC",
+      "sector": "Acero"
+    },
+    "PEN": {
+      "stooq": "pen.us",
+      "yahoo": "PEN",
+      "sector": "Uranio"
+    },
+    "CMP": {
+      "stooq": "cmp.us",
+      "yahoo": "CMP",
+      "sector": "Materiales"
+    },
+    "MTAL": {
+      "stooq": "mtal.us",
+      "yahoo": "MTAL",
+      "sector": "Diversificada"
+    },
+    "POET": {
+      "stooq": "poet.us",
+      "yahoo": "POET",
+      "sector": "Fotónica"
+    },
+    "AEHR": {
+      "stooq": "aehr.us",
+      "yahoo": "AEHR",
+      "sector": "Semis/Test"
+    },
+    "INDI": {
+      "stooq": "indi.us",
+      "yahoo": "INDI",
+      "sector": "Semis/Auto"
+    },
+    "WOLF": {
+      "stooq": "wolf.us",
+      "yahoo": "WOLF",
+      "sector": "Semis/SiC"
+    },
+    "AMBA": {
+      "stooq": "amba.us",
+      "yahoo": "AMBA",
+      "sector": "Semis/IA Visión"
+    },
+    "LSCC": {
+      "stooq": "lscc.us",
+      "yahoo": "LSCC",
+      "sector": "Semis"
+    },
+    "SLAB": {
+      "stooq": "slab.us",
+      "yahoo": "SLAB",
+      "sector": "Semis"
+    },
+    "POWI": {
+      "stooq": "powi.us",
+      "yahoo": "POWI",
+      "sector": "Semis"
+    },
+    "ALGM": {
+      "stooq": "algm.us",
+      "yahoo": "ALGM",
+      "sector": "Semis"
+    },
+    "SYM": {
+      "stooq": "sym.us",
+      "yahoo": "SYM",
+      "sector": "Robótica/IA"
+    },
+    "NNDM": {
+      "stooq": "nndm.us",
+      "yahoo": "NNDM",
+      "sector": "Impresión 3D"
+    },
+    "DDD": {
+      "stooq": "ddd.us",
+      "yahoo": "DDD",
+      "sector": "Impresión 3D"
+    },
+    "SSYS": {
+      "stooq": "ssys.us",
+      "yahoo": "SSYS",
+      "sector": "Impresión 3D"
+    },
+    "VNET": {
+      "stooq": "vnet.us",
+      "yahoo": "VNET",
+      "sector": "Datacenter"
+    },
+    "SMTC": {
+      "stooq": "smtc.us",
+      "yahoo": "SMTC",
+      "sector": "Semis/Conectividad"
+    },
+    "CIEN": {
+      "stooq": "cien.us",
+      "yahoo": "CIEN",
+      "sector": "Redes ópticas"
+    },
+    "ANET": {
+      "stooq": "anet.us",
+      "yahoo": "ANET",
+      "sector": "Redes/IA"
+    },
+    "CSCO": {
+      "stooq": "csco.us",
+      "yahoo": "CSCO",
+      "sector": "Redes"
+    },
+    "JNPR": {
+      "stooq": "jnpr.us",
+      "yahoo": "JNPR",
+      "sector": "Redes"
+    },
+    "EXTR": {
+      "stooq": "extr.us",
+      "yahoo": "EXTR",
+      "sector": "Redes"
+    },
+    "CALX": {
+      "stooq": "calx.us",
+      "yahoo": "CALX",
+      "sector": "Redes"
+    },
+    "INFN": {
+      "stooq": "infn.us",
+      "yahoo": "INFN",
+      "sector": "Redes ópticas"
+    },
+    "LITE": {
+      "stooq": "lite.us",
+      "yahoo": "LITE",
+      "sector": "Fotónica"
+    },
+    "FN": {
+      "stooq": "fn.us",
+      "yahoo": "FN",
+      "sector": "Fotónica/Manufactura"
+    },
+    "BTBT": {
+      "stooq": "btbt.us",
+      "yahoo": "BTBT",
+      "sector": "Cripto/Minería"
+    },
+    "SDIG": {
+      "stooq": "sdig.us",
+      "yahoo": "SDIG",
+      "sector": "Cripto/Minería"
+    },
+    "GREE": {
+      "stooq": "gree.us",
+      "yahoo": "GREE",
+      "sector": "Cripto/Minería"
+    },
+    "CAN": {
+      "stooq": "can.us",
+      "yahoo": "CAN",
+      "sector": "Cripto/Hardware"
+    },
+    "BTCM": {
+      "stooq": "btcm.us",
+      "yahoo": "BTCM",
+      "sector": "Cripto"
+    },
+    "BMNR": {
+      "stooq": "bmnr.us",
+      "yahoo": "BMNR",
+      "sector": "Cripto/ETH"
+    },
+    "PSNY": {
+      "stooq": "psny.us",
+      "yahoo": "PSNY",
+      "sector": "EV"
+    },
+    "ZK": {
+      "stooq": "zk.us",
+      "yahoo": "ZK",
+      "sector": "EV"
+    },
+    "VFS": {
+      "stooq": "vfs.us",
+      "yahoo": "VFS",
+      "sector": "EV"
+    },
+    "LEV": {
+      "stooq": "lev.us",
+      "yahoo": "LEV",
+      "sector": "EV comercial"
+    },
+    "NRG": {
+      "stooq": "nrg.us",
+      "yahoo": "NRG",
+      "sector": "Energía/Red"
+    },
+    "TLN": {
+      "stooq": "tln.us",
+      "yahoo": "TLN",
+      "sector": "Nuclear/Energía"
+    },
+    "NEE": {
+      "stooq": "nee.us",
+      "yahoo": "NEE",
+      "sector": "Utility/Renovable"
+    },
+    "D": {
+      "stooq": "d.us",
+      "yahoo": "D",
+      "sector": "Utility"
+    },
+    "PCG": {
+      "stooq": "pcg.us",
+      "yahoo": "PCG",
+      "sector": "Utility"
+    },
+    "SO": {
+      "stooq": "so.us",
+      "yahoo": "SO",
+      "sector": "Utility/Nuclear"
+    },
+    "SRPT": {
+      "stooq": "srpt.us",
+      "yahoo": "SRPT",
+      "sector": "Biotech"
+    },
+    "INSM": {
+      "stooq": "insm.us",
+      "yahoo": "INSM",
+      "sector": "Biotech"
+    },
+    "ARWR": {
+      "stooq": "arwr.us",
+      "yahoo": "ARWR",
+      "sector": "Biotech"
+    },
+    "IONS": {
+      "stooq": "ions.us",
+      "yahoo": "IONS",
+      "sector": "Biotech"
+    },
+    "ALNY": {
+      "stooq": "alny.us",
+      "yahoo": "ALNY",
+      "sector": "Biotech"
+    },
+    "EXAS": {
+      "stooq": "exas.us",
+      "yahoo": "EXAS",
+      "sector": "Biotech/Diag"
+    },
+    "TGTX": {
+      "stooq": "tgtx.us",
+      "yahoo": "TGTX",
+      "sector": "Biotech"
+    },
+    "CYTK": {
+      "stooq": "cytk.us",
+      "yahoo": "CYTK",
+      "sector": "Biotech"
+    },
+    "SHOP": {
+      "stooq": "shop.us",
+      "yahoo": "SHOP",
+      "sector": "E-commerce"
+    },
+    "DASH": {
+      "stooq": "dash.us",
+      "yahoo": "DASH",
+      "sector": "Consumo/Tech"
+    },
+    "ABNB": {
+      "stooq": "abnb.us",
+      "yahoo": "ABNB",
+      "sector": "Consumo/Tech"
+    },
+    "RBLX": {
+      "stooq": "rblx.us",
+      "yahoo": "RBLX",
+      "sector": "Gaming/Metaverso"
+    },
+    "U": {
+      "stooq": "u.us",
+      "yahoo": "U",
+      "sector": "Software/3D"
+    },
+    "DKNG": {
+      "stooq": "dkng.us",
+      "yahoo": "DKNG",
+      "sector": "Apuestas"
+    },
+    "CVNA": {
+      "stooq": "cvna.us",
+      "yahoo": "CVNA",
+      "sector": "Auto/E-commerce"
+    },
+    "TTD": {
+      "stooq": "ttd.us",
+      "yahoo": "TTD",
+      "sector": "AdTech"
+    },
+    "APP": {
+      "stooq": "app.us",
+      "yahoo": "APP",
+      "sector": "AdTech/IA"
+    },
+    "MELI": {
+      "stooq": "meli.us",
+      "yahoo": "MELI",
+      "sector": "E-commerce LatAm"
+    },
+    "SE": {
+      "stooq": "se.us",
+      "yahoo": "SE",
+      "sector": "E-commerce/Fintech"
+    },
+    "GRAB": {
+      "stooq": "grab.us",
+      "yahoo": "GRAB",
+      "sector": "Movilidad/Fintech"
+    },
+    "NTR": {
+      "stooq": "ntr.us",
+      "yahoo": "NTR",
+      "sector": "Fertilizantes"
+    },
+    "MOS": {
+      "stooq": "mos.us",
+      "yahoo": "MOS",
+      "sector": "Fertilizantes"
+    },
+    "CF": {
+      "stooq": "cf.us",
+      "yahoo": "CF",
+      "sector": "Fertilizantes"
+    },
+    "CTVA": {
+      "stooq": "ctva.us",
+      "yahoo": "CTVA",
+      "sector": "Agro"
+    },
+    "BG": {
+      "stooq": "bg.us",
+      "yahoo": "BG",
+      "sector": "Agro"
+    },
+    "ADM": {
+      "stooq": "adm.us",
+      "yahoo": "ADM",
+      "sector": "Agro"
     }
   }
 }
