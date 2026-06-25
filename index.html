@@ -127,14 +127,15 @@ const sigTxt=s=>(s||'').replace('_',' ');
 
 async function loadAll(){
   try{
-    const [sig,his,st,mt,seg]=await Promise.all([
+    const [sig,his,st,mt,seg,cdl]=await Promise.all([
       fetch(BASE+'signals.json'+bust()).then(r=>{if(!r.ok)throw new Error('signals '+r.status);return r.json();}),
       fetch(BASE+'history.json'+bust()).then(r=>r.ok?r.json():{}).catch(()=>({})),
       fetch(BASE+'stats.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch(BASE+'meta.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch(BASE+'seguimiento_vivo.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch(BASE+'candles.json'+bust()).then(r=>r.ok?r.json():null).catch(()=>null),
     ]);
-    STATE.signals=sig;STATE.history=his;STATE.stats=st;STATE.meta=mt;STATE.seg=seg;render();
+    STATE.signals=sig;STATE.history=his;STATE.stats=st;STATE.meta=mt;STATE.seg=seg;STATE.candles=cdl;render();
   }catch(e){
     document.getElementById('app').innerHTML='<div class="err"><b>No pude leer los datos.</b><br>Comprueba que el robot ha corrido y existe:<br><span style="font-family:var(--f-mono);font-size:11px">'+BASE+'signals.json</span><br><br>Detalle: '+e.message+'</div>';
   }
@@ -348,6 +349,8 @@ function openSegModal(id){
       <button class="x" onclick="closeModal()">×</button></div>
     <div class="m-body">
       <div style="font-family:var(--f-mono);font-size:12px;margin-bottom:14px;padding:10px;background:var(--ink2);border-radius:8px">${estado}</div>
+      <div class="m-sec">📊 Gráfico</div>
+      <canvas id="segChart" style="width:100%;height:280px;background:var(--card);border:1px solid var(--rule2);border-radius:10px;display:block;margin-bottom:12px"></canvas>
       <div class="m-sec">Niveles y objetivos</div>
       <div class="lvls">
         ${row('Entrada (congelada)',f(t.entry))}
@@ -373,6 +376,111 @@ function openSegModal(id){
   document.getElementById('modal').innerHTML=html;
   document.getElementById('overlay').classList.add('on');
   document.body.style.overflow='hidden';
+  // Gráfico: velas del símbolo en seguimiento + niveles CONGELADOS de la operación
+  const cdata=STATE.candles&&STATE.candles['seg:'+t.sym];
+  if(cdata){
+    const lv={entry:t.entry,stop:t.stop,target:t.target,target2:t.target2,
+      poc:t.poc,vah:t.vah,val:t.val,
+      exitPrice:t.exitPrice,exitTs:t.closedAt,outcome:t.outcome};
+    requestAnimationFrame(()=>drawChart('segChart',cdata,lv));
+  }
+}
+// ══════════════════════════════════════════════════════════════════
+// GRÁFICO interactivo de Volume Profile (canvas)
+// ══════════════════════════════════════════════════════════════════
+let CHART_HOVER=null;
+function drawChart(canvasId, data, levels){
+  const cv=document.getElementById(canvasId);
+  if(!cv||!data||!data.candles||!data.candles.length)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth, H=cv.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  const candles=data.candles;
+  // Layout: gráfico a la izquierda, perfil de volumen a la derecha
+  const padT=14,padB=26,padL=8,padR=64;
+  const profileW=54;
+  const chartW=W-padL-padR-profileW-6;
+  const chartH=H-padT-padB;
+  const x0=padL, y0=padT;
+  // Rango de precios: min/max de velas y de niveles
+  let lo=Infinity,hi=-Infinity;
+  for(const c of candles){ if(c.l<lo)lo=c.l; if(c.h>hi)hi=c.h; }
+  const lv=levels||{};
+  [lv.entry,lv.stop,lv.target,lv.target2,lv.poc,lv.vah,lv.val].forEach(v=>{
+    if(v!=null){ if(v<lo)lo=v; if(v>hi)hi=v; }
+  });
+  const pad=(hi-lo)*0.06||1; lo-=pad; hi+=pad;
+  const py=p=>y0+chartH-((p-lo)/(hi-lo))*chartH;
+  const n=candles.length;
+  const cw=chartW/n;
+  const px=i=>x0+i*cw+cw/2;
+  // Rejilla horizontal + etiquetas de precio
+  ctx.font='9px ui-monospace,monospace'; ctx.textBaseline='middle';
+  ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.fillStyle='#9ca3af';
+  const gridN=5;
+  for(let g=0;g<=gridN;g++){
+    const p=lo+(hi-lo)*g/gridN, y=py(p);
+    ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x0+chartW,y);ctx.stroke();
+    ctx.textAlign='left'; ctx.fillText(p.toFixed(2), x0+chartW+profileW+8, y);
+  }
+  // Perfil de volumen lateral (barras horizontales por nivel)
+  if(lv.volByLevel&&lv.priceLow!=null&&lv.step){
+    const vmax=Math.max(...lv.volByLevel)||1;
+    const profX=x0+chartW+4;
+    for(let l=0;l<lv.volByLevel.length;l++){
+      const pLevelLo=lv.priceLow+l*lv.step, pLevelHi=pLevelLo+lv.step;
+      const yA=py(pLevelHi), yB=py(pLevelLo);
+      const wBar=(lv.volByLevel[l]/vmax)*profileW;
+      const inVA=(l>=lv.valLevel&&l<=lv.vahLevel);
+      ctx.fillStyle=inVA?'rgba(41,98,255,0.30)':'rgba(150,150,150,0.22)';
+      ctx.fillRect(profX, yA, wBar, Math.max(1,yB-yA-1));
+    }
+  }
+  // Velas
+  for(let i=0;i<n;i++){
+    const c=candles[i], x=px(i);
+    const up=c.c>=c.o;
+    ctx.strokeStyle=up?'#16a34a':'#dc2626';
+    ctx.fillStyle=up?'#16a34a':'#dc2626';
+    ctx.beginPath();ctx.moveTo(x,py(c.h));ctx.lineTo(x,py(c.l));ctx.stroke();
+    const bw=Math.max(1,cw*0.6);
+    const yo=py(c.o),yc=py(c.c);
+    ctx.fillRect(x-bw/2,Math.min(yo,yc),bw,Math.max(1,Math.abs(yc-yo)));
+  }
+  // Líneas de niveles
+  const line=(p,color,label,dash)=>{
+    if(p==null)return;
+    const y=py(p);
+    ctx.strokeStyle=color; ctx.lineWidth=1.2; ctx.setLineDash(dash||[]);
+    ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x0+chartW,y);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=color; ctx.textAlign='left'; ctx.font='8px ui-monospace,monospace';
+    ctx.fillText(label, x0+3, y-4);
+  };
+  // Zona Value Area sombreada
+  if(lv.vah!=null&&lv.val!=null){
+    ctx.fillStyle='rgba(41,98,255,0.06)';
+    ctx.fillRect(x0,py(lv.vah),chartW,py(lv.val)-py(lv.vah));
+  }
+  line(lv.vah,'#2962ff','VAH '+(lv.vah!=null?lv.vah.toFixed(2):''));
+  line(lv.poc,'#ff0000','PoC '+(lv.poc!=null?lv.poc.toFixed(2):''));
+  line(lv.val,'#2962ff','VAL '+(lv.val!=null?lv.val.toFixed(2):''));
+  if(lv.entry!=null)line(lv.entry,'#111','▶ Entrada '+lv.entry.toFixed(2));
+  if(lv.target!=null)line(lv.target,'#16a34a','🎯 Objetivo '+lv.target.toFixed(2),[4,3]);
+  if(lv.target2!=null)line(lv.target2,'#16a34a','🎯 Obj2 '+lv.target2.toFixed(2),[2,3]);
+  if(lv.stop!=null)line(lv.stop,'#f59e0b','◆ Stop '+lv.stop.toFixed(2),[4,3]);
+  // Marca de salida si la operación está cerrada
+  if(lv.exitPrice!=null&&lv.exitTs!=null){
+    // encontrar la vela más cercana al exitTs
+    let xi=n-1;
+    for(let i=0;i<n;i++){ if(candles[i].t>=lv.exitTs){ xi=i; break; } }
+    const x=px(xi), y=py(lv.exitPrice);
+    ctx.fillStyle=lv.outcome==='win'?'#16a34a':'#dc2626';
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+  }
 }
 function openModal(key){MODAL.key=key;MODAL.filter='all';renderModal();document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
@@ -449,6 +557,9 @@ function renderModal(){
       <span style="font-size:11px;color:var(--dim)">${s.sector||''}</span>
       <button class="x" onclick="closeModal()">×</button></div>
     <div class="m-body">
+      <div class="m-sec">📊 Gráfico de Volume Profile</div>
+      <canvas id="alertChart" style="width:100%;height:300px;background:var(--card);border:1px solid var(--rule2);border-radius:10px;display:block"></canvas>
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--dim);text-align:center;margin:4px 0 10px">Velas diarias · niveles del sistema (no de TradingView) · perfil de volumen a la derecha</div>
       <div class="m-sec">Escenario</div><div class="scn">${s.scenario||'—'}</div>
       <div class="m-sec">Niveles y objetivos</div><div class="lvls">${lvlsHtml}</div>
       <div class="m-sec">Contexto (indicadores)</div><div class="lvls">${indHtml}</div>
@@ -456,6 +567,15 @@ function renderModal(){
       <div class="m-sec">Rendimiento por tipo de alerta en ${s.sym}</div>${labBreakHtml}
       <div class="m-sec">Operaciones históricas (${trades.length})</div>${trHtml}
     </div>`;
+  // Dibujar el gráfico tras renderizar
+  const cdata=STATE.candles&&STATE.candles[MODAL.key];
+  if(cdata){
+    const lv={entry:s.entry,stop:s.stop,target:s.target,target2:s.target2,
+      poc:s.poc,vah:s.vah,val:s.val};
+    if(cdata.vp){Object.assign(lv,{priceLow:cdata.vp.priceLow,step:cdata.vp.step,
+      volByLevel:cdata.vp.volByLevel,valLevel:cdata.vp.valLevel,vahLevel:cdata.vp.vahLevel});}
+    requestAnimationFrame(()=>drawChart('alertChart',cdata,lv));
+  }
 }
 function wire(){
   const q=document.getElementById('q');
