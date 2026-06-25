@@ -186,12 +186,30 @@ def process_symbol(sym: str, meta: Dict[str, Any], interval_key: str) -> Optiona
                 'totalPnl': round(tot, 2), 'avgRR': round(rr / n, 2)}
     bt_elite = _agg(elite_trades)
 
+    # Datos para el GRÁFICO interactivo (solo si hay señal élite viva, para no
+    # engordar el JSON con 285 símbolos). Velas recientes + VP con su rango y volumen.
+    chart = None
+    if sig_now and vp_now:
+        chart = {
+            'candles': [{'t': b['ts'], 'o': round(b['open'], 4), 'h': round(b['high'], 4),
+                         'l': round(b['low'], 4), 'c': round(b['close'], 4),
+                         'v': b.get('volume', 0)} for b in df[-130:]],
+            'vp': {
+                'poc': vp_now['pocPrice'], 'vah': vp_now['vahPrice'], 'val': vp_now['valPrice'],
+                'priceHigh': vp_now['priceHigh'], 'priceLow': vp_now['priceLow'],
+                'step': vp_now['priceStep'], 'nRows': vp_now['nRows'],
+                'volByLevel': [round(v, 1) for v in vp_now['volByLevel']],
+                'pocLevel': vp_now['pocLevel'], 'vahLevel': vp_now['vahLevel'], 'valLevel': vp_now['valLevel'],
+            },
+        }
+
     return {
         'sym': sym, 'tf': INTERVALS[interval_key].get('label', interval_key),
         'sector': meta.get('sector', ''),
         'signal': sig_now,
         'bt': bt_elite,
         'trades': trades,
+        'chart': chart,
         # cola de precios para el seguimiento en vivo (cubre el timeout de 60 sesiones)
         'priceTail': [{'ts': b['ts'], 'open': b['open'], 'high': b['high'],
                        'low': b['low'], 'close': b['close']} for b in df[-70:]],
@@ -215,6 +233,7 @@ def main():
     history_out: Dict[str, Any] = {}
     all_trades: List[Dict[str, Any]] = []
     price_tails: Dict[str, List[Dict[str, Any]]] = {}
+    charts_out: Dict[str, Any] = {}
     ok, failed = [], []
 
     interval_keys = ['1d']   # SOLO diario (decisión del usuario)
@@ -242,6 +261,8 @@ def main():
             all_trades.extend(r['trades'])
             if r.get('priceTail'):
                 price_tails[sym] = r['priceTail']
+            if r.get('chart'):
+                charts_out[key] = r['chart']
             if done % 20 == 0:
                 print(f'  ... {done}/{total_jobs}', flush=True)
 
@@ -289,6 +310,24 @@ def main():
         st = seg['stats']['global']
         print(f"Seguimiento vivo: {st['open']} abiertas · {st['n']} cerradas · WR {st['wr']}%" if st['n'] else
               f"Seguimiento vivo: {st['open']} abiertas · sin cierres aún", flush=True)
+        # Para el gráfico de operaciones en seguimiento sin señal hoy: añadir sus velas.
+        # Usan los niveles CONGELADOS de la operación (ya en seguimiento_vivo.json),
+        # así que aquí solo hace falta el OHLC.
+        for t in seg.get('trades', []):
+            sym = t['sym']
+            key_seg = f'seg:{sym}'
+            if key_seg in charts_out:
+                continue
+            tail = price_tails.get(sym)
+            if tail:
+                charts_out[key_seg] = {
+                    'candles': [{'t': b['ts'], 'o': round(b['open'], 4), 'h': round(b['high'], 4),
+                                 'l': round(b['low'], 4), 'c': round(b['close'], 4),
+                                 'v': b.get('volume', 0)} for b in tail],
+                    'vp': None,  # el gráfico usará los niveles congelados de la operación
+                }
+
+    json.dump(charts_out, open(os.path.join(DATA_DIR, 'candles.json'), 'w'), ensure_ascii=False)
 
     print(f'\nOK: {len(ok)} · Fallidos: {len(failed)} · Trades: {len(all_trades)}', flush=True)
     print(f'Señales vivas: {len(signals_out)}', flush=True)
