@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-07T01:36:45.586356+00:00",
+  "generatedAt": "2026-08-07T23:03:42.299716+00:00",
   "symbolsOK": 283,
   "symbolsFailed": 2,
   "failed": [
     "CTRA|1d",
     "SATS|1d"
   ],
-  "totalTrades": 1955
+  "totalTrades": 1959
 }
