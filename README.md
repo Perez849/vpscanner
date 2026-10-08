@@ -153,6 +153,26 @@ El sistema se afinó con acciones de 2016–2026, con sesgo de supervivencia y e
 - **Es pequeño en un índice**: +0,07 pts por operación sobre un ATR de ~1 %. Una cartera «solo S&P 500» con este sistema estuvo el 26 % del tiempo en mercado y rindió +1,0 % anual frente a +7,5 % de comprar y mantener (sin dividendos, 65 años): **solo con un índice no se gana dinero**. La ventaja necesita activos volátiles (ATR ≥ 2,5 %) donde el mismo rebote paga más en % — de ahí el suelo de volatilidad y que las acciones den +0,7 % por operación.
 - **No protege en mercados bajistas fuertes**: 2000–02 −0,34 % por operación (al azar −0,33 %), 2008 −0,94 % (al azar −0,75 %). El filtro de tendencia (sobre la SMA200) llega tarde en las caídas rápidas.
 
+## Sesgo de supervivencia: cuánto de la ventaja era real (`research.py pit | pit_mid | pit_deep`)
+
+El universo de las pruebas es la lista **actual** del S&P 500/400/600. Eso cuela dos sesgos: acciones que entraron al índice *después* de subir mucho (se las contaba como si siempre hubieran estado) y las que salieron (caídas, quiebras, compras). Se reconstruyó la pertenencia en cada fecha con las tablas de cambios de Wikipedia (S&P 500: 412 cambios desde 1976, «Historical components of the S&P 500»; S&P 400: 623 desde 2012; S&P 600: 491 desde 2019) y se descargaron las retiradas que aún cotizan (**198 de 717 con datos, el 28 %**: las quebradas y compradas ya no existen en Yahoo; sesgo residual que no se puede cerrar con estos datos). El 15,8 % de las señales de acciones de EE.UU. eran de valores que aún no estaban en el índice.
+
+**Sistema de rebotes, plan Equilibrado (walk-forward 2019–2026):**
+
+| | Operaciones | Acierto | Media | PF | Alfa vs S&P 500 | Cartera 10×10 % |
+|---|---|---|---|---|---|---|
+| A · lista actual (lo que se mostraba) | 4.083 | 66,5 % | +0,74 % | 1,41 | +0,35 % (t=3,0) | +32,1 % anual · caída −29 % · Sharpe 1,7 |
+| B · solo cuando ya era miembro | 4.006 | 66,2 % | +0,57 % | 1,34 | +0,18 % (t=1,7) | +22,5 % · −25 % · 1,4 |
+| C · B + retiradas que aún cotizan | 3.852 | 66,8 % | +0,53 % | 1,30 | **+0,13 % (t=1,1)** | **+19,2 % · −26 % · 1,3** |
+
+El S&P 500 comprar y mantener: +17,5 % anual, caída −33,7 %. Con la pertenencia histórica **la ventaja por operación baja un 28 %, el alfa deja de ser significativo y la rentabilidad de la cartera se queda en la del índice con algo menos de caída**. Las pequeñas capitalizaciones (S&P 600) pasan de +0,73 % a −0,48 % por operación y el sistema las excluye solo. El plan «Alta probabilidad» no tiene alfa en ninguna versión (−0,06 %, +0,01 %, −0,01 %).
+
+**Prueba dura 2005–2026 (incluye 2008, 2011, 2015, 2018, 2020, 2022):** Equilibrado con pertenencia histórica (y sin operaciones de S&P 400/600 anteriores a su tabla): 8.117 operaciones, 66,0 % de acierto, **+0,38 % por operación**, alfa +0,12 % (t=1,9); cartera 10×10 %: **+11,1 % anual con caída −36 %** frente a +11,4 % y −52 % del S&P 500 (con la lista actual: +14,0 % y −34 %). Gana en 17 de 19 años (2008: +0,32 %; pierde en 2015: −0,16 % y 2018: −0,61 %).
+
+**Medio plazo con acciones, con pertenencia histórica:** el «efecto grande» de 2018–2026 era casi todo hindsight. Con el S&P 500 de cada fecha: contraste del «mejor de 2.730» p=0,24 (con las 300 más negociadas, p=0,48); el 85 % de las variantes no bate al S&P 500; persistencia entre mitades +0,15; la selección honesta rinde +15,7 % (Sharpe 0,91) frente a +14,9 % (1,05) del índice; el momentum clásico 12-1 pasa de +29,5 % (Sharpe 1,20) a +15,7 % (0,82). **No hay habilidad demostrable en elegir acciones a medio plazo.**
+
+**Qué se hizo en producción:** la validación semanal (`research.py final`) usa ahora esta pertenencia histórica y aborta si no puede reconstruirla (no sustituye el registro por uno con sesgo). La web lo indica en «Cómo se validó».
+
 ## 🚀 Pelotazos (experimental)
 
 Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
