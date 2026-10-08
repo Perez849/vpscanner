@@ -21,7 +21,7 @@ Causas (todas corregidas):
 
 1. **Candidatos** (`setups.py`): 17 patrones de sobreventa dentro de tendencia (precio > SMA200 con RSI(2) bajo, rachas bajistas, mínimos de 5/10/20 sesiones, Bollinger, precio bajo el VAL del perfil de volumen móvil…). Solo largos: los cortos no tuvieron ventaja en ninguna variante.
 2. **Probabilidad** (`model.py`): regresión logística lineal (poca capacidad) con 28 variables de contexto — VIX y SPY, **amplitud de mercado** (qué parte del universo está sobre su SMA200 y cuánta está en sobreventa), tamaño de la caída, posición respecto a máximos… Se reentrena cada semana con los últimos 3 años.
-3. **Política**: cada día solo se alertan las **5 mejores** cuya probabilidad supera la tasa base de acierto. Los grupos de activos sin evidencia (p. ej. valores temáticos) se excluyen solos.
+3. **Política**: cada día solo se alertan las **mejores** (3 en *Equilibrado*, 5 en *Alta probabilidad*) cuya probabilidad supera la tasa base de acierto; las mejor clasificadas rinden más. Los grupos de activos sin evidencia (p. ej. valores temáticos) se excluyen solos.
 4. **Dos planes de salida** por alerta: *Equilibrado* (sale cuando RSI(2) > 70) y *Alta probabilidad* (objetivo +1 ATR). Stop a 4×ATR y máximo 10 sesiones en ambos.
 5. **Operativa honesta** (`simulate.py`): señal con el cierre, **entrada en la apertura siguiente**, huecos de apertura, un día que toca stop y objetivo cuenta como **stop**, costes por tipo de activo (0,10–0,40 % ida y vuelta).
 6. **Seguimiento en vivo** (`track.py`): cada alerta se registra y se simula con *exactamente* el mismo código que el backtest; la web compara acierto real vs esperado.
@@ -48,9 +48,35 @@ Las alertas salen con el cierre y se compra en la apertura siguiente; si la acci
 
 - **El hueco no destruye la ventaja**, pero sí castiga al plan *Equilibrado* cuando abre muy por encima: con aperturas > referencia + 0,5 ATR perdió de media ≈ −0,8 % por operación (306 casos). El plan *Alta probabilidad* no se resintió. Por eso la web muestra un **precio máximo orientativo de entrada** (referencia + 0,5 ATR) y los niveles de stop/objetivo se miden **desde tu precio de entrada real**, no desde el cierre de ayer (el fallo original era de presentación: mostraba niveles del cierre).
 - **Escaneo previo al cierre (MOC)**: `scan.yml` corre tras el cierre, pero `scan_preclose.yml` corre a las **15:20 ET** (19:20/20:20 UTC según el horario de verano; el script comprueba la hora de Nueva York y solo actúa entre 15:10 y 15:40 ET) y repite la misma lógica sobre la vela *provisional* de hoy, solo en EE.UU. (grandes, medianas, pequeñas y ETF). Avisa con tiempo para colocar una **orden MOC antes de las 15:50 ET (21:50 en España)** y entrar al precio de cierre, sin hueco. Los avisos van a `alerts_pre.json`, a la sección «Preliminares» de la web y a Telegram.
-  - Validación (`research.py moc`, barras de 60 min reconstruyendo la vela de las 15:30 ET): las señales provisionales rindieron **igual o mejor** que las finales (plan Equilibrado ≈ +0,68 % comprando al cierre frente a ≈ +0,46 % a la apertura siguiente). Ojo: el modelo ya vio esos años al entrenar, así que valen las *diferencias*, no el nivel, y es una reconstrucción, no operativa real.
+  - Validación (`research.py moc`, barras de 60 min reconstruyendo la vela de las 15:30 ET, ≈ 2 años): comprar al cierre con la señal provisional dio ≈ +0,68 % por operación frente a ≈ +0,56 % comprando a la apertura con la señal definitiva (plan *Equilibrado*): **≈ +0,1 % de mejora, dentro del margen de error (±0,1)**. Para *Alta probabilidad* no hay diferencia apreciable. Solo ≈ 30 % de las señales provisionales coinciden luego con la lista definitiva (el top-N se reordena mucho cerca del cierre), pero las que desaparecen rinden igual que las que se confirman. Ojo: el modelo ya vio esos años al entrenar y es una reconstrucción, no operativa real.
+  - **Temáticos (p. ej. Equinor): no validado**, así que no entran en el aviso previo. Con ≈ 370 señales provisionales la diferencia cierre − apertura fue +0,07 % ± 0,34 (inconcluyente) y solo el 44 % se confirmaba al cierre. Además, el plan *Alta probabilidad* es el menos sensible al hueco, así que no hay ganancia que justifique el riesgo.
   - El seguimiento registra estas operaciones aparte (`mode: moc`, entrada = cierre final) y el escaneo posterior al cierre **no las duplica**; si una señal provisional no se confirma con el cierre final, sigue en el seguimiento (para medir el coste real de actuar antes).
   - Si no puedes poner la orden a tiempo: no pasa nada, esperas a las alertas definitivas y entras a la apertura.
+
+## Qué se probó para mejorar la fiabilidad y la rentabilidad (y qué funcionó)
+
+Todo con la misma tubería walk-forward (`research.py improve`, `improve2`, `index`; informes en la rama `claude/research-results-<cmd>`), comparando año a año con el plan desplegado. Con tantas pruebas, una mejora aislada puede ser azar: solo se adopta lo que mejora en casi todos los años, se replica con salidas vecinas y tiene una razón a priori.
+
+| Prueba | Resultado | Decisión |
+|---|---|---|
+| **Puesto del día** (media por puesto, Equilibrado) | #1 +0,80 % · #2 +0,52 % · #3 +0,41 % · #4 +0,34 % · #5 +0,39 %; tendencia monótona, #1 positivo 7 de 8 años | **Adoptado: Equilibrado pasa a las 3 mejores del día** (cartera de 10 posiciones: Sharpe 1,42 frente a 1,31, menos caída, mismo CAGR). *Alta probabilidad* se queda en 5 (solo el #1 destaca: +0,48 % frente a +0,1–0,2 %). |
+| Puertas de régimen a mano (VIX alto, SPY bajo su SMA200, amplitud baja, sobreventa amplia, ATR alto) | **Todas empeoran**: las señales descartadas rendían más (p. ej. VIX z > 1,5: +1,04 %; amplitud < 30 %: +1,29 %) | Descartado: el modelo ya elige bien en pánico |
+| Ventana de entrenamiento 2/4/5 años o creciente; regularización | 3 años es igual o mejor en *Equilibrado* | Sin cambio |
+| Variables nuevas (choques de noticias, momentum, corto plazo, mercado) | No mejoran *Equilibrado*; «mercado» mejoró *Alta probabilidad* (+0,13 %) pero no se replicó en todas las salidas vecinas (3 de 5) | Descartado (sospecha de azar) |
+| Tope por sector y día | Casi nunca limita, sin efecto | Sin cambio |
+| Modelo frente a elegir 5 al azar entre los candidatos | *Equilibrado*: +0,50 % frente a +0,08 %, mejor en **8 de 8 años**. *Alta probabilidad*: +0,24 % frente a +0,18 % (6 de 8 años) | El modelo aporta en *Equilibrado*; en *Alta probabilidad* aporta poco |
+| Entrada al cierre (MOC) | ≈ +0,1 % por operación (ver arriba) | Aviso previo mantenido |
+
+**Qué esperar con una cartera real** (simulación con capital limitado desde 2019, máx. 10 posiciones al 10 % cada una, netas de costes; la web la regenera cada semana):
+
+| | Anual | Caída máx. | Sharpe | Meses + | Peor mes |
+|---|---|---|---|---|---|
+| Equilibrado (3 mejores/día) | ver web | | | | |
+| Comprar y mantener el S&P 500 (2019–2026) | +17,5 % | 33,7 % | 0,94 | | |
+
+- **Hallazgo incómodo**: en las mismas ventanas de cada operación, comprar el propio S&P 500 acertó casi igual (≈ 64 % frente a ≈ 66 %) y rindió +0,39 % frente a +0,51 %. El «alfa» sobre el índice del plan *Equilibrado* es ≈ +0,08 % (t ≈ 1) y el de *Alta probabilidad* ≈ −0,15 % (t ≈ −2): **gran parte de la ventaja viene de *cuándo* se compra (tras caídas en un mercado alcista), no de *qué* acción se elige**, y la parte de selección queda además inflada por el sesgo de supervivencia.
+- La misma idea aplicada **solo a índices** (SPY/QQQ/IWM/DIA, sin modelo y sin sesgo de supervivencia): 513 señales en 10 años, **71 % de acierto, +0,30 % por operación** (t = 2,5; 8 de 10 años positivos), y con VIX tranquilo (z < 0,5) 72 % y +0,36 %. Una cartera «solo SPY» (≈ 15 operaciones al año) dio ≈ +6 % anual con caída máxima ≈ 7 % y 79 % de meses positivos: fiable pero de poca rentabilidad si no se apalanca. No está en producción; es una opción de bajo riesgo.
+- Un 65 % de operaciones ganadoras **no** implica una curva suave: en la simulación solo ≈ 6 de cada 10 meses son positivos y los peores meses superan el −10 %. Usa posiciones pequeñas.
 
 ## 🚀 Pelotazos (experimental)
 

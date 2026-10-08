@@ -221,7 +221,8 @@ def main():
                                'targetPct': round((tgt / close - 1) * 100, 2) if tgt else None, 'target': round(tgt, 4) if tgt else None,
                                'exitTrig': round(trig, 4) if trig else None,
                                'exitTrigPct': round((trig / close - 1) * 100, 2) if trig else None},
-                    'hist': {'wr': s['stats']['oos']['wr'], 'n': s['stats']['oos']['n'], 'mean': s['stats']['oos']['mean'], 'pf': s['stats']['oos']['pf']}}
+                    'hist': {'wr': s['stats']['oos']['wr'], 'n': s['stats']['oos']['n'], 'mean': s['stats']['oos']['mean'], 'pf': s['stats']['oos']['pf']},
+                    'rankHist': s['stats'].get('byRank', {}).get(str(rank + 1))}
             target = by_sym if rank < n_day else watch_syms
             if rank >= n_day and rank >= n_day + 20:
                 continue

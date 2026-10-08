@@ -168,7 +168,25 @@ def test_resolve_trailing_equals_simulate():
     print(f'ok · seguimiento (trailing) == simulador en {tot} operaciones')
 
 
+def test_portfolio_sim():
+    """Cartera con capital limitado: aritmética exacta con operaciones a mano."""
+    import research
+    cal = np.arange(100, 130)
+    # 3 señales: A (sesión 2, 3 sesiones, +10 %), B (sesión 2, puesto 2, +5 %: no cabe con M=1), C (sesión 10, 1 sesión, −4 %)
+    ti = np.array([2, 2, 10]); bars = np.array([3, 3, 1]); res = np.array([10.0, 5.0, -4.0]); rank = np.array([1, 2, 1])
+    r = research.portfolio_sim(cal, ti, bars, res, rank, 1, 0.5)
+    eq = (1 + 0.5 * 0.10) * (1 - 0.5 * 0.04)
+    assert abs(r['curve'][-1] - eq) < 1e-12, (r['curve'][-1], eq)
+    assert abs(r['tradesYear'] * (len(r['curve']) / 252.0) - 2) < 1e-9          # B se queda fuera por falta de hueco
+    r2 = research.portfolio_sim(cal, ti, bars, res, rank, 2, 0.25)               # con 2 huecos entran A y B
+    eq2 = 1 + 0.25 * 0.10 + 0.25 * 0.05
+    eq2 *= (1 - 0.25 * 0.04)
+    assert abs(r2['curve'][-1] - eq2) < 1e-12, (r2['curve'][-1], eq2)
+    print('ok · simulación de cartera con capital limitado (aritmética exacta)')
+
+
 if __name__ == '__main__':
+    test_portfolio_sim()
     test_resolve_trailing_equals_simulate()
     test_trailing_stop_and_close_entry()
     test_exit_trigger_formula()

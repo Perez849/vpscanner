@@ -264,8 +264,8 @@ def topn_mask(p, day, m, n):
 #  FINAL: planes de salida, política "N mejores por día", salud y registro
 # ═════════════════════════════════════════════════════════════════════════
 PLANS = [
-    {'id': 'rsi_S4_H10', 'role': 'principal', 'label': 'Equilibrado', 'blurb': 'sale cuando el RSI(2) supera 70 (stop 4×ATR, máx. 10 sesiones)'},
-    {'id': 'atr_T1_S4_H10', 'role': 'alta_prob', 'label': 'Alta probabilidad', 'blurb': 'objetivo +1×ATR (stop 4×ATR, máx. 10 sesiones): acierta más, gana menos por operación'},
+    {'id': 'rsi_S4_H10', 'role': 'principal', 'label': 'Equilibrado', 'n': 3, 'blurb': 'sale cuando el RSI(2) supera 70 (stop 4×ATR, máx. 10 sesiones)'},
+    {'id': 'atr_T1_S4_H10', 'role': 'alta_prob', 'label': 'Alta probabilidad', 'n': 5, 'blurb': 'objetivo +1×ATR (stop 4×ATR, máx. 10 sesiones): acierta más, gana menos por operación'},
 ]
 N_PER_DAY = 5
 WINDOW_YEARS = 3
@@ -293,10 +293,21 @@ def wf_predict_linear(EV, rows, FL, y, ok, upto_day: int):
     return p, base
 
 
-def select_policy(p, base, day, gid, ok, allowed_gids):
+def select_policy(p, base, day, gid, ok, allowed_gids, n: int | None = None):
     """Las N mejores por día (probabilidad), entre las que superan la tasa base y están en grupos permitidos."""
     cand = ok & np.isfinite(p) & (p >= base) & np.isin(gid, allowed_gids)
-    return topn_mask(p, day, cand, N_PER_DAY)
+    return topn_mask(p, day, cand, n or N_PER_DAY)
+
+
+def rank_in_day(p, day, sel):
+    """Puesto (1 = mejor) de cada señal seleccionada dentro de su día."""
+    idx = np.flatnonzero(sel)
+    o = idx[np.lexsort((-p[idx], day[idx]))]
+    d = day[o]
+    first = np.concatenate([[0], np.flatnonzero(np.diff(d)) + 1])
+    rk = np.arange(len(o)) - np.repeat(first, np.diff(np.concatenate([first, [len(o)]])))
+    out = np.zeros(len(p), np.int16); out[o] = rk + 1
+    return out
 
 
 def _block(pnl, day, sym):
@@ -304,7 +315,7 @@ def _block(pnl, day, sym):
     return {k: round(float(st[k]), 3) for k in ('n', 'wr', 'wr_lo', 'mean', 'pf', 't_day', 'avg_win', 'avg_loss') if k in st}
 
 
-def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True):
+def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None):
     import model as MD
     variants = EV['variants']
     vi = variants.index(plan['id'])
@@ -318,7 +329,8 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True):
     m = ok & np.isfinite(p)
     print(f"\n  [{plan['id']} · {plan['label']}] AUC OOS={MD.auc(p[m], y[m]):.3f} · todos los candidatos: {fmt(stats(pnl[m], day[m], sym[m]))}", flush=True)
     # grupos permitidos: evidencia fuera de muestra con la política aplicada a todos los grupos
-    sel0 = select_policy(p, base, day, gid, ok, list(range(len(GROUPS))))
+    N = int(plan.get('n', N_PER_DAY))
+    sel0 = select_policy(p, base, day, gid, ok, list(range(len(GROUPS))), n=N)
     allowed = []
     for gi, gname in enumerate(GROUPS):
         mg = sel0 & (gid == gi)
@@ -330,9 +342,9 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True):
                 allowed.append(gi)
         elif mg.sum() > 0:
             print(f"       grupo {gname:9s} n={mg.sum()} (<{MIN_GROUP_N}: sin evidencia) → EXCLUIDO")
-    sel = select_policy(p, base, day, gid, ok, allowed)
+    sel = select_policy(p, base, day, gid, ok, allowed, n=N)
     st = stats(pnl[sel], day[sel], sym[sel])
-    print(f"     política top {N_PER_DAY}/día en {[GROUPS[g] for g in allowed]}: {fmt(st)} · t={st['t_day']:.1f}", flush=True)
+    print(f"     política top {N}/día en {[GROUPS[g] for g in allowed]}: {fmt(st)} · t={st['t_day']:.1f}", flush=True)
     # por año, por grupo, reciente, sensibilidad a costes ×2
     by_year = {}
     for Y in sorted(set(years[sel])):
@@ -354,6 +366,40 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True):
     st_h = stats(pnl[hm], day[hm], sym[hm]) if hm.sum() >= 30 else None
     paused = bool(st_h and st_h['n'] >= 200 and st_h['mean'] <= 0)
     print(f"     salud (últimos 12 meses): {fmt(st_h) if st_h else 'datos insuficientes'} → {'PAUSADO' if paused else 'activo'}", flush=True)
+    # resultado por PUESTO del día (con las 5 mejores) y cartera realista con capital limitado frente al S&P 500
+    sel5 = select_policy(p, base, day, gid, ok, allowed, n=5)
+    rk5 = rank_in_day(p, day, sel5)
+    by_rank = {}
+    for r in range(1, 6):
+        mr = sel5 & (rk5 == r)
+        if mr.sum() >= 50:
+            sr_ = stats(pnl[mr], day[mr], sym[mr])
+            by_rank[str(r)] = {'n': sr_['n'], 'wr': round(sr_['wr'], 1), 'mean': round(sr_['mean'], 2), 'pf': round(sr_['pf'], 2)}
+    print('     por puesto del día: ' + ' '.join(f"#{k}: {v['wr']:.0f}%/{v['mean']:+.2f}% (n={v['n']})" for k, v in by_rank.items()), flush=True)
+    extra = {}
+    if spy is not None:
+        cal_d = (spy['t'] // 86400).astype(np.int64)
+        ti = np.searchsorted(cal_d, day, side='left')
+        bars_ = EV['bars'][rows, vi]
+        e_ = np.minimum(ti + 1, len(cal_d) - 1); x_ = np.minimum(ti + np.maximum(bars_.astype(int), 1), len(cal_d) - 1)
+        spy_ret = (spy['c'][x_] / spy['o'][e_] - 1) * 100 - 0.03
+        ms = sel & np.isfinite(spy_ret)
+        alpha = stats(pnl[ms] - spy_ret[ms], day[ms], sym[ms])
+        extra['vsSpy'] = {'planMean': round(float(np.mean(pnl[ms])), 2), 'spyMean': round(float(np.mean(spy_ret[ms])), 2),
+                          'planWR': round(float(np.mean(pnl[ms] > 0) * 100), 1), 'spyWR': round(float(np.mean(spy_ret[ms] > 0) * 100), 1),
+                          'alpha': round(alpha['mean'], 2), 'alphaT': round(alpha['t_day'], 1)}
+        res_ = np.where(sel & (day >= day_of('2019-01-01')), pnl, np.nan)
+        ports = {}
+        for M_, f_ in ((10, 0.10), (20, 0.05)):
+            o = portfolio_sim(cal_d, ti, bars_, res_, rk5, M_, f_)
+            ports[f'{M_}x{int(f_ * 100)}'] = {k: round(v, 1) for k, v in o.items() if k != 'curve'} | {'positions': M_, 'size': int(f_ * 100)}
+        i0 = int(np.searchsorted(cal_d, day_of('2019-01-01'))); c_ = spy['c'][i0:]
+        extra['portfolio'] = ports
+        extra['spyHold'] = {'cagr': round(float((c_[-1] / c_[0]) ** (252 / len(c_)) - 1) * 100, 1),
+                            'dd': round(float(((np.maximum.accumulate(c_) - c_) / np.maximum.accumulate(c_)).max()) * 100, 1)}
+        print(f"     frente al S&P 500 en las mismas ventanas: plan {extra['vsSpy']['planMean']:+.2f}% (acierto {extra['vsSpy']['planWR']:.0f}%) · S&P {extra['vsSpy']['spyMean']:+.2f}% ({extra['vsSpy']['spyWR']:.0f}%) · alfa {extra['vsSpy']['alpha']:+.2f}% (t={extra['vsSpy']['alphaT']:.1f})")
+        for k_, o_ in ports.items():
+            print(f"     cartera {o_['positions']} pos. × {o_['size']}%: CAGR {o_['cagr']:+.1f}% · DD {o_['dd']:.1f}% · Sharpe {o_['sharpe']:.2f} · meses+ {o_['monthsPos']:.0f}% · peor mes {o_['worstMonth']:+.1f}%   (S&P comprar y mantener: CAGR {extra['spyHold']['cagr']:+.1f}% · DD {extra['spyHold']['dd']:.1f}%)")
     # calibración isotónica (todas las predicciones OOS) y modelo desplegado (últimos 3 años)
     cal = MD.LogitModel(fidx, names, GROUPS); cal.set_calibration(p[m], y[m])
     trm = (day >= upto_day - 365 * WINDOW_YEARS) & (day <= upto_day) & ok
@@ -365,11 +411,12 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True):
     return {
         'id': plan['id'], 'role': plan['role'], 'label': plan['label'], 'blurb': plan['blurb'],
         'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': [GROUPS[g] for g in allowed], 'gids': allowed,
-        'nPerDay': N_PER_DAY, 'floorRaw': round(base_now, 4), 'paused': paused,
+        'nPerDay': N, 'floorRaw': round(base_now, 4), 'paused': paused,
         'ev': {'aw': round(st['avg_win'], 3), 'al': round(st['avg_loss'], 3)},
         'stats': {'oos': _block(pnl[sel], day[sel], sym[sel]), 'recent': _block(pnl[recent], day[recent], sym[recent]) if st_rec else None,
                   'cost2x': {k: round(float(st2[k]), 3) for k in ('wr', 'mean', 'pf')}, 'health': _block(pnl[hm], day[hm], sym[hm]) if st_h else None,
-                  'baseWR': round(float(y[m].mean() * 100), 1), 'meanPCal': round(float(pc[sel].mean() * 100), 1), 'byYear': by_year, 'byGroup': by_group},
+                  'baseWR': round(float(y[m].mean() * 100), 1), 'meanPCal': round(float(pc[sel].mean() * 100), 1), 'byYear': by_year, 'byGroup': by_group,
+                  'byRank': by_rank, **extra},
         'model': fm}
 
 
@@ -464,12 +511,12 @@ def build_pelotazo(EV: Dict, upto_day: int):
         'model': fm}
 
 
-def final(EV: Dict, EV_pel: Dict | None, out_dir: str, universe_n: int):
+def final(EV: Dict, EV_pel: Dict | None, out_dir: str, universe_n: int, spy=None):
     rows, FL, names = union_events(EV, +1)
     last_day = int(EV['day'].max())
     last_str = str(np.datetime64('1970-01-01') + np.timedelta64(last_day, 'D'))
     print(f'\n########  VALIDACIÓN FINAL · {len(rows):,} candidatos · datos hasta {last_str}  ########', flush=True)
-    plans = [build_plan(EV, rows, FL, names, pl, last_day) for pl in PLANS]
+    plans = [build_plan(EV, rows, FL, names, pl, last_day, spy=spy) for pl in PLANS]
     pel = build_pelotazo(EV_pel, last_day) if EV_pel is not None else None
     reg = {'version': 5, 'generatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'dataThrough': last_str, 'universe': universe_n,
            'design': {'windowYears': WINDOW_YEARS, 'firstWalkForwardYear': FIRST_WF_YEAR, 'nPerDay': N_PER_DAY, 'healthDays': HEALTH_DAYS},
@@ -536,7 +583,7 @@ def main():
     print(f'tabla de eventos lista · {time.time() - t0:.0f}s', flush=True)
     if args.cmd == 'final':
         EV_pel = build_events(data, uni, SU.PEL_SETUPS + [SU.BY_ID['B_up']], PEL_VARIANTS, with_moc=False)
-        final(EV, EV_pel, args.out, len([s for s in uni if not uni[s].get('aux')]))
+        final(EV, EV_pel, args.out, len([s for s in uni if not uni[s].get('aux')]), spy=data.get('SPY'))
     elif args.cmd in ('improve', 'improve2'):
         import lab
         getattr(lab, args.cmd + '_explore')(EV, args.out, data, uni)
