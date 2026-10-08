@@ -2,7 +2,7 @@
 
 Escáner diario de ~2.000 activos (S&P 500/400/600, Nasdaq-100, ETF, Europa, cripto…) que avisa de **compras tras una caída dentro de una tendencia alcista** cuando un modelo estadístico, validado año a año, le da probabilidad de salir bien. Todo corre gratis en GitHub Actions; la web (`index.html`) solo lee los JSON.
 
-> **Expectativas realistas.** La ventaja medida es modesta: **≈65 % de acierto y ≈ +0,4 % por operación neto de costes** (plan *Equilibrado*, positivo en los 8 años 2019–2026), o ≈70 % de acierto y ≈ +0,2 % (plan *Alta probabilidad*, marginal con costes dobles). No existe, en estos datos, una estrategia de ≥75 % de acierto *y* rentable: cuando el acierto sube, cada fallo (−4/−6 %) pesa más que cada acierto (+1/+1,5 %) y la ganancia media se evapora. La prueba definitiva es la pestaña **Seguimiento real**.
+> **Expectativas realistas.** La ventaja medida es modesta: **≈66 % de acierto y ≈ +0,6 % por operación neto de costes** (plan *Equilibrado*, las 3 mejores del día, positivo en los 8 años 2019–2026), o ≈70 % de acierto y ≈ +0,25 % (plan *Alta probabilidad*, marginal con costes dobles). No existe, en estos datos, una estrategia de ≥75 % de acierto *y* rentable: cuando el acierto sube, cada fallo (−4/−6 %) pesa más que cada acierto (+1/+1,5 %) y la ganancia media se evapora. La prueba definitiva es la pestaña **Seguimiento real**.
 
 ## Qué estaba mal en la versión anterior
 
@@ -31,8 +31,8 @@ Causas (todas corregidas):
 
 | Plan | Acierto | Media/op. | Factor beneficio | Desde 2024 | Costes ×2 |
 |---|---|---|---|---|---|
-| Equilibrado | 65,8 % | +0,51 % | 1,32 | 64,9 % / +0,45 % | +0,32 % |
-| Alta probabilidad | 70,1 % | +0,25 % | 1,16 | 69,2 % / +0,20 % | +0,06 % |
+| Equilibrado (3 mejores/día) | 65,8 % | +0,59 % | 1,35 | 64,4 % / +0,53 % | +0,40 % |
+| Alta probabilidad (5 mejores/día) | 70,1 % | +0,25 % | 1,15 | 69,1 % / +0,19 % | +0,05 % |
 
 Lo que mostró la investigación (`scanner/lab.py`, informes en `scanner/model/last_report.txt`):
 
@@ -71,10 +71,11 @@ Todo con la misma tubería walk-forward (`research.py improve`, `improve2`, `ind
 
 | | Anual | Caída máx. | Sharpe | Meses + | Peor mes |
 |---|---|---|---|---|---|
-| Equilibrado (3 mejores/día) | ver web | | | | |
+| Equilibrado (3 mejores/día) | +23,9 % | 27,6 % | 1,40 | 62 % | −22 % |
+| Alta probabilidad (5 mejores/día) | +15,4 % | 23,9 % | 1,30 | 70 % | −11,5 % |
 | Comprar y mantener el S&P 500 (2019–2026) | +17,5 % | 33,7 % | 0,94 | | |
 
-- **Hallazgo incómodo**: en las mismas ventanas de cada operación, comprar el propio S&P 500 acertó casi igual (≈ 64 % frente a ≈ 66 %) y rindió +0,39 % frente a +0,51 %. El «alfa» sobre el índice del plan *Equilibrado* es ≈ +0,08 % (t ≈ 1) y el de *Alta probabilidad* ≈ −0,15 % (t ≈ −2): **gran parte de la ventaja viene de *cuándo* se compra (tras caídas en un mercado alcista), no de *qué* acción se elige**, y la parte de selección queda además inflada por el sesgo de supervivencia.
+- **Hallazgo incómodo**: en las mismas ventanas de cada operación, comprar el propio S&P 500 acertó casi igual (≈ 64 % frente a ≈ 66 %) y rindió +0,39 % frente a +0,59 % (*Equilibrado*, 3 mejores/día). El «alfa» sobre el índice es ≈ +0,20 % (t ≈ 1,9, en el límite de lo apreciable) en *Equilibrado* y ≈ −0,12 % (t ≈ −1,7) en *Alta probabilidad*: **gran parte de la ventaja viene de *cuándo* se compra (tras caídas en un mercado alcista), no de *qué* acción se elige**, y la parte de selección queda además inflada por el sesgo de supervivencia.
 - La misma idea aplicada **solo a índices** (SPY/QQQ/IWM/DIA, sin modelo y sin sesgo de supervivencia): 513 señales en 10 años, **71 % de acierto, +0,30 % por operación** (t = 2,5; 8 de 10 años positivos), y con VIX tranquilo (z < 0,5) 72 % y +0,36 %. Una cartera «solo SPY» (≈ 15 operaciones al año) dio ≈ +6 % anual con caída máxima ≈ 7 % y 79 % de meses positivos: fiable pero de poca rentabilidad si no se apalanca. No está en producción; es una opción de bajo riesgo.
 - Un 65 % de operaciones ganadoras **no** implica una curva suave: en la simulación solo ≈ 6 de cada 10 meses son positivos y los peores meses superan el −10 %. Usa posiciones pequeñas.
 

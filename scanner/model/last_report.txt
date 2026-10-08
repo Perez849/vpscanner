@@ -1,63 +1,71 @@
   datos: 1971 en caché, 14 por descargar (10y)
   datos: OK 1971 · fallidos 14
-  fallidos: HONA FDXF VYLR BLFS ADIG HLX CWEN-A MBGL MFP ROG.SW LEG SATS CTRA QRVO
+  fallidos: FDXF VYLR CWEN-A HLX HONA ADIG LEG BLFS MBGL MFP QRVO SATS ROG.SW CTRA
 universo con datos: 1967 activos · 7s
   amplitud de mercado lista
-  eventos: 300/1967 símbolos (20s)
-  eventos: 600/1967 símbolos (40s)
-  eventos: 900/1967 símbolos (60s)
-  eventos: 1200/1967 símbolos (79s)
-  eventos: 1500/1967 símbolos (98s)
-  eventos: 1800/1967 símbolos (117s)
-tabla de eventos lista · 147s
+  eventos: 300/1967 símbolos (18s)
+  eventos: 600/1967 símbolos (36s)
+  eventos: 900/1967 símbolos (53s)
+  eventos: 1200/1967 símbolos (70s)
+  eventos: 1500/1967 símbolos (87s)
+  eventos: 1800/1967 símbolos (105s)
+tabla de eventos lista · 132s
   amplitud de mercado lista
   eventos: 300/1967 símbolos (3s)
-  eventos: 600/1967 símbolos (7s)
-  eventos: 900/1967 símbolos (10s)
-  eventos: 1200/1967 símbolos (13s)
-  eventos: 1500/1967 símbolos (16s)
-  eventos: 1800/1967 símbolos (19s)
+  eventos: 600/1967 símbolos (6s)
+  eventos: 900/1967 símbolos (8s)
+  eventos: 1200/1967 símbolos (11s)
+  eventos: 1500/1967 símbolos (14s)
+  eventos: 1800/1967 símbolos (16s)
 
-########  VALIDACIÓN FINAL · 198,451 candidatos · datos hasta 2026-10-07  ########
+########  VALIDACIÓN FINAL · 198,450 candidatos · datos hasta 2026-10-07  ########
 
-  [rsi_S4_H10 · Equilibrado] AUC OOS=0.518 · todos los candidatos: n=169680 WR= 63.4% (lo 63.2) μ= +0.10% PF=1.06
-       grupo us_large  n=  3919 WR= 66.6% (lo 65.1) μ= +0.50% PF=1.37 → ok
-       grupo us_mid    n=  1092 WR= 66.9% (lo 64.1) μ= +0.65% PF=1.35 → ok
-       grupo us_small  n=   458 WR= 64.4% (lo 59.9) μ= +0.80% PF=1.38 → ok
-       grupo thematic  n=   369 WR= 58.5% (lo 53.4) μ= -0.65% PF=0.86 → EXCLUIDO
-       grupo etf       n=   404 WR= 61.9% (lo 57.1) μ= +0.28% PF=1.19 → ok
-       grupo crypto    n=   245 WR= 62.4% (lo 56.2) μ= +0.69% PF=1.18 → ok
-       grupo fx        n=41 (<80: sin evidencia) → EXCLUIDO
-       grupo futures   n=   235 WR= 57.0% (lo 50.6) μ= -0.51% PF=0.77 → EXCLUIDO
-       grupo eu        n=   379 WR= 58.0% (lo 53.0) μ= -0.42% PF=0.73 → EXCLUIDO
-     política top 5/día en ['us_large', 'us_mid', 'us_small', 'etf', 'crypto']: n=  6857 WR= 65.8% (lo 64.7) μ= +0.50% PF=1.31 · t=5.2
-     por año: 2019:68%/+0.40 2020:77%/+1.95 2021:67%/+0.64 2022:62%/-0.01 2023:64%/+0.58 2024:61%/+0.38 2025:67%/+0.41 2026:64%/+0.49
-     desde 2024: n=  2227 WR= 65.1% (lo 63.1) μ= +0.44% PF=1.25
-     con costes DOBLES: WR=63.5% μ=+0.31% PF=1.19
-     salud (últimos 12 meses): n=  1127 WR= 63.9% (lo 61.0) μ= +0.39% PF=1.20 → activo
+  [rsi_S4_H10 · Equilibrado] AUC OOS=0.518 · todos los candidatos: n=169685 WR= 63.4% (lo 63.2) μ= +0.10% PF=1.06
+       grupo us_large  n=  2426 WR= 67.2% (lo 65.3) μ= +0.65% PF=1.46 → ok
+       grupo us_mid    n=   687 WR= 66.2% (lo 62.6) μ= +0.81% PF=1.43 → ok
+       grupo us_small  n=   284 WR= 64.1% (lo 58.4) μ= +0.82% PF=1.35 → ok
+       grupo thematic  n=   252 WR= 60.3% (lo 54.2) μ= -0.57% PF=0.88 → EXCLUIDO
+       grupo etf       n=   231 WR= 61.9% (lo 55.5) μ= +0.28% PF=1.19 → ok
+       grupo crypto    n=   212 WR= 61.8% (lo 55.1) μ= +0.57% PF=1.15 → ok
+       grupo fx        n=37 (<80: sin evidencia) → EXCLUIDO
+       grupo futures   n=   174 WR= 59.8% (lo 52.3) μ= -0.23% PF=0.89 → EXCLUIDO
+       grupo eu        n=   236 WR= 55.9% (lo 49.6) μ= -0.31% PF=0.79 → EXCLUIDO
+     política top 3/día en ['us_large', 'us_mid', 'us_small', 'etf', 'crypto']: n=  4360 WR= 65.8% (lo 64.3) μ= +0.59% PF=1.35 · t=5.1
+     por año: 2019:67%/+0.38 2020:77%/+2.07 2021:67%/+0.57 2022:62%/+0.18 2023:65%/+0.78 2024:62%/+0.67 2025:66%/+0.54 2026:63%/+0.46
+     desde 2024: n=  1417 WR= 64.4% (lo 61.8) μ= +0.53% PF=1.29
+     con costes DOBLES: WR=63.6% μ=+0.40% PF=1.22
+     salud (últimos 12 meses): n=   700 WR= 62.3% (lo 58.6) μ= +0.33% PF=1.16 → activo
+     por puesto del día: #1: 67%/+0.80% (n=1589) #2: 65%/+0.52% (n=1435) #3: 65%/+0.41% (n=1336) #4: 66%/+0.34% (n=1276) #5: 66%/+0.39% (n=1230)
+     frente al S&P 500 en las mismas ventanas: plan +0.59% (acierto 66%) · S&P +0.39% (64%) · alfa +0.20% (t=1.9)
+     cartera 10 pos. × 10%: CAGR +23.9% · DD 27.6% · Sharpe 1.40 · meses+ 62% · peor mes -22.3%   (S&P comprar y mantener: CAGR +17.5% · DD 33.7%)
+     cartera 20 pos. × 5%: CAGR +17.5% · DD 16.5% · Sharpe 1.80 · meses+ 62% · peor mes -12.3%   (S&P comprar y mantener: CAGR +17.5% · DD 33.7%)
 
-  [atr_T1_S4_H10 · Alta probabilidad] AUC OOS=0.512 · todos los candidatos: n=169680 WR= 68.4% (lo 68.2) μ= +0.04% PF=1.02
-       grupo us_large  n=  3095 WR= 70.4% (lo 68.7) μ= +0.29% PF=1.19 → ok
-       grupo us_mid    n=   794 WR= 67.4% (lo 64.0) μ= +0.03% PF=1.02 → EXCLUIDO
-       grupo us_small  n=   362 WR= 65.5% (lo 60.4) μ= +0.04% PF=1.01 → EXCLUIDO
-       grupo thematic  n=   210 WR= 68.1% (lo 61.5) μ= +0.46% PF=1.15 → ok
-       grupo etf       n=   881 WR= 69.7% (lo 66.6) μ= +0.02% PF=1.02 → EXCLUIDO
-       grupo crypto    n=59 (<80: sin evidencia) → EXCLUIDO
+  [atr_T1_S4_H10 · Alta probabilidad] AUC OOS=0.512 · todos los candidatos: n=169685 WR= 68.4% (lo 68.2) μ= +0.04% PF=1.02
+       grupo us_large  n=  3085 WR= 70.3% (lo 68.6) μ= +0.27% PF=1.18 → ok
+       grupo us_mid    n=   801 WR= 67.8% (lo 64.5) μ= +0.07% PF=1.03 → ok
+       grupo us_small  n=   360 WR= 65.3% (lo 60.2) μ= +0.01% PF=1.00 → EXCLUIDO
+       grupo thematic  n=   210 WR= 68.1% (lo 61.5) μ= +0.48% PF=1.16 → ok
+       grupo etf       n=   880 WR= 69.5% (lo 66.4) μ= +0.02% PF=1.01 → EXCLUIDO
+       grupo crypto    n=60 (<80: sin evidencia) → EXCLUIDO
        grupo fx        n=55 (<80: sin evidencia) → EXCLUIDO
        grupo futures   n=   121 WR= 60.3% (lo 51.4) μ= -0.78% PF=0.66 → EXCLUIDO
-       grupo eu        n=   751 WR= 70.3% (lo 66.9) μ= +0.26% PF=1.21 → ok
-     política top 5/día en ['us_large', 'thematic', 'eu']: n=  5836 WR= 70.2% (lo 69.1) μ= +0.24% PF=1.16 · t=3.0
-     por año: 2019:75%/+0.39 2020:82%/+1.70 2021:71%/+0.25 2022:66%/-0.20 2023:71%/+0.41 2024:70%/+0.52 2025:69%/+0.17 2026:68%/+0.15
-     desde 2024: n=  1906 WR= 68.9% (lo 66.8) μ= +0.18% PF=1.10
-     con costes DOBLES: WR=69.7% μ=+0.06% PF=1.04
-     salud (últimos 12 meses): n=   977 WR= 67.3% (lo 64.3) μ= +0.14% PF=1.08 → activo
+       grupo eu        n=   764 WR= 70.7% (lo 67.4) μ= +0.27% PF=1.22 → ok
+     política top 5/día en ['us_large', 'us_mid', 'thematic', 'eu']: n=  6016 WR= 70.1% (lo 68.9) μ= +0.25% PF=1.15 · t=3.1
+     por año: 2019:76%/+0.49 2020:81%/+1.76 2021:71%/+0.32 2022:64%/-0.31 2023:71%/+0.39 2024:68%/+0.36 2025:70%/+0.19 2026:68%/+0.18
+     desde 2024: n=  1973 WR= 69.1% (lo 67.1) μ= +0.19% PF=1.11
+     con costes DOBLES: WR=69.5% μ=+0.05% PF=1.03
+     salud (últimos 12 meses): n=  1027 WR= 67.1% (lo 64.2) μ= +0.13% PF=1.07 → activo
+     por puesto del día: #1: 71%/+0.41% (n=1351) #2: 69%/+0.29% (n=1250) #3: 70%/+0.20% (n=1186) #4: 69%/+0.05% (n=1141) #5: 71%/+0.26% (n=1088)
+     frente al S&P 500 en las mismas ventanas: plan +0.25% (acierto 70%) · S&P +0.37% (65%) · alfa -0.12% (t=-1.7)
+     cartera 10 pos. × 10%: CAGR +15.4% · DD 23.9% · Sharpe 1.30 · meses+ 70% · peor mes -11.5%   (S&P comprar y mantener: CAGR +17.5% · DD 33.7%)
+     cartera 20 pos. × 5%: CAGR +10.2% · DD 21.8% · Sharpe 1.30 · meses+ 66% · peor mes -12.2%   (S&P comprar y mantener: CAGR +17.5% · DD 33.7%)
 
-  [pel_trl_T5_S5_H60] AUC(≥12%) OOS=0.569 · base 21.8% · todos los candidatos: n= 39457 WR= 45.9% (lo 45.4) μ= +2.41% PF=1.47
-     política top 3/día en ['us_large', 'us_mid', 'us_small']: n=  3714 WR= 48.8% (lo 47.2) μ= +5.51% PF=1.67 · t=9.2 · mediana -1.07% · P≥20%=24% · duración 43 ses.
-     por año: 2019:+3.9% 2020:+18.6% 2021:+2.0% 2022:-0.4% 2023:+1.8% 2024:+3.3% 2025:+8.9% 2026:+10.3%
-     benchmark (entrar al azar sobre SMA200, misma salida): μ=+2.14% · descuento por quiebras: {'2%': 4.2, '5%': 2.23, '8%': 0.27} · costes dobles: μ=+5.22%
+  [pel_trl_T5_S5_H60] AUC(≥12%) OOS=0.569 · base 21.8% · todos los candidatos: n= 39458 WR= 45.9% (lo 45.4) μ= +2.41% PF=1.47
+     política top 3/día en ['us_large', 'us_mid', 'us_small']: n=  3713 WR= 48.8% (lo 47.2) μ= +5.50% PF=1.67 · t=9.2 · mediana -1.04% · P≥20%=23% · duración 43 ses.
+     por año: 2019:+3.8% 2020:+18.7% 2021:+1.9% 2022:-0.3% 2023:+1.8% 2024:+3.3% 2025:+8.9% 2026:+10.3%
+     benchmark (entrar al azar sobre SMA200, misma salida): μ=+2.14% · descuento por quiebras: {'2%': 4.19, '5%': 2.22, '8%': 0.26} · costes dobles: μ=+5.21%
      salud (12 meses): n=   702 WR= 55.0% (lo 51.3) μ=+10.34% PF=2.50 → activo
 
-registro escrito: /tmp/out/validated.json (13 KB) · 2 planes · pausados: []
+registro escrito: /tmp/out/validated.json (14 KB) · 2 planes · pausados: []
 
-fin · 187s
+fin · 168s
