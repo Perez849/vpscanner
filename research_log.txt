@@ -1,0 +1,99 @@
+  datos: 1971 en caché, 14 por descargar (10y)
+  datos: OK 1971 · fallidos 14
+  fallidos: VYLR CWEN-A BLFS LEG HLX FDXF MBGL ADIG HONA MFP ROG.SW CTRA SATS QRVO
+universo con datos: 1967 activos · 7s
+
+######## ÍNDICES LARGOS · 19 descargados · fallidos []
+  ^GSPC      1961–2026 ·  16324 barras ·  877 candidatos ·  3833 barras de referencia
+  ^IXIC      1984–2026 ·  10602 barras ·  550 candidatos ·  2547 barras de referencia
+  ^RUT       1987–2026 ·   9843 barras ·  500 candidatos ·  2215 barras de referencia
+  ^DJI       1992–2026 ·   8753 barras ·  493 candidatos ·  2151 barras de referencia
+  ^FTSE      1984–2026 ·  10803 barras ·  591 candidatos ·  2426 barras de referencia
+  ^GDAXI     1993–2026 ·   8340 barras ·  447 candidatos ·  1901 barras de referencia
+  ^FCHI      1990–2026 ·   9297 barras ·  458 candidatos ·  1945 barras de referencia
+  ^N225      1988–2026 ·   9473 barras ·  432 candidatos ·  1713 barras de referencia
+  ^HSI       1989–2026 ·   9154 barras ·  432 candidatos ·  1850 barras de referencia
+  ^GSPTSE    1979–2026 ·  11870 barras ·  621 candidatos ·  2688 barras de referencia
+  ^BVSP      1993–2026 ·   8286 barras ·  427 candidatos ·  1794 barras de referencia
+  ^AXJO      2000–2026 ·   6726 barras ·  347 candidatos ·  1494 barras de referencia
+  ^IBEX      1993–2026 ·   8424 barras ·  382 candidatos ·  1655 barras de referencia
+  ^STOXX50E  2007–2026 ·   4894 barras ·  237 candidatos ·   967 barras de referencia
+  ^KS11      1996–2026 ·   7340 barras ·  332 candidatos ·  1424 barras de referencia
+  ^BSESN     1997–2026 ·   7211 barras ·  384 candidatos ·  1612 barras de referencia
+  ^TWII      1997–2026 ·   7173 barras ·  362 candidatos ·  1528 barras de referencia
+  ^MXX       1993–2026 ·   8442 barras ·  424 candidatos ·  1831 barras de referencia
+  ^NYA       2002–2026 ·   5998 barras ·  345 candidatos ·  1462 barras de referencia
+
+================ SALIDA rsi_S4_H10 ================
+  POR ÍNDICE (candidatos frente a entrar al azar en tendencia alcista con la misma salida):
+    ^GSPC      n= 877 acierto 69.0% · media +0.09% (t=+1.6) · PF 1.17 | al azar: 64.3% / +0.00% | Δ +0.09 pts
+    ^IXIC      n= 550 acierto 67.1% · media +0.15% (t=+1.5) · PF 1.20 | al azar: 66.0% / +0.10% | Δ +0.05 pts
+    ^RUT       n= 500 acierto 61.4% · media -0.08% (t=-0.8) · PF 0.90 | al azar: 65.0% / +0.03% | Δ -0.11 pts
+    ^DJI       n= 493 acierto 71.8% · media +0.13% (t=+1.8) · PF 1.27 | al azar: 66.6% / +0.02% | Δ +0.11 pts
+    ^FTSE      n= 591 acierto 69.2% · media +0.11% (t=+1.7) · PF 1.21 | al azar: 64.7% / -0.01% | Δ +0.12 pts
+    ^GDAXI     n= 447 acierto 69.4% · media +0.07% (t=+0.7) · PF 1.10 | al azar: 66.0% / +0.09% | Δ -0.03 pts
+    ^FCHI      n= 458 acierto 64.8% · media +0.11% (t=+1.2) · PF 1.17 | al azar: 63.7% / +0.09% | Δ +0.03 pts
+    ^N225      n= 432 acierto 66.4% · media +0.10% (t=+0.9) · PF 1.13 | al azar: 61.1% / -0.02% | Δ +0.12 pts
+    ^HSI       n= 432 acierto 67.4% · media +0.10% (t=+0.8) · PF 1.11 | al azar: 62.6% / +0.01% | Δ +0.09 pts
+    ^GSPTSE    n= 621 acierto 68.1% · media +0.02% (t=+0.3) · PF 1.03 | al azar: 64.7% / +0.01% | Δ +0.01 pts
+    ^BVSP      n= 427 acierto 68.1% · media +0.39% (t=+2.5) · PF 1.41 | al azar: 66.1% / +0.11% | Δ +0.28 pts
+    ^AXJO      n= 347 acierto 71.8% · media +0.15% (t=+2.1) · PF 1.37 | al azar: 67.3% / +0.03% | Δ +0.12 pts
+    ^IBEX      n= 382 acierto 66.8% · media +0.13% (t=+1.2) · PF 1.19 | al azar: 64.0% / +0.05% | Δ +0.07 pts
+    ^STOXX50E  n= 237 acierto 69.2% · media +0.18% (t=+1.5) · PF 1.33 | al azar: 63.3% / +0.03% | Δ +0.15 pts
+    ^KS11      n= 332 acierto 65.4% · media +0.15% (t=+0.9) · PF 1.17 | al azar: 61.8% / +0.12% | Δ +0.03 pts
+    ^BSESN     n= 384 acierto 69.3% · media +0.18% (t=+1.4) · PF 1.23 | al azar: 64.5% / +0.09% | Δ +0.10 pts
+    ^TWII      n= 362 acierto 71.0% · media +0.24% (t=+1.8) · PF 1.31 | al azar: 65.2% / +0.07% | Δ +0.16 pts
+    ^MXX       n= 424 acierto 67.9% · media +0.03% (t=+0.3) · PF 1.04 | al azar: 67.2% / -0.03% | Δ +0.06 pts
+    ^NYA       n= 345 acierto 68.4% · media +0.04% (t=+0.5) · PF 1.08 | al azar: 64.8% / +0.01% | Δ +0.03 pts
+  → el mecanismo supera al azar en 17 de 19 índices
+  AGRUPADO POR DÉCADA (todos los índices disponibles en cada década):
+    1960s: n=  84 acierto 60.7% · media -0.38% | al azar 56.8% / -0.22% | Δ -0.16 pts (error típico ≈ 0.15)
+    1970s: n=  99 acierto 55.6% · media -0.32% | al azar 60.1% / -0.19% | Δ -0.12 pts (error típico ≈ 0.18)
+    1980s: n= 471 acierto 67.1% · media +0.09% | al azar 64.7% / +0.04% | Δ +0.06 pts (error típico ≈ 0.07)
+    1990s: n=1598 acierto 67.5% · media +0.21% | al azar 65.6% / +0.08% | Δ +0.13 pts (error típico ≈ 0.06)
+    2000s: n=2030 acierto 70.3% · media +0.17% | al azar 65.8% / +0.09% | Δ +0.08 pts (error típico ≈ 0.05)
+    2010s: n=2546 acierto 67.8% · media +0.02% | al azar 63.4% / -0.02% | Δ +0.04 pts (error típico ≈ 0.04)
+    2020s: n=1813 acierto 67.5% · media +0.15% | al azar 65.4% / +0.06% | Δ +0.09 pts (error típico ≈ 0.04)
+    TODO: n=8641 acierto 68.0% · media +0.11% (t=+3.6) · PF 1.17 | al azar +0.04% → Δ +0.07 pts
+  EN MERCADOS BAJISTAS FUERTES (años 1973-74, 2000-02, 2008): 2000: n=344, media -0.34% (al azar -0.33%) · 2008: n=36, media -0.94% (al azar -0.75%)
+
+================ SALIDA atr_T1_S4_H10 ================
+  POR ÍNDICE (candidatos frente a entrar al azar en tendencia alcista con la misma salida):
+    ^GSPC      n= 877 acierto 74.5% · media +0.12% (t=+1.9) · PF 1.18 | al azar: 72.0% / +0.10% | Δ +0.02 pts
+    ^IXIC      n= 550 acierto 74.5% · media +0.05% (t=+0.5) · PF 1.06 | al azar: 75.0% / +0.07% | Δ -0.03 pts
+    ^RUT       n= 500 acierto 68.4% · media -0.20% (t=-2.0) · PF 0.79 | al azar: 71.0% / -0.08% | Δ -0.12 pts
+    ^DJI       n= 493 acierto 73.8% · media +0.06% (t=+0.7) · PF 1.09 | al azar: 72.0% / +0.01% | Δ +0.05 pts
+    ^FTSE      n= 591 acierto 72.1% · media +0.04% (t=+0.6) · PF 1.06 | al azar: 71.1% / -0.04% | Δ +0.08 pts
+    ^GDAXI     n= 447 acierto 72.5% · media +0.07% (t=+0.6) · PF 1.08 | al azar: 73.2% / +0.08% | Δ -0.01 pts
+    ^FCHI      n= 458 acierto 73.6% · media +0.14% (t=+1.3) · PF 1.17 | al azar: 71.0% / +0.00% | Δ +0.13 pts
+    ^N225      n= 432 acierto 71.3% · media +0.04% (t=+0.3) · PF 1.04 | al azar: 68.2% / -0.08% | Δ +0.12 pts
+    ^HSI       n= 432 acierto 70.4% · media +0.01% (t=+0.1) · PF 1.01 | al azar: 69.0% / -0.09% | Δ +0.10 pts
+    ^GSPTSE    n= 621 acierto 72.3% · media -0.03% (t=-0.5) · PF 0.95 | al azar: 73.1% / -0.02% | Δ -0.01 pts
+    ^BVSP      n= 427 acierto 70.5% · media +0.11% (t=+0.6) · PF 1.08 | al azar: 69.8% / +0.07% | Δ +0.04 pts
+    ^AXJO      n= 347 acierto 74.4% · media +0.08% (t=+1.0) · PF 1.15 | al azar: 73.2% / -0.03% | Δ +0.10 pts
+    ^IBEX      n= 382 acierto 73.8% · media +0.05% (t=+0.4) · PF 1.05 | al azar: 71.7% / +0.07% | Δ -0.03 pts
+    ^STOXX50E  n= 237 acierto 73.0% · media +0.13% (t=+1.0) · PF 1.18 | al azar: 70.1% / -0.01% | Δ +0.13 pts
+    ^KS11      n= 332 acierto 70.2% · media +0.03% (t=+0.2) · PF 1.03 | al azar: 70.1% / +0.06% | Δ -0.03 pts
+    ^BSESN     n= 384 acierto 70.8% · media +0.05% (t=+0.4) · PF 1.05 | al azar: 71.3% / +0.00% | Δ +0.05 pts
+    ^TWII      n= 362 acierto 72.7% · media -0.05% (t=-0.4) · PF 0.95 | al azar: 69.8% / -0.11% | Δ +0.06 pts
+    ^MXX       n= 424 acierto 71.7% · media +0.00% (t=+0.0) · PF 1.00 | al azar: 71.8% / -0.06% | Δ +0.07 pts
+    ^NYA       n= 345 acierto 75.1% · media +0.09% (t=+1.0) · PF 1.15 | al azar: 74.5% / +0.07% | Δ +0.02 pts
+  → el mecanismo supera al azar en 13 de 19 índices
+  AGRUPADO POR DÉCADA (todos los índices disponibles en cada década):
+    1960s: n=  84 acierto 61.9% · media -0.07% | al azar 68.4% / +0.23% | Δ -0.30 pts (error típico ≈ 0.20)
+    1970s: n=  99 acierto 69.7% · media +0.29% | al azar 66.6% / +0.23% | Δ +0.06 pts (error típico ≈ 0.22)
+    1980s: n= 471 acierto 74.1% · media -0.00% | al azar 73.9% / +0.02% | Δ -0.02 pts (error típico ≈ 0.07)
+    1990s: n=1598 acierto 72.2% · media +0.04% | al azar 72.7% / +0.02% | Δ +0.03 pts (error típico ≈ 0.06)
+    2000s: n=2030 acierto 75.5% · media +0.11% | al azar 73.3% / +0.05% | Δ +0.07 pts (error típico ≈ 0.06)
+    2010s: n=2546 acierto 70.3% · media -0.09% | al azar 70.1% / -0.07% | Δ -0.02 pts (error típico ≈ 0.04)
+    2020s: n=1813 acierto 72.6% · media +0.14% | al azar 70.9% / +0.03% | Δ +0.11 pts (error típico ≈ 0.05)
+    TODO: n=8641 acierto 72.5% · media +0.04% (t=+1.2) · PF 1.05 | al azar +0.01% → Δ +0.03 pts
+  EN MERCADOS BAJISTAS FUERTES (años 1973-74, 2000-02, 2008): 2000: n=344, media -0.62% (al azar -0.73%) · 2008: n=36, media -1.27% (al azar -1.51%)
+
+================ CARTERA «solo S&P 500»: una posición con el 100 % del capital, el resto en liquidez al 0 % (aproximación) ================
+  salida rsi_S4_H10: 855 operaciones · en mercado 26% del tiempo · acierto 69.0% · media +0.09% · capital final x2.0 (+1.0% anual) | comprar y mantener x108.6 (+7.5% anual, sin dividendos) en 65 años
+    por década: 1960s: -22% (en mercado 21% · comprar y mantener +28%) · 1970s: -29% (en mercado 22% · comprar y mantener +17%) · 1980s: +29% (en mercado 29% · comprar y mantener +227%) · 1990s: +70% (en mercado 32% · comprar y mantener +316%) · 2000s: +23% (en mercado 20% · comprar y mantener -24%) · 2010s: +11% (en mercado 30% · comprar y mantener +190%) · 2020s: +17% (en mercado 27% · comprar y mantener +141%)
+  salida atr_T1_S4_H10: 818 operaciones · en mercado 27% del tiempo · acierto 74.3% · media +0.11% · capital final x2.1 (+1.1% anual) | comprar y mantener x108.6 (+7.5% anual, sin dividendos) en 65 años
+    por década: 1960s: -3% (en mercado 23% · comprar y mantener +28%) · 1970s: +12% (en mercado 25% · comprar y mantener +17%) · 1980s: +15% (en mercado 28% · comprar y mantener +227%) · 1990s: +38% (en mercado 33% · comprar y mantener +316%) · 2000s: +24% (en mercado 21% · comprar y mantener -24%) · 2010s: +2% (en mercado 30% · comprar y mantener +190%) · 2020s: -4% (en mercado 29% · comprar y mantener +141%)
+
+fin · 9s
