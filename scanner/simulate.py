@@ -29,6 +29,7 @@ COST_RT = {
 
 class Variant(NamedTuple):
     kind: str            # 'atr' (objetivo+stop+tiempo) | 'sig' (cierre sobre SMA5) | 'rsi' (RSI2>70) | 'ph' (cierre > máx. previo) | 'trl' (trailing stop)
+                         # | 'e34' / 'e89' (SOLO estudios: sale en la apertura siguiente al cierre bajo la EMA 34 / 89; en cortos, sobre ella)
     T: float             # objetivo en ATR (solo 'atr')
     S: float             # stop en ATR
     H: int               # barras máximas
@@ -138,7 +139,11 @@ def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List
             bars = np.where(any_ev, k + 1, H)
             kind = np.where(any_ev, np.where(exit_px >= tgt - 1e-12 * absE, 1, -1), 0)
         else:
-            if v.kind == 'sig':
+            if v.kind in ('e34', 'e89'):
+                cc_ = np.minimum(idx[:, None] + 1 + np.arange(hmax)[None, :], len(F['c']) - 1)
+                EM = F['ema34' if v.kind == 'e34' else 'ema89'][cc_] * (1 if sgn > 0 else -1)
+                cond = (C[:, :H] < EM[:, :H]) & np.isfinite(EM[:, :H])
+            elif v.kind == 'sig':
                 cond = (C[:, :H] > S5[:, :H]) & np.isfinite(S5[:, :H])
             elif v.kind == 'rsi':
                 cond = (R2[:, :H] > rthr) if sgn > 0 else (R2[:, :H] > rthr)
