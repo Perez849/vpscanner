@@ -15,12 +15,13 @@ from typing import Dict, List, Optional
 import numpy as np
 
 # variables usadas por el modelo (subconjunto de research.FEATURES)
+# Variables del modelo. Ablaciones en walk-forward (solo datos de desarrollo) mostraron que el Volume Profile
+# y los choques de noticias NO aportan (resultado idéntico sin ellos), mientras que quitar VIX/SPY o la
+# amplitud de mercado destruye la ventaja. Se mantienen solo las que aportan.
 MODEL_FEATURES = ['rsi2', 'ibs', 'ret1', 'ret5', 'ret10', 'atrp', 'atr_rel', 'dist200', 'dist50', 'slope200',
                   'dd20', 'dd52', 'pos52', 'bbz', 'vol_ratio', 'dn_streak', 'gap',
-                  'max_gap5', 'shock5', 'max_vr5', 'rel5',
                   'spy_up', 'spy_dist200', 'spy_rsi2', 'spy_dd60', 'vix', 'vix_z', 'vix_chg5',
-                  'b_up200', 'b_os', 'b_ret1', 'b_ret5',
-                  'vp_poc_atr', 'vp_val_atr', 'vp_pos']
+                  'b_up200', 'b_os', 'b_ret1', 'b_ret5']
 NB = 5
 
 
@@ -105,7 +106,7 @@ class LogitModel:
             return
         order = np.argsort(p_oos)
         p, y = p_oos[order], y_oos[order].astype(float)
-        edges = np.unique(np.quantile(p, np.linspace(0, 1, nbins + 1)))
+        edges = np.unique(np.quantile(p, [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95, .98, 1.0]))
         xs, ys, ws = [], [], []
         for a, b in zip(edges[:-1], edges[1:]):
             m = (p >= a) & (p <= b) if b == edges[-1] else (p >= a) & (p < b)

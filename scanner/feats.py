@@ -24,6 +24,17 @@ def _wilder(x: np.ndarray, n: int) -> np.ndarray:
     return pd.Series(x).ewm(alpha=1.0 / n, adjust=False, min_periods=n).mean().to_numpy()
 
 
+def _rsi_parts(c: np.ndarray, n: int):
+    d = np.diff(c, prepend=np.nan)
+    up = np.where(d > 0, d, 0.0)
+    dn = np.where(d < 0, -d, 0.0)
+    ru = np.full_like(c, np.nan)
+    rd = np.full_like(c, np.nan)
+    ru[1:] = _wilder(up[1:], n)
+    rd[1:] = _wilder(dn[1:], n)
+    return ru, rd
+
+
 def _rsi(c: np.ndarray, n: int) -> np.ndarray:
     d = np.diff(c, prepend=np.nan)
     up = np.where(d > 0, d, 0.0)
@@ -58,6 +69,7 @@ def build(b: Bars) -> Dict[str, np.ndarray]:
     for k in (5, 10, 20, 50, 100, 200):
         F[f'sma{k}'] = _sma(c, k)
     F['rsi2'] = _rsi(c, 2)
+    F['rsi2_ru'], F['rsi2_rd'] = _rsi_parts(c, 2)       # medias de Wilder: permiten calcular el cierre que daría RSI(2)=70
     F['rsi3'] = _rsi(c, 3)
     F['rsi14'] = _rsi(c, 14)
 

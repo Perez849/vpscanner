@@ -41,32 +41,16 @@ def day_of(s: str) -> int:
     return int(np.datetime64(s).astype('datetime64[D]').astype(np.int64))
 
 
+def year_of(day: np.ndarray) -> np.ndarray:
+    return (np.datetime64('1970-01-01') + day.astype('timedelta64[D]')).astype('datetime64[Y]').astype(int) + 1970
+
+
 # ═════════════════════════════════════════════════════════════════════════
 #  Construcción de la tabla de eventos
 # ═════════════════════════════════════════════════════════════════════════
-def synthetic_universe(n=60):
-    """Datos sintéticos para probar el pipeline sin red."""
-    sys.path.insert(0, os.path.join(HERE, '..'))
-    rng = np.random.default_rng(1)
-    uni, data = {}, {}
-    for k in range(n):
-        N = 2600
-        ret = rng.normal(0.0003, 0.016, N)
-        c = 100 * np.exp(np.cumsum(ret))
-        o = np.concatenate([[100], c[:-1]]) * np.exp(rng.normal(0, 0.006, N))
-        h = np.maximum(o, c) * np.exp(np.abs(rng.normal(0, 0.008, N)))
-        l = np.minimum(o, c) * np.exp(-np.abs(rng.normal(0, 0.008, N)))
-        v = rng.lognormal(16, 0.4, N)
-        t = (np.datetime64('2016-01-04').astype('datetime64[s]').astype(np.int64) + np.arange(N) * 86400).astype(float)
-        sym = f'SYN{k}'
-        data[sym] = {'t': t, 'o': o, 'h': h, 'l': l, 'c': c, 'v': v}
-        uni[sym] = {'yahoo': sym, 'group': GROUPS[k % 5]}
-    spy = data['SYN0']
-    data['SPY'] = spy
-    data['^VIX'] = {**spy, 'c': 15 + 5 * np.abs(np.sin(np.arange(len(spy['c'])) / 50))}
-    uni['SPY'] = {'yahoo': 'SPY', 'group': 'etf', 'aux': True}
-    uni['^VIX'] = {'yahoo': '^VIX', 'group': 'index', 'aux': True}
-    return uni, data
+def synthetic_universe(n=60, ar=0.0):
+    import synth
+    return synth.universe(n, ar, n_bars=3400)
 
 
 def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: List[SM.Variant],
@@ -309,243 +293,6 @@ def explore(EV: Dict, out_dir: str):
                   f"\n    dentro/sobre {fmt(stats(EV['pnl'][above, vi], day[above], sym[above]))}"
                   f"\n    POC>3ATR     {fmt(stats(EV['pnl'][far, vi], day[far], sym[far]))}")
     return rows
-
-
-
-# ═════════════════════════════════════════════════════════════════════════
-#  FINAL: procedimiento de selección + modelo de probabilidad
-# ═════════════════════════════════════════════════════════════════════════
-SEL = dict(min_n=400, min_syms=40, min_t_edge=2.5, min_edge=0.10, min_mean=0.20, min_wr=60.0,
-           min_year_frac=0.70, min_group_n=80, min_margin=4.0, min_pf=1.20)
-P_GRID = (0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85)
-
-
-def year_of(day: np.ndarray) -> np.ndarray:
-    return (np.datetime64('1970-01-01') + day.astype('timedelta64[D]')).astype('datetime64[Y]').astype(int) + 1970
-
-
-def select_cells(EV: Dict, mask: np.ndarray, sel: Dict = SEL, verbose: bool = True) -> List[Dict]:
-    """Celdas (setup × salida) que superan los umbrales sobre `mask`. Una por setup."""
-    setups_, variants = EV['setups'], EV['variants']
-    sid, grp, day, sym = EV['sid'], EV['grp'], EV['day'], EV['sym']
-    years = year_of(day)
-    base_i = {+1: setups_.index('B_up'), -1: setups_.index('B_dn')}
-    chosen: List[Dict] = []
-    for si, sname in enumerate(setups_):
-        st_ = SU.BY_ID[sname]
-        if st_.family in ('baseline', 'control'):
-            continue
-        ms = (sid == si) & mask
-        if ms.sum() < sel['min_n']:
-            continue
-        nsyms = len(np.unique(sym[ms]))
-        if nsyms < sel['min_syms']:
-            continue
-        best = None
-        for vi, vname in enumerate(variants):
-            p = EV['pnl'][:, vi]
-            st = stats(p[ms], day[ms], sym[ms])
-            if st['n'] < sel['min_n']:
-                continue
-            mb = (sid == base_i[st_.dir]) & mask
-            bs = stats(p[mb], day[mb], sym[mb])
-            edge = st['mean'] - bs['mean']
-            t_edge = edge / math.sqrt(st['se'] ** 2 + bs['se'] ** 2 + 1e-12)
-            if not (st['wr'] >= sel['min_wr'] and st['mean'] >= sel['min_mean'] and edge >= sel['min_edge'] and t_edge >= sel['min_t_edge']):
-                continue
-            be = -st['avg_loss'] / (st['avg_win'] - st['avg_loss']) * 100      # acierto de equilibrio
-            if st['wr_lo'] - be < sel['min_margin'] or st['pf'] < sel['min_pf']:
-                continue
-            # consistencia anual: % de años con media > 0 y ventaja > 0 frente al benchmark
-            ok_y = tot_y = 0
-            for y in np.unique(years[ms]):
-                my = ms & (years == y)
-                if my.sum() < 30:
-                    continue
-                by = (sid == base_i[st_.dir]) & mask & (years == y)
-                tot_y += 1
-                ok_y += (p[my][np.isfinite(p[my])].mean() > 0) and (p[my][np.isfinite(p[my])].mean() > p[by][np.isfinite(p[by])].mean())
-            if tot_y < 3 or ok_y / tot_y < sel['min_year_frac']:
-                continue
-            cand = {'setup': sname, 'variant': vname, 'vi': vi, 'st': st, 'base': bs, 'edge': edge, 't_edge': t_edge,
-                    'year_ok': f'{ok_y}/{tot_y}', 'nsyms': nsyms, 'be': be}
-            if best is None or st['wr_lo'] > best['st']['wr_lo']:
-                best = cand
-        if best is None:
-            continue
-        # grupos en los que funciona
-        vi = best['vi']; p = EV['pnl'][:, vi]
-        groups_ok, by_group = [], {}
-        for gi, gname in enumerate(GROUPS):
-            mg = ms & (grp == gi)
-            if mg.sum() < 20:
-                continue
-            sg = stats(p[mg], day[mg], sym[mg])
-            by_group[gname] = {k: round(float(sg[k]), 2) for k in ('n', 'wr', 'mean')}
-            if sg['n'] >= sel['min_group_n'] and sg['mean'] > 0.05 and sg['wr'] >= sel['min_wr'] - 5:
-                groups_ok.append(gname)
-        if not groups_ok:
-            continue
-        # recalcular estadísticos solo con los grupos válidos
-        gm = ms & np.isin(grp, [GROUPS.index(g) for g in groups_ok])
-        stg = stats(p[gm], day[gm], sym[gm])
-        v = SM.default_variants()[vi]
-        by_year = {}
-        for y in np.unique(years[gm]):
-            my = gm & (years == y)
-            if my.sum() >= 30:
-                sy = stats(p[my])
-                by_year[str(int(y))] = {'n': sy['n'], 'wr': round(sy['wr'], 1), 'mean': round(sy['mean'], 2)}
-        chosen.append({
-            'id': f'{sname}|{best["variant"]}', 'setup': sname, 'label': st_.label, 'family': st_.family, 'dir': st_.dir,
-            'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': groups_ok, 'vi': vi,
-            'stats': {'dev': {'n': stg['n'], 'wr': round(stg['wr'], 2), 'wr_lo': round(stg['wr_lo'], 2),
-                               'mean': round(stg['mean'], 3), 'pf': round(stg['pf'], 3),
-                               'avg_win': round(stg['avg_win'], 3), 'avg_loss': round(stg['avg_loss'], 3)},
-                      'base': {'wr': round(best['base']['wr'], 2), 'mean': round(best['base']['mean'], 3)},
-                      'edge': round(best['edge'], 3), 't_edge': round(best['t_edge'], 2), 'year_ok': best['year_ok'],
-                      'byYear': by_year, 'byGroup': by_group}})
-        if verbose:
-            print(f"  ✔ {sname:13s} {best['variant']:20s} n={stg['n']:6d} WR={stg['wr']:5.1f}% μ={stg['mean']:+.2f}% edge={best['edge']:+.2f} t={best['t_edge']:.1f} margen={best['st']['wr_lo'] - best['be']:+.1f} años {best['year_ok']} grupos={groups_ok}", flush=True)
-    return chosen
-
-
-def train_model(EV: Dict, cells: List[Dict], train_mask: np.ndarray):
-    """Entrena el modelo sobre los eventos de las celdas elegidas (etiqueta: gana con su propia salida)."""
-    import model as MD
-    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
-    sel_rows, y, sid_m, gid = [], [], [], []
-    cell_ids = [c['id'] for c in cells]
-    for k, c in enumerate(cells):
-        si = EV['setups'].index(c['setup'])
-        m = (EV['sid'] == si) & train_mask & np.isin(EV['grp'], [GROUPS.index(g) for g in c['groups']])
-        m &= np.isfinite(EV['pnl'][:, c['vi']])
-        idx = np.flatnonzero(m)
-        sel_rows.append(idx); y.append((EV['pnl'][idx, c['vi']] > 0).astype(np.float32))
-        sid_m.append(np.full(len(idx), k)); gid.append(EV['grp'][idx])
-    rows = np.concatenate(sel_rows); y = np.concatenate(y); sid_m = np.concatenate(sid_m); gid = np.concatenate(gid)
-    mdl = MD.LogitModel(fidx, cell_ids, GROUPS)
-    mdl.fit(EV['X'][rows], sid_m, gid, y)
-    return mdl, rows, y, sid_m, gid
-
-
-def walk_forward_oos(EV: Dict, cells: List[Dict], upto_day: int, first_year: int = 2019):
-    """Predicciones fuera de muestra: para cada año Y, modelo entrenado solo con eventos anteriores."""
-    import model as MD
-    years = year_of(EV['day'])
-    out_rows, out_p, out_y, out_sid = [], [], [], []
-    last_year = int(year_of(np.array([upto_day]))[0])
-    for Y in range(first_year, last_year + 1):
-        trm = EV['day'] < day_of(f'{Y}-01-01')
-        tem = (years == Y) & (EV['day'] <= upto_day)
-        if trm.sum() < 5000 or tem.sum() == 0:
-            continue
-        mdl, *_ = train_model(EV, cells, trm)
-        for k, c in enumerate(cells):
-            si = EV['setups'].index(c['setup'])
-            m = (EV['sid'] == si) & tem & np.isin(EV['grp'], [GROUPS.index(g) for g in c['groups']]) & np.isfinite(EV['pnl'][:, c['vi']])
-            idx = np.flatnonzero(m)
-            if len(idx) == 0:
-                continue
-            p = mdl.predict_raw(EV['X'][idx], np.full(len(idx), k), EV['grp'][idx])
-            out_rows.append(idx); out_p.append(p); out_y.append((EV['pnl'][idx, c['vi']] > 0).astype(np.float32)); out_sid.append(np.full(len(idx), k))
-    if not out_rows:
-        return None
-    return (np.concatenate(out_rows), np.concatenate(out_p), np.concatenate(out_y), np.concatenate(out_sid))
-
-
-def thr_table(title: str, p: np.ndarray, pnl: np.ndarray, day: np.ndarray, sym: np.ndarray, grid=P_GRID, base_wr: float | None = None):
-    print(f'\n--- {title}')
-    print(f"{'P>=':>5s} {'n':>7s} {'WR%':>6s} {'loWR':>6s} {'μ%':>7s} {'PF':>5s} {'avgW':>6s} {'avgL':>6s} {'alertas/día':>11s}")
-    ndays = max(1, len(np.unique(day)))
-    st0 = stats(pnl, day, sym)
-    print(f"{'todas':>5s} {st0['n']:7d} {st0['wr']:6.1f} {st0['wr_lo']:6.1f} {st0['mean']:+7.2f} {st0['pf']:5.2f} {st0['avg_win']:+6.2f} {st0['avg_loss']:+6.2f} {st0['n']/ndays:11.2f}")
-    res = {}
-    for g in grid:
-        m = p >= g
-        if m.sum() < 30:
-            continue
-        st = stats(pnl[m], day[m], sym[m])
-        res[g] = st
-        print(f"{g:5.2f} {st['n']:7d} {st['wr']:6.1f} {st['wr_lo']:6.1f} {st['mean']:+7.2f} {st['pf']:5.2f} {st['avg_win']:+6.2f} {st['avg_loss']:+6.2f} {st['n']/ndays:11.2f}")
-    return res
-
-
-def run_procedure(EV: Dict, cutoff: str, evaluate_from: str | None, verbose: bool = True):
-    """Aplica el procedimiento con datos hasta `cutoff`. Si evaluate_from, mide en test (>cutoff)."""
-    cut = day_of(cutoff)
-    mask = EV['day'] <= cut
-    print(f'\n########  PROCEDIMIENTO con datos hasta {cutoff}  ########', flush=True)
-    cells = select_cells(EV, mask, verbose=verbose)
-    print(f'  → {len(cells)} celdas seleccionadas', flush=True)
-    if not cells:
-        return {'cells': [], 'model': None}
-    # probabilidad: walk-forward para calibrar, modelo final sobre todo hasta cutoff
-    oos = walk_forward_oos(EV, cells, cut)
-    mdl, *_ = train_model(EV, cells, mask)
-    info = {}
-    if oos is not None:
-        rows, p, y, k = oos
-        import model as MD
-        print(f'  walk-forward {len(rows):,} eventos OOS · AUC={MD.auc(p, y):.3f}')
-        mdl.set_calibration(p, y)
-        pc = np.interp(p, [c[0] for c in mdl.calib], [c[1] for c in mdl.calib]) if len(mdl.calib) >= 2 else p
-        pnl_sel = np.array([EV['pnl'][r, cells[kk]['vi']] for r, kk in zip(rows, k)])
-        base_wr = float(y.mean() * 100)
-        info['wf'] = thr_table('Walk-forward DENTRO de muestra (años previos al corte) · probabilidad calibrada', pc, pnl_sel, EV['day'][rows], EV['sym'][rows])
-    out = {'cells': cells, 'model': mdl, 'cut': cut}
-    if evaluate_from:
-        te = EV['day'] > cut
-        rows_l, p_l, pnl_l, sid_l = [], [], [], []
-        for kk, c in enumerate(cells):
-            si = EV['setups'].index(c['setup'])
-            m = (EV['sid'] == si) & te & np.isin(EV['grp'], [GROUPS.index(g) for g in c['groups']]) & np.isfinite(EV['pnl'][:, c['vi']])
-            idx = np.flatnonzero(m)
-            if len(idx) == 0:
-                continue
-            rows_l.append(idx); sid_l.append(np.full(len(idx), kk)); pnl_l.append(EV['pnl'][idx, c['vi']])
-            p_l.append(mdl.predict(EV['X'][idx], np.full(len(idx), kk), EV['grp'][idx]))
-            st = stats(EV['pnl'][idx, c['vi']], EV['day'][idx], EV['sym'][idx])
-            print(f"  TEST {c['id']:34s} n={st['n']:5d} WR={st['wr']:5.1f}% (DEV {c['stats']['dev']['wr']:.1f}%) μ={st['mean']:+.2f}% (DEV {c['stats']['dev']['mean']:+.2f}%)", flush=True)
-        if rows_l:
-            rows = np.concatenate(rows_l); p = np.concatenate(p_l); pnl = np.concatenate(pnl_l)
-            info['test'] = thr_table('TEST CIEGO (después del corte) · todas las celdas · probabilidad calibrada', p, pnl, EV['day'][rows], EV['sym'][rows])
-            # mejor día-a-día: máx. N alertas por día
-            out['test_rows'] = (rows, p, pnl)
-    out['info'] = info
-    return out
-
-
-def registry_json(proc: Dict, last_day_str: str, universe_n: int, honest: Dict | None) -> Dict:
-    cells = []
-    for c in proc['cells']:
-        cc = {k: v for k, v in c.items() if k != 'vi'}
-        cells.append(cc)
-    reg = {'version': 2, 'generatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'dataThrough': last_day_str,
-           'universe': universe_n, 'periods': {'trainEnd': TRAIN_END, 'valEnd': VAL_END},
-           'rules': {'minP': 0.70, 'minEv': 0.15, 'watchP': 0.62, 'maxAlerts': 30},
-           'summary': honest, 'cells': cells}
-    if proc.get('model') is not None:
-        reg['model'] = proc['model'].to_json()
-    return reg
-
-
-def final(EV: Dict, out_dir: str, universe_n: int):
-    # 1) Procedimiento con corte en 2023-12-31 → test ciego 2024+
-    p1 = run_procedure(EV, VAL_END, evaluate_from=VAL_END)
-    honest = None
-    if p1.get('info', {}).get('test'):
-        t = p1['info']['test']
-        honest = {'procedureCut': VAL_END, 'test': {str(k): {kk: round(float(vv), 3) for kk, vv in v.items() if kk in ('n', 'wr', 'wr_lo', 'mean', 'pf')} for k, v in t.items()}}
-    # 2) Procedimiento con TODOS los datos → registro que se despliega
-    last_day = int(EV['day'].max())
-    last_str = str(np.datetime64('1970-01-01') + np.timedelta64(last_day, 'D'))
-    p2 = run_procedure(EV, last_str, evaluate_from=None)
-    reg = registry_json(p2, last_str, universe_n, honest)
-    os.makedirs(os.path.join(HERE, 'model'), exist_ok=True)
-    path = os.path.join(out_dir, 'validated.json')
-    json.dump(reg, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'), default=float)
-    print(f'\nregistro escrito: {path} ({os.path.getsize(path) / 1024:.0f} KB) · {len(reg["cells"])} celdas', flush=True)
 
 
 
@@ -800,9 +547,230 @@ def meta3_explore(EV: Dict, out_dir: str):
         sys.stdout.flush()
 
 
+# ═════════════════════════════════════════════════════════════════════════
+#  FINAL: estrategias (variante de salida + umbral de probabilidad) y prueba ciega
+# ═════════════════════════════════════════════════════════════════════════
+# Se despliega UNA sola regla de salida (elegida con datos de desarrollo). Las alternativas solo se evalúan para el informe.
+FINAL_VARIANTS = ['rsi_S2.5_H10']
+ALT_VARIANTS = ['rsi_S4_H10', 'sig_S4_H10', 'ph_S4_H10']
+CRIT = dict(min_n=600, min_wr=66.0, min_mean=0.35, min_pf=1.30, min_t=2.5, min_margin=3.0, min_years_pos=0.8)
+THR_GRID = [round(x, 2) for x in np.arange(0.55, 0.91, 0.01)]
+FIRST_WF_YEAR = 2019
+
+
+def wf_oos_p(EV, rows, FL, y, ok, upto_day):
+    """Probabilidad cruda fuera de muestra (walk-forward anual) para todos los eventos con día <= upto_day."""
+    import model as MD
+    day = EV['day'][rows]; years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+    p = np.full(len(rows), np.nan)
+    last_year = int(year_of(np.array([upto_day]))[0])
+    for Y in range(FIRST_WF_YEAR, last_year + 1):
+        trm = (day < day_of(f'{Y}-01-01')) & ok
+        tem = (years == Y) & (day <= upto_day)
+        if trm.sum() < 3000 or not tem.any():
+            continue
+        m = MD.LogitModel(fidx, ['f%d' % i for i in range(FL.shape[1])], GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+        p[tem] = m.predict_raw(X[tem], FL[tem], gid[tem])
+    return p
+
+
+def pick_threshold(pc, pnl, day, sym, years, m, crit=CRIT):
+    """Umbral de probabilidad más bajo que cumple todos los criterios en OOS (más alertas con la misma calidad)."""
+    for thr in THR_GRID:
+        mm = m & (pc >= thr)
+        if mm.sum() < crit['min_n']:
+            return None
+        st = stats(pnl[mm], day[mm], sym[mm])
+        be = -st['avg_loss'] / (st['avg_win'] - st['avg_loss']) * 100 if st['avg_win'] > 0 and st['avg_loss'] < 0 else 100.0
+        yrs = [int(y) for y in np.unique(years[mm]) if (mm & (years == y)).sum() >= 30]
+        pos = sum(1 for y in yrs if np.nanmean(pnl[mm & (years == y)]) > 0)
+        if (st['wr'] >= crit['min_wr'] and st['mean'] >= crit['min_mean'] and st['pf'] >= crit['min_pf'] and st['t_day'] >= crit['min_t']
+                and st['wr_lo'] - be >= crit['min_margin'] and len(yrs) >= 3 and pos / len(yrs) >= crit['min_years_pos']):
+            return thr, st, be, f'{pos}/{len(yrs)}'
+    return None
+
+
+def run_procedure(EV: Dict, cutoff_day: int, test: bool):
+    """Procedimiento completo con datos hasta cutoff_day. Si test=True evalúa en los eventos posteriores."""
+    import model as MD
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+    dev = day <= cutoff_day
+    strategies = []
+    print(f"\n########  PROCEDIMIENTO con datos hasta {np.datetime64('1970-01-01') + np.timedelta64(cutoff_day, 'D')}  ·  {dev.sum():,} eventos candidatos  ########", flush=True)
+    for vname in FINAL_VARIANTS:
+        vi = variants.index(vname)
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        p = wf_oos_p(EV, rows, FL, y, ok, cutoff_day)
+        m = dev & ok & np.isfinite(p)
+        if m.sum() < 5000:
+            continue
+        cal = MD.LogitModel(fidx, names, GROUPS)
+        cal.set_calibration(p[m], y[m])
+        xs = np.array([c[0] for c in cal.calib]); ys = np.array([c[1] for c in cal.calib])
+        pc = np.interp(p, xs, ys) if len(xs) >= 2 else p
+        print(f"\n  [{vname}] AUC OOS={MD.auc(p[m], y[m]):.3f} · sin modelo: {fmt(stats(pnl[m], day[m], sym[m]))}")
+        pk = pick_threshold(pc, pnl, day, sym, years, m)
+        if pk is None:
+            print('     ✘ ningún umbral cumple los criterios → variante descartada')
+            continue
+        # grupos de activos en los que de verdad funciona (el resto se excluye automáticamente)
+        allowed = []
+        for gi, gname in enumerate(GROUPS):
+            mg = m & (pc >= pk[0]) & (gid == gi)
+            if mg.sum() >= 80:
+                sg_ = stats(pnl[mg], day[mg], sym[mg])
+                ok_g = sg_['mean'] > 0.05 and sg_['wr'] >= CRIT['min_wr'] - 6
+                print(f"       grupo {gname:9s} {fmt(sg_)} → {'ok' if ok_g else 'EXCLUIDO'}")
+                if ok_g:
+                    allowed.append(gi)
+            elif mg.sum() > 0:
+                print(f"       grupo {gname:9s} n={mg.sum()} (<80, sin evidencia suficiente) → EXCLUIDO")
+        m2 = m & np.isin(gid, allowed)
+        pk = pick_threshold(pc, pnl, day, sym, years, m2)
+        if pk is None:
+            print('     ✘ tras excluir grupos ningún umbral cumple → descartada')
+            continue
+        m = m2
+        thr, st, be, yr_ok = pk
+        print(f"     ✔ umbral calibrado P≥{thr:.2f} en {[GROUPS[g] for g in allowed]}: {fmt(st)} · t={st['t_day']:.1f} · acierto de equilibrio {be:.1f}% · años positivos {yr_ok}")
+        mm = m & (pc >= thr)
+        by_year = {}
+        for Y in np.unique(years[mm]):
+            my = mm & (years == Y)
+            if my.sum() >= 30:
+                sy = stats(pnl[my]); by_year[str(int(Y))] = {'n': sy['n'], 'wr': round(sy['wr'], 1), 'mean': round(sy['mean'], 2)}
+        by_group = {}
+        for gi, gname in enumerate(GROUPS):
+            mg = mm & (gid == gi)
+            if mg.sum() >= 30:
+                sg_ = stats(pnl[mg]); by_group[gname] = {'n': sg_['n'], 'wr': round(sg_['wr'], 1), 'mean': round(sg_['mean'], 2)}
+        final_m = MD.LogitModel(fidx, names, GROUPS).fit(X[dev & ok], FL[dev & ok], gid[dev & ok], y[dev & ok])
+        final_m.calib = cal.calib
+        v = SM.default_variants()[vi]
+        strategies.append({
+            'id': vname, 'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'thr': thr, 'vi': vi,
+            'groups': [GROUPS[g] for g in allowed], 'gids': allowed,
+            'ev': {'aw': round(st['avg_win'], 3), 'al': round(st['avg_loss'], 3)},
+            'stats': {'oos': {k: round(float(st[k]), 3) for k in ('n', 'wr', 'wr_lo', 'mean', 'pf', 't_day', 'avg_win', 'avg_loss')},
+                      'be': round(be, 1), 'byYear': by_year, 'byGroup': by_group},
+            'model': final_m})
+    out = {'strategies': strategies, 'names': names}
+    if test:   # alternativas SOLO informativas (no se despliegan)
+        te_ = day > cutoff_day
+        print('\n  (informativo) otras reglas de salida con el mismo procedimiento, evaluadas en la prueba ciega:')
+        for vname in ALT_VARIANTS:
+            vi = variants.index(vname)
+            pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl); y = (pnl > 0).astype(np.float32)
+            p = wf_oos_p(EV, rows, FL, y, ok, cutoff_day)
+            m = dev & ok & np.isfinite(p)
+            if m.sum() < 5000:
+                continue
+            cal = MD.LogitModel(fidx, names, GROUPS); cal.set_calibration(p[m], y[m])
+            xs = np.array([c[0] for c in cal.calib]); ys = np.array([c[1] for c in cal.calib])
+            pc = np.interp(p, xs, ys)
+            pk = pick_threshold(pc, pnl, day, sym, years, m)
+            if pk is None:
+                print(f'     {vname}: no supera los criterios en desarrollo'); continue
+            fm = MD.LogitModel(fidx, names, GROUPS).fit(X[dev & ok], FL[dev & ok], gid[dev & ok], y[dev & ok]); fm.calib = cal.calib
+            pt = fm.predict(X, FL, gid); mt = te_ & ok & (pt >= pk[0])
+            print(f"     {vname}: umbral {pk[0]:.2f} · desarrollo {fmt(pk[1])} · TEST {fmt(stats(pnl[mt], day[mt], sym[mt]))}")
+    if test and strategies:
+        te = (day > cutoff_day)
+        print(f'\n  ====== PRUEBA CIEGA (eventos posteriores al corte: {te.sum():,}) ======', flush=True)
+        best_pc = np.full(len(rows), -1.0); best_pnl = np.full(len(rows), np.nan); best_k = np.full(len(rows), -1)
+        for k, sg_ in enumerate(strategies):
+            vi = sg_['vi']; pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+            p = sg_['model'].predict(X, FL, gid)           # con calibración OOS
+            mt = te & ok & np.isin(gid, sg_['gids'])
+            for thr in (sg_['thr'], 0.70, 0.75, 0.80):
+                mm = mt & (p >= thr)
+                if mm.sum() >= 30:
+                    print(f"   {sg_['id']:14s} P≥{thr:.2f}: {fmt(stats(pnl[mm], day[mm], sym[mm]))}")
+            sel = mt & (p >= sg_['thr']) & (p > best_pc)
+            best_pc[sel] = p[sel]; best_pnl[sel] = pnl[sel]; best_k[sel] = k
+        mm = best_k >= 0
+        # tope diario: solo las N mejores señales por día (en un día de pánico hay cientos, todas correlacionadas)
+        for cap in (5, 15):
+            idx_ = np.flatnonzero(mm)
+            o_ = idx_[np.lexsort((-best_pc[idx_], day[idx_]))]
+            d_ = day[o_]
+            first = np.concatenate([[0], np.flatnonzero(np.diff(d_)) + 1])
+            rank = np.arange(len(o_)) - np.repeat(first, np.diff(np.concatenate([first, [len(o_)]])))
+            sel_ = o_[rank < cap]
+            if len(sel_) >= 30:
+                print(f"   con tope de {cap} señales/día: {fmt(stats(best_pnl[sel_], day[sel_], sym[sel_]))}")
+        if mm.sum() < 5:
+            print('   (sin señales en la prueba ciega)')
+            return out
+        st = stats(best_pnl[mm], day[mm], sym[mm])
+        ny = max(1, len(np.unique(year_of(day[te])))) 
+        ndays = max(1, len(np.unique(day[te])))
+        print(f"   COMBINADO (mejor estrategia por señal, P≥umbral): {fmt(st)} · t={st['t_day']:.1f} · {mm.sum() / ndays:.2f} alertas/día de mercado")
+        for Y in sorted(set(year_of(day[te]))):
+            my = mm & (year_of(day) == Y)
+            sy = stats(best_pnl[my]); print(f"      {Y}: n={sy.get('n', 0)} WR={sy.get('wr', 0):.1f}% μ={sy.get('mean', 0):+.2f}% PF={sy.get('pf', 0):.2f}")
+        tab = {}
+        for g in (0.65, 0.70, 0.75, 0.80):
+            sel = (best_k >= 0) | True
+            # umbral global sobre la mejor probabilidad calibrada de cualquier estrategia
+            pcs = np.full(len(rows), -1.0); pn = np.full(len(rows), np.nan)
+            for k, sg_ in enumerate(strategies):
+                vi = sg_['vi']; pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl) & te & np.isin(gid, sg_['gids'])
+                p = sg_['model'].predict(X, FL, gid)
+                better = ok & (p > pcs)
+                pcs[better] = p[better]; pn[better] = pnl[better]
+            mq = (pcs >= g) & np.isfinite(pn)
+            if mq.sum() >= 30:
+                sq = stats(pn[mq], day[mq], sym[mq]); tab[str(g)] = {k: round(float(sq[k]), 3) for k in ('n', 'wr', 'wr_lo', 'mean', 'pf')}
+                print(f"   P≥{g:.2f} (mejor prob. de cualquier estrategia): {fmt(sq)}")
+        out['test_table'] = tab
+        out['test_stats'] = {k: round(float(st[k]), 3) for k in ('n', 'wr', 'wr_lo', 'mean', 'pf')} if st.get('n') else None
+    return out
+
+
+def registry_json(proc: Dict, last_day_str: str, universe_n: int, honest: Dict | None, names: List[str]) -> Dict:
+    strategies = []
+    for sg_ in proc['strategies']:
+        d = {k: v for k, v in sg_.items() if k not in ('model', 'vi', 'gids')}
+        d['model'] = sg_['model'].to_json()
+        strategies.append(d)
+    return {'version': 3, 'generatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'dataThrough': last_day_str,
+            'universe': universe_n, 'periods': {'firstWalkForward': FIRST_WF_YEAR, 'blindFrom': '2024-01-01'},
+            'criteria': CRIT,
+            'rules': {'maxAlerts': 15, 'watchMargin': 0.05},
+            'patterns': [{'id': n, 'label': SU.BY_ID[n].label} for n in names],
+            'summary': honest, 'strategies': strategies}
+
+
+def final(EV: Dict, out_dir: str, universe_n: int):
+    cut = day_of(VAL_END)
+    # 1) Procedimiento con corte 2023-12-31 → prueba ciega 2024+ (cifras honestas del procedimiento)
+    p1 = run_procedure(EV, cut, test=True)
+    honest = None
+    if p1.get('test_table') is not None:
+        honest = {'procedureCut': VAL_END, 'test': p1['test_table'], 'combined': p1.get('test_stats')}
+    # 2) Procedimiento con TODOS los datos → registro que se despliega
+    last_day = int(EV['day'].max())
+    last_str = str(np.datetime64('1970-01-01') + np.timedelta64(last_day, 'D'))
+    p2 = run_procedure(EV, last_day, test=False)
+    reg = registry_json(p2, last_str, universe_n, honest, p2['names'] if p2.get('names') else [])
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, 'validated.json')
+    json.dump(reg, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'), default=float)
+    print(f'\nregistro escrito: {path} ({os.path.getsize(path) / 1024:.0f} KB) · {len(reg["strategies"])} estrategias', flush=True)
+
+
 def load_data(args):
     if args.synthetic:
-        return synthetic_universe(args.synthetic)
+        return synthetic_universe(args.synthetic, args.synthetic_ar)
     uni = UV.load()
     syms = list(uni.keys())
     if args.limit:
@@ -822,6 +790,7 @@ def main():
     ap.add_argument('--workers', type=int, default=8)
     ap.add_argument('--limit', type=int, default=0)
     ap.add_argument('--synthetic', type=int, default=0)
+    ap.add_argument('--synthetic-ar', type=float, default=0.0)
     ap.add_argument('--out', default=os.path.join(HERE, 'research_out'))
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)

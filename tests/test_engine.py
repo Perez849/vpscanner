@@ -13,19 +13,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 import feats, setups, simulate, track
 
 
+import synth as _synth
+
+
 def synth(n=2500, seed=0, mu=0.0, sig=0.015, ar=0.0):
-    r = np.random.default_rng(seed)
-    e = r.normal(mu, sig, n)
-    ret = np.zeros(n)
-    for i in range(1, n):
-        ret[i] = e[i] + ar * ret[i - 1]
-    c = 100 * np.exp(np.cumsum(ret))
-    o = np.concatenate([[100], c[:-1]]) * np.exp(r.normal(0, sig * 0.4, n))
-    h = np.maximum(o, c) * np.exp(np.abs(r.normal(0, sig * 0.5, n)))
-    l = np.minimum(o, c) * np.exp(-np.abs(r.normal(0, sig * 0.5, n)))
-    v = r.lognormal(15, 0.4, n)
-    t = (np.arange(n) * 86400 + 1.5e9).astype(float)
-    return {'t': t, 'o': o, 'h': h, 'l': l, 'c': c, 'v': v}
+    return _synth.series(n, seed, mu, sig, ar)
 
 
 def test_vectorized_equals_scalar():
@@ -94,7 +86,29 @@ def test_causality():
     print('ok · indicadores, perfil de volumen y señales son causales')
 
 
+def test_exit_trigger_formula():
+    """El cierre que da RSI(2)=70 según la fórmula coincide con recalcular el RSI con ese cierre."""
+    b = synth(seed=11, ar=-0.1)
+    F = feats.build(b)
+    n = 0
+    for i in range(300, 2400, 37):
+        ru, rd = F['rsi2_ru'][i], F['rsi2_rd'][i]
+        d = max(0.0, (7.0 / 3.0) * rd - ru)
+        if d <= 0 or not np.isfinite(d):
+            continue
+        for delta, expect in ((d * 1.001, True), (d * 0.999, False)):
+            bb = {k: v[:i + 2].copy() for k, v in b.items()}
+            bb['c'][i + 1] = b['c'][i] + delta
+            bb['h'][i + 1] = max(bb['h'][i + 1], bb['c'][i + 1]); bb['l'][i + 1] = min(bb['l'][i + 1], bb['c'][i + 1])
+            r = feats.build(bb)['rsi2'][i + 1]
+            assert (r > 70) == expect, (i, delta, r)
+        n += 1
+    assert n > 10
+    print(f'ok · fórmula del precio de activación de la salida RSI(2)>70 ({n} casos)')
+
+
 if __name__ == '__main__':
+    test_exit_trigger_formula()
     test_causality()
     test_vectorized_equals_scalar()
     test_no_edge_on_random_walk()

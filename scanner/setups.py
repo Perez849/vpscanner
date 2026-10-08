@@ -163,3 +163,27 @@ def detect(F: Dict[str, np.ndarray], group: str, setups: List[Setup] | None = No
         idx = np.flatnonzero(m).astype(np.int64)
         out[s.id] = idx
     return out
+
+
+UNION_COOLDOWN = 5
+
+
+def long_pattern_ids() -> List[str]:
+    """Patrones que generan candidatos (largos, sin benchmark ni controles). Orden = banderas del modelo."""
+    return [s.id for s in SETUPS if s.dir > 0 and s.family not in ('baseline', 'control')]
+
+
+def candidate_at_last(F: Dict[str, np.ndarray], group: str, pattern_ids: List[str]):
+    """
+    ¿Hay candidato en la última barra? Devuelve el vector de banderas (qué patrones saltaron) o None.
+    Misma regla que la investigación: algún patrón dispara hoy y NINGUNO lo hizo en las 4 barras previas.
+    """
+    n = len(F['c'])
+    last = n - 1
+    ev = detect(F, group, [BY_ID[i] for i in pattern_ids])
+    fire = np.zeros(n, dtype=bool)
+    for idx in ev.values():
+        fire[idx] = True
+    if not fire[last] or fire[max(0, last - (UNION_COOLDOWN - 1)):last].any():
+        return None
+    return np.array([1.0 if (len(ev[i]) and ev[i][-1] == last) else 0.0 for i in pattern_ids], dtype=np.float32)
