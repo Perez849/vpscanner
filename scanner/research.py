@@ -319,7 +319,7 @@ def _block(pnl, day, sym):
     return {k: round(float(st[k]), 3) for k in ('n', 'wr', 'wr_lo', 'mean', 'pf', 't_day', 'avg_win', 'avg_loss') if k in st}
 
 
-def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None):
+def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None, curves=None):
     import model as MD
     variants = EV['variants']
     vi = variants.index(plan['id'])
@@ -435,6 +435,8 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
         for M_, f_ in ((10, 0.10), (20, 0.05)):
             o = portfolio_sim(cal_d, ti, bars_, res_, rk5, M_, f_)
             ports[f'{M_}x{int(f_ * 100)}'] = {k: round(v, 1) for k, v in o.items() if k != 'curve'} | {'positions': M_, 'size': int(f_ * 100)}
+            if curves is not None:
+                curves[(plan['id'], f'{M_}x{int(f_ * 100)}')] = o['curve']
         i0 = int(np.searchsorted(cal_d, day_of(PORT_START))); c_ = spy['c'][i0:]
         extra['portfolio'] = ports
         extra['spyHold'] = {'cagr': round(float((c_[-1] / c_[0]) ** (252 / len(c_)) - 1) * 100, 1),

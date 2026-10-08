@@ -11,6 +11,7 @@ descargan las retiradas que aún cotizan (las que quebraron o se fusionaron ya n
 y se repiten las pruebas: sistema de rebotes (`pit`) y búsqueda masiva a medio plazo (`pit_mid`) solo con acciones MIEMBRO EN ESA FECHA.
 """
 from __future__ import annotations
+import math
 import re
 import sys
 from io import StringIO
@@ -383,12 +384,13 @@ def run_deep(uni: Dict, data: Dict, args, out_dir: str):
         'C · pertenencia histórica (con retiradas) y sin eventos de S&P 400/600 anteriores a su tabla': pit_ok & ~unk,
     }
     summary = {}
+    curves_by_lab: Dict[str, Dict] = {}
     for lab, mask in variants.items():
         print(f'\n================ {lab} · {int(mask.sum()):,} candidatos ================', flush=True)
         plans = []
         for pl in RS.PLANS:
             try:
-                plans.append(RS.build_plan(EV, rows[mask], FL[mask], names, pl, last_day, spy=data2.get('SPY')))
+                plans.append(RS.build_plan(EV, rows[mask], FL[mask], names, pl, last_day, spy=data2.get('SPY'), curves=curves_by_lab.setdefault(lab, {})))
             except (KeyError, ValueError, IndexError) as e:
                 print(f'     (sin resultado: {type(e).__name__} {e})', flush=True)
                 plans.append(None)
@@ -407,4 +409,48 @@ def run_deep(uni: Dict, data: Dict, args, out_dir: str):
             print(f"    {lab[:70]}\n       n={o['n']:.0f} · acierto {o['wr']:.1f}% · media {o['mean']:+.2f}% · PF {o['pf']:.2f} · alfa vs S&P {vs.get('alpha', float('nan')):+.2f}% (t={vs.get('alphaT', float('nan')):.1f}) · "
                   f"cartera 10×10%: {pf.get('cagr', float('nan')):+.1f}% anual / caída {pf.get('dd', float('nan')):.0f}% / Sharpe {pf.get('sharpe', float('nan')):.2f} (S&P: {p['stats'].get('spyHold', {}).get('cagr', float('nan')):+.1f}% / {p['stats'].get('spyHold', {}).get('dd', float('nan')):.0f}%) · grupos {p['groups']}\n"
                   f"       por año: " + ' '.join(f"{y}:{v['wr']:.0f}%/{v['mean']:+.2f}" for y, v in by.items()))
+    sys.stdout.flush()
+    lab_c = [k for k in curves_by_lab if k.startswith('C')][0]
+    cv = curves_by_lab[lab_c].get(('rsi_S4_H10', '10x10'))
+    if cv is not None:
+        combos(data2, cv)
+
+
+def combos(data: Dict, curve: np.ndarray):
+    """¿Cómo repartir el dinero? S&P 500 (comprar y mantener), tendencia (sobre su SMA200) y rebotes con pertenencia histórica, 2008–2026."""
+    spy = data['SPY']
+    cal = (spy['t'] // 86400).astype(np.int64)
+    n = len(cal)
+    c = spy['c']
+    r_spy = np.r_[0.0, c[1:] / c[:-1] - 1]
+    sma = pd.Series(c).rolling(200).mean().to_numpy()
+    cash_sym = 'BIL' if 'BIL' in data else 'SHY'
+    cb = data[cash_sym]
+    cs = pd.Series(cb['c'], index=(cb['t'] // 86400).astype(np.int64))
+    cs = cs[~cs.index.duplicated(keep='last')].reindex(cal).ffill()
+    r_cash = np.nan_to_num(cs.pct_change().to_numpy())
+    up = np.r_[False, c[:-1] > sma[:-1]]                                  # la regla se decide con el cierre de ayer
+    r_tr = np.where(up, r_spy, r_cash)
+    full = np.ones(n)
+    full[n - len(curve):] = curve
+    r_dip = np.r_[0.0, full[1:] / full[:-1] - 1]
+    st = n - len(curve) + 1
+    ix = slice(st, n)
+    yrs = pd.to_datetime(cal[ix] * 86400, unit='s').year.to_numpy()
+
+    def row(name, r):
+        r = np.nan_to_num(r[ix])
+        eq = np.cumprod(1 + r)
+        y = len(r) / 252.0
+        by = {Y: float(np.prod(1 + r[yrs == Y]) - 1) * 100 for Y in sorted(set(yrs))}
+        print(f"    {name:44s} {(eq[-1] ** (1 / y) - 1) * 100:+6.1f}% anual · vol {r.std() * math.sqrt(252) * 100:4.1f}% · Sharpe {r.mean() / (r.std() + 1e-12) * math.sqrt(252):4.2f} · caída {((eq / np.maximum.accumulate(eq)) - 1).min() * 100:5.1f}% · 2008 {by.get(2008, float('nan')):+5.0f}% · 2018 {by.get(2018, float('nan')):+4.0f}% · 2022 {by.get(2022, float('nan')):+4.0f}%")
+    print(f"\n################ CÓMO REPARTIR EL DINERO · {pd.to_datetime(cal[st] * 86400, unit='s').date()} → {pd.to_datetime(cal[-1] * 86400, unit='s').date()} (rebotes con pertenencia histórica, curva a precio realizado; el resto en liquidez {cash_sym}) ################")
+    row('S&P 500 comprar y mantener', r_spy)
+    row('Tendencia: S&P 500 sobre SMA200, si no liquidez', r_tr)
+    row('Rebotes (Equilibrado, 10 posiciones × 10 %)', r_dip)
+    row('50 % tendencia + 50 % rebotes', 0.5 * r_tr + 0.5 * r_dip)
+    row('70 % tendencia + 30 % rebotes', 0.7 * r_tr + 0.3 * r_dip)
+    row('50 % S&P 500 + 50 % rebotes', 0.5 * r_spy + 0.5 * r_dip)
+    row('S&P 500 + rebotes encima (sin apalancar la base)', r_spy + 0.5 * r_dip)
+    row('70 % tendencia + 30 % rebotes, apalancado x1,5', 1.5 * (0.7 * r_tr + 0.3 * r_dip))
     sys.stdout.flush()
