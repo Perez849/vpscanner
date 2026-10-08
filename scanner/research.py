@@ -768,6 +768,62 @@ def final(EV: Dict, out_dir: str, universe_n: int):
     print(f'\nregistro escrito: {path} ({os.path.getsize(path) / 1024:.0f} KB) · {len(reg["strategies"])} estrategias', flush=True)
 
 
+
+def regime_explore(EV: Dict, out_dir: str):
+    """Descriptivo sobre TODOS los años: ¿qué relaciones con el contexto son estables entre años?"""
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fi = {f: j for j, f in enumerate(FEATURES)}
+    ys = list(range(2017, 2027))
+    print(f'\n######## REGIMEN (todos los años, {len(rows):,} candidatos largos)', flush=True)
+    for vname in ('rsi_S2.5_H10', 'sig_S4_H10'):
+        vi = variants.index(vname)
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        print(f'\n=== {vname}: todos los candidatos por año (WR% / μ% / n / días distintos)')
+        line = ''
+        for Y in ys:
+            m = ok & (years == Y)
+            if m.sum() >= 30:
+                st = stats(pnl[m]); line += f" {Y}:{st['wr']:.0f}/{st['mean']:+.2f}/{st['n']}/{len(np.unique(day[m]))}"
+        print(line)
+        specs = {
+            'vix': [0, 13, 16, 20, 25, 35, 999], 'vix_z': [-9, -1, 0, 1, 2, 99], 'b_up200': [0, 30, 50, 65, 80, 101],
+            'b_os': [0, 2, 5, 10, 20, 101], 'spy_dist200': [-99, 0, 3, 6, 10, 99], 'spy_dd60': [-99, -10, -5, -2, -0.01, 1],
+            'b_ret5': [-99, -4, -2, 0, 2, 99], 'dd52': [-99, -30, -20, -10, -5, 1], 'rsi2': [0, 2, 5, 10, 15, 30],
+            'atrp': [0, 1.5, 2.5, 4, 6, 99], 'dist200': [-99, 0, 5, 10, 20, 999], 'ret5': [-99, -10, -6, -3, 0, 99],
+            'rs60': [-999, -10, 0, 10, 25, 999], 'ret120': [-999, 0, 15, 30, 60, 9999], 'vol_ratio': [0, 0.7, 1, 1.5, 2.5, 999],
+        }
+        for f, edges in specs.items():
+            col = X[:, fi[f]]
+            print(f'  -- {f} (WR/μ/n por año)')
+            for a, b in zip(edges[:-1], edges[1:]):
+                mb = ok & np.isfinite(col) & (col >= a) & (col < b)
+                if mb.sum() < 200:
+                    continue
+                st = stats(pnl[mb], day[mb], sym[mb])
+                line = f"     [{a:>6g},{b:>6g}) n={st['n']:6d} WR={st['wr']:4.1f} μ={st['mean']:+5.2f} |"
+                npos = 0; ntot = 0
+                for Y in ys:
+                    my = mb & (years == Y)
+                    if my.sum() >= 30:
+                        sy = stats(pnl[my]); line += f" {str(Y)[2:]}:{sy['wr']:.0f}/{sy['mean']:+.1f}/{sy['n']}"
+                        ntot += 1; npos += sy['mean'] > 0
+                    else:
+                        line += f' {str(Y)[2:]}:—'
+                print(line + f"  años+ {npos}/{ntot}")
+        # capitulaciones de mercado: días con mucha sobreventa generalizada
+        print(f'  -- días de capitulación (b_os>=10%) por año')
+        bos = X[:, fi['b_os']]
+        for Y in ys:
+            m = ok & (years == Y) & np.isfinite(bos) & (bos >= 10)
+            if m.sum() >= 20:
+                st = stats(pnl[m]); print(f"     {Y}: n={st['n']} días={len(np.unique(day[m]))} WR={st['wr']:.0f}% μ={st['mean']:+.2f}%")
+        sys.stdout.flush()
+
+
 def load_data(args):
     if args.synthetic:
         return synthetic_universe(args.synthetic, args.synthetic_ar)
@@ -783,7 +839,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'meta3', 'final'])
+    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'meta3', 'regime', 'final'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -809,6 +865,8 @@ def main():
         meta2_explore(EV, args.out)
     elif args.cmd == 'meta3':
         meta3_explore(EV, args.out)
+    elif args.cmd == 'regime':
+        regime_explore(EV, args.out)
     else:
         final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
     print(f'\nfin · {time.time() - t0:.0f}s', flush=True)

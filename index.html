@@ -119,7 +119,11 @@ const fmtTs=ts=>{if(!ts)return'—';try{return new Date(ts).toLocaleDateString('
 const fmtDate=iso=>{if(!iso)return'—';try{return new Date(iso).toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch{return iso;}};
 const GROUP_NAME={us_large:'EE.UU. grandes',us_mid:'EE.UU. medianas',us_small:'EE.UU. pequeñas',thematic:'Temáticos',etf:'ETF',crypto:'Cripto',fx:'Divisas',futures:'Futuros',eu:'Europa',index:'Índices'};
 const sideTxt=d=>d>0?'COMPRA':'VENTA';
-const exitTxt=(ex)=>ex.kind==='atr'?`objetivo +${ex.T}×ATR · stop ${ex.S}×ATR · máx ${ex.H} sesiones`:`salir cuando cierre sobre la media de 5 · stop ${ex.S}×ATR · máx ${ex.H} sesiones`;
+const exitTxt=(ex)=>ex.kind==='atr'?`objetivo +${ex.T}×ATR · stop ${ex.S}×ATR · máx ${ex.H} sesiones`
+  :ex.kind==='rsi'?`salir cuando el RSI(2) supere 70 · stop ${ex.S}×ATR · máx ${ex.H} sesiones`
+  :ex.kind==='ph'?`salir cuando cierre sobre el máximo previo · stop ${ex.S}×ATR · máx ${ex.H} sesiones`
+  :`salir cuando cierre sobre la media de 5 · stop ${ex.S}×ATR · máx ${ex.H} sesiones`;
+const tgtLabel=(lv)=>lv.targetPct!=null?sg(lv.targetPct,1)+'%':lv.exitTrigPct!=null?'≥ '+sg(lv.exitTrigPct,1)+'%':'señal';
 
 async function loadAll(){
   const get=n=>fetch(BASE+n+bust()).then(r=>r.ok?r.json():null).catch(()=>null);
@@ -137,20 +141,17 @@ function marketChips(){
   return `<div class="chips">
     <span class="chip ${m.spyUp?'g':'r'}">SPY ${m.spyUp?'sobre':'BAJO'} su SMA200 (${sg(m.spyDist200,1)}%)</span>
     <span class="chip ${stress?'r':calm?'g':'a'}">VIX ${f(m.vix,1)} · ${stress?'ESTRÉS':calm?'calma':'moderado'}</span>
+    ${m.breadthUp200!=null?`<span class="chip ${m.breadthUp200>=50?'g':'a'}">${f(m.breadthUp200,0)}% del universo sobre su SMA200</span>`:''}
     <span class="chip">${S.meta.symbols?.toLocaleString('es-ES')} activos escaneados</span>
     <span class="chip">${S.meta.oversoldUptrend??0} en sobreventa dentro de tendencia</span></div>`;
 }
 function honestyBanner(){
   const reg=S.reg,g=S.track?.stats?.global;
   let t='';
-  const tst=reg?.summary?.test;
-  if(tst){
-    const k=Object.keys(tst).map(Number).sort((a,b)=>a-b).find(x=>x>=0.70)||Object.keys(tst).map(Number).sort((a,b)=>a-b).pop();
-    const v=tst[String(k)]||tst[k.toFixed(2)];
-    if(v)t+=`<b>Prueba ciega (2024 en adelante, datos que el modelo nunca vio):</b> las señales con P ≥ ${Math.round(k*100)}% acertaron el <b>${f(v.wr,0)}%</b> (${v.n.toLocaleString('es-ES')} operaciones, ${sg(v.mean)}% por operación, neto de costes).<br>`;
-  }
+  const c=reg?.summary?.combined;
+  if(c&&c.n)t+=`<b>Prueba ciega (${(reg.summary.procedureCut||'').slice(0,4)*1+1} en adelante, datos que el modelo nunca vio):</b> las alertas del sistema acertaron el <b>${f(c.wr,0)}%</b> (${c.n.toLocaleString('es-ES')} operaciones, <b>${sg(c.mean)}%</b> por operación, neto de costes, factor de beneficio ${f(c.pf)}).<br>`;
   if(g&&g.n)t+=`<b>Resultado real en vivo desde el lanzamiento:</b> ${g.wr}% de acierto en ${g.n} operaciones cerradas (${sg(g.mean)}% por operación)${g.pExp!=null?` · el modelo esperaba ${g.pExp}%`:''}.`;
-  else t+=`<b>Seguimiento en vivo:</b> aún sin operaciones cerradas — cada alerta se registra y se mide con las mismas reglas que el backtest.`;
+  else t+=`<b>Seguimiento en vivo:</b> aún sin operaciones cerradas — cada alerta se registra y se mide con exactamente las mismas reglas que el backtest.`;
   return `<div class="note">${t}</div>`;
 }
 function rowsAlerts(){
@@ -169,7 +170,7 @@ function cardHtml(a){
     <div class="row"><span class="k">Ganancia esperada</span><span style="color:${col(a.ev)}">${sg(a.ev)}%</span></div>
     <div class="row"><span class="k">Referencia (cierre)</span><span>${f(a.sigClose)}</span></div>
     <div class="row"><span class="k" style="color:var(--amber)">◆ Stop</span><span style="color:var(--amber)">${sg(lv.stopPct,1)}%</span></div>
-    <div class="row"><span class="k" style="color:var(--emerald)">🎯 Objetivo</span><span style="color:var(--emerald)">${lv.targetPct!=null?sg(lv.targetPct,1)+'%':'SMA5'}</span></div>
+    <div class="row"><span class="k" style="color:var(--emerald)">🎯 Salida</span><span style="color:var(--emerald)">${tgtLabel(lv)}</span></div>
     <div class="tc-lbl">${a.label}<br><span class="dim">${GROUP_NAME[a.group]||a.group}${a.sector?' · '+a.sector:''}</span></div></div>`;
 }
 function alertasView(){
@@ -184,7 +185,7 @@ function alertasView(){
     h+=`<div class="topgrid">`+list.slice(0,6).map(cardHtml).join('')+`</div>`;
     const arrow=k=>S.sort===k?(S.dir<0?' ▼':' ▲'):'';
     h+=`<table><thead><tr><td data-s="sym">Activo${arrow('sym')}</td><td>Lado</td><td data-s="p" style="text-align:right">P(acierto)${arrow('p')}</td><td data-s="ev" style="text-align:right">Esperado${arrow('ev')}</td>
-      <td class="hide-sm">Patrón</td><td style="text-align:right" class="hide-sm">Stop</td><td style="text-align:right" class="hide-sm">Objetivo</td><td style="text-align:right" class="hide-sm">Máx.</td></tr></thead><tbody>`;
+      <td class="hide-sm">Patrón</td><td style="text-align:right" class="hide-sm">Stop</td><td style="text-align:right" class="hide-sm">Salida</td><td style="text-align:right" class="hide-sm">Máx.</td></tr></thead><tbody>`;
     for(const a of list){
       h+=`<tr onclick="openModal('${a.id}')"><td class="sym">${a.sym} <span class="dim" style="font-weight:400;font-size:10px;font-family:var(--f-text)">${GROUP_NAME[a.group]||''}</span></td>
         <td><span class="badge ${a.dir>0?'L':'S'}">${sideTxt(a.dir)}</span></td>
@@ -192,7 +193,7 @@ function alertasView(){
         <td style="text-align:right;color:${col(a.ev)}" class="mono">${sg(a.ev)}%</td>
         <td class="hide-sm" style="font-size:11px;color:var(--sub)">${a.label}</td>
         <td style="text-align:right;color:var(--amber)" class="mono hide-sm">${sg(a.levels.stopPct,1)}%</td>
-        <td style="text-align:right;color:var(--emerald)" class="mono hide-sm">${a.levels.targetPct!=null?sg(a.levels.targetPct,1)+'%':'SMA5'}</td>
+        <td style="text-align:right;color:var(--emerald)" class="mono hide-sm">${tgtLabel(a.levels)}</td>
         <td style="text-align:right" class="mono hide-sm">${a.exit.H}d</td></tr>`;
     }
     h+=`</tbody></table>`;
@@ -219,9 +220,9 @@ function trackView(){
     <div class="note">Si <b>acierto real</b> y <b>esperado</b> se parecen, las probabilidades son fiables. Si el real queda muy por debajo durante muchas operaciones, el sistema debe revisarse — por eso se mide aquí, en vivo y sin retoques.</div>`;
   const rowO=t=>`<tr onclick="openModal('${t.id}',true)"><td class="sym">${t.sym}</td><td><span class="badge ${t.dir>0?'L':'S'}">${sideTxt(t.dir)}</span></td><td class="hide-sm mono dim">${fmtTs(t.sigTs)}</td>
       <td class="mono" style="text-align:right">${t.entry!=null?f(t.entry):'—'}</td><td class="mono" style="text-align:right">${t.curPrice!=null?f(t.curPrice):'—'}</td>
-      <td class="mono" style="text-align:right;color:${col(t.curPnl||0)}">${t.curPnl!=null?sg(t.curPnl)+'%':'—'}</td><td class="mono hide-sm" style="text-align:right">${t.stop!=null?f(t.stop):'—'}</td><td class="mono hide-sm" style="text-align:right">${t.target!=null?f(t.target):'SMA5'}</td><td class="mono" style="text-align:right">${t.bars||0}/${t.exit.H}</td><td class="mono" style="text-align:right">${t.p!=null?Math.round(t.p*100)+'%':'—'}</td></tr>`;
+      <td class="mono" style="text-align:right;color:${col(t.curPnl||0)}">${t.curPnl!=null?sg(t.curPnl)+'%':'—'}</td><td class="mono hide-sm" style="text-align:right">${t.stop!=null?f(t.stop):'—'}</td><td class="mono hide-sm" style="text-align:right">${t.target!=null?f(t.target):t.exitTrig!=null?'≥ '+f(t.exitTrig):'—'}</td><td class="mono" style="text-align:right">${t.bars||0}/${t.exit.H}</td><td class="mono" style="text-align:right">${t.p!=null?Math.round(t.p*100)+'%':'—'}</td></tr>`;
   h+=`<h2>Abiertas y pendientes (${ab.length+pe.length})</h2>`;
-  h+=(ab.length+pe.length)?`<table><thead><tr><td>Activo</td><td>Lado</td><td class="hide-sm">Señal</td><td style="text-align:right">Entrada</td><td style="text-align:right">Actual</td><td style="text-align:right">Flotante</td><td class="hide-sm" style="text-align:right">Stop</td><td class="hide-sm" style="text-align:right">Obj.</td><td style="text-align:right">Días</td><td style="text-align:right">P</td></tr></thead><tbody>${[...pe,...ab].map(rowO).join('')}</tbody></table>`:`<p class="dim mono" style="font-size:12px">Ninguna.</p>`;
+  h+=(ab.length+pe.length)?`<table><thead><tr><td>Activo</td><td>Lado</td><td class="hide-sm">Señal</td><td style="text-align:right">Entrada</td><td style="text-align:right">Actual</td><td style="text-align:right">Flotante</td><td class="hide-sm" style="text-align:right">Stop</td><td class="hide-sm" style="text-align:right">Salida si cierra</td><td style="text-align:right">Días</td><td style="text-align:right">P</td></tr></thead><tbody>${[...pe,...ab].map(rowO).join('')}</tbody></table>`:`<p class="dim mono" style="font-size:12px">Ninguna.</p>`;
   h+=`<h2>Cerradas (${ce.length})</h2>`;
   h+=ce.length?`<table><thead><tr><td>Activo</td><td>Lado</td><td class="hide-sm">Señal</td><td style="text-align:right">Entrada</td><td style="text-align:right">Salida</td><td style="text-align:right">Resultado</td><td>Motivo</td><td style="text-align:right">P</td></tr></thead><tbody>${ce.slice(0,300).map(t=>`<tr onclick="openModal('${t.id}',true)"><td class="sym">${t.sym}</td><td><span class="badge ${t.dir>0?'L':'S'}">${sideTxt(t.dir)}</span></td><td class="hide-sm mono dim">${fmtTs(t.sigTs)}</td><td class="mono" style="text-align:right">${f(t.entry)}</td><td class="mono" style="text-align:right">${f(t.exitPrice)}</td><td class="mono" style="text-align:right;color:${col(t.pnl)};font-weight:700">${sg(t.pnl)}%</td><td style="font-size:11px;color:${t.reason==='objetivo'?'var(--emerald)':t.reason==='stop'?'var(--ember)':'var(--dim)'}">${t.reason}</td><td class="mono" style="text-align:right">${t.p!=null?Math.round(t.p*100)+'%':'—'}</td></tr>`).join('')}</tbody></table>`:`<p class="dim mono" style="font-size:12px">Aún no se ha cerrado ninguna.</p>`;
   const bs=T.stats.bySetup||{};
@@ -234,24 +235,33 @@ function trackView(){
 }
 function validView(){
   const R=S.reg;
-  if(!R||!R.cells)return `<div class="note">Sin registro de validación.</div>`;
-  let h=`<div class="note"><b>Cómo funciona.</b> Cada día el robot busca valores en <b>sobreventa dentro de una tendencia alcista</b> (retroceso) o rebotes dentro de una bajista. Un modelo estima la <b>probabilidad de acierto</b> de cada candidata mirando el contexto: volatilidad del mercado (VIX), amplitud (cuántos valores están por encima de su media de 200), si la caída es propia o de todo el mercado, choques recientes de noticias, distancia a la media y descuento respecto al <b>perfil de volumen</b> de las últimas 60 sesiones. Solo se alerta si la probabilidad supera ${Math.round((R.rules?.minP||0.7)*100)}% <b>y</b> la ganancia esperada neta de costes es positiva.</div>`;
-  h+=`<div class="note warn"><b>Qué cambió respecto a la versión anterior.</b> El backtest antiguo calculaba el perfil de volumen de cada tramo con barras <i>posteriores</i> a la entrada (fuga de información del futuro) y elegía los "nichos élite" mirando el mismo histórico: por eso prometía 63% y en vivo daba 30%. Ahora todo es causal, la entrada es en la apertura siguiente, el empate stop/objetivo se resuelve en contra, se compara contra entradas aleatorias y la selección se valida en años que el modelo no vio.</div>`;
+  if(!R)return `<div class="note">Sin registro de validación.</div>`;
+  const st=R.strategies||[];
+  let h=`<div class="note"><b>Cómo funciona.</b> Cada día el robot escanea ~${(R.universe||2000).toLocaleString('es-ES')} activos buscando valores en <b>sobreventa dentro de una tendencia alcista</b> (precio sobre su media de 200 con RSI(2) bajo, rachas bajistas, mínimos recientes…). Eso solo genera <i>candidatos</i>, y por sí solo no gana dinero (acierto ~63% pero resultado ≈ 0% neto de costes). Un modelo estima la <b>probabilidad de acierto</b> de cada candidato según el contexto: <b>volatilidad (VIX), tendencia del mercado, amplitud</b> (qué parte del universo está sobre su media de 200 y cuánta está en sobreventa), tamaño de la caída y su posición respecto a máximos. Solo se alerta si la probabilidad supera el umbral validado <b>y</b> la ganancia esperada neta de costes es positiva.</div>`;
+  h+=`<div class="note warn"><b>Lo que descubrió la validación (análisis 2016–2023).</b> (1) Comprar caídas en pánico (VIX alto) es lo que hundía al sistema anterior: con VIX en estrés el acierto cae a ~50% y se pierde ≈1,2% por operación. (2) Quitar del modelo el VIX/SPY o la amplitud de mercado destruye la ventaja; quitar el <b>perfil de volumen</b> no cambia nada, así que no añade capacidad predictiva (se conserva solo como información). (3) Los cortos no tienen ventaja en ninguna variante probada. (4) Los valores temáticos/especulativos no funcionan: se excluyen automáticamente.</div>`;
+  h+=`<div class="note warn"><b>Qué cambió respecto a la versión anterior.</b> El backtest antiguo calculaba el perfil de volumen de cada tramo con barras <i>posteriores</i> a la entrada (fuga de información del futuro) y elegía los "nichos élite" mirando el mismo histórico: prometía 63% de acierto y en vivo dio 30%. Ahora todo es causal, la entrada es en la apertura siguiente, un día que toca stop y objetivo cuenta como pérdida, hay costes por tipo de activo, se compara contra entradas aleatorias y la selección se mide en años que el modelo no vio (walk-forward) más una prueba ciega final.</div>`;
   const tst=R.summary?.test;
-  if(tst){
-    h+=`<h2>Prueba ciega (después de ${R.summary.procedureCut})</h2><table><thead><tr><td>Probabilidad ≥</td><td style="text-align:right">Operaciones</td><td style="text-align:right">Acierto</td><td style="text-align:right">IC95% inf.</td><td style="text-align:right">Media/op.</td><td style="text-align:right">Factor beneficio</td></tr></thead><tbody>`;
-    for(const k of Object.keys(tst).map(Number).sort((a,b)=>a-b)){const v=tst[String(k)]||tst[k.toFixed(2)];if(!v)continue;
+  if(tst&&Object.keys(tst).length){
+    h+=`<h2>Prueba ciega (${(R.summary.procedureCut||'').slice(0,4)*1+1} en adelante)</h2><p class="dim mono" style="font-size:11.5px;margin:0 0 8px">Procedimiento fijado con datos hasta ${R.summary.procedureCut}; estas cifras son de operaciones posteriores, que no se usaron para nada.</p><table><thead><tr><td>Probabilidad ≥</td><td style="text-align:right">Operaciones</td><td style="text-align:right">Acierto</td><td style="text-align:right">IC95% inf.</td><td style="text-align:right">Media/op.</td><td style="text-align:right">Factor beneficio</td></tr></thead><tbody>`;
+    for(const k of Object.keys(tst).map(Number).sort((a,b)=>a-b)){const v=tst[String(k)];if(!v)continue;
       h+=`<tr style="cursor:default"><td class="mono">${Math.round(k*100)}%</td><td class="mono" style="text-align:right">${v.n.toLocaleString('es-ES')}</td><td class="mono" style="text-align:right"><b>${f(v.wr,1)}%</b></td><td class="mono dim" style="text-align:right">${f(v.wr_lo,1)}%</td><td class="mono" style="text-align:right;color:${col(v.mean)}">${sg(v.mean)}%</td><td class="mono" style="text-align:right">${f(v.pf)}</td></tr>`;}
     h+=`</tbody></table>`;
   }
-  h+=`<h2>Patrones candidatos (${R.cells.length})</h2><p class="dim mono" style="font-size:11.5px;margin:0 0 8px">Estadísticas históricas netas de costes. «Ventaja» = resultado medio menos el de entrar al azar con la misma salida.</p>`;
-  h+=`<table><thead><tr><td>Patrón</td><td style="text-align:right">Casos</td><td style="text-align:right">Acierto</td><td style="text-align:right">Media/op.</td><td style="text-align:right" class="hide-sm">Ventaja</td><td class="hide-sm">Salida</td></tr></thead><tbody>`;
-  for(const c of R.cells){const d=c.stats.dev;
-    h+=`<tr style="cursor:default"><td style="font-size:12px">${c.label}<div class="dim mono" style="font-size:10px">${(c.groups||[]).map(g=>GROUP_NAME[g]||g).join(' · ')}</div><div class="yrs">${Object.entries(c.stats.byYear||{}).map(([y,v])=>`<span class="yr" style="color:${col(v.mean)}">${y}: ${v.wr}% · ${sg(v.mean,1)}%</span>`).join('')}</div></td>
-      <td class="mono" style="text-align:right">${d.n.toLocaleString('es-ES')}</td><td class="mono" style="text-align:right">${f(d.wr,1)}%</td><td class="mono" style="text-align:right;color:${col(d.mean)}">${sg(d.mean)}%</td>
-      <td class="mono hide-sm" style="text-align:right">${sg(c.stats.edge)}% <span class="dim">(t=${f(c.stats.t_edge,1)})</span></td><td class="hide-sm" style="font-size:11px;color:var(--sub)">${exitTxt(c.exit)}</td></tr>`;}
-  h+=`</tbody></table>`;
-  h+=`<p class="dim mono" style="font-size:11px">Validado con datos hasta ${R.dataThrough||'—'} · universo de ${R.universe||'—'} activos</p>`;
+  if(!st.length){
+    h+=`<div class="note warn"><b>Sin estrategias validadas ahora mismo.</b> La última revalidación no encontró un umbral que cumpla los criterios, así que el sistema <b>no emite alertas</b>. Es la protección buscada: no operar cuando la ventaja desaparece.</div>`;
+  }
+  for(const s of st){const o=s.stats.oos;
+    h+=`<h2>Estrategia desplegada · ${exitTxt(s.exit)}</h2>
+    <div class="seg-head">
+      <div class="seg-card"><div class="seg-n">${Math.round(s.thr*100)}%</div><div class="seg-l">Umbral de probabilidad</div></div>
+      <div class="seg-card"><div class="seg-n">${f(o.wr,1)}%</div><div class="seg-l">Acierto fuera de muestra</div></div>
+      <div class="seg-card"><div class="seg-n" style="color:${col(o.mean)}">${sg(o.mean)}%</div><div class="seg-l">Media / operación</div></div>
+      <div class="seg-card"><div class="seg-n">${f(o.pf)}</div><div class="seg-l">Factor de beneficio</div></div>
+      <div class="seg-card"><div class="seg-n">${o.n.toLocaleString('es-ES')}</div><div class="seg-l">Operaciones (OOS)</div></div></div>
+    <p class="dim mono" style="font-size:11.5px">Acierto de equilibrio ${f(s.stats.be,1)}% (por debajo de eso se pierde dinero) · ganancia media ${sg(o.avg_win)}% · pérdida media ${sg(o.avg_loss)}% · se opera en: ${(s.groups||[]).map(g=>GROUP_NAME[g]||g).join(', ')}</p>
+    <div class="yrs">${Object.entries(s.stats.byYear||{}).map(([y,v])=>`<span class="yr" style="color:${col(v.mean)}">${y}: ${v.wr}% · ${sg(v.mean,1)}% (${v.n})</span>`).join('')}</div>`;}
+  if(R.patterns&&R.patterns.length)h+=`<details><summary>Patrones que generan candidatos (${R.patterns.length})</summary><ul style="font-size:12px;color:var(--sub);margin:8px 0 0 18px;padding:0">${R.patterns.map(p=>`<li>${p.label}</li>`).join('')}</ul></details>`;
+  h+=`<p class="dim mono" style="font-size:11px;margin-top:14px">Validado con datos hasta ${R.dataThrough||'—'} · revalidación automática cada domingo</p>`;
   return h;
 }
 function render(){
@@ -277,18 +287,20 @@ function openModal(id,fromTrack){
   let body='';
   if(a){
     const lv=a.levels,hs=a.hist||{};
-    body+=`<div class="m-sec">Qué hacer</div><div class="scn"><b>${sideTxt(a.dir)}</b> ${sym} en la <b>apertura de la próxima sesión</b>. Tras entrar, fija <b>stop</b> a ${a.exit.S}×ATR (≈ ${sg(lv.stopPct,1)}% desde la entrada)${lv.targetPct!=null?` y <b>objetivo</b> a ${a.exit.T}×ATR (≈ ${sg(lv.targetPct,1)}%)`:' y <b>sal cuando el precio cierre por '+(isL?'encima':'debajo')+' de su media de 5 sesiones</b> (se ejecuta en la apertura siguiente)'}. Si en ${a.exit.H} sesiones no se ha resuelto, cierra al cierre de la sesión ${a.exit.H}. ATR(14) = ${f(a.atr)} (${f(a.atrPct,1)}%). Si la apertura ya está más allá del stop o del objetivo, no entres.</div>`;
-    body+=`<div class="m-sec">Probabilidad y expectativa</div><div class="lvls">${lvl('P(acierto)',Math.round(a.p*100)+'%','var(--emerald)')}${lvl('Ganancia esperada',sg(a.ev)+'%',col(a.ev))}${lvl('Histórico del patrón',f(hs.wr,0)+'% ('+(hs.n||0).toLocaleString('es-ES')+' casos)')}${lvl('Media histórica',sg(hs.mean)+'%')}</div>`;
+    const salida=a.exit.kind==='rsi'?`<b>sal cuando el RSI(2) supere 70</b> (hoy equivale a un cierre ≥ ${f(lv.exitTrig)}, ${sg(lv.exitTrigPct,1)}% sobre la referencia; esa cifra se actualiza cada día en la pestaña de seguimiento) — se ejecuta en la apertura siguiente`
+      :a.exit.kind==='atr'?`<b>objetivo</b> a ${a.exit.T}×ATR (≈ ${sg(lv.targetPct,1)}%)`:`<b>sal cuando el precio cierre por encima de su máximo previo</b>`;
+    body+=`<div class="m-sec">Qué hacer</div><div class="scn"><b>COMPRA</b> ${sym} en la <b>apertura de la próxima sesión</b>. Tras entrar, fija el <b>stop</b> a ${a.exit.S}×ATR (≈ ${sg(lv.stopPct,1)}% desde la entrada) y ${salida}. Si en ${a.exit.H} sesiones no se ha resuelto, cierra al cierre de la sesión ${a.exit.H}. ATR(14) = ${f(a.atr)} (${f(a.atrPct,1)}%). Si la apertura ya está por debajo del stop, no entres.</div>`;
+    body+=`<div class="m-sec">Probabilidad y expectativa</div><div class="lvls">${lvl('P(acierto)',Math.round(a.p*100)+'%','var(--emerald)')}${lvl('Ganancia esperada',sg(a.ev)+'%',col(a.ev))}${lvl('Histórico (fuera de muestra)',f(hs.wr,0)+'% ('+(hs.n||0).toLocaleString('es-ES')+' casos)')}${lvl('Media histórica',sg(hs.mean)+'%')}${lvl('Factor de beneficio',f(hs.pf))}</div>`;
     const c=a.ctx||{};
-    body+=`<div class="m-sec">Contexto de la señal</div><div class="lvls">${lvl('RSI(2)',f(c.rsi2,0))}${lvl('Posición en la vela (IBS)',f(c.ibs,2))}${lvl('Rend. 5 sesiones',sg(c.ret5,1)+'%')}${lvl('Distancia a SMA200',sg(c.dist200,1)+'%')}${lvl('Caída desde máx. 20d',sg(c.dd20,1)+'%')}${lvl('Volumen vs media',f(c.vol_ratio,1)+'×')}${lvl('Dist. bajo VAL (ATR)',c.vp_val_atr!=null?sg(c.vp_val_atr,1):'—')}${lvl('VIX',f(c.vix,1)+' (z '+f(c.vix_z,1)+')')}</div>`;
+    body+=`<div class="m-sec">Contexto de la señal</div><div class="lvls">${lvl('RSI(2)',f(c.rsi2,0))}${lvl('Posición en la vela (IBS)',f(c.ibs,2))}${lvl('Rend. 5 sesiones',sg(c.ret5,1)+'%')}${lvl('Distancia a SMA200',sg(c.dist200,1)+'%')}${lvl('Caída desde máx. 20d',sg(c.dd20,1)+'%')}${lvl('Volumen vs media',f(c.vol_ratio,1)+'×')}${lvl('Dist. bajo VAL (ATR)',c.vp_val_atr!=null?sg(c.vp_val_atr,1):'—')}${lvl('VIX',f(c.vix,1)+' (z '+f(c.vix_z,1)+')')}${lvl('Universo sobre SMA200',c.b_up200!=null?f(c.b_up200,0)+'%':'—')}${lvl('Universo en sobreventa',c.b_os!=null?f(c.b_os,1)+'%':'—')}</div>`;
     if(a.also&&a.also.length)body+=`<div class="m-sec">También saltaron</div><div class="scn">${a.also.map(o=>o.setup+' ('+Math.round(o.p*100)+'%)').join(' · ')}</div>`;
-    const reg=(S.reg?.cells||[]).find(c=>c.id===a.cell);
-    if(reg&&reg.stats.byYear)body+=`<div class="m-sec">Rendimiento histórico del patrón por año</div><div class="yrs">${Object.entries(reg.stats.byYear).map(([y,v])=>`<span class="yr" style="color:${col(v.mean)}">${y}: ${v.wr}% · ${sg(v.mean,1)}% (${v.n})</span>`).join('')}</div>`;
+    const reg=(S.reg?.strategies||[]).find(c=>c.id===a.strategy);
+    if(reg&&reg.stats?.byYear)body+=`<div class="m-sec">Rendimiento fuera de muestra por año (misma estrategia)</div><div class="yrs">${Object.entries(reg.stats.byYear).map(([y,v])=>`<span class="yr" style="color:${col(v.mean)}">${y}: ${v.wr}% · ${sg(v.mean,1)}% (${v.n})</span>`).join('')}</div>`;
   }
   if(t){
     const est=t.status==='cerrada'?`<b style="color:${t.reason==='objetivo'?'var(--emerald)':t.reason==='stop'?'var(--ember)':'var(--dim)'}">Cerrada (${t.reason})</b> · resultado <b style="color:${col(t.pnl)}">${sg(t.pnl)}%</b> en ${t.bars} sesiones`
       :t.status==='abierta'?`<b style="color:var(--sapphire)">Abierta</b> · ${t.bars} sesiones · flotante <b style="color:${col(t.curPnl||0)}">${sg(t.curPnl)}%</b>`:`<b>Pendiente de entrada</b> (se entra en la apertura siguiente)`;
-    body+=`<div class="m-sec">Estado en vivo</div><div class="scn">${est}</div><div class="lvls" style="margin-top:8px">${lvl('Entrada',t.entry!=null?f(t.entry):'—')}${lvl('Stop',t.stop!=null?f(t.stop):'—','var(--amber)')}${lvl('Objetivo',t.target!=null?f(t.target):'SMA5','var(--emerald)')}${t.exitPrice!=null?lvl('Salida',f(t.exitPrice)):''}${lvl('P estimada',t.p!=null?Math.round(t.p*100)+'%':'—')}</div>`;
+    body+=`<div class="m-sec">Estado en vivo</div><div class="scn">${est}</div><div class="lvls" style="margin-top:8px">${lvl('Entrada',t.entry!=null?f(t.entry):'—')}${lvl('Stop',t.stop!=null?f(t.stop):'—','var(--amber)')}${lvl(t.exit.kind==='rsi'?'Cierre que activa la salida hoy':'Objetivo',t.target!=null?f(t.target):t.exitTrig!=null?'≥ '+f(t.exitTrig):'—','var(--emerald)')}${t.exitPrice!=null?lvl('Salida',f(t.exitPrice)):''}${lvl('P estimada',t.p!=null?Math.round(t.p*100)+'%':'—')}</div>`;
   }
   document.getElementById('modal').innerHTML=`<div class="m-hd"><span style="font-family:var(--f-display);font-size:20px;font-weight:800">${sym}</span>
     <span class="badge ${isL?'L':'S'}">${sideTxt(x.dir)}</span><span class="dim" style="font-size:11px">${GROUP_NAME[x.group]||''} ${a?.sector||''}</span>

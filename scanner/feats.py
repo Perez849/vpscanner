@@ -81,7 +81,7 @@ def build(b: Bars) -> Dict[str, np.ndarray]:
         rng = h - l
         F['ibs'] = np.where(rng > 0, (c - l) / rng, 0.5)
         F['ret1'] = (c / cp - 1.0) * 100.0
-        for k in (2, 3, 5, 10, 20):
+        for k in (2, 3, 5, 10, 20, 60, 120):
             ck = np.concatenate([np.full(k, np.nan), c[:-k]])
             F[f'ret{k}'] = (c / ck - 1.0) * 100.0
         F['gap'] = (o / cp - 1.0) * 100.0
@@ -187,6 +187,8 @@ def regime_series(spy: Dict[str, np.ndarray], vix: Dict[str, np.ndarray]) -> Dic
             'spy_dist200': (c / s200 - 1.0) * 100.0,
             'spy_rsi2': _rsi(c, 2),
             'spy_ret5': np.concatenate([np.full(5, np.nan), (c[5:] / c[:-5] - 1.0) * 100.0]),
+            'spy_ret60': np.concatenate([np.full(60, np.nan), (c[60:] / c[:-60] - 1.0) * 100.0]),
+            'spy_ret120': np.concatenate([np.full(120, np.nan), (c[120:] / c[:-120] - 1.0) * 100.0]),
             'spy_dd60': (c / pd.Series(spy['h']).rolling(60, min_periods=20).max().to_numpy() - 1.0) * 100.0,
         }
     # VIX alineado a las fechas de SPY (as-of)
@@ -270,9 +272,10 @@ FEATURES = ['rsi2', 'rsi3', 'rsi14', 'ibs', 'ret1', 'ret2', 'ret3', 'ret5', 'ret
             'dn_streak', 'up_streak', 'gap',
             'spy_up', 'spy_dist200', 'spy_rsi2', 'spy_ret5', 'spy_dd60', 'vix', 'vix_z', 'vix_chg5',
             'max_gap5', 'shock5', 'max_vr5', 'b_up200', 'b_os', 'b_ret1', 'b_ret5', 'rel5',
+            'ret60', 'ret120', 'rs60', 'rs120',
             'vp_poc_atr', 'vp_val_atr', 'vp_pos']
 GROUPS = ['us_large', 'us_mid', 'us_small', 'thematic', 'etf', 'crypto', 'fx', 'futures', 'eu', 'index']
-REGIME_KEYS = ('spy_up', 'spy_dist200', 'spy_rsi2', 'spy_ret5', 'spy_dd60', 'vix', 'vix_z', 'vix_chg5')
+REGIME_KEYS = ('spy_up', 'spy_dist200', 'spy_rsi2', 'spy_ret5', 'spy_ret60', 'spy_ret120', 'spy_dd60', 'vix', 'vix_z', 'vix_chg5')
 
 
 def event_matrix(F: Dict[str, np.ndarray], idx: np.ndarray) -> np.ndarray:
@@ -288,6 +291,9 @@ def event_matrix(F: Dict[str, np.ndarray], idx: np.ndarray) -> np.ndarray:
     for f in FEATURES[:-3]:
         if f == 'rel5':           # caída propia frente al mercado (idiosincrática vs. sistemática)
             base.append(F['ret5'][idx] - F['b_ret5'][idx] if 'b_ret5' in F else np.full(len(idx), np.nan))
+        elif f in ('rs60', 'rs120'):   # fuerza relativa frente al S&P 500
+            k = f[2:]
+            base.append(F['ret' + k][idx] - F['spy_ret' + k][idx] if ('spy_ret' + k) in F else np.full(len(idx), np.nan))
         else:
             base.append(F[f][idx] if f in F else np.full(len(idx), np.nan))
     return np.stack(base + extra, 1).astype(np.float32)
