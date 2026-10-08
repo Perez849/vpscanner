@@ -122,7 +122,7 @@ const exitTxt=(ex)=>ex.kind==='atr'?`objetivo +${ex.T}×ATR · stop ${ex.S}×ATR
   :ex.kind==='ph'?`salir cuando cierre sobre el máximo previo · stop ${ex.S}×ATR · máx ${ex.H} sesiones`
   :`salir cuando cierre sobre la media de 5 · stop ${ex.S}×ATR · máx ${ex.H} sesiones`;
 const tgtLabel=(lv)=>lv.targetPct!=null?sg(lv.targetPct,1)+'%':lv.exitTrigPct!=null?'≥ '+sg(lv.exitTrigPct,1)+'%':'señal';
-const stratLabel=id=>(S.reg?.strategies||[]).find(x=>x.id===id)?.label||id;
+const stratLabel=id=>(S.reg?.strategies||[]).find(x=>x.id===id)?.label||(S.reg?.pelotazo&&S.reg.pelotazo.id===id?'Pelotazo':id);
 const prim=a=>a.plans.find(p=>p.role==='principal')||a.plans[0];
 const alt=a=>a.plans.find(p=>p.role!=='principal');
 
@@ -226,7 +226,7 @@ function trackView(){
     <div class="note">Esta es la prueba definitiva. Si <b>acierto real</b> y <b>esperado</b> se parecen, las probabilidades son fiables. Se necesitan unas 100–200 operaciones cerradas para sacar conclusiones; antes, el azar domina.</div>`;
   const rowO=t=>`<tr onclick="openModal('${t.id}',true)"><td class="sym">${t.sym}</td><td style="font-size:11px">${stratLabel(t.setup)}</td><td class="hide-sm mono dim">${fmtTs(t.sigTs)}</td>
       <td class="mono" style="text-align:right">${t.entry!=null?f(t.entry):'—'}</td><td class="mono" style="text-align:right">${t.curPrice!=null?f(t.curPrice):'—'}</td>
-      <td class="mono" style="text-align:right;color:${col(t.curPnl||0)}">${t.curPnl!=null?sg(t.curPnl)+'%':'—'}</td><td class="mono hide-sm" style="text-align:right">${t.stop!=null?f(t.stop):'—'}</td><td class="mono hide-sm" style="text-align:right">${t.target!=null?f(t.target):t.exitTrig!=null?'≥ '+f(t.exitTrig):'—'}</td><td class="mono" style="text-align:right">${t.bars||0}/${t.exit.H}</td><td class="mono" style="text-align:right">${t.p!=null?Math.round(t.p*100)+'%':'—'}</td></tr>`;
+      <td class="mono" style="text-align:right;color:${col(t.curPnl||0)}">${t.curPnl!=null?sg(t.curPnl)+'%':'—'}</td><td class="mono hide-sm" style="text-align:right">${t.stop!=null?f(t.stop):'—'}</td><td class="mono hide-sm" style="text-align:right">${t.target!=null?f(t.target):t.exitTrig!=null?'≥ '+f(t.exitTrig):t.trailStop!=null?'stop '+f(t.trailStop):'—'}</td><td class="mono" style="text-align:right">${t.bars||0}/${t.exit.H}</td><td class="mono" style="text-align:right">${t.p!=null?Math.round(t.p*100)+'%':'—'}</td></tr>`;
   h+=`<h2>Abiertas y pendientes (${ab.length+pe.length})</h2>`;
   h+=(ab.length+pe.length)?`<table><thead><tr><td>Activo</td><td>Plan</td><td class="hide-sm">Señal</td><td style="text-align:right">Entrada</td><td style="text-align:right">Actual</td><td style="text-align:right">Flotante</td><td class="hide-sm" style="text-align:right">Stop</td><td class="hide-sm" style="text-align:right">Salida si cierra</td><td style="text-align:right">Días</td><td style="text-align:right">P</td></tr></thead><tbody>${[...pe,...ab].map(rowO).join('')}</tbody></table>`:`<p class="dim mono" style="font-size:12px">Ninguna.</p>`;
   h+=`<h2>Cerradas (${ce.length})</h2>`;
@@ -237,6 +237,36 @@ function trackView(){
     for(const [k,b] of Object.entries(bs))h+=`<tr style="cursor:default"><td>${stratLabel(k)}</td><td class="mono" style="text-align:right">${b.wr!=null?b.wr+'%':'—'}</td><td class="mono dim" style="text-align:right">${b.pExp!=null?b.pExp+'%':'—'}</td><td class="mono" style="text-align:right;color:${col(b.mean||0)}">${b.mean!=null?sg(b.mean)+'%':'—'}</td><td class="mono" style="text-align:right">${b.n}</td></tr>`;
     h+=`</tbody></table>`;
   }
+  return h;
+}
+function pelotazoView(){
+  const R=S.reg?.pelotazo,list=S.alerts?.pelotazos||[];
+  if(!R)return `<div class="note">El plan de pelotazos no está disponible en este registro.</div>`;
+  const o=R.stats.oos,r=R.stats.recent;
+  let h=`<div class="note warn"><b>🚀 Pelotazos · experimental · alto riesgo.</b> Aquí se buscan operaciones de <b>cola gruesa</b>: acierta poco, pero cuando acierta gana mucho. En el histórico (2019–2026) <b>${f(o.wr,0)}%</b> de las operaciones acabó en positivo, la <b>mediana fue ${sg(o.median)}%</b> (la operación típica pierde), y aun así la media fue <b>${sg(o.mean)}%</b> porque <b>${f(o.p20,0)}%</b> de las operaciones superó +20% y <b>${f(o.p30,0)}%</b> superó +30%. ${R.paused?'<b style="color:var(--ember)">⏸ EN PAUSA: el chequeo de salud no es rentable.</b>':''}</div>`;
+  h+=`<div class="note"><b>No te fíes de la media.</b> Esas cifras están infladas: (1) el universo son las empresas que existen <i>hoy</i> (las que quebraron o salieron del índice tras desplomarse no están), (2) 2019–2026 fue un mercado alcista, y (3) entrar al azar sobre la SMA200 con la misma salida ya daba ${sg(R.stats.benchmark)}%. Si el ${Object.keys(R.stats.haircut||{})[1]||'5%'} de las operaciones acabara en una pérdida del 60% (quiebras que el histórico no ve), la media bajaría a ≈${sg((R.stats.haircut||{})['5%'])}%. Con costes dobles: ${sg(R.stats.cost2x)}%. Y la probabilidad de superar +12% no está bien calibrada: úsala solo como orientación (~${f(R.stats.pBigCal,0)}%). La prueba definitiva es el seguimiento en vivo.</div>`;
+  h+=`<div class="seg-head">
+    <div class="seg-card"><div class="seg-n">${f(o.wr,0)}%</div><div class="seg-l">Operaciones ganadoras</div></div>
+    <div class="seg-card"><div class="seg-n" style="color:${col(o.median)}">${sg(o.median)}%</div><div class="seg-l">Mediana (la típica)</div></div>
+    <div class="seg-card"><div class="seg-n" style="color:${col(o.mean)}">${sg(o.mean)}%</div><div class="seg-l">Media (inflada, ver aviso)</div></div>
+    <div class="seg-card"><div class="seg-n">${f(o.pf)}</div><div class="seg-l">Factor de beneficio</div></div>
+    <div class="seg-card"><div class="seg-n">${f(o.p20,0)}% · ${f(o.p30,0)}%</div><div class="seg-l">Superan +20% · +30%</div></div>
+    <div class="seg-card"><div class="seg-n">${f(o.hold,0)}</div><div class="seg-l">Sesiones medias abierta</div></div>
+    ${r?`<div class="seg-card"><div class="seg-n" style="color:${col(r.mean)}">${sg(r.mean)}%</div><div class="seg-l">Media desde 2024 (${r.n} ops)</div></div>`:''}</div>
+    <div class="yrs">${Object.entries(R.stats.byYear||{}).map(([y,v])=>`<span class="yr" style="color:${col(v.mean)}">${y}: ${sg(v.mean,1)}% · ${v.p20}% >+20% (${v.n})</span>`).join('')}</div>`;
+  const lv_=S.track?.stats?.pelotazo;
+  h+=`<div class="note"><b>Resultado real en vivo de los pelotazos:</b> ${lv_&&lv_.n?`${lv_.wr}% ganadoras, media ${sg(lv_.mean)}% en ${lv_.n} cerradas · ${lv_.open||0} abiertas`:`aún sin operaciones cerradas (${(lv_?.open||0)+(lv_?.pending||0)} abiertas/pendientes). Una operación puede durar hasta 60 sesiones: paciencia.`}</div>`;
+  if(!list.length){h+=`<h2>Pelotazos de hoy</h2><div class="note">Hoy no hay candidatos que superen el filtro del modelo.</div>`;}
+  else{
+    h+=`<h2>Pelotazos de hoy (${list.length}) <span class="dim mono" style="font-size:11px">· datos hasta ${S.alerts.dataThrough||'—'} · comprar en la apertura siguiente</span></h2><div class="topgrid">`;
+    for(const a of list)h+=`<div class="tcard" onclick="openModal('${a.id}')"><div class="tc-head"><span class="tc-sym">${a.sym}</span><span class="badge L">🚀</span><div class="tc-p">${f(a.pBig*100,0)}%<small>de superar +12%</small></div></div>
+      <div class="row"><span class="k">Referencia (cierre)</span><span>${f(a.sigClose)}</span></div>
+      <div class="row"><span class="k" style="color:var(--amber)">◆ Stop inicial</span><span style="color:var(--amber)">${sg(a.levels.stopPct,1)}%</span></div>
+      <div class="row"><span class="k">Rend. 120 sesiones</span><span>${sg(a.ctx.ret120,0)}%</span></div>
+      <div class="tc-lbl">${a.label}<br><span class="dim">${GROUP_NAME[a.group]||a.group}${a.sector?' · '+a.sector:''}</span></div></div>`;
+    h+=`</div>`;
+  }
+  h+=`<details><summary>Cómo se opera un pelotazo</summary><div style="font-size:12.5px;color:var(--sub);margin-top:8px">Entras en la apertura siguiente. El <b>stop inicial</b> está a 5×ATR bajo tu entrada (ancho a propósito: hay que dejar respirar la operación). A partir de ahí es un <b>stop de seguimiento</b>: cada día lo subes a <i>(máximo alcanzado desde la entrada) − 5×ATR</i>, nunca lo bajas. No hay objetivo: dejas correr el ganador hasta que el stop salte o pasen 60 sesiones. Como la operación típica pierde, <b>arriesga muy poco por operación</b> (p. ej. 0,25–0,5% del capital) y no conviertas un pelotazo en una posición grande.</div></details>`;
   return h;
 }
 function stratCard(s){
@@ -270,12 +300,13 @@ function validView(){
 function render(){
   const m=S.meta;
   document.getElementById('meta').innerHTML=m?`datos hasta <b>${m.dataThrough||'—'}</b> · act. ${fmtDate(m.generatedAt)}`:'';
-  const g=S.track?.stats?.global,open=(g?.open||0)+(g?.pending||0);
+  const g=S.track?.stats?.global,pg=S.track?.stats?.pelotazo,open=(g?.open||0)+(g?.pending||0)+(pg?.open||0)+(pg?.pending||0);
   const tabs=`<div class="tabs">
     <button class="${S.view==='alertas'?'on':''}" onclick="S.view='alertas';render()">📡 Alertas de hoy${S.alerts?.alerts?.length?`<span class="pill">${S.alerts.alerts.length}</span>`:''}</button>
     <button class="${S.view==='seguimiento'?'on':''}" onclick="S.view='seguimiento';render()">📈 Seguimiento real${open?`<span class="pill">${open}</span>`:''}</button>
+    <button class="${S.view==='pelotazos'?'on':''}" onclick="S.view='pelotazos';render()">🚀 Pelotazos${S.alerts?.pelotazos?.length?`<span class="pill">${S.alerts.pelotazos.length}</span>`:''}</button>
     <button class="${S.view==='validacion'?'on':''}" onclick="S.view='validacion';render()">🧪 Cómo se validó</button></div>`;
-  document.getElementById('app').innerHTML=tabs+(S.view==='alertas'?alertasView():S.view==='seguimiento'?trackView():validView());
+  document.getElementById('app').innerHTML=tabs+(S.view==='alertas'?alertasView():S.view==='seguimiento'?trackView():S.view==='pelotazos'?pelotazoView():validView());
   const q=document.getElementById('q');
   if(q){q.addEventListener('input',e=>{S.q=e.target.value;const p=e.target.selectionStart;render();const n=document.getElementById('q');n.focus();n.setSelectionRange(p,p);});}
   document.querySelectorAll('thead td[data-s]').forEach(td=>td.addEventListener('click',()=>{const k=td.dataset.s;if(S.sort===k)S.dir*=-1;else{S.sort=k;S.dir=k==='sym'?1:-1;}render();}));
@@ -288,13 +319,20 @@ function planBox(pl,sym,ref){
   return `<div class="scn" style="margin-bottom:8px"><b>Plan «${pl.label}» · P(acierto) ${Math.round(pl.p*100)}% · ganancia esperada ${sg(pl.ev)}%</b><br>Tras entrar fija el <b>stop</b> a ${ex.S}×ATR por debajo de <b>tu precio de entrada</b> (≈ ${sg(lv.stopPct,1)}%) y ${salida}. Si en ${ex.H} sesiones no se ha resuelto, cierra al cierre de la sesión ${ex.H}.<div class="dim" style="font-size:11px;margin-top:4px">Ejemplo entrando a la referencia ${f(ref)}: stop ${f(lv.stop)}${lv.target!=null?` · objetivo ${f(lv.target)}`:''}. Tamaño orientativo: si arriesgas el 1% de tu capital hasta el stop, la posición sería ≈ ${f(100/Math.abs(lv.stopPct),0)}% del capital.</div><div class="dim" style="font-size:11px;margin-top:4px">Histórico fuera de muestra de este plan: ${f(pl.hist.wr,0)}% de acierto, ${sg(pl.hist.mean)}% por operación (${pl.hist.n.toLocaleString('es-ES')} operaciones)</div></div>`;
 }
 function openModal(id,fromTrack){
-  const a=(S.alerts.alerts||[]).concat(S.alerts.watch||[]).find(x=>x.id===id);
+  const pz=(S.alerts.pelotazos||[]).find(x=>x.id===id);
+  const a=(S.alerts.alerts||[]).concat(S.alerts.watch||[]).find(x=>x.id===id)||pz;
   let t=(S.track?.trades||[]).find(x=>x.id===id);
   if(!a&&!t)return;
   const sym=a?a.sym:t.sym;
   const lvl=(k,v,c)=>`<div class="lvl"><div class="lk">${k}</div><div class="lv" style="${c?'color:'+c:''}">${v}</div></div>`;
   let body='',ref,stop,target,sigTs;
-  if(a){
+  if(pz){
+    const lv=pz.levels,c=pz.ctx||{};ref=pz.sigClose;stop=lv.stop;target=null;sigTs=pz.sigTs;
+    body+=`<div class="m-sec">Qué hacer · 🚀 pelotazo (experimental)</div><div class="scn" style="margin-bottom:8px"><b>COMPRA</b> ${sym} en la <b>apertura de la próxima sesión</b>. <b>Stop inicial</b>: 5×ATR por debajo de tu entrada (≈ ${sg(lv.stopPct,1)}%; con la referencia ${f(ref)}, precio ${f(lv.stop)}). Después, cada día sube el stop a <b>(máximo alcanzado desde tu entrada) − ${f(5*pz.atr)}</b> (5×ATR = ${f(5*pz.atrPct,1)}% del precio) y <b>nunca lo bajes</b>. No hay objetivo: deja correr hasta que salte el stop o pasen 60 sesiones.</div>
+      <div class="scn" style="margin-bottom:8px;border-left:3px solid var(--amber)"><b>Riesgo.</b> Solo ~${f(pz.hist.wr,0)}% de estas operaciones gana y la mediana pierde ${f(Math.abs(pz.hist.median),1)}%; la media positiva depende de ~${f(pz.hist.p20,0)}% de operaciones que superan +20%. Probabilidad estimada de superar +12%: ≈${f(pz.pBig*100,0)}% (orientativa). Arriesga una fracción pequeña del capital (p. ej. 0,25–0,5% hasta el stop → posición ≈ ${f(0.4/Math.abs(lv.stopPct)*100,0)}% del capital).</div>`;
+    body+=`<div class="m-sec">Contexto de la señal</div><div class="lvls">${lvl('Rend. 5 sesiones',sg(c.ret5,1)+'%')}${lvl('Rend. 60 sesiones',sg(c.ret60,1)+'%')}${lvl('Rend. 120 sesiones',sg(c.ret120,1)+'%')}${lvl('Fuerza relativa 120d vs S&P',sg(c.rs120,0)+'%')}${lvl('Distancia a SMA200',sg(c.dist200,1)+'%')}${lvl('Dist. a máx. 52 sem.',sg(c.dd52,1)+'%')}${lvl('Volumen vs media',f(c.vol_ratio,1)+'×')}${lvl('Hueco de hoy',sg(c.gap,1)+'%')}${lvl('VIX',f(c.vix,1)+' (z '+f(c.vix_z,1)+')')}</div>`;
+    body+=`<div class="m-sec">Patrones que saltaron</div><div class="scn">${pz.label||'—'}</div>`;
+  } else if(a){
     const lv=a.levels;ref=a.sigClose;stop=lv.stop;target=lv.target;sigTs=a.sigTs;
     body+=`<div class="m-sec">Qué hacer</div><div class="scn" style="margin-bottom:8px"><b>COMPRA</b> ${sym} en la <b>apertura de la próxima sesión</b>. ATR(14) = ${f(a.atr)} (${f(a.atrPct,1)}%). <b>Los niveles se miden desde tu precio de ENTRADA real, no desde el cierre de ayer</b>: si abre con hueco al alza, el stop y la salida se desplazan con él.</div>
       <div class="scn" style="margin-bottom:8px;border-left:3px solid var(--amber)"><b>Hueco de apertura.</b> Precio máximo orientativo de entrada: <b>${f(a.sigClose+0.5*a.atr)}</b> (referencia + 0,5 ATR ≈ ${sg(0.5*a.atrPct,1)}%). En 2019–2026, cuando la acción abría por encima de eso el plan <i>Equilibrado</i> perdió de media (−0,8% por operación, 306 casos, positivo solo 1 de 7 años); el de <i>Alta probabilidad</i> no se resintió (+0,1%). Con huecos menores no hay diferencia apreciable. Por debajo del stop, no entres.</div>
@@ -308,7 +346,7 @@ function openModal(id,fromTrack){
     ref=t.sigClose;stop=t.stop;target=t.target;sigTs=t.sigTs;
     const est=t.status==='cerrada'?`<b style="color:${t.reason==='objetivo'?'var(--emerald)':t.reason==='stop'?'var(--ember)':'var(--dim)'}">Cerrada (${t.reason})</b> · resultado <b style="color:${col(t.pnl)}">${sg(t.pnl)}%</b> en ${t.bars} sesiones`
       :t.status==='abierta'?`<b style="color:var(--sapphire)">Abierta</b> · ${t.bars} sesiones · flotante <b style="color:${col(t.curPnl||0)}">${sg(t.curPnl)}%</b>`:`<b>Pendiente de entrada</b> (se entra en la apertura siguiente)`;
-    body+=`<div class="m-sec">Estado en vivo · plan «${stratLabel(t.setup)}»</div><div class="scn">${est}</div><div class="lvls" style="margin-top:8px">${lvl('Entrada',t.entry!=null?f(t.entry):'—')}${lvl('Stop',t.stop!=null?f(t.stop):'—','var(--amber)')}${lvl(t.exit.kind==='rsi'?'Cierre que activa la salida hoy':'Objetivo',t.target!=null?f(t.target):t.exitTrig!=null?'≥ '+f(t.exitTrig):'—','var(--emerald)')}${t.exitPrice!=null?lvl('Salida',f(t.exitPrice)):''}${lvl('P estimada',t.p!=null?Math.round(t.p*100)+'%':'—')}</div>`;
+    body+=`<div class="m-sec">Estado en vivo · plan «${stratLabel(t.setup)}»</div><div class="scn">${est}</div><div class="lvls" style="margin-top:8px">${lvl('Entrada',t.entry!=null?f(t.entry):'—')}${lvl('Stop',t.stop!=null?f(t.stop):'—','var(--amber)')}${lvl(t.exit.kind==='rsi'?'Cierre que activa la salida hoy':t.exit.kind==='trl'?'Stop de seguimiento actual':'Objetivo',t.target!=null?f(t.target):t.exitTrig!=null?'≥ '+f(t.exitTrig):t.trailStop!=null?f(t.trailStop):'—','var(--emerald)')}${t.exitPrice!=null?lvl('Salida',f(t.exitPrice)):''}${lvl('P estimada',t.p!=null?Math.round(t.p*100)+'%':'—')}</div>`;
   }
   const grp=a?a.group:t.group;
   document.getElementById('modal').innerHTML=`<div class="m-hd"><span style="font-family:var(--f-display);font-size:20px;font-weight:800">${sym}</span>

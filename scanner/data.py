@@ -150,3 +150,40 @@ def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
         if failed:
             print('  fallidos:', ' '.join(failed[:60]) + (' …' if len(failed) > 60 else ''), flush=True)
     return out, failed
+
+
+def fetch_intraday(ysym: str, interval: str = '60m', rng: str = '730d'):
+    """Barras intradía (sesión regular). Devuelve dict de arrays + 'off' (desfase horario en segundos) o None."""
+    url = (f'https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(ysym, safe="")}'
+           f'?interval={interval}&range={rng}&includePrePost=false')
+    raw = _get(url)
+    if not raw:
+        return None
+    try:
+        res = json.loads(raw)['chart']['result'][0]
+        ts = res.get('timestamp')
+        if not ts:
+            return None
+        q = res['indicators']['quote'][0]
+        t = np.array(ts, dtype=np.float64)
+        arr = {k: np.array([np.nan if x is None else x for x in q[k]], dtype=np.float64) for k in ('open', 'high', 'low', 'close')}
+        v = np.array([0.0 if x is None else x for x in q.get('volume', [0] * len(ts))], dtype=np.float64)
+        ok = np.isfinite(arr['open']) & np.isfinite(arr['high']) & np.isfinite(arr['low']) & np.isfinite(arr['close'])
+        off = float((res.get('meta') or {}).get('gmtoffset', 0))
+        return {'t': t[ok], 'o': arr['open'][ok], 'h': arr['high'][ok], 'l': arr['low'][ok], 'c': arr['close'][ok], 'v': v[ok], 'off': off}
+    except Exception:
+        return None
+
+
+def fetch_intraday_many(symbols, workers: int = 8, **kw):
+    out = {}
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(fetch_intraday, s, **kw): s for s in symbols}
+        for fu in as_completed(futs):
+            try:
+                r = fu.result()
+            except Exception:
+                r = None
+            if r is not None:
+                out[futs[fu]] = r
+    return out

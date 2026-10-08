@@ -330,17 +330,110 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True):
         'model': fm}
 
 
-def final(EV: Dict, out_dir: str, universe_n: int):
+# ═════════════════════════════════════════════════════════════════════════
+#  PELOTAZOS (experimental): cola gruesa, baja tasa de acierto
+# ═════════════════════════════════════════════════════════════════════════
+PEL_PLAN = {'id': 'pel_trl_T5_S5_H60', 'variant': 'trl_T5_S5_H60', 'label': 'Pelotazo (experimental)',
+            'blurb': 'trailing stop de 5×ATR hasta 60 sesiones: acierta ~48%, la mediana pierde, pero ~1 de cada 4 operaciones supera +20%'}
+PEL_VARIANTS = [SM.Variant('trl', 5.0, 5.0, 60)]
+PEL_GROUPS = ['us_large', 'us_mid', 'us_small']       # por diseño: temáticos y cripto son listas elegidas a posteriori (sesgo extremo)
+PEL_N_PER_DAY = 3
+PEL_BIG = 12.0
+PEL_EXTRA = ['ret60', 'ret120', 'rs60', 'rs120', 'max_gap5', 'shock5', 'max_vr5']
+
+
+def build_pelotazo(EV: Dict, upto_day: int):
+    import model as MD
+    vi = EV['variants'].index(PEL_PLAN['variant'])
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    feats_ = list(MD.MODEL_FEATURES) + PEL_EXTRA
+    fidx = [FEATURES.index(f) for f in feats_]
+    pnl = EV['pnl'][rows, vi]; bars = EV['bars'][rows, vi]
+    ok = np.isfinite(pnl) & (day <= upto_day)
+    allowed = [GROUPS.index(g) for g in PEL_GROUPS]
+    ing = np.isin(gid, allowed)
+    y = (pnl >= PEL_BIG).astype(np.float32)
+    p = np.full(len(rows), np.nan); base = np.full(len(rows), np.nan)
+    last_year = int(year_of(np.array([upto_day]))[0])
+    for Y in range(FIRST_WF_YEAR, last_year + 1):
+        trm = (day < day_of(f'{Y}-01-01')) & (day >= day_of(f'{Y - WINDOW_YEARS}-01-01')) & ok & ing
+        tem = (years == Y) & (day <= upto_day) & ing
+        if trm.sum() < 3000 or not tem.any():
+            continue
+        m1 = MD.LinearLogitModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+        p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem])
+        base[tem] = float(y[trm].mean())
+    m = ok & ing & np.isfinite(p)
+    cand = m & (p >= base)
+    sel = topn_mask(p, day, cand, PEL_N_PER_DAY) if cand.sum() else np.zeros(len(rows), bool)
+    if sel.sum() < 300:
+        print(f'\n  [{PEL_PLAN["id"]}] sin eventos suficientes ({int(sel.sum())}): no se despliega el plan de pelotazos', flush=True)
+        return None
+    x = pnl[sel]
+    st = stats(x, day[sel], sym[sel])
+    print(f"\n  [{PEL_PLAN['id']}] AUC(≥{PEL_BIG:.0f}%) OOS={MD.auc(p[m], y[m]):.3f} · base {y[m].mean() * 100:.1f}% · todos los candidatos: {fmt(stats(pnl[m], day[m], sym[m]))}")
+    print(f"     política top {PEL_N_PER_DAY}/día en {PEL_GROUPS}: {fmt(st)} · t={st['t_day']:.1f} · mediana {np.median(x):+.2f}% · P≥20%={np.mean(x >= 20) * 100:.0f}% · duración {np.nanmean(bars[sel]):.0f} ses.", flush=True)
+    by_year = {}
+    for Y in sorted(set(years[sel])):
+        my = sel & (years == Y)
+        if my.sum() >= 20:
+            sy = stats(pnl[my]); by_year[str(int(Y))] = {'n': sy['n'], 'wr': round(sy['wr'], 1), 'mean': round(sy['mean'], 2), 'p20': round(float(np.mean(pnl[my] >= 20) * 100), 1)}
+    print('     por año: ' + ' '.join(f"{y_}:{v['mean']:+.1f}%" for y_, v in by_year.items()))
+    by_group = {}
+    for g in PEL_GROUPS:
+        mg = sel & (gid == GROUPS.index(g))
+        if mg.sum() >= 30:
+            sg_ = stats(pnl[mg]); by_group[g] = {'n': sg_['n'], 'wr': round(sg_['wr'], 1), 'mean': round(sg_['mean'], 2)}
+    mu = float(np.mean(x))
+    haircut = {f'{int(f * 100)}%': round((1 - f) * mu + f * -60.0, 2) for f in (0.02, 0.05, 0.08)}
+    cost_arr = np.array([SM.COST_RT.get(GROUPS[g], 0.30) for g in range(len(GROUPS))])[gid]
+    # benchmark honesto: entrar al azar sobre la SMA200 con la misma salida
+    bi = EV['setups'].index('B_up')
+    bmask = (EV['sid'] == bi) & np.isfinite(EV['pnl'][:, vi]) & np.isin(EV['grp'], allowed)
+    bench = float(np.mean(EV['pnl'][bmask, vi])) if bmask.sum() else float('nan')
+    recent = sel & (day >= day_of('2024-01-01'))
+    last_known = int(day[sel].max()) if sel.any() else upto_day
+    hm = sel & (day > last_known - HEALTH_DAYS)
+    st_h = stats(pnl[hm], day[hm], sym[hm]) if hm.sum() >= 30 else None
+    paused = bool(st_h and st_h['n'] >= 150 and st_h['mean'] <= 0)
+    print(f"     benchmark (entrar al azar sobre SMA200, misma salida): μ={bench:+.2f}% · descuento por quiebras: {haircut} · costes dobles: μ={np.mean(x - cost_arr[sel]):+.2f}%")
+    print(f"     salud (12 meses): {fmt(st_h) if st_h else 'datos insuficientes'} → {'PAUSADO' if paused else 'activo'}", flush=True)
+    cal = MD.LogitModel(fidx, names, GROUPS); cal.set_calibration(p[sel], y[sel])
+    trm = (day >= upto_day - 365 * WINDOW_YEARS) & (day <= upto_day) & ok & ing
+    fm = MD.LinearLogitModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+    fm.calib = cal.calib
+    v = PEL_VARIANTS[0]
+    return {
+        'id': PEL_PLAN['id'], 'label': PEL_PLAN['label'], 'blurb': PEL_PLAN['blurb'], 'role': 'pelotazo',
+        'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': PEL_GROUPS, 'nPerDay': PEL_N_PER_DAY,
+        'floorRaw': round(float(y[trm].mean()), 4), 'bigPct': PEL_BIG, 'paused': paused,
+        'patterns': [{'id': n, 'label': SU.BY_ID[n].label} for n in names],
+        'stats': {'oos': {**_block(x, day[sel], sym[sel]), 'median': round(float(np.median(x)), 2), 'p10': round(float(np.mean(x >= 10) * 100), 1),
+                          'p20': round(float(np.mean(x >= 20) * 100), 1), 'p30': round(float(np.mean(x >= 30) * 100), 1), 'p95': round(float(np.percentile(x, 95)), 1),
+                          'hold': round(float(np.nanmean(bars[sel])), 1)},
+                  'recent': _block(pnl[recent], day[recent], sym[recent]) if recent.sum() >= 50 else None, 'benchmark': round(bench, 2),
+                  'haircut': haircut, 'cost2x': round(float(np.mean(x - cost_arr[sel])), 2),
+                  'health': _block(pnl[hm], day[hm], sym[hm]) if st_h else None, 'byYear': by_year, 'byGroup': by_group,
+                  'pBigCal': round(float(y[sel].mean() * 100), 1)},
+        'model': fm}
+
+
+def final(EV: Dict, EV_pel: Dict | None, out_dir: str, universe_n: int):
     rows, FL, names = union_events(EV, +1)
     last_day = int(EV['day'].max())
     last_str = str(np.datetime64('1970-01-01') + np.timedelta64(last_day, 'D'))
     print(f'\n########  VALIDACIÓN FINAL · {len(rows):,} candidatos · datos hasta {last_str}  ########', flush=True)
     plans = [build_plan(EV, rows, FL, names, pl, last_day) for pl in PLANS]
-    reg = {'version': 4, 'generatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'dataThrough': last_str, 'universe': universe_n,
+    pel = build_pelotazo(EV_pel, last_day) if EV_pel is not None else None
+    reg = {'version': 5, 'generatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'dataThrough': last_str, 'universe': universe_n,
            'design': {'windowYears': WINDOW_YEARS, 'firstWalkForwardYear': FIRST_WF_YEAR, 'nPerDay': N_PER_DAY, 'healthDays': HEALTH_DAYS},
            'rules': {'nPerDay': N_PER_DAY, 'watchMargin': 0.03},
            'patterns': [{'id': n, 'label': SU.BY_ID[n].label} for n in names],
-           'strategies': [{**{k: v for k, v in pl.items() if k not in ('model', 'gids')}, 'model': pl['model'].to_json()} for pl in plans]}
+           'strategies': [{**{k: v for k, v in pl.items() if k not in ('model', 'gids')}, 'model': pl['model'].to_json()} for pl in plans],
+           'pelotazo': ({**{k: v for k, v in pel.items() if k != 'model'}, 'model': pel['model'].to_json()} if pel else None)}
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, 'validated.json')
     json.dump(reg, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'), default=float)
@@ -365,7 +458,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -380,6 +473,11 @@ def main():
     t0 = time.time()
     uni, data = load_data(args)
     print(f'universo con datos: {len([s for s in uni if not uni[s].get("aux")])} activos · {time.time() - t0:.0f}s', flush=True)
+    if args.cmd == 'moc':
+        import lab
+        lab.moc_check(uni, data, args.out)
+        print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
+        return
     if args.cmd in ('pelotazo', 'pelotazo2'):
         import lab
         variants = lab.PEL_VARIANTS
@@ -389,7 +487,8 @@ def main():
         EV = build_events(data, uni, SU.SETUPS, variants)
     print(f'tabla de eventos lista · {time.time() - t0:.0f}s', flush=True)
     if args.cmd == 'final':
-        final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
+        EV_pel = build_events(data, uni, SU.PEL_SETUPS + [SU.BY_ID['B_up']], PEL_VARIANTS, with_moc=False)
+        final(EV, EV_pel, args.out, len([s for s in uni if not uni[s].get('aux')]))
     else:
         import lab
         getattr(lab, {'explore': 'explore', 'meta': 'meta_explore', 'meta2': 'meta2_explore', 'meta3': 'meta3_explore',

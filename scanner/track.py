@@ -30,7 +30,40 @@ def _exit_cond(F, b: int, sgn: int, kind: str, c: float) -> bool:
     return False
 
 
-def resolve(F: Dict[str, np.ndarray], i: int, sgn: int, ex: Dict[str, Any], cost: float) -> Dict[str, Any]:
+def _resolve_trailing(F, i: int, sgn: int, K: float, S0: float, H: int, E: float, atr: float, cost: float) -> Dict[str, Any]:
+    """Stop de seguimiento (chandelier): extremo favorable hasta la barra ANTERIOR ∓ K×ATR; solo se mueve a favor."""
+    n = len(F['c'])
+    out: Dict[str, Any] = {'entry': E, 'stop': E - sgn * S0 * atr, 'target': None, 'entryIdx': i + 1}
+    ext = E
+    last_j = min(H, n - 1 - i)
+    exit_px, bars = None, 0
+    for j in range(1, last_j + 1):
+        b = i + j
+        o, h, l, c = float(F['o'][b]), float(F['h'][b]), float(F['l'][b]), float(F['c'][b])
+        bars = j
+        if sgn > 0:
+            stop = max(E - S0 * atr, ext - K * atr)
+            if l <= stop:
+                exit_px, reason = min(o, stop), 'stop'; break
+            ext = max(ext, h)
+        else:
+            stop = min(E + S0 * atr, ext + K * atr)
+            if h >= stop:
+                exit_px, reason = max(o, stop), 'stop'; break
+            ext = min(ext, l)
+        if j == H:
+            exit_px, reason = c, 'tiempo'
+    if exit_px is not None:
+        out.update(status='cerrada', exitPrice=exit_px, reason=reason, bars=bars, exitIdx=i + bars,
+                   pnl=sgn * (exit_px - E) / E * 100.0 - cost)
+    else:
+        lastc = float(F['c'][min(i + last_j, n - 1)])
+        trail = max(E - S0 * atr, ext - K * atr) if sgn > 0 else min(E + S0 * atr, ext + K * atr)
+        out.update(status='abierta', bars=bars, curPrice=lastc, curPnl=sgn * (lastc - E) / E * 100.0 - cost, trailStop=trail)
+    return out
+
+
+def resolve(F: Dict[str, np.ndarray], i: int, sgn: int, ex: Dict[str, Any], cost: float, entry_mode: str = 'open') -> Dict[str, Any]:
     """
     Estado de una operación con señal en la barra i, con los datos disponibles.
     Devuelve dict: status ('pendiente'|'abierta'|'cerrada'), y según el caso entry/exit/pnl.
@@ -40,7 +73,9 @@ def resolve(F: Dict[str, np.ndarray], i: int, sgn: int, ex: Dict[str, Any], cost
     atr = float(F['atr'][i])
     if i + 1 >= n:
         return {'status': 'pendiente'}
-    E = float(F['o'][i + 1])
+    E = float(F['o'][i + 1]) if entry_mode == 'open' else float(F['c'][i])
+    if kind == 'trl':
+        return _resolve_trailing(F, i, sgn, T, S, H, E, atr, cost)
     stop = E - sgn * S * atr
     tgt = E + sgn * T * atr if kind == 'atr' else None
     out: Dict[str, Any] = {'entry': E, 'stop': stop, 'target': tgt, 'entryIdx': i + 1}
@@ -136,7 +171,7 @@ def update(prev: Optional[Dict[str, Any]], alerts: List[Dict[str, Any]], series_
         if len(j) == 0:
             continue
         r = resolve(F, int(j[0]), int(t['dir']), t['exit'], cost_of.get(t['sym'], 0.30))
-        for k in ('entry', 'stop', 'target', 'exitPrice', 'reason', 'bars', 'pnl', 'curPrice', 'curPnl', 'pendingExit'):
+        for k in ('entry', 'stop', 'target', 'exitPrice', 'reason', 'bars', 'pnl', 'curPrice', 'curPnl', 'pendingExit', 'trailStop'):
             t.pop(k, None)
         t.update({k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in r.items()
                   if k not in ('entryIdx', 'exitIdx')})
@@ -148,4 +183,6 @@ def update(prev: Optional[Dict[str, Any]], alerts: List[Dict[str, Any]], series_
     by_setup: Dict[str, Any] = {}
     for sid in sorted({t['setup'] for t in trades}):
         by_setup[sid] = stat_block([t for t in trades if t['setup'] == sid])
-    return {'trades': trades, 'stats': {'global': stat_block(trades), 'bySetup': by_setup}}
+    core = [t for t in trades if t['exit']['kind'] != 'trl']        # los pelotazos (trailing) tienen otra naturaleza: se miden aparte
+    pel = [t for t in trades if t['exit']['kind'] == 'trl']
+    return {'trades': trades, 'stats': {'global': stat_block(core), 'pelotazo': stat_block(pel), 'bySetup': by_setup}}

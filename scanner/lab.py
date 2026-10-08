@@ -779,3 +779,145 @@ def pelotazo2_explore(EV: Dict, out_dir: str):
                 mm = pc_sel & (p >= a_) & (p <= b_)
                 print(f"  calibración 2024+: p∈[{a_:.2f},{b_:.2f}] n={mm.sum()} predicho≈{np.mean(p[mm]) * 100:.0f}% real P(≥12%)={y[mm].mean() * 100:.0f}% μ={np.nanmean(pnl[mm]):+.1f}%")
         sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  MOC: ¿funciona escanear ANTES del cierre y comprar al cierre?
+# ═════════════════════════════════════════════════════════════════════════
+def _prov_bars(it: Dict, fin: Dict, last_n: int = 900):
+    """
+    Reconstruye, con barras de 60 min, el diario 'tal como se veía a las 15:30 ET' (30 min antes del cierre):
+    cierre provisional = apertura de la última barra horaria; máx/mín sin la última media hora; volumen sin ella.
+    Devuelve (serie_final_recortada, serie_provisional, válida) alineadas por fecha, o None.
+    """
+    off = it['off']
+    loc = it['t'] + off
+    dday = (loc // 86400).astype(np.int64)
+    sec = loc % 86400
+    fday = ((fin['t'] + off) // 86400).astype(np.int64)
+    n = len(fday)
+    a0 = max(0, n - last_n)
+    fin_s = {k: v[a0:] for k, v in fin.items()}
+    fday = fday[a0:]
+    pos = {int(d): i for i, d in enumerate(fday)}
+    prov = {k: v.copy() for k, v in fin_s.items()}
+    valid = np.zeros(len(fday), bool)
+    ud, st = np.unique(dday, return_index=True)
+    en = np.concatenate([st[1:], [len(dday)]])
+    for d, a, b in zip(ud, st, en):
+        i = pos.get(int(d))
+        if i is None or b - a < 5 or not (15.25 * 3600 <= sec[b - 1] <= 15.75 * 3600):
+            continue
+        fac = fin_s['c'][i] / it['c'][b - 1] if it['c'][b - 1] > 0 else 0
+        if not (0.5 < fac < 2.0):
+            continue
+        hi = max(it['h'][a:b - 1].max(), it['o'][b - 1]); lo = min(it['l'][a:b - 1].min(), it['o'][b - 1])
+        prov['o'][i] = it['o'][a] * fac; prov['h'][i] = hi * fac; prov['l'][i] = lo * fac
+        prov['c'][i] = it['o'][b - 1] * fac; prov['v'][i] = it['v'][a:b - 1].sum()
+        valid[i] = True
+    return fin_s, prov, valid
+
+
+def moc_check(uni: Dict, data: Dict, out_dir: str):
+    import data as D
+    import feats
+    import model as MD
+    import setups as SU
+    here = os.path.dirname(os.path.abspath(__file__))
+    reg = json.load(open(os.path.join(here, 'model', 'validated.json')))
+    strategies = reg['strategies']
+    models = [MD.LogitModel.from_json(s['model']) for s in strategies]
+    pattern_ids = [p['id'] for p in reg['patterns']]
+    variants = {s['id']: SM.Variant(s['exit']['kind'], s['exit']['T'], s['exit']['S'], s['exit']['H']) for s in strategies}
+    us = {'us_large', 'us_mid', 'us_small', 'etf'}
+    syms = [x for x in uni if not uni[x].get('aux') and uni[x]['group'] in us and x in data]
+    print(f'\n######## MOC · {len(syms)} símbolos de EE.UU.: descargando barras de 60 min…', flush=True)
+    intr = D.fetch_intraday_many(syms + ['SPY', '^VIX'], workers=8)
+    print(f'  intradía OK: {len(intr)}/{len(syms) + 2}', flush=True)
+    pairs = {}
+    for x in syms + ['SPY', '^VIX']:
+        if x in intr and x in data:
+            r = _prov_bars(intr[x], data[x])
+            if r is not None and r[2].sum() > 100:
+                pairs[x] = r
+    print(f'  días provisionales reconstruidos para {len(pairs)} símbolos · mediana {int(np.median([p[2].sum() for p in pairs.values()]))} días', flush=True)
+    if 'SPY' not in pairs:
+        print('  sin SPY intradía: no se puede continuar'); return
+    # régimen provisional / final
+    vix_f = pairs['^VIX'][0] if '^VIX' in pairs else None
+    spy_f, spy_p, _ = pairs['SPY']
+    vix_p = pairs['^VIX'][1] if '^VIX' in pairs else spy_f
+    reg_f = feats.regime_series(spy_f, vix_f if vix_f is not None else {**spy_f}) if vix_f is not None else None
+    reg_p = feats.regime_series(spy_p, vix_p) if vix_f is not None else None
+    if reg_f is None:
+        print('  sin VIX intradía: se usa VIX final en ambos'); vix_f = data['^VIX']
+        reg_f = feats.regime_series(spy_f, {k: v[-len(spy_f['c']):] for k, v in vix_f.items()}); reg_p = feats.regime_series(spy_p, {k: v[-len(spy_f['c']):] for k, v in vix_f.items()})
+    # amplitud (dos pasadas para no guardar todo)
+    bre_f, bre_p = feats.Breadth(), feats.Breadth()
+    cache = {}
+    for x in syms:
+        if x not in pairs:
+            continue
+        Ff, Fp = feats.build(pairs[x][0]), feats.build(pairs[x][1])
+        bre_f.add(Ff); bre_p.add(Fp)
+    bd_f, bd_p = bre_f.finalize(), bre_p.finalize()
+    rows = {sid: {'fin': [], 'prov': []} for sid in variants}
+    n_cand = {'fin': 0, 'prov': 0}
+    for x in syms:
+        if x not in pairs:
+            continue
+        fin_s, prov_s, valid = pairs[x]
+        g = uni[x]['group']; gi = feats.GROUPS.index(g)
+        cost = SM.COST_RT.get(g, 0.30)
+        Ff, Fp = feats.build(fin_s), feats.build(prov_s)
+        feats.ensure_regime(Ff, reg_f); feats.ensure_regime(Fp, reg_p)
+        feats.align_breadth(bd_f, Ff['t'], Ff); feats.align_breadth(bd_p, Fp['t'], Fp)
+        for tag, F in (('fin', Ff), ('prov', Fp)):
+            idx, FLm = SU.candidate_bars(F, g, pattern_ids)
+            keep = valid[idx] & (idx < len(F['c']) - 12) if len(idx) else np.zeros(0, bool)
+            idx, FLm = idx[keep], FLm[keep]
+            if len(idx) == 0:
+                continue
+            n_cand[tag] += len(idx)
+            Xm = feats.event_matrix(F, idx)
+            for s, mdl in zip(strategies, models):
+                if g not in s['groups']:
+                    continue
+                p_raw = mdl.predict_raw(Xm, FLm, np.full(len(idx), gi))
+                sel = p_raw >= s['floorRaw']
+                if not sel.any():
+                    continue
+                ii = idx[sel]
+                v = variants[s['id']]
+                pc = SM.simulate(Ff, ii, +1, [v], cost, entry_mode='close')[v.name].pnl     # resultado SIEMPRE con el cierre FINAL
+                po = SM.simulate(Ff, ii, +1, [v], cost, entry_mode='open')[v.name].pnl
+                dd = (Ff['t'][ii] // 86400).astype(np.int64)
+                rows[s['id']][tag].append((dd, np.full(len(ii), hash(x) % 10 ** 9), p_raw[sel], pc, po))
+    print(f"  candidatos en la ventana: finales {n_cand['fin']:,} · provisionales {n_cand['prov']:,}", flush=True)
+    for sid in variants:
+        res = {}
+        for tag in ('fin', 'prov'):
+            if not rows[sid][tag]:
+                continue
+            dd, ss, pp, pc, po = [np.concatenate(z) for z in zip(*rows[sid][tag])]
+            ok = np.isfinite(pc) & np.isfinite(po)
+            dd, ss, pp, pc, po = dd[ok], ss[ok], pp[ok], pc[ok], po[ok]
+            m = np.ones(len(dd), bool)
+            top = _topn_mask(pp, dd, m, 5)
+            res[tag] = (dd[top], ss[top], pc[top], po[top])
+        print(f"\n=== {sid} · política top 5/día (ventana ≈ {int(np.median([p[2].sum() for p in pairs.values()]))} días; el modelo vio estos años al entrenar → valen las DIFERENCIAS, no el nivel) ===")
+        for tag, lbl in (('fin', 'señal con CIERRE FINAL'), ('prov', 'señal PROVISIONAL (15:30 ET)')):
+            if tag not in res:
+                continue
+            dd, ss, pc, po = res[tag]
+            sc, so = stats(pc, dd, ss), stats(po, dd, ss)
+            print(f"  {lbl:30s} n={sc['n']:5d} | compra al CIERRE: WR={sc['wr']:4.1f}% μ={sc['mean']:+5.2f}% PF={sc['pf']:4.2f} | compra a la APERTURA: WR={so['wr']:4.1f}% μ={so['mean']:+5.2f}% PF={so['pf']:4.2f}")
+        if 'fin' in res and 'prov' in res:
+            kf = set(zip(res['fin'][0].tolist(), res['fin'][1].tolist())); kp = set(zip(res['prov'][0].tolist(), res['prov'][1].tolist()))
+            print(f"  solapamiento: {len(kf & kp) / max(1, len(kp)) * 100:.0f}% de las señales provisionales también lo son al cierre final · {len(kf & kp) / max(1, len(kf)) * 100:.0f}% de las finales ya estaban avisadas a las 15:30")
+            both = np.array([(d, s) in kf for d, s in zip(res['prov'][0].tolist(), res['prov'][1].tolist())])
+            dd, ss, pc, po = res['prov']
+            for lbl, mm in (('provisionales que se CONFIRMAN al cierre', both), ('provisionales que se DESVANECEN', ~both)):
+                if mm.sum() >= 20:
+                    s_ = stats(pc[mm], dd[mm], ss[mm]); print(f"    {lbl:42s} n={s_['n']:5d} WR={s_['wr']:4.1f}% μ={s_['mean']:+5.2f}%")
+    sys.stdout.flush()

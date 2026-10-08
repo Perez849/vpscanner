@@ -177,6 +177,22 @@ def long_pattern_ids() -> List[str]:
     return [s.id for s in SETUPS if s.dir > 0 and s.family not in ('baseline', 'control')]
 
 
+def candidate_bars(F: Dict[str, np.ndarray], group: str, pattern_ids: List[str]):
+    """Barras candidatas (mismo criterio que candidate_at_last) y matriz de banderas [n_candidatas, n_patrones]."""
+    n = len(F['c'])
+    ev = detect(F, group, [BY_ID[i] for i in pattern_ids])
+    fire = np.zeros(n, dtype=bool)
+    flags = np.zeros((n, len(pattern_ids)), dtype=np.float32)
+    for c, pid in enumerate(pattern_ids):
+        fire[ev[pid]] = True
+        flags[ev[pid], c] = 1.0
+    cs = np.concatenate([[0], np.cumsum(fire.astype(np.int64))])
+    lo = np.maximum(np.arange(n) - (UNION_COOLDOWN - 1), 0)
+    prev = cs[np.arange(n)] - cs[lo]
+    idx = np.flatnonzero(fire & (prev == 0))
+    return idx, flags[idx]
+
+
 def candidate_at_last(F: Dict[str, np.ndarray], group: str, pattern_ids: List[str]):
     """
     ¿Hay candidato en la última barra? Devuelve el vector de banderas (qué patrones saltaron) o None.

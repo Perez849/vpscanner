@@ -90,6 +90,10 @@ def main():
     pattern_ids = [p['id'] for p in reg.get('patterns', [])]
     labels = {p['id']: p['label'] for p in reg.get('patterns', [])}
     models = [MD.LogitModel.from_json(s['model']) for s in strategies]
+    pel = reg.get('pelotazo')
+    pel_model = MD.LogitModel.from_json(pel['model']) if pel else None
+    pel_pattern_ids = [p['id'] for p in pel['patterns']] if pel else []
+    pel_labels = {p['id']: p['label'] for p in pel['patterns']} if pel else {}
 
     if args.synthetic:
         import synth
@@ -127,6 +131,7 @@ def main():
 
     # ── pasada 2: candidatos de hoy y probabilidad ────────────────────────
     cand: List[Dict[str, Any]] = []
+    pel_cand: List[Dict[str, Any]] = []
     cost_of: Dict[str, float] = {}
     last_ts_all: List[float] = []
     n_os = 0
@@ -141,6 +146,10 @@ def main():
         fl = SU.candidate_at_last(F, g, pattern_ids)
         if fl is not None:
             cand.append({'sym': sym, 'g': g, 'F': F, 'last': last, 'fl': fl})
+        if pel and not pel.get('paused') and g in pel['groups']:
+            flp = SU.candidate_at_last(F, g, pel_pattern_ids)
+            if flp is not None:
+                pel_cand.append({'sym': sym, 'g': g, 'F': F, 'last': last, 'fl': flp})
 
     # probabilidad de cada candidato en cada plan; cada plan elige sus N mejores del día
     per_plan: Dict[str, List[Dict[str, Any]]] = {s['id']: [] for s in strategies}
@@ -207,6 +216,32 @@ def main():
     n_over_cap = 0
     alerts = main_alerts
 
+    # ── pelotazos (experimental): las N mejores del día por probabilidad de ganar ≥ +12 % ──
+    pelotazos: List[Dict[str, Any]] = []
+    if pel and pel_cand:
+        rows_ = []
+        for a in pel_cand:
+            X = feats.event_matrix(a['F'], np.array([a['last']]))
+            gid = np.array([feats.GROUPS.index(a['g'])])
+            p_raw = float(pel_model.predict_raw(X, a['fl'][None, :], gid)[0])
+            if p_raw >= pel['floorRaw']:
+                rows_.append((p_raw, float(pel_model.predict(X, a['fl'][None, :], gid)[0]), a, X))
+        rows_.sort(key=lambda r: -r[0])
+        for rank, (p_raw, p_cal, a, X) in enumerate(rows_[:int(pel.get('nPerDay', 3))]):
+            F, i, sym, g = a['F'], a['last'], a['sym'], a['g']
+            atr, close = float(F['atr'][i]), float(F['c'][i])
+            ex = pel['exit']
+            flagged = [pid for pid, v in zip(pel_pattern_ids, a['fl']) if v > 0]
+            pelotazos.append({
+                'id': f"{sym}|pel|{int(F['t'][i] * 1000)}", 'sym': sym, 'group': g, 'sector': uni[sym].get('sector', ''),
+                'label': ' · '.join(pel_labels.get(f, f) for f in flagged[:3]), 'patterns': flagged, 'dir': 1,
+                'sigTs': int(F['t'][i] * 1000), 'sigClose': round(close, 4), 'atr': round(atr, 4), 'atrPct': round(atr / close * 100, 2),
+                'strategy': pel['id'], 'rank': rank + 1, 'pBig': round(p_cal, 4), 'exit': ex,
+                'levels': {'stopPct': round(-ex['S'] * atr / close * 100, 2), 'stop': round(close - ex['S'] * atr, 4)},
+                'ctx': {k: (None if not np.isfinite(X[0][feats.FEATURES.index(k)]) else round(float(X[0][feats.FEATURES.index(k)]), 2))
+                        for k in ('rsi2', 'ret5', 'ret60', 'ret120', 'rs120', 'dist200', 'dd52', 'vol_ratio', 'gap', 'vix', 'vix_z', 'b_up200', 'b_os')},
+                'hist': {k: pel['stats']['oos'].get(k) for k in ('n', 'wr', 'mean', 'median', 'pf', 'p20', 'p30')}})
+
     # ── seguimiento en vivo ───────────────────────────────────────────────
     prev = jload('tracking.json', args.out)
     plan_trades = []
@@ -214,6 +249,9 @@ def main():
         for pl in al['plans']:
             plan_trades.append({'id': f"{al['sym']}|{pl['strategy']}|{al['sigTs']}", 'sym': al['sym'], 'group': al['group'], 'setup': pl['strategy'],
                                 'cell': pl['strategy'], 'dir': 1, 'exit': pl['exit'], 'sigTs': al['sigTs'], 'p': pl['p'], 'sigClose': al['sigClose']})
+    for pa in pelotazos:
+        plan_trades.append({'id': pa['id'], 'sym': pa['sym'], 'group': pa['group'], 'setup': pa['strategy'], 'cell': pa['strategy'], 'dir': 1,
+                            'exit': pa['exit'], 'sigTs': pa['sigTs'], 'p': None, 'sigClose': pa['sigClose']})
     tracking = TR.update(prev, plan_trades, series_F, cost_of)
     for t in tracking['trades']:
         if t['status'] in ('abierta', 'pendiente') and t['exit']['kind'] == 'rsi' and t['sym'] in series_F:
@@ -247,19 +285,22 @@ def main():
     now = datetime.now(timezone.utc).isoformat()
     meta = {'generatedAt': now, 'dataThrough': last_day, 'symbols': len(series_F), 'failed': len(failed),
             'failedList': failed[:80], 'strategies': len(strategies), 'candidates': len(cand), 'alerts': len(main_alerts),
-            'paused': [s['id'] for s in strategies if s.get('paused')], 'watch': len(watch), 'market': mk, 'oversoldUptrend': n_os, 'rules': rules,
+            'paused': [s['id'] for s in strategies if s.get('paused')] + ([pel['id']] if pel and pel.get('paused') else []), 'watch': len(watch), 'pelotazos': len(pelotazos), 'market': mk, 'oversoldUptrend': n_os, 'rules': rules,
             'validatedAt': reg.get('generatedAt'), 'validatedThrough': reg.get('dataThrough'), 'secs': round(time.time() - t0)}
 
-    jdump({'generatedAt': now, 'dataThrough': last_day, 'alerts': main_alerts, 'watch': watch}, 'alerts.json', args.out)
+    jdump({'generatedAt': now, 'dataThrough': last_day, 'alerts': main_alerts, 'watch': watch, 'pelotazos': pelotazos}, 'alerts.json', args.out)
     jdump(tracking, 'tracking.json', args.out)
     jdump(candles, 'candles.json', args.out)
     jdump(meta, 'meta.json', args.out)
     jdump({'generatedAt': reg.get('generatedAt'), 'dataThrough': reg.get('dataThrough'), 'universe': reg.get('universe'),
            'design': reg.get('design'), 'rules': rules,
            'patterns': reg.get('patterns'),
-           'strategies': [{k: v for k, v in s.items() if k != 'model'} for s in strategies]}, 'registry.json', args.out)
+           'strategies': [{k: v for k, v in s.items() if k != 'model'} for s in strategies],
+           'pelotazo': ({k: v for k, v in pel.items() if k != 'model'} if pel else None)}, 'registry.json', args.out)
 
     print(f"\nActivos: {len(series_F)} · fallidos {len(failed)} · candidatos {len(cand)} · alertas {len(main_alerts)} · vigilancia {len(watch)} · {time.time() - t0:.0f}s", flush=True)
+    for pa in pelotazos:
+        print(f"  🚀 {pa['sym']:10s} P(≥+12%)≈{pa['pBig'] * 100:.0f}%  stop inicial {pa['levels']['stopPct']:+.1f}%  {pa['label'][:60]}", flush=True)
     for a in main_alerts[:15]:
         print(f"  {a['sym']:10s} " + ' | '.join(f"{pl['label']}: P={pl['p'] * 100:.0f}% EV={pl['ev']:+.2f}%" for pl in a['plans']) + f"  {a['label'][:60]}", flush=True)
     if not strategies:
@@ -268,8 +309,8 @@ def main():
         if s_.get('paused'):
             print(f"  ⏸ Plan «{s_['label']}» en PAUSA: el chequeo de salud (últimos 12 meses) no es rentable.", flush=True)
     if not args.no_notify:
-        notify.send(main_alerts, meta, tracking)
-    notify.step_summary(main_alerts, watch, meta, tracking)
+        notify.send(main_alerts, meta, tracking, pelotazos)
+    notify.step_summary(main_alerts, watch, meta, tracking, pelotazos)
 
 
 if __name__ == '__main__':

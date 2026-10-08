@@ -26,7 +26,12 @@ def _fmt_alert(a: Dict[str, Any]) -> str:
     return '\n'.join(lines)
 
 
-def build_message(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str, Any]) -> str:
+def _fmt_pelotazo(a: Dict[str, Any]) -> str:
+    return (f"🚀 *{a['sym']}*  ({a['label'][:55]})\n   probab. de superar +12% ≈ {a['pBig'] * 100:.0f}% · stop inicial {a['levels']['stopPct']:+.1f}% "
+            f"que sube con el precio (trailing {a['exit']['T']:g}×ATR) · máx {a['exit']['H']} sesiones")
+
+
+def build_message(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str, Any], pelotazos: List[Dict[str, Any]] | None = None) -> str:
     g = tracking['stats']['global']
     head = f"📡 *VP Scanner* · datos hasta {meta.get('dataThrough')}\n"
     mk = meta.get('market') or {}
@@ -41,11 +46,11 @@ def build_message(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: 
     return head + '\n' + body + more + "\n\nOperar en la apertura de la próxima sesión."
 
 
-def send(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str, Any]) -> None:
+def send(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str, Any], pelotazos: List[Dict[str, Any]] | None = None) -> None:
     token, chat = os.environ.get('TELEGRAM_BOT_TOKEN'), os.environ.get('TELEGRAM_CHAT_ID')
     if not token or not chat:
         return
-    text = build_message(alerts, meta, tracking)
+    text = build_message(alerts, meta, tracking, pelotazos)
     req = urllib.request.Request(
         f'https://api.telegram.org/bot{token}/sendMessage',
         data=json.dumps({'chat_id': chat, 'text': text[:4000], 'parse_mode': 'Markdown',
@@ -58,7 +63,7 @@ def send(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str,
         print(f'  Telegram: fallo ({e})', flush=True)
 
 
-def step_summary(alerts, watch, meta, tracking) -> None:
+def step_summary(alerts, watch, meta, tracking, pelotazos=None) -> None:
     path = os.environ.get('GITHUB_STEP_SUMMARY')
     if not path:
         return
@@ -75,5 +80,9 @@ def step_summary(alerts, watch, meta, tracking) -> None:
                 lines.append(f"| {a['sym']} | {pl['label']} | {pl['p'] * 100:.0f}% | {pl['ev']:+.2f}% | {lv['stopPct']:+.1f}% | {sal} | {pl['exit']['H']} |")
     else:
         lines.append('_Sin alertas hoy._')
+    if pelotazos:
+        lines += ['', '### 🚀 Pelotazos (experimental)', '| Activo | P(≥+12%) | Stop inicial | Patrón |', '|---|---|---|---|']
+        for a in pelotazos:
+            lines.append(f"| {a['sym']} | {a['pBig'] * 100:.0f}% | {a['levels']['stopPct']:+.1f}% | {a['label'][:60]} |")
     with open(path, 'a', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')

@@ -152,7 +152,24 @@ def test_trailing_stop_and_close_entry():
     print(f'ok · trailing stop == referencia escalar ({tot} operaciones) y entrada al cierre')
 
 
+def test_resolve_trailing_equals_simulate():
+    bad = tot = 0
+    for seed in range(3):
+        F = feats.build(synth(seed=seed + 60, ar=0.05, sig=0.02))
+        idx = np.arange(300, 1500, 9)
+        for sgn in (1, -1):
+            v = simulate.Variant('trl', 5.0, 5.0, 60)
+            res = simulate.simulate(F, idx, sgn, [v], 0.2)[v.name]
+            for q, i in enumerate(idx):
+                r = track.resolve(F, int(i), sgn, {'kind': 'trl', 'T': 5.0, 'S': 5.0, 'H': 60}, 0.2)
+                tot += 1
+                bad += (r['status'] != 'cerrada') or abs(r['pnl'] - res.pnl[q]) > 1e-9
+    assert tot > 500 and bad == 0, (tot, bad)
+    print(f'ok · seguimiento (trailing) == simulador en {tot} operaciones')
+
+
 if __name__ == '__main__':
+    test_resolve_trailing_equals_simulate()
     test_trailing_stop_and_close_entry()
     test_exit_trigger_formula()
     test_causality()
