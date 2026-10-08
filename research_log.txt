@@ -1,0 +1,101 @@
+  datos: 1971 en caché, 14 por descargar (10y)
+  datos: OK 1971 · fallidos 14
+  fallidos: HONA VYLR CWEN-A LEG FDXF HLX BLFS ADIG MFP ROG.SW MBGL QRVO SATS CTRA
+universo con datos: 1967 activos · 6s
+  amplitud de mercado lista
+  eventos: 300/1967 símbolos (12s)
+  eventos: 600/1967 símbolos (23s)
+  eventos: 900/1967 símbolos (34s)
+  eventos: 1200/1967 símbolos (45s)
+  eventos: 1500/1967 símbolos (57s)
+  eventos: 1800/1967 símbolos (68s)
+tabla de eventos lista · 87s
+
+######## REASONS2 · 198,461 candidatos largos · walk-forward 2019–2026
+  variables de crédito/tipos/dólar disponibles: ['hyg_ret5', 'hyg_dist50', 'hyg_dd60', 'tlt_ret20', 'uup_ret20', 'credit_z']
+
+================ rsi_S4_H10 · Equilibrado (N=3) ================
+  [R1] ¿Basta una REGLA SIMPLE y transparente? (se eligen las N mejores del día entre TODOS los candidatos del plan, sin modelo ni umbral)
+   DESPLEGADO (modelo, N mejores con p ≥ tasa base) n= 4362 WR=65.7% μ=+0.58% t=5.1 R̄=+0.025 μ(riesgo cte)=+0.31 | ≤2023 +0.61 · 2024+ +0.52 | cartera 10×10%: +23.6% DD 27.6% Sharpe 1.37
+   al azar (N por día)                          n= 6092 WR=63.2% μ=+0.01% t=0.1 R̄=-0.006 μ(riesgo cte)=-0.06 | ≤2023 +0.01 · 2024+ +0.01 | mejor que desplegado 0/8 | cartera 10×10%:  -2.5% DD 52.8% Sharpe -0.08
+   volatilidad (ATR%) + caída desde máx. 20d    n= 6092 WR=62.5% μ=+0.42% t=3.1 R̄=+0.011 μ(riesgo cte)=+0.24 | ≤2023 +0.49 · 2024+ +0.30 | mejor que desplegado 3/8 | cartera 10×10%:  +7.7% DD 57.5% Sharpe 0.42
+   volatilidad + caída 20d + caída 52 sem.      n= 6092 WR=62.3% μ=+0.37% t=2.7 R̄=+0.012 μ(riesgo cte)=+0.24 | ≤2023 +0.51 · 2024+ +0.11 | mejor que desplegado 2/8 | cartera 10×10%: +13.4% DD 48.5% Sharpe 0.61
+   volatilidad + caída 3 sesiones               n= 6092 WR=61.9% μ=+0.28% t=2.0 R̄=+0.007 μ(riesgo cte)=+0.13 | ≤2023 +0.34 · 2024+ +0.16 | mejor que desplegado 1/8 | cartera 10×10%:  +4.5% DD 50.4% Sharpe 0.31
+   volatilidad + caída 20d + VIX                n= 6092 WR=62.5% μ=+0.42% t=3.1 R̄=+0.011 μ(riesgo cte)=+0.24 | ≤2023 +0.49 · 2024+ +0.30 | mejor que desplegado 3/8 | cartera 10×10%:  +7.7% DD 57.5% Sharpe 0.42
+   solo caída 20d                               n= 6092 WR=62.5% μ=+0.33% t=2.6 R̄=+0.011 μ(riesgo cte)=+0.19 | ≤2023 +0.43 · 2024+ +0.15 | mejor que desplegado 2/8 | cartera 10×10%:  +6.4% DD 47.5% Sharpe 0.38
+   solo volatilidad                             n= 6092 WR=62.9% μ=+0.54% t=3.8 R̄=+0.015 μ(riesgo cte)=+0.33 | ≤2023 +0.60 · 2024+ +0.43 | mejor que desplegado 2/8 | cartera 10×10%: +22.7% DD 50.8% Sharpe 0.89
+  [R2] ¿Mejor ordenar por RETORNO ESPERADO que por probabilidad de ganar? (regresión ridge con ventana móvil de 3 años)
+   ridge sobre el resultado %                   n= 4448 WR=64.2% μ=+0.40% t=2.9 R̄=+0.018 μ(riesgo cte)=+0.28 | ≤2023 +0.30 · 2024+ +0.57 | mejor que desplegado 2/8 | cartera 10×10%: +19.3% DD 34.2% Sharpe 1.03
+   ridge sobre el resultado en R (por riesgo)   n= 4005 WR=65.3% μ=+0.38% t=3.3 R̄=+0.019 μ(riesgo cte)=+0.26 | ≤2023 +0.42 · 2024+ +0.31 | mejor que desplegado 2/8 | cartera 10×10%: +17.1% DD 24.4% Sharpe 1.16
+   mezcla probabilidad + retorno esperado       n= 3564 WR=65.5% μ=+0.60% t=4.2 R̄=+0.024 μ(riesgo cte)=+0.36 | ≤2023 +0.62 · 2024+ +0.55 | mejor que desplegado 4/8 | cartera 10×10%: +22.9% DD 19.2% Sharpe 1.40
+  [R3] RETORNO POR UNIDAD DE RIESGO según la volatilidad del valor (candidatos del plan, R = resultado / (stop en %)):
+     ATR% quintil 1 (≈1.5%): n= 29267 WR=63.7% μ=-0.03% R̄=-0.004
+     ATR% quintil 2 (≈2.1%): n= 29266 WR=62.8% μ=-0.06% R̄=-0.007
+     ATR% quintil 3 (≈2.6%): n= 29267 WR=63.0% μ=-0.00% R̄=-0.000
+     ATR% quintil 4 (≈3.2%): n= 29266 WR=63.1% μ=+0.10% R̄=+0.008
+     ATR% quintil 5 (≈5.0%): n= 29267 WR=65.2% μ=+0.50% R̄=+0.023
+  [R4] INFORMACIÓN DE CRÉDITO / TIPOS / DÓLAR añadida al modelo lineal
+   + crédito (HYG, diferencial) (AUC 0.519)     n= 4289 WR=64.8% μ=+0.35% t=3.1 R̄=+0.012 μ(riesgo cte)=+0.15 | ≤2023 +0.45 · 2024+ +0.14 | mejor que desplegado 1/8 | cartera 10×10%: +11.2% DD 38.7% Sharpe 0.74
+   + tipos y dólar (TLT, UUP) (AUC 0.522)       n= 4214 WR=65.8% μ=+0.51% t=4.4 R̄=+0.023 μ(riesgo cte)=+0.29 | ≤2023 +0.58 · 2024+ +0.38 | mejor que desplegado 3/8 | cartera 10×10%: +20.2% DD 30.1% Sharpe 1.26
+   + todo el bloque (AUC 0.516)                 n= 4268 WR=65.0% μ=+0.38% t=3.3 R̄=+0.014 μ(riesgo cte)=+0.17 | ≤2023 +0.47 · 2024+ +0.20 | mejor que desplegado 1/8 | cartera 10×10%: +13.7% DD 36.4% Sharpe 0.87
+  [R6] SUELO DE VOLATILIDAD: los costes son fijos en % y en valores poco volátiles se comen el rebote. Operaciones SELECCIONADAS por tramo de ATR%:
+     ATR% [0,2) n=  610 WR=63.8% μ=-0.09% R̄=-0.016 años+ 4/8
+     ATR% [2,3) n= 1092 WR=64.9% μ=+0.11% R̄=+0.010 años+ 5/8
+     ATR% [3,4) n=  906 WR=67.0% μ=+0.51% R̄=+0.036 años+ 6/8
+     ATR% [4,6) n= 1072 WR=65.4% μ=+0.64% R̄=+0.032 años+ 7/8
+     ATR% [6,999) n=  682 WR=67.4% μ=+1.93% R̄=+0.061 años+ 8/8
+     política con suelo de ATR% (se aplica ANTES de elegir las N mejores del día):
+   sin suelo (desplegado)                       n= 4362 WR=65.7% μ=+0.58% t=5.1 R̄=+0.025 μ(riesgo cte)=+0.31 | ≤2023 +0.61 · 2024+ +0.52 | mejor que desplegado 0/8 | cartera 10×10%: +23.6% DD 27.6% Sharpe 1.37
+   suelo ATR ≥ 2%                               n= 4257 WR=65.6% μ=+0.60% t=5.0 R̄=+0.026 μ(riesgo cte)=+0.37 | ≤2023 +0.62 · 2024+ +0.55 | mejor que desplegado 5/8 | cartera 10×10%: +24.4% DD 29.4% Sharpe 1.37
+   suelo ATR ≥ 2.5%                             n= 4134 WR=66.6% μ=+0.70% t=5.6 R̄=+0.034 μ(riesgo cte)=+0.54 | ≤2023 +0.74 · 2024+ +0.61 | mejor que desplegado 6/8 | cartera 10×10%: +31.4% DD 27.6% Sharpe 1.68
+   suelo ATR ≥ 3%                               n= 3900 WR=66.4% μ=+0.73% t=5.3 R̄=+0.034 μ(riesgo cte)=+0.59 | ≤2023 +0.88 · 2024+ +0.45 | mejor que desplegado 6/8 | cartera 10×10%: +32.4% DD 32.8% Sharpe 1.67
+   suelo ATR ≥ 3.5%                             n= 3607 WR=65.8% μ=+0.75% t=4.8 R̄=+0.031 μ(riesgo cte)=+0.61 | ≤2023 +0.90 · 2024+ +0.45 | mejor que desplegado 7/8 | cartera 10×10%: +27.7% DD 36.9% Sharpe 1.39
+   suelo ATR ≥ 4%                               n= 3283 WR=65.3% μ=+0.78% t=4.4 R̄=+0.029 μ(riesgo cte)=+0.63 | ≤2023 +0.92 · 2024+ +0.49 | mejor que desplegado 7/8 | cartera 10×10%: +28.0% DD 36.5% Sharpe 1.38
+   suelo ATR ≥ 5%                               n= 2510 WR=65.7% μ=+1.04% t=4.5 R̄=+0.037 μ(riesgo cte)=+0.94 | ≤2023 +1.11 · 2024+ +0.91 | mejor que desplegado 7/8 | cartera 10×10%: +34.3% DD 33.4% Sharpe 1.61
+  [R5] ¿Ayuda quedarse solo con los patrones que HAN FUNCIONADO hasta cada año? (elección anidada: cada año usa solo años previos)
+   desplegado (solo 2021+, comparable)          n= 3474 WR=64.6% μ=+0.51% t=4.0 R̄=+0.022 μ(riesgo cte)=+0.28 | ≤2023 +0.51 · 2024+ +0.52 | cartera 10×10%: +23.2% DD 27.6% Sharpe 1.30
+   solo patrones que ya funcionaban             n= 3413 WR=64.8% μ=+0.50% t=3.8 R̄=+0.022 μ(riesgo cte)=+0.28 | ≤2023 +0.59 · 2024+ +0.36 | mejor que desplegado 3/6 | cartera 10×10%: +25.9% DD 22.9% Sharpe 1.47
+
+================ atr_T1_S4_H10 · Alta probabilidad (N=5) ================
+  [R1] ¿Basta una REGLA SIMPLE y transparente? (se eligen las N mejores del día entre TODOS los candidatos del plan, sin modelo ni umbral)
+   DESPLEGADO (modelo, N mejores con p ≥ tasa base) n= 6013 WR=70.1% μ=+0.25% t=3.1 R̄=+0.016 μ(riesgo cte)=+0.15 | ≤2023 +0.27 · 2024+ +0.19 | cartera 10×10%: +14.5% DD 26.8% Sharpe 1.26
+   al azar (N por día)                          n= 9702 WR=68.9% μ=+0.18% t=2.8 R̄=+0.011 μ(riesgo cte)=+0.10 | ≤2023 +0.13 · 2024+ +0.26 | mejor que desplegado 2/8 | cartera 10×10%: +10.4% DD 32.6% Sharpe 0.75
+   volatilidad (ATR%) + caída desde máx. 20d    n= 9702 WR=65.7% μ=+0.12% t=0.9 R̄=+0.005 μ(riesgo cte)=+0.09 | ≤2023 +0.11 · 2024+ +0.13 | mejor que desplegado 2/8 | cartera 10×10%:  +1.2% DD 79.2% Sharpe 0.18
+   volatilidad + caída 20d + caída 52 sem.      n= 9702 WR=65.3% μ=+0.09% t=0.7 R̄=+0.003 μ(riesgo cte)=+0.05 | ≤2023 +0.12 · 2024+ +0.05 | mejor que desplegado 1/8 | cartera 10×10%:  -2.6% DD 79.2% Sharpe 0.04
+   volatilidad + caída 3 sesiones               n= 9702 WR=65.9% μ=+0.13% t=1.1 R̄=+0.006 μ(riesgo cte)=+0.09 | ≤2023 +0.13 · 2024+ +0.13 | mejor que desplegado 2/8 | cartera 10×10%:  -0.7% DD 77.8% Sharpe 0.10
+   volatilidad + caída 20d + VIX                n= 9702 WR=65.7% μ=+0.12% t=0.9 R̄=+0.005 μ(riesgo cte)=+0.09 | ≤2023 +0.11 · 2024+ +0.13 | mejor que desplegado 2/8 | cartera 10×10%:  +1.2% DD 79.2% Sharpe 0.18
+   solo caída 20d                               n= 9702 WR=66.0% μ=+0.17% t=1.5 R̄=+0.009 μ(riesgo cte)=+0.14 | ≤2023 +0.16 · 2024+ +0.17 | mejor que desplegado 3/8 | cartera 10×10%: +12.3% DD 53.9% Sharpe 0.60
+   solo volatilidad                             n= 9702 WR=66.0% μ=+0.15% t=1.1 R̄=+0.007 μ(riesgo cte)=+0.13 | ≤2023 +0.12 · 2024+ +0.20 | mejor que desplegado 2/8 | cartera 10×10%:  -2.3% DD 83.9% Sharpe 0.06
+  [R2] ¿Mejor ordenar por RETORNO ESPERADO que por probabilidad de ganar? (regresión ridge con ventana móvil de 3 años)
+   ridge sobre el resultado %                   n= 6732 WR=68.2% μ=+0.23% t=2.0 R̄=+0.013 μ(riesgo cte)=+0.19 | ≤2023 +0.24 · 2024+ +0.22 | mejor que desplegado 2/8 | cartera 10×10%:  +8.7% DD 43.3% Sharpe 0.53
+   ridge sobre el resultado en R (por riesgo)   n= 6276 WR=68.5% μ=+0.31% t=3.2 R̄=+0.015 μ(riesgo cte)=+0.19 | ≤2023 +0.39 · 2024+ +0.17 | mejor que desplegado 4/8 | cartera 10×10%: +17.4% DD 30.4% Sharpe 1.15
+   mezcla probabilidad + retorno esperado       n= 4965 WR=69.1% μ=+0.23% t=2.1 R̄=+0.015 μ(riesgo cte)=+0.17 | ≤2023 +0.28 · 2024+ +0.15 | mejor que desplegado 5/8 | cartera 10×10%: +11.7% DD 37.6% Sharpe 0.90
+  [R3] RETORNO POR UNIDAD DE RIESGO según la volatilidad del valor (candidatos del plan, R = resultado / (stop en %)):
+     ATR% quintil 1 (≈1.6%): n= 21388 WR=70.6% μ=-0.02% R̄=-0.004
+     ATR% quintil 2 (≈2.0%): n= 21388 WR=69.7% μ=-0.01% R̄=-0.001
+     ATR% quintil 3 (≈2.4%): n= 21388 WR=68.8% μ=+0.03% R̄=+0.003
+     ATR% quintil 4 (≈3.0%): n= 21388 WR=68.3% μ=+0.15% R̄=+0.012
+     ATR% quintil 5 (≈5.1%): n= 21389 WR=68.5% μ=+0.47% R̄=+0.025
+  [R4] INFORMACIÓN DE CRÉDITO / TIPOS / DÓLAR añadida al modelo lineal
+   + crédito (HYG, diferencial) (AUC 0.512)     n= 6104 WR=69.8% μ=+0.22% t=2.6 R̄=+0.011 μ(riesgo cte)=+0.10 | ≤2023 +0.27 · 2024+ +0.10 | mejor que desplegado 5/8 | cartera 10×10%: +12.9% DD 27.8% Sharpe 1.03
+   + tipos y dólar (TLT, UUP) (AUC 0.507)       n= 5859 WR=70.1% μ=+0.22% t=2.6 R̄=+0.015 μ(riesgo cte)=+0.14 | ≤2023 +0.29 · 2024+ +0.07 | mejor que desplegado 1/8 | cartera 10×10%: +15.4% DD 22.7% Sharpe 1.25
+   + todo el bloque (AUC 0.509)                 n= 6063 WR=69.9% μ=+0.21% t=2.5 R̄=+0.010 μ(riesgo cte)=+0.10 | ≤2023 +0.24 · 2024+ +0.13 | mejor que desplegado 4/8 | cartera 10×10%: +10.2% DD 27.0% Sharpe 0.82
+  [R6] SUELO DE VOLATILIDAD: los costes son fijos en % y en valores poco volátiles se comen el rebote. Operaciones SELECCIONADAS por tramo de ATR%:
+     ATR% [0,2) n= 1828 WR=68.9% μ=-0.06% R̄=-0.008 años+ 4/8
+     ATR% [2,3) n= 2368 WR=70.5% μ=+0.20% R̄=+0.019 años+ 6/8
+     ATR% [3,4) n= 1049 WR=72.6% μ=+0.66% R̄=+0.047 años+ 6/7
+     ATR% [4,6) n=  585 WR=68.4% μ=+0.52% R̄=+0.025 años+ 5/6
+     ATR% [6,999) n=  183 WR=67.2% μ=+0.76% R̄=+0.030 años+ 4/5
+     política con suelo de ATR% (se aplica ANTES de elegir las N mejores del día):
+   sin suelo (desplegado)                       n= 6013 WR=70.1% μ=+0.25% t=3.1 R̄=+0.016 μ(riesgo cte)=+0.15 | ≤2023 +0.27 · 2024+ +0.19 | mejor que desplegado 0/8 | cartera 10×10%: +14.5% DD 26.8% Sharpe 1.26
+   suelo ATR ≥ 2%                               n= 5537 WR=69.3% μ=+0.21% t=2.3 R̄=+0.014 μ(riesgo cte)=+0.15 | ≤2023 +0.26 · 2024+ +0.12 | mejor que desplegado 3/8 | cartera 10×10%: +14.2% DD 31.7% Sharpe 1.16
+   suelo ATR ≥ 2.5%                             n= 5007 WR=69.4% μ=+0.36% t=3.3 R̄=+0.025 μ(riesgo cte)=+0.33 | ≤2023 +0.43 · 2024+ +0.23 | mejor que desplegado 7/8 | cartera 10×10%: +18.8% DD 32.3% Sharpe 1.39
+   suelo ATR ≥ 3%                               n= 4285 WR=69.5% μ=+0.39% t=2.9 R̄=+0.026 μ(riesgo cte)=+0.40 | ≤2023 +0.46 · 2024+ +0.28 | mejor que desplegado 7/8 | cartera 10×10%: +20.5% DD 29.0% Sharpe 1.38
+   suelo ATR ≥ 3.5%                             n= 3585 WR=68.2% μ=+0.35% t=2.0 R̄=+0.020 μ(riesgo cte)=+0.36 | ≤2023 +0.24 · 2024+ +0.54 | mejor que desplegado 5/7 | cartera 10×10%: +17.2% DD 35.2% Sharpe 1.09
+   suelo ATR ≥ 4%                               n= 2935 WR=68.3% μ=+0.36% t=1.7 R̄=+0.021 μ(riesgo cte)=+0.42 | ≤2023 +0.27 · 2024+ +0.53 | mejor que desplegado 5/7 | cartera 10×10%: +13.9% DD 37.7% Sharpe 0.88
+   suelo ATR ≥ 5%                               n= 1874 WR=67.2% μ=+0.68% t=2.0 R̄=+0.026 μ(riesgo cte)=+0.67 | ≤2023 +0.62 · 2024+ +0.78 | mejor que desplegado 4/6 | cartera 10×10%:  +6.2% DD 54.3% Sharpe 0.43
+  [R5] ¿Ayuda quedarse solo con los patrones que HAN FUNCIONADO hasta cada año? (elección anidada: cada año usa solo años previos)
+   desplegado (solo 2021+, comparable)          n= 5031 WR=68.8% μ=+0.14% t=1.6 R̄=+0.007 μ(riesgo cte)=+0.07 | ≤2023 +0.11 · 2024+ +0.19 | cartera 10×10%:  +9.4% DD 26.8% Sharpe 0.82
+   solo patrones que ya funcionaban             n= 4769 WR=68.1% μ=+0.07% t=0.8 R̄=-0.000 μ(riesgo cte)=-0.00 | ≤2023 +0.04 · 2024+ +0.12 | mejor que desplegado 0/6 | cartera 10×10%:  +7.7% DD 27.3% Sharpe 0.67
+
+fin · 116s
