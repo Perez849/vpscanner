@@ -733,6 +733,73 @@ def meta2_explore(EV: Dict, out_dir: str):
         sys.stdout.flush()
 
 
+
+def meta3_explore(EV: Dict, out_dir: str):
+    """Ablaciones y reparto por grupo con el modelo logístico (solo largos, solo DEV, walk-forward)."""
+    import model as MD
+    variants = EV['variants']
+    cut = day_of(VAL_END)
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    allf = MD.MODEL_FEATURES
+    def fi(fs): return [FEATURES.index(f) for f in fs]
+    configs = {
+        'base (l2=30, 5 tramos)': dict(fs=allf, l2=30.0, nb=5),
+        'l2=10': dict(fs=allf, l2=10.0, nb=5),
+        'l2=100': dict(fs=allf, l2=100.0, nb=5),
+        '8 tramos': dict(fs=allf, l2=30.0, nb=8),
+        'SIN Volume Profile': dict(fs=[f for f in allf if not f.startswith('vp_')], l2=30.0, nb=5),
+        'SIN amplitud mercado': dict(fs=[f for f in allf if not f.startswith('b_')], l2=30.0, nb=5),
+        'SIN VIX/SPY': dict(fs=[f for f in allf if not (f.startswith('vix') or f.startswith('spy'))], l2=30.0, nb=5),
+        'SIN choque noticias': dict(fs=[f for f in allf if f not in ('max_gap5', 'shock5', 'max_vr5', 'rel5')], l2=30.0, nb=5),
+    }
+    print(f'\n######## META3 largos: {len(rows):,} eventos', flush=True)
+    for vname in ('rsi_S4_H10', 'rsi_S2.5_H10', 'rsi_S1.5_H10', 'rsi_S4_H5'):
+        vi = variants.index(vname)
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        print(f"\n=== {vname} · sin modelo: {fmt(stats(pnl[ok & (day <= cut)], day[ok & (day <= cut)], sym[ok & (day <= cut)]))}")
+        keep_p = None
+        for cname, cfg in configs.items():
+            if vname != 'rsi_S4_H10' and cname != 'base (l2=30, 5 tramos)':
+                continue
+            idxf = fi(cfg['fs'])
+            p = np.full(len(rows), np.nan)
+            for Y in range(2019, 2024):
+                trm = (day < day_of(f'{Y}-01-01')) & ok
+                tem = (years == Y) & ok
+                if trm.sum() < 3000 or not tem.any():
+                    continue
+                m1 = MD.LogitModel(idxf, names, GROUPS, nb=cfg['nb'], l2=cfg['l2']).fit(X[trm], FL[trm], gid[trm], y[trm])
+                p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem])
+            m = ok & (day <= cut) & np.isfinite(p)
+            print(f"  [{cname}] AUC={MD.auc(p[m], y[m]):.3f}")
+            _top_table('  ', p, pnl, day, sym, years, m)
+            if cname.startswith('base'):
+                keep_p = p
+        if keep_p is not None and vname in ('rsi_S4_H10', 'rsi_S2.5_H10'):
+            m = ok & (day <= cut) & np.isfinite(keep_p)
+            thr = np.quantile(keep_p[m], 0.95)
+            top = m & (keep_p >= thr)
+            print(f'  -- reparto del top 5% (p≥{thr:.3f}) por grupo de activo:')
+            for gi, gname in enumerate(GROUPS):
+                mm = top & (EV['grp'][rows] == gi)
+                if mm.sum() >= 30:
+                    print(f"     {gname:9s} {fmt(stats(pnl[mm], day[mm], sym[mm]))}")
+            nd = len(np.unique(day[top]))
+            per_day = np.bincount(np.unique(day[top], return_inverse=True)[1])
+            print(f'  -- alertas/día del top 5%: media {top.sum() / max(1, len(np.unique(day[m]))):.2f} (sobre todos los días) · días con alerta {nd}/{len(np.unique(day[m]))} · máx {per_day.max()} · p90 {np.percentile(per_day, 90):.0f}')
+            print(f"  -- duración media: {np.nanmean(EV['bars'][rows, vi][top]):.1f} sesiones")
+            # coste de Volume Profile: top5% con VP bajo VAL vs no
+            fvp = FEATURES.index('vp_val_atr')
+            for lbl, mm in (('precio bajo VAL', top & (X[:, fvp] < 0)), ('dentro/sobre VAL', top & (X[:, fvp] >= 0))):
+                if mm.sum() >= 30:
+                    print(f"     top5% {lbl:17s} {fmt(stats(pnl[mm], day[mm], sym[mm]))}")
+        sys.stdout.flush()
+
+
 def load_data(args):
     if args.synthetic:
         return synthetic_universe(args.synthetic)
@@ -748,7 +815,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'final'])
+    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'meta3', 'final'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -771,6 +838,8 @@ def main():
         meta_explore(EV, args.out)
     elif args.cmd == 'meta2':
         meta2_explore(EV, args.out)
+    elif args.cmd == 'meta3':
+        meta3_explore(EV, args.out)
     else:
         final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
     print(f'\nfin · {time.time() - t0:.0f}s', flush=True)

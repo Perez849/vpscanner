@@ -50,6 +50,9 @@ def default_variants() -> List[Variant]:
     for kind in ('rsi', 'ph'):
         for H in (5, 10):
             v.append(Variant(kind, 0.0, 4.0, H))
+    for H in (5, 10):
+        v.append(Variant('rsi', 0.0, 2.5, H))
+        v.append(Variant('rsi', 0.0, 1.5, H))
     return v
 
 

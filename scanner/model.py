@@ -25,7 +25,9 @@ NB = 5
 
 
 class LogitModel:
-    def __init__(self, feat_idx: List[int], flag_names: List[str], groups: List[str]):
+    def __init__(self, feat_idx: List[int], flag_names: List[str], groups: List[str], nb: int = NB, l2: float = 30.0):
+        self.nb = nb
+        self.l2 = l2
         self.feat_idx = feat_idx            # columnas de X que usa
         self.flag_names = flag_names        # banderas binarias (qué patrones se han disparado)
         self.groups = groups
@@ -43,7 +45,7 @@ class LogitModel:
             if len(col) < 50:
                 self.edges.append(np.array([]))
                 continue
-            q = np.unique(np.quantile(col, np.linspace(0, 1, NB + 1)[1:-1]))
+            q = np.unique(np.quantile(col, np.linspace(0, 1, self.nb + 1)[1:-1]))
             self.edges.append(q)
 
     def design(self, X: np.ndarray, FL: np.ndarray, gid: np.ndarray) -> np.ndarray:
@@ -63,7 +65,8 @@ class LogitModel:
         return np.concatenate(cols + [FL.astype(np.float32), go, np.ones((n, 1), np.float32)], axis=1)
 
     # ── ajuste ────────────────────────────────────────────────────────────
-    def fit(self, X, FL, gid, y, l2: float = 30.0, iters: int = 15, chunk: int = 150000, max_rows: int = 600000, seed: int = 0):
+    def fit(self, X, FL, gid, y, l2: float | None = None, iters: int = 15, chunk: int = 150000, max_rows: int = 600000, seed: int = 0):
+        l2 = self.l2 if l2 is None else l2
         self.fit_bins(X)
         if len(X) > max_rows:       # eventos muy correlacionados: submuestreo sin pérdida relevante
             sel = np.sort(np.random.default_rng(seed).choice(len(X), max_rows, replace=False))
