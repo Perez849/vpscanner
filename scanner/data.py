@@ -43,9 +43,12 @@ def _get(url: str, timeout: int = 25) -> Optional[bytes]:
     return None
 
 
-def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None, keep_partial: bool = False) -> Optional[Dict[str, np.ndarray]]:
+def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None, keep_partial: bool = False,
+                period1: Optional[int] = None) -> Optional[Dict[str, np.ndarray]]:
+    # period1 (epoch s) pide barras DIARIAS desde esa fecha: con range=max Yahoo devuelve barras mensuales en la parte antigua
+    span = f'period1={int(period1)}&period2={int(time.time()) + 86400}' if period1 else f'range={rng}'
     url = (f'https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(ysym, safe="")}'
-           f'?interval=1d&range={rng}&includeAdjustedClose=true&events=div%7Csplit')
+           f'?interval=1d&{span}&includeAdjustedClose=true&events=div%7Csplit')
     raw = _get(url)
     if not raw:
         return None
@@ -116,7 +119,7 @@ def save_cache(path: str, cache: dict) -> None:
 
 def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
                cache_path: Optional[str] = None, max_age_h: float = 18.0,
-               verbose: bool = True, keep_partial: bool = False):
+               verbose: bool = True, keep_partial: bool = False, period1: Optional[int] = None):
     """Descarga todas las series (reutilizando caché fresca). Devuelve ({sym: serie}, [fallidos])."""
     symbols = list(dict.fromkeys(symbols))
     cache = load_cache(cache_path) if cache_path else {}
@@ -135,7 +138,7 @@ def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
     t0 = time.time()
     done = 0
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = {ex.submit(fetch_yahoo, s, rng, None, keep_partial): s for s in todo}
+        futs = {ex.submit(fetch_yahoo, s, rng, None, keep_partial, period1): s for s in todo}
         for fu in as_completed(futs):
             s = futs[fu]
             done += 1

@@ -197,8 +197,12 @@ def run(EV, out_dir: str, data: Dict, uni: Dict):
     try:
         import data as D
         pool = [s for s in ROT_ETFS if s not in ('XLRE', 'XLC')] + ['SHY']
-        bars, failed = D.fetch_many(list(dict.fromkeys(pool + ['SPY'])), rng='max', workers=6, cache_path=None, verbose=False)
+        bars, failed = D.fetch_many(list(dict.fromkeys(pool + ['SPY'])), workers=6, cache_path=None, verbose=False,
+                                    period1=int(pd.Timestamp('2002-01-02').timestamp()))
         calL = (bars['SPY']['t'] // 86400).astype(np.int64)
+        gaps = np.diff(calL)
+        if np.median(gaps) > 3 or gaps.max() > 12:
+            raise RuntimeError(f'barras no diarias (mediana {np.median(gaps)} días, máximo {gaps.max()})')
         r_spyL = np.nan_to_num(pd.Series(bars['SPY']['c']).pct_change().to_numpy())
         resL, startsL, gridL, _ = etf_suite(bars, calL, 'SHY', pool)
         i05 = int(np.searchsorted(calL, day_of('2005-01-01')))
