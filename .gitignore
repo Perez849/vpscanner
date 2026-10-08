@@ -1,0 +1,4 @@
+scanner/cache/
+scanner/research_out/
+__pycache__/
+*.pyc
