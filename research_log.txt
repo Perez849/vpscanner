@@ -1,0 +1,48 @@
+  datos: 0 en caché, 1985 por descargar (10y)
+  ... 200/1985 (4s)
+  ... 400/1985 (8s)
+  ... 600/1985 (12s)
+  ... 800/1985 (16s)
+  ... 1000/1985 (20s)
+  ... 1200/1985 (24s)
+  ... 1400/1985 (28s)
+  ... 1600/1985 (32s)
+  ... 1800/1985 (36s)
+  datos: OK 1971 · fallidos 14
+  fallidos: FDXF HONA VYLR ADIG BLFS CWEN-A HLX LEG MBGL MFP QRVO ROG.SW CTRA SATS
+universo con datos: 1967 activos · 47s
+
+######## MOC · 1767 símbolos de EE.UU.: descargando barras de 60 min…
+  intradía OK: 1750/1769
+  días provisionales reconstruidos para 1742 símbolos · mediana 475 días
+  sin VIX intradía: se usa VIX final en ambos
+  candidatos en la ventana: finales 39,421 · provisionales 39,063
+
+=== rsi_S4_H10 · política top 5/día (ventana ≈ 475 días; el modelo vio estos años al entrenar → valen las DIFERENCIAS, no el nivel) ===
+  señal con CIERRE FINAL         n= 1894 | compra al CIERRE: WR=67.7% μ=+0.75% PF=1.57 | compra a la APERTURA: WR=66.7% μ=+0.56% PF=1.43
+      · etf       n= 245 | CIERRE: WR=64.9% μ=+0.17% | APERTURA: WR=61.2% μ=+0.02% | cierre−apertura +0.14% ± 0.20
+      · us_large  n=1109 | CIERRE: WR=68.6% μ=+0.76% | APERTURA: WR=67.8% μ=+0.60% | cierre−apertura +0.16% ± 0.09
+      · us_mid    n= 509 | CIERRE: WR=67.8% μ=+0.96% | APERTURA: WR=67.4% μ=+0.70% | cierre−apertura +0.26% ± 0.51
+      · us_small  n=  31 | CIERRE: WR=58.1% μ=+1.89% | APERTURA: WR=58.1% μ=+1.52% | cierre−apertura +0.37% ± 0.63
+  señal PROVISIONAL (15:30 ET)   n= 1906 | compra al CIERRE: WR=67.5% μ=+0.68% PF=1.51 | compra a la APERTURA: WR=66.7% μ=+0.59% PF=1.46
+      · etf       n= 239 | CIERRE: WR=64.0% μ=+0.18% | APERTURA: WR=65.3% μ=+0.19% | cierre−apertura -0.01% ± 0.22
+      · us_large  n=1132 | CIERRE: WR=69.6% μ=+0.76% | APERTURA: WR=67.8% μ=+0.64% | cierre−apertura +0.12% ± 0.09
+      · us_mid    n= 510 | CIERRE: WR=65.1% μ=+0.65% | APERTURA: WR=64.9% μ=+0.56% | cierre−apertura +0.09% ± 0.19
+      · us_small  n=  25 | CIERRE: WR=56.0% μ=+2.62% | APERTURA: WR=64.0% μ=+2.45% | cierre−apertura +0.17% ± 0.97
+  solapamiento: 29% de las señales provisionales también lo son al cierre final · 29% de las finales ya estaban avisadas a las 15:30
+    provisionales que se CONFIRMAN al cierre   n=  549 WR=67.4% μ=+0.57%
+    provisionales que se DESVANECEN            n= 1357 WR=67.6% μ=+0.73%
+
+=== atr_T1_S4_H10 · política top 5/día (ventana ≈ 475 días; el modelo vio estos años al entrenar → valen las DIFERENCIAS, no el nivel) ===
+  señal con CIERRE FINAL         n= 1742 | compra al CIERRE: WR=71.9% μ=+0.45% PF=1.30 | compra a la APERTURA: WR=71.8% μ=+0.36% PF=1.24
+      · thematic  n= 402 | CIERRE: WR=71.9% μ=+0.58% | APERTURA: WR=72.6% μ=+0.56% | cierre−apertura +0.02% ± 0.32
+      · us_large  n=1340 | CIERRE: WR=71.9% μ=+0.41% | APERTURA: WR=71.5% μ=+0.30% | cierre−apertura +0.10% ± 0.13
+  señal PROVISIONAL (15:30 ET)   n= 1771 | compra al CIERRE: WR=71.5% μ=+0.35% PF=1.24 | compra a la APERTURA: WR=70.9% μ=+0.30% PF=1.20
+      · thematic  n= 374 | CIERRE: WR=71.4% μ=+0.22% | APERTURA: WR=71.9% μ=+0.15% | cierre−apertura +0.07% ± 0.34
+      · us_large  n=1397 | CIERRE: WR=71.5% μ=+0.38% | APERTURA: WR=70.6% μ=+0.34% | cierre−apertura +0.04% ± 0.11
+  thematic: 374 señales provisionales · 44% se confirman con el cierre final
+  solapamiento: 32% de las señales provisionales también lo son al cierre final · 33% de las finales ya estaban avisadas a las 15:30
+    provisionales que se CONFIRMAN al cierre   n=  568 WR=71.0% μ=+0.27%
+    provisionales que se DESVANECEN            n= 1203 WR=71.7% μ=+0.38%
+
+fin · 268s
