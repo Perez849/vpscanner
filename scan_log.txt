@@ -1,0 +1,28 @@
+  datos: 0 en caché, 1985 por descargar (2y)
+  ... 200/1985 (3s)
+  ... 400/1985 (5s)
+  ... 600/1985 (8s)
+  ... 800/1985 (11s)
+  ... 1000/1985 (14s)
+  ... 1200/1985 (16s)
+  ... 1400/1985 (19s)
+  ... 1600/1985 (21s)
+  ... 1800/1985 (24s)
+  datos: OK 1971 · fallidos 14
+  fallidos: FDXF HONA VYLR ADIG BLFS CWEN-A HLX LEG MFP MBGL QRVO ROG.SW CTRA SATS
+  descarga lista · 27s
+  indicadores listos · 1967 activos · 38s
+  seguimiento: 0 abiertas · 10 pendientes · 0 cerradas
+
+Activos: 1967 · fallidos 14 · candidatos 88 · alertas 8 · vigilancia 30 · 47s
+  🚀 WT         P(≥+12%)≈31%  stop inicial -19.8%  Líder de fuerza relativa que retrocede 4–12% desde máximos
+  🚀 EXTR       P(≥+12%)≈31%  stop inicial -17.7%  Ruptura tras contracción de volatilidad (tendencia fuerte)
+  🚀 NHC        P(≥+12%)≈30%  stop inicial -14.7%  Líder de fuerza relativa que retrocede 4–12% desde máximos
+  ASML       Equilibrado: P=65% EV=+0.43% | Alta probabilidad: P=72% EV=+0.38%  3+ cierres bajistas seguidos sobre SMA200 · Mínimo de cierre
+  ON         Equilibrado: P=65% EV=+0.46% | Alta probabilidad: P=72% EV=+0.36%  Cierre en el 20% inferior de la vela, sobre SMA200
+  EQNR       Alta probabilidad: P=72% EV=+0.35%  Cierre en el 10% inferior de la vela, sobre SMA200 · Cierre 
+  SHEL.L     Alta probabilidad: P=71% EV=+0.34%  Cierre en el 20% inferior de la vela, sobre SMA200
+  HST        Alta probabilidad: P=71% EV=+0.34%  RSI(2) < 15 sobre SMA200 · Cierre en el 10% inferior de la v
+  CRM        Equilibrado: P=66% EV=+0.49%  4+ cierres bajistas seguidos sobre SMA200
+  ROIV       Equilibrado: P=65% EV=+0.45%  Mínimo de cierre de 20 sesiones sobre SMA200
+  EWZ        Equilibrado: P=65% EV=+0.42%  Cierre en el 10% inferior de la vela, sobre SMA200
