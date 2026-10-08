@@ -42,6 +42,24 @@ Lo que mostró la investigación (`scanner/lab.py`, informes en `scanner/model/l
 - Las probabilidades mostradas están **calibradas** también en 2024+ (p. ej. 63,9 % predicho → 63,8 % real).
 - Ya no queda periodo ciego: lo que valida el sistema a partir de ahora es el seguimiento en vivo.
 
+## Ir tarde: el hueco de apertura y el aviso previo al cierre
+
+Las alertas salen con el cierre y se compra en la apertura siguiente; si la acción abre con un hueco alcista grande, parte de la ganancia esperada ya se la ha llevado el mercado. Medido en 2019–2026:
+
+- **El hueco no destruye la ventaja**, pero sí castiga al plan *Equilibrado* cuando abre muy por encima: con aperturas > referencia + 0,5 ATR perdió de media ≈ −0,8 % por operación (306 casos). El plan *Alta probabilidad* no se resintió. Por eso la web muestra un **precio máximo orientativo de entrada** (referencia + 0,5 ATR) y los niveles de stop/objetivo se miden **desde tu precio de entrada real**, no desde el cierre de ayer (el fallo original era de presentación: mostraba niveles del cierre).
+- **Escaneo previo al cierre (MOC)**: `scan.yml` corre tras el cierre, pero `scan_preclose.yml` corre a las **15:20 ET** (19:20/20:20 UTC según el horario de verano; el script comprueba la hora de Nueva York y solo actúa entre 15:10 y 15:40 ET) y repite la misma lógica sobre la vela *provisional* de hoy, solo en EE.UU. (grandes, medianas, pequeñas y ETF). Avisa con tiempo para colocar una **orden MOC antes de las 15:50 ET (21:50 en España)** y entrar al precio de cierre, sin hueco. Los avisos van a `alerts_pre.json`, a la sección «Preliminares» de la web y a Telegram.
+  - Validación (`research.py moc`, barras de 60 min reconstruyendo la vela de las 15:30 ET): las señales provisionales rindieron **igual o mejor** que las finales (plan Equilibrado ≈ +0,68 % comprando al cierre frente a ≈ +0,46 % a la apertura siguiente). Ojo: el modelo ya vio esos años al entrenar, así que valen las *diferencias*, no el nivel, y es una reconstrucción, no operativa real.
+  - El seguimiento registra estas operaciones aparte (`mode: moc`, entrada = cierre final) y el escaneo posterior al cierre **no las duplica**; si una señal provisional no se confirma con el cierre final, sigue en el seguimiento (para medir el coste real de actuar antes).
+  - Si no puedes poner la orden a tiempo: no pasa nada, esperas a las alertas definitivas y entras a la apertura.
+
+## 🚀 Pelotazos (experimental)
+
+Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
+
+- En el histórico: **≈48 % de operaciones ganadoras, la mediana pierde** y la media positiva depende de que ≈1 de cada 4 operaciones supere +20 %.
+- **Las cifras están infladas**: sesgo de supervivencia (el universo son las empresas que existen hoy; las que quebraron no están), mercado alcista 2019–2026, y un benchmark aleatorio sobre la SMA200 con la misma salida ya da una media positiva. La web muestra la media con un descuento por quiebras (2/5/8 % de operaciones perdiendo −60 %), con costes dobles y el benchmark.
+- Arriesga muy poco por operación (≈0,25–0,5 % del capital hasta el stop). El seguimiento de los pelotazos se mide aparte y no contamina las estadísticas globales. Se pausa solo si los últimos 12 meses no son rentables. No se opera al cierre (solo se validó entrando a la apertura).
+
 ## Estructura
 
 ```
@@ -56,10 +74,11 @@ scanner/
   research.py              construye la tabla de eventos y VALIDA → model/validated.json
   lab.py                   laboratorio exploratorio (cómo se llegó al diseño)
   scan.py                  robot diario → data/alerts.json, tracking.json, candles.json, …
+                           (--mode preclose: aviso previo al cierre → alerts_pre.json)
   track.py / notify.py     seguimiento en vivo / avisos (Telegram, resumen en Actions)
   model/validated.json     modelo y estadísticas validadas (se regenera cada domingo)
 tests/                     test_engine.py (causalidad, simulador, sin ventaja en datos aleatorios) · test_pipeline.py
-.github/workflows/         scan.yml (L–V 22:30 UTC) · revalidate.yml (domingos) · research.yml (manual)
+.github/workflows/         scan.yml (L–V 22:30 UTC) · scan_preclose.yml (L–V 15:20 ET) · revalidate.yml (domingos) · research.yml (manual)
 ```
 
 ## Puesta en marcha
@@ -67,9 +86,9 @@ tests/                     test_engine.py (causalidad, simulador, sin ventaja en
 1. Fusiona la rama en `main` (los *cron* de Actions solo corren desde la rama por defecto).
 2. En *Settings → Pages* publica `main` (carpeta raíz) para ver `index.html`; lee los datos de `raw.githubusercontent.com/.../main/scanner/data/`.
 3. **Alertas al móvil (opcional)**: crea un bot con @BotFather y añade los *secrets* `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en *Settings → Secrets and variables → Actions*. Sin ellos, el resumen de cada día aparece igualmente en la pestaña *Actions → Scan diario*.
-4. Lanzar a mano: *Actions → Scan diario → Run workflow*; revalidar: *Actions → Revalidación del modelo*.
+4. Lanzar a mano: *Actions → Scan diario → Run workflow*; el aviso previo al cierre: *Actions → Scan previo al cierre → Run workflow* (marca «force» para probarlo fuera de horario); revalidar: *Actions → Revalidación del modelo*.
 
-En local: `pip install numpy pandas` · `python tests/test_engine.py` · `python tests/test_pipeline.py` · `cd scanner && python scan.py`.
+En local: `pip install numpy pandas` · `python tests/test_engine.py` · `python tests/test_pipeline.py` · `cd scanner && python scan.py` (o `python scan.py --mode preclose --force`).
 
 ## Avisos
 

@@ -144,10 +144,11 @@ def stat_block(trades: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def update(prev: Optional[Dict[str, Any]], alerts: List[Dict[str, Any]], series_F: Dict[str, Dict[str, np.ndarray]],
-           cost_of: Dict[str, float]) -> Dict[str, Any]:
+           cost_of: Dict[str, float], add_only: bool = False) -> Dict[str, Any]:
     """
     prev: tracking.json anterior (o None). alerts: alertas de HOY (dicts con id, sym, setup, dir, exit, sigTs...).
     series_F: {sym: features} de los activos con operaciones (necesita o,h,l,c,atr,sma5,t).
+    add_only: solo añade las operaciones nuevas (escaneo previo al cierre: la última barra es provisional y no debe cerrar nada).
     """
     prev = prev or {'trades': []}
     trades: List[Dict[str, Any]] = prev.get('trades', [])
@@ -155,9 +156,9 @@ def update(prev: Optional[Dict[str, Any]], alerts: List[Dict[str, Any]], series_
     for a in alerts:
         if a['id'] in known:
             continue
-        trades.append({k: a[k] for k in ('id', 'sym', 'group', 'setup', 'cell', 'dir', 'exit', 'sigTs', 'p', 'sigClose') if k in a}
+        trades.append({k: a[k] for k in ('id', 'sym', 'group', 'setup', 'cell', 'dir', 'exit', 'sigTs', 'p', 'sigClose', 'mode') if k in a}
                       | {'status': 'pendiente'})
-    for t in trades:
+    for t in ([] if add_only else trades):
         if t['status'] == 'cerrada':
             continue
         F = series_F.get(t['sym'])
@@ -170,7 +171,7 @@ def update(prev: Optional[Dict[str, Any]], alerts: List[Dict[str, Any]], series_
         j = np.flatnonzero(np.abs(ts - t['sigTs'] / 1000.0) < 3600)
         if len(j) == 0:
             continue
-        r = resolve(F, int(j[0]), int(t['dir']), t['exit'], cost_of.get(t['sym'], 0.30))
+        r = resolve(F, int(j[0]), int(t['dir']), t['exit'], cost_of.get(t['sym'], 0.30), 'close' if t.get('mode') == 'moc' else 'open')
         for k in ('entry', 'stop', 'target', 'exitPrice', 'reason', 'bars', 'pnl', 'curPrice', 'curPnl', 'pendingExit', 'trailStop'):
             t.pop(k, None)
         t.update({k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in r.items()

@@ -12,8 +12,8 @@ import urllib.request
 from typing import Any, Dict, List
 
 
-def _fmt_alert(a: Dict[str, Any]) -> str:
-    lines = [f"🟢 COMPRA *{a['sym']}*  ({a['label'][:60]})"]
+def _fmt_alert(a: Dict[str, Any], moc: bool = False) -> str:
+    lines = [f"🟢 {'COMPRA AL CIERRE' if moc else 'COMPRA'} *{a['sym']}*  ({a['label'][:60]})"]
     for pl in a['plans']:
         lv, ex = pl['levels'], pl['exit']
         if lv.get('targetPct') is not None:
@@ -41,16 +41,30 @@ def build_message(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: 
         head += f"Real en vivo: {g['wr']}% acierto en {g['n']} operaciones cerradas ({g['mean']:+.2f}%/op)\n"
     if not alerts:
         return head + '\nHoy no hay alertas que superen el umbral de probabilidad. Mejor no forzar.'
-    body = '\n\n'.join(_fmt_alert(a) for a in alerts[:12])
+    new = [a for a in alerts if not a.get('pre')]
+    done = [a['sym'] for a in alerts if a.get('pre')]
+    note = f"\n\n⏱ Ya avisadas antes del cierre (orden MOC): {', '.join(done)}" if done else ''
+    if not new:
+        return head + note + '\n\nNo hay alertas nuevas para la apertura de mañana.'
+    body = '\n\n'.join(_fmt_alert(a) for a in new[:12])
+    more = f"\n\n… y {len(new) - 12} más en la web" if len(new) > 12 else ''
+    return head + '\n' + body + more + note + "\n\nOperar en la apertura de la próxima sesión."
+
+
+def build_message_pre(alerts: List[Dict[str, Any]], meta: Dict[str, Any]) -> str:
+    head = f"⏱ *VP Scanner · PREVIO AL CIERRE* · sesión {meta.get('sigDate')}\n"
+    if not alerts:
+        return head + '\nNada que comprar al cierre hoy. Mejor no forzar.'
+    body = '\n\n'.join(_fmt_alert(a, moc=True) for a in alerts[:12])
     more = f"\n\n… y {len(alerts) - 12} más en la web" if len(alerts) > 12 else ''
-    return head + '\n' + body + more + "\n\nOperar en la apertura de la próxima sesión."
+    return (head + '\nSeñal PROVISIONAL (la vela de hoy aún no ha cerrado). Para comprar al precio de cierre: orden MOC *antes de las 15:50 ET* '
+            '(21:50 en España). Si no puedes, espera al aviso de después del cierre y entra a la apertura de mañana.\n\n' + body + more)
 
 
-def send(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str, Any], pelotazos: List[Dict[str, Any]] | None = None) -> None:
+def _telegram(text: str) -> None:
     token, chat = os.environ.get('TELEGRAM_BOT_TOKEN'), os.environ.get('TELEGRAM_CHAT_ID')
     if not token or not chat:
         return
-    text = build_message(alerts, meta, tracking, pelotazos)
     req = urllib.request.Request(
         f'https://api.telegram.org/bot{token}/sendMessage',
         data=json.dumps({'chat_id': chat, 'text': text[:4000], 'parse_mode': 'Markdown',
@@ -61,6 +75,15 @@ def send(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str,
         print('  Telegram: enviado', flush=True)
     except Exception as e:
         print(f'  Telegram: fallo ({e})', flush=True)
+
+
+def send(alerts: List[Dict[str, Any]], meta: Dict[str, Any], tracking: Dict[str, Any], pelotazos: List[Dict[str, Any]] | None = None) -> None:
+    _telegram(build_message(alerts, meta, tracking, pelotazos))
+
+
+def send_pre(alerts: List[Dict[str, Any]], meta: Dict[str, Any]) -> None:
+    if alerts:                      # sin avisos no se molesta a nadie antes del cierre
+        _telegram(build_message_pre(alerts, meta))
 
 
 def step_summary(alerts, watch, meta, tracking, pelotazos=None) -> None:
@@ -84,5 +107,19 @@ def step_summary(alerts, watch, meta, tracking, pelotazos=None) -> None:
         lines += ['', '### 🚀 Pelotazos (experimental)', '| Activo | P(≥+12%) | Stop inicial | Patrón |', '|---|---|---|---|']
         for a in pelotazos:
             lines.append(f"| {a['sym']} | {a['pBig'] * 100:.0f}% | {a['levels']['stopPct']:+.1f}% | {a['label'][:60]} |")
+    with open(path, 'a', encoding='utf-8') as f:
+        f.write('\n'.join(lines) + '\n')
+
+
+def step_summary_pre(alerts, sig_date) -> None:
+    path = os.environ.get('GITHUB_STEP_SUMMARY')
+    if not path:
+        return
+    lines = [f"## VP Scanner · previo al cierre · sesión {sig_date}", f"{len(alerts)} avisos para comprar AL CIERRE (orden MOC antes de las 15:50 ET)", '']
+    if alerts:
+        lines += ['| Activo | Plan | P(acierto) | Esperado | Stop | Máx. sesiones |', '|---|---|---|---|---|---|']
+        for a in alerts:
+            for pl in a['plans']:
+                lines.append(f"| {a['sym']} | {pl['label']} | {pl['p'] * 100:.0f}% | {pl['ev']:+.2f}% | {pl['levels']['stopPct']:+.1f}% | {pl['exit']['H']} |")
     with open(path, 'a', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')

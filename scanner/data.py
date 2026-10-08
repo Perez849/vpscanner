@@ -43,7 +43,7 @@ def _get(url: str, timeout: int = 25) -> Optional[bytes]:
     return None
 
 
-def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None) -> Optional[Dict[str, np.ndarray]]:
+def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None, keep_partial: bool = False) -> Optional[Dict[str, np.ndarray]]:
     url = (f'https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(ysym, safe="")}'
            f'?interval=1d&range={rng}&includeAdjustedClose=true&events=div%7Csplit')
     raw = _get(url)
@@ -80,13 +80,20 @@ def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None) -> Opti
         reg = (res.get('meta') or {}).get('currentTradingPeriod', {}).get('regular', {})
         start, end = reg.get('start'), reg.get('end')
         now = time.time() if now is None else now
+        partial = False
         if start and end and t[-1] >= start and now < end:
-            t, o, h, l, c, v = t[:-1], o[:-1], h[:-1], l[:-1], c[:-1], v[:-1]
+            if keep_partial and (end - now) < 4 * 3600 and now > start:     # sesión en curso: se conserva como barra PROVISIONAL
+                partial = True
+            else:
+                t, o, h, l, c, v = t[:-1], o[:-1], h[:-1], l[:-1], c[:-1], v[:-1]
         if len(t) < MIN_BARS:
             return None
         # duplicados de timestamp (Yahoo a veces repite la última barra)
         keep = np.concatenate([[True], np.diff(t) > 0])
-        return {'t': t[keep], 'o': o[keep], 'h': h[keep], 'l': l[keep], 'c': c[keep], 'v': v[keep]}
+        out = {'t': t[keep], 'o': o[keep], 'h': h[keep], 'l': l[keep], 'c': c[keep], 'v': v[keep]}
+        if partial:
+            out['partial'] = np.array([1.0])          # la última barra es provisional
+        return out
     except Exception:
         return None
 
@@ -109,7 +116,7 @@ def save_cache(path: str, cache: dict) -> None:
 
 def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
                cache_path: Optional[str] = None, max_age_h: float = 18.0,
-               verbose: bool = True):
+               verbose: bool = True, keep_partial: bool = False):
     """Descarga todas las series (reutilizando caché fresca). Devuelve ({sym: serie}, [fallidos])."""
     symbols = list(dict.fromkeys(symbols))
     cache = load_cache(cache_path) if cache_path else {}
@@ -128,7 +135,7 @@ def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
     t0 = time.time()
     done = 0
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = {ex.submit(fetch_yahoo, s, rng): s for s in todo}
+        futs = {ex.submit(fetch_yahoo, s, rng, None, keep_partial): s for s in todo}
         for fu in as_completed(futs):
             s = futs[fu]
             done += 1
@@ -140,7 +147,8 @@ def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
                 failed.append(s)
             else:
                 out[s] = bars
-                cache[s] = {'rng': rng, 'fetched': now, 'bars': bars}
+                if not keep_partial:
+                    cache[s] = {'rng': rng, 'fetched': now, 'bars': bars}
             if verbose and done % 200 == 0:
                 print(f'  ... {done}/{len(todo)} ({time.time() - t0:.0f}s)', flush=True)
     if cache_path and todo:
