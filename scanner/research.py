@@ -275,6 +275,7 @@ WINDOW_YEARS = 3
 FIRST_WF_YEAR = 2019
 MIN_GROUP_N = 80
 HEALTH_DAYS = 365
+PORT_START = '2019-01-01'     # inicio de la cartera simulada frente al S&P 500 (el estudio `deep` lo adelanta)
 
 
 def wf_predict_linear(EV, rows, FL, y, ok, upto_day: int):
@@ -429,12 +430,12 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
         extra['vsSpy'] = {'planMean': round(float(np.mean(pnl[ms])), 2), 'spyMean': round(float(np.mean(spy_ret[ms])), 2),
                           'planWR': round(float(np.mean(pnl[ms] > 0) * 100), 1), 'spyWR': round(float(np.mean(spy_ret[ms] > 0) * 100), 1),
                           'alpha': round(alpha['mean'], 2), 'alphaT': round(alpha['t_day'], 1)}
-        res_ = np.where(sel & (day >= day_of('2019-01-01')), pnl, np.nan)
+        res_ = np.where(sel & (day >= day_of(PORT_START)), pnl, np.nan)
         ports = {}
         for M_, f_ in ((10, 0.10), (20, 0.05)):
             o = portfolio_sim(cal_d, ti, bars_, res_, rk5, M_, f_)
             ports[f'{M_}x{int(f_ * 100)}'] = {k: round(v, 1) for k, v in o.items() if k != 'curve'} | {'positions': M_, 'size': int(f_ * 100)}
-        i0 = int(np.searchsorted(cal_d, day_of('2019-01-01'))); c_ = spy['c'][i0:]
+        i0 = int(np.searchsorted(cal_d, day_of(PORT_START))); c_ = spy['c'][i0:]
         extra['portfolio'] = ports
         extra['spyHold'] = {'cagr': round(float((c_[-1] / c_[0]) ** (252 / len(c_)) - 1) * 100, 1),
                             'dd': round(float(((np.maximum.accumulate(c_) - c_) / np.maximum.accumulate(c_)).max()) * 100, 1)}
@@ -589,7 +590,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'longidx'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'pit_deep', 'longidx'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -609,9 +610,9 @@ def main():
         longidx.run(uni, data, args.out)
         print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
         return
-    if args.cmd in ('pit', 'pit_mid'):
+    if args.cmd in ('pit', 'pit_mid', 'pit_deep'):
         import pit
-        {'pit': pit.run, 'pit_mid': pit.run_mid}[args.cmd](uni, data, args, args.out)
+        {'pit': pit.run, 'pit_mid': pit.run_mid, 'pit_deep': pit.run_deep}[args.cmd](uni, data, args, args.out)
         print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
         return
     if args.cmd in ('stockmid', 'stockmid_long'):

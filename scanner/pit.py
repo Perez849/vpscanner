@@ -168,9 +168,9 @@ def member_matrix(names: List[str], days: np.ndarray, iv: Dict[str, List[Tuple[i
     return M
 
 
-def extra_universe(uni: Dict, mem: Dict[str, Dict], first_day: int) -> Dict[str, str]:
+def extra_universe(uni: Dict, mem: Dict[str, Dict], since_str: str = FROM_YEAR) -> Dict[str, str]:
     """Retiradas del índice desde FROM_YEAR que no están en el universo actual → {ticker: grupo}."""
-    since = int(pd.Timestamp(FROM_YEAR).value // 86400 // 10 ** 9)
+    since = int(pd.Timestamp(since_str).value // 86400 // 10 ** 9)
     extra: Dict[str, str] = {}
     for k in ('sp500', 'sp400', 'sp600'):
         for d, a, r in mem.get(k, {}).get('chg', []):
@@ -180,12 +180,12 @@ def extra_universe(uni: Dict, mem: Dict[str, Dict], first_day: int) -> Dict[str,
     return extra
 
 
-def load_extras(uni: Dict, data: Dict, mem: Dict[str, Dict], args) -> Tuple[Dict, Dict, Dict]:
+def load_extras(uni: Dict, data: Dict, mem: Dict[str, Dict], args, since: str = FROM_YEAR, period1: int | None = None) -> Tuple[Dict, Dict, Dict]:
     """Descarga las retiradas que aún tienen datos y las añade (copias) a uni/data. Informa de la cobertura."""
     import data as D
-    extra = extra_universe(uni, mem, 0)
-    print(f'\n  retiradas/altas ya fuera del universo actual desde {FROM_YEAR}: {len(extra)} tickers', flush=True)
-    bars, failed = D.fetch_many(list(extra), rng=args.range, workers=args.workers, cache_path=None, verbose=False)
+    extra = extra_universe(uni, mem, since)
+    print(f'\n  retiradas/altas ya fuera del universo actual desde {since}: {len(extra)} tickers', flush=True)
+    bars, failed = D.fetch_many(list(extra), rng=args.range, workers=args.workers, cache_path=None, verbose=False, period1=period1)
     got = {s: b for s, b in bars.items() if len(b['c']) >= 260}
     iv = merged_intervals(mem)
     ends = 0
@@ -281,3 +281,89 @@ def run_mid(uni: Dict, data: Dict, args, out_dir: str):
 
     SMD.core(uni2, data2, stk, True, 'MEDIO PLAZO CON ACCIONES · PERTENENCIA HISTÓRICA (S&P 500 en cada fecha, con retiradas que aún cotizan)', member=member)
     SMD._etf_persistence(data2)
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  C. Sistema de rebotes 2005–2026 (incluye 2008) con pertenencia histórica
+# ═════════════════════════════════════════════════════════════════════════
+def unknown_before(names: List[str], sym: np.ndarray, day: np.ndarray, mem: Dict[str, Dict]) -> np.ndarray:
+    """True para eventos de valores cuyo ÚNICO dato de pertenencia viene de una tabla que empieza después de esa fecha (S&P 400/600)."""
+    first = {k: min([c[0] for c in v['chg']], default=NEG) for k, v in mem.items()}
+    cut: Dict[str, int] = {}
+    for t in set().union(*[set(v['iv']) for v in mem.values()]):
+        idx_in = [k for k, v in mem.items() if t in v['iv']]
+        if idx_in and 'sp500' not in idx_in:
+            cut[t] = min(first[k] for k in idx_in)
+    out = np.zeros(len(sym), bool)
+    for k in np.unique(sym):
+        c = cut.get(names[k])
+        if c is not None:
+            m = sym == k
+            out[m] = day[m] < c
+    return out
+
+
+def run_deep(uni: Dict, data: Dict, args, out_dir: str):
+    import data as D
+    import research as RS
+    import setups as SU
+    import simulate as SM
+    mem = fetch_membership()
+    if not mem:
+        raise SystemExit('sin red a Wikipedia: no se puede reconstruir la pertenencia')
+    p1 = int(pd.Timestamp('2003-01-02').timestamp())
+    bars, failed = D.fetch_many(list(uni), workers=args.workers, cache_path=None, verbose=False, period1=p1)
+    spy = bars['SPY']
+    gaps = np.diff(spy['t'] // 86400)
+    if np.median(gaps) > 3 or gaps.max() > 12:
+        raise SystemExit(f'barras no diarias (mediana {np.median(gaps)}, máx. {gaps.max()})')
+    print(f'  descargadas {len(bars)} series desde 2003 (fallidas {len(failed)}) · SPY desde {pd.to_datetime(spy["t"][0], unit="s").date()}', flush=True)
+    uni1 = {s: uni[s] for s in bars}
+    uni2, data2, _ = load_extras(uni1, bars, mem, args, since='2004-01-01', period1=p1)
+    iv = merged_intervals(mem)
+    RS.FIRST_WF_YEAR = 2008
+    RS.PORT_START = '2008-01-01'
+    EV = RS.build_events(data2, uni2, SU.SETUPS, SM.default_variants())
+    rows, FL, names = RS.union_events(EV, +1)
+    last_day = int(EV['day'].max())
+    sn = EV['sym_names']
+    symr, dayr = EV['sym'][rows], EV['day'][rows]
+    is_extra = np.array([bool(uni2[s].get('pit_extra')) for s in sn])[symr]
+    pit_ok = event_mask(sn, symr, dayr, iv)
+    unk = unknown_before(sn, symr, dayr, mem)
+    grp = EV['grp'][rows]
+    us = np.isin(grp, [RS.GROUPS.index(g) for g in ('us_large', 'us_mid', 'us_small')])
+    yrs = RS.year_of(dayr)
+    print(f'\n########  SISTEMA DE REBOTES 2005–2026 · {len(rows):,} candidatos · datos hasta {np.datetime64("1970-01-01") + np.timedelta64(last_day, "D")}', flush=True)
+    print('  candidatos de acciones de EE.UU. por año (todos / de retiradas / sin información de pertenencia): ' + ' '.join(
+        f'{Y}:{int((us & (yrs == Y)).sum())}/{int((us & is_extra & (yrs == Y)).sum())}/{int((us & unk & (yrs == Y)).sum())}' for Y in range(2005, 2027, 3)), flush=True)
+    variants = {
+        'A · lista actual, tal como está desplegado': ~is_extra,
+        'C · pertenencia histórica (con retiradas) y sin eventos de S&P 400/600 anteriores a su tabla': pit_ok & ~unk,
+    }
+    summary = {}
+    for lab, mask in variants.items():
+        print(f'\n================ {lab} · {int(mask.sum()):,} candidatos ================', flush=True)
+        plans = []
+        for pl in RS.PLANS:
+            try:
+                plans.append(RS.build_plan(EV, rows[mask], FL[mask], names, pl, last_day, spy=data2.get('SPY')))
+            except (KeyError, ValueError, IndexError) as e:
+                print(f'     (sin resultado: {type(e).__name__} {e})', flush=True)
+                plans.append(None)
+        summary[lab] = plans
+    print('\n################ RESUMEN 2008–2026 ################')
+    for pi, pl in enumerate(RS.PLANS):
+        print(f"\n  Plan «{pl['label']}»")
+        for lab, plans in summary.items():
+            p = plans[pi]
+            if p is None:
+                print(f'    {lab[:70]}: sin evidencia suficiente')
+                continue
+            o, vs = p['stats']['oos'], p['stats'].get('vsSpy', {})
+            pf = p['stats'].get('portfolio', {}).get('10x10', {})
+            by = p['stats']['byYear']
+            print(f"    {lab[:70]}\n       n={o['n']:.0f} · acierto {o['wr']:.1f}% · media {o['mean']:+.2f}% · PF {o['pf']:.2f} · alfa vs S&P {vs.get('alpha', float('nan')):+.2f}% (t={vs.get('alphaT', float('nan')):.1f}) · "
+                  f"cartera 10×10%: {pf.get('cagr', float('nan')):+.1f}% anual / caída {pf.get('dd', float('nan')):.0f}% / Sharpe {pf.get('sharpe', float('nan')):.2f} (S&P: {p['stats'].get('spyHold', {}).get('cagr', float('nan')):+.1f}% / {p['stats'].get('spyHold', {}).get('dd', float('nan')):.0f}%) · grupos {p['groups']}\n"
+                  f"       por año: " + ' '.join(f"{y}:{v['wr']:.0f}%/{v['mean']:+.2f}" for y, v in by.items()))
+    sys.stdout.flush()
