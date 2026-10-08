@@ -474,10 +474,12 @@ PEL_BIG = 12.0
 PEL_EXTRA = ['ret60', 'ret120', 'rs60', 'rs120', 'max_gap5', 'shock5', 'max_vr5']
 
 
-def build_pelotazo(EV: Dict, upto_day: int):
+def build_pelotazo(EV: Dict, upto_day: int, row_ok=None):
     import model as MD
     vi = EV['variants'].index(PEL_PLAN['variant'])
     rows, FL, names = union_events(EV, +1)
+    if row_ok is not None:
+        k_ = row_ok(EV, rows); rows, FL = rows[k_], FL[k_]
     day, sym = EV['day'][rows], EV['sym'][rows]
     years = year_of(day)
     X = EV['X'][rows]; gid = EV['grp'][rows]
@@ -553,16 +555,22 @@ def build_pelotazo(EV: Dict, upto_day: int):
         'model': fm}
 
 
-def final(EV: Dict, EV_pel: Dict | None, out_dir: str, universe_n: int, spy=None):
+def final(EV: Dict, EV_pel: Dict | None, out_dir: str, universe_n: int, spy=None, row_ok=None, pit_info=None):
+    """row_ok(EV, filas) -> máscara: solo cuentan los eventos de valores que eran miembros del índice en ese día (módulo pit); pit_info se guarda en el registro."""
     rows, FL, names = union_events(EV, +1)
+    if row_ok is not None:
+        k_ = row_ok(EV, rows)
+        print(f'  pertenencia histórica: {int((~k_).sum()):,} de {len(rows):,} candidatos descartados (valores que aún no estaban en el índice en esa fecha)', flush=True)
+        rows, FL = rows[k_], FL[k_]
     last_day = int(EV['day'].max())
     last_str = str(np.datetime64('1970-01-01') + np.timedelta64(last_day, 'D'))
     print(f'\n########  VALIDACIÓN FINAL · {len(rows):,} candidatos · datos hasta {last_str}  ########', flush=True)
     plans = [build_plan(EV, rows, FL, names, pl, last_day, spy=spy) for pl in PLANS]
-    pel = build_pelotazo(EV_pel, last_day) if EV_pel is not None else None
+    pel = build_pelotazo(EV_pel, last_day, row_ok=row_ok) if EV_pel is not None else None
     reg = {'version': 5, 'generatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'dataThrough': last_str, 'universe': universe_n,
            'design': {'windowYears': WINDOW_YEARS, 'firstWalkForwardYear': FIRST_WF_YEAR, 'nPerDay': N_PER_DAY, 'healthDays': HEALTH_DAYS},
            'rules': {'nPerDay': N_PER_DAY, 'watchMargin': 0.03},
+           'pit': pit_info or {'on': False},
            'patterns': [{'id': n, 'label': SU.BY_ID[n].label} for n in names],
            'strategies': [{**{k: v for k, v in pl.items() if k not in ('model', 'gids')}, 'model': pl['model'].to_json()} for pl in plans],
            'pelotazo': ({**{k: v for k, v in pel.items() if k != 'model'}, 'model': pel['model'].to_json()} if pel else None)}
@@ -598,6 +606,7 @@ def main():
     ap.add_argument('--limit', type=int, default=0)
     ap.add_argument('--synthetic', type=int, default=0)
     ap.add_argument('--synthetic-ar', type=float, default=0.0)
+    ap.add_argument('--no-pit', action='store_true', help='validación final sin pertenencia histórica a los índices (solo para pruebas)')
     ap.add_argument('--out', default=os.path.join(HERE, 'research_out'))
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
@@ -610,6 +619,18 @@ def main():
         return
     uni, data = load_data(args)
     print(f'universo con datos: {len([s for s in uni if not uni[s].get("aux")])} activos · {time.time() - t0:.0f}s', flush=True)
+    universe_n = len([s for s in uni if not uni[s].get('aux')])
+    row_ok, pit_info = None, None
+    if args.cmd == 'final' and not args.synthetic and not args.no_pit:
+        import pit
+        mem = pit.fetch_membership()
+        if len(mem.get('sp500', {}).get('chg', [])) < 100:
+            raise SystemExit('Pertenencia histórica del S&P 500 no disponible: se aborta para no sustituir el registro por una validación con sesgo de supervivencia')
+        uni, data, cov = pit.load_extras(uni, data, mem, args)
+        iv = pit.merged_intervals(mem)
+        row_ok = lambda EV_, rows_: pit.event_mask(EV_['sym_names'], EV_['sym'][rows_], EV_['day'][rows_], iv)
+        pit_info = {'on': True, 'removedTickers': cov['extra'], 'removedWithData': cov['got'],
+                    'changes': {k: len(v['chg']) for k, v in mem.items()}, 'since': pit.FROM_YEAR}
     if args.cmd == 'longidx':
         import longidx
         longidx.run(uni, data, args.out)
@@ -650,7 +671,7 @@ def main():
     print(f'tabla de eventos lista · {time.time() - t0:.0f}s', flush=True)
     if args.cmd == 'final':
         EV_pel = build_events(data, uni, SU.PEL_SETUPS + [SU.BY_ID['B_up']], PEL_VARIANTS, with_moc=False)
-        final(EV, EV_pel, args.out, len([s for s in uni if not uni[s].get('aux')]), spy=data.get('SPY'))
+        final(EV, EV_pel, args.out, universe_n, spy=data.get('SPY'), row_ok=row_ok, pit_info=pit_info)
     elif args.cmd in ('improve', 'improve2'):
         import lab
         getattr(lab, args.cmd + '_explore')(EV, args.out, data, uni)
