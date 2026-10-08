@@ -1,11 +1,1 @@
-{
-  "generatedAt": "2026-10-08T02:09:03.005897+00:00",
-  "symbolsOK": 282,
-  "symbolsFailed": 3,
-  "failed": [
-    "CTRA|1d",
-    "SATS|1d",
-    "QRVO|1d"
-  ],
-  "totalTrades": 1942
-}
+{"generatedAt":"2026-10-08T07:43:58.440292+00:00","dataThrough":"2026-10-07","symbols":1967,"failed":14,"failedList":["FDXF","HONA","VYLR","ADIG","BLFS","CWEN-A","HLX","LEG","MBGL","MFP","QRVO","ROG.SW","CTRA","SATS"],"strategies":2,"candidates":85,"alerts":8,"paused":[],"watch":24,"market":{"spyUp":true,"spyDist200":8.1,"vix":15.1,"vixZ":-0.88,"spyRsi2":68.0,"breadthUp200":45.0,"breadthOversold":14.2},"oversoldUptrend":71,"rules":{"nPerDay":5,"watchMargin":0.03},"validatedAt":"2026-10-08T07:41:34Z","validatedThrough":"2026-10-07","secs":43}

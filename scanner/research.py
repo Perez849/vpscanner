@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+"""
+research.py — Construye la tabla de eventos del universo y VALIDA el sistema (comando `final`).
+
+    python research.py final --out model        → escribe model/validated.json (lo usa scan.py)
+    python research.py <cmd>                    → laboratorio exploratorio (ver lab.py)
+
+Procedimiento de `final` (walk-forward, sin mirar nunca al futuro):
+  1. Candidatos: unión de patrones de sobreventa en tendencia alcista (largos), un evento por (activo, día).
+  2. Por cada plan de salida, para cada año Y≥2019 se entrena el modelo SOLO con los 3 años anteriores y se
+     predice la probabilidad de acierto de los candidatos de Y (fuera de muestra).
+  3. Política: de cada día, las N mejores señales cuya probabilidad supere la tasa base de acierto.
+     Los grupos de activos sin evidencia (n<80 o media≤0) se excluyen automáticamente.
+  4. Calibración isotónica de la probabilidad con esas predicciones fuera de muestra.
+  5. Chequeo de salud: si los últimos 12 meses (fuera de muestra) no son rentables, el plan se PAUSA.
+  6. El modelo desplegado se ajusta con los últimos 3 años de datos.
+"""
+from __future__ import annotations
+import argparse
+import json
+import math
+import os
+import sys
+import time
+from typing import Dict, List
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import data as D
+import feats
+import setups as SU
+import simulate as SM
+import universe as UV
+
+TRAIN_END = '2021-12-31'      # (solo laboratorio)
+VAL_END = '2023-12-31'
+
+FEATURES = feats.FEATURES
+GROUPS = feats.GROUPS
+
+
+def day_of(s: str) -> int:
+    return int(np.datetime64(s).astype('datetime64[D]').astype(np.int64))
+
+
+def year_of(day: np.ndarray) -> np.ndarray:
+    return (np.datetime64('1970-01-01') + day.astype('timedelta64[D]')).astype('datetime64[Y]').astype(int) + 1970
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Construcción de la tabla de eventos
+# ═════════════════════════════════════════════════════════════════════════
+def synthetic_universe(n=60, ar=0.0):
+    import synth
+    return synth.universe(n, ar, n_bars=3400)
+
+
+def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: List[SM.Variant],
+                 only_last: bool = False, verbose: bool = True):
+    """
+    Recorre el universo y devuelve la tabla de eventos en arrays NumPy:
+      sid, sym_i, grp_i, day, X[n, len(FEATURES)], pnl[n,V], kind[n,V], bars[n,V]
+    """
+    spy, vix = data.get('SPY'), data.get('^VIX')
+    reg = feats.regime_series(spy, vix) if (spy is not None and vix is not None) else None
+    sym_list = [s for s in uni if not uni[s].get('aux') and s in data]
+    sid_of = {s.id: k for k, s in enumerate(setup_list)}
+    # Pasada 1: amplitud de mercado del universo (fracción sobre SMA200, sobreventa, rentabilidad media)
+    bre = feats.Breadth()
+    for sym in sym_list:
+        bre.add(feats.build(data[sym]))
+    bd = bre.finalize()
+    print('  amplitud de mercado lista', flush=True)
+    acc = {k: [] for k in ('sid', 'sym', 'grp', 'day', 'bi', 'X', 'pnl', 'kind', 'bars')}
+    t0 = time.time()
+    for n_s, sym in enumerate(sym_list):
+        g = uni[sym]['group']
+        F = feats.build(data[sym])
+        feats.ensure_regime(F, reg)
+        feats.align_breadth(bd, F['t'], F)
+        ev = SU.detect(F, g, setup_list)
+        cost = SM.COST_RT.get(g, 0.30)
+        # un único cálculo de simulación por dirección sobre la unión de índices
+        for sgn in (+1, -1):
+            ids = [s.id for s in setup_list if s.dir == sgn and len(ev[s.id])]
+            if not ids:
+                continue
+            uni_idx = np.unique(np.concatenate([ev[i] for i in ids]))
+            res = SM.simulate(F, uni_idx, sgn, variants, cost)
+            P = np.stack([res[v.name].pnl for v in variants], 1).astype(np.float32)
+            K = np.stack([res[v.name].kind for v in variants], 1)
+            B = np.stack([res[v.name].bars for v in variants], 1)
+            Xs = feats.event_matrix(F, uni_idx)
+            for sid in ids:
+                pos = np.searchsorted(uni_idx, ev[sid])
+                acc['sid'].append(np.full(len(pos), sid_of[sid], np.int16))
+                acc['sym'].append(np.full(len(pos), n_s, np.int32))
+                acc['grp'].append(np.full(len(pos), GROUPS.index(g), np.int8))
+                acc['day'].append((F['t'][uni_idx][pos] // 86400).astype(np.int32))
+                acc['bi'].append(uni_idx[pos].astype(np.int32))
+                acc['X'].append(Xs[pos]); acc['pnl'].append(P[pos])
+                acc['kind'].append(K[pos]); acc['bars'].append(B[pos])
+        if verbose and (n_s + 1) % 300 == 0:
+            print(f'  eventos: {n_s + 1}/{len(sym_list)} símbolos ({time.time() - t0:.0f}s)', flush=True)
+    EV = {k: (np.concatenate(v) if v else np.array([])) for k, v in acc.items()}
+    EV['sym_names'] = sym_list
+    EV['setups'] = [s.id for s in setup_list]
+    EV['variants'] = [v.name for v in variants]
+    return EV
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Estadísticos
+# ═════════════════════════════════════════════════════════════════════════
+def wilson_lo(w: int, n: int, z: float = 1.96) -> float:
+    if n == 0:
+        return 0.0
+    p = w / n
+    d = 1 + z * z / n
+    c = p + z * z / (2 * n)
+    r = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return (c - r) / d
+
+
+def stats(pnl: np.ndarray, day: np.ndarray | None = None, sym: np.ndarray | None = None) -> Dict:
+    x = pnl[np.isfinite(pnl)]
+    n = len(x)
+    if n == 0:
+        return {'n': 0}
+    w = int((x > 0).sum())
+    gp, gl = x[x > 0].sum(), -x[x < 0].sum()
+    d = {'n': n, 'wr': w / n * 100, 'wr_lo': wilson_lo(w, n) * 100, 'mean': float(x.mean()),
+         'med': float(np.median(x)), 'pf': float(gp / gl) if gl > 0 else 99.0,
+         'avg_win': float(x[x > 0].mean()) if w else 0.0, 'avg_loss': float(x[x <= 0].mean()) if n - w else 0.0}
+    if day is not None:
+        dd = day[np.isfinite(pnl)]
+        u, inv = np.unique(dd, return_inverse=True)
+        # error estándar robusto por clústeres de día (las señales de un mismo día están correlacionadas)
+        r = np.bincount(inv, weights=x - x.mean())
+        se = math.sqrt(float((r ** 2).sum())) / n
+        if sym is not None:        # y por símbolo: ventanas solapadas de un mismo activo comparten trayectoria
+            _, inv2 = np.unique(sym[np.isfinite(pnl)], return_inverse=True)
+            r2 = np.bincount(inv2, weights=x - x.mean())
+            se = max(se, math.sqrt(float((r2 ** 2).sum())) / n)
+        d['se'] = se
+        d['t_day'] = float(x.mean() / (se + 1e-12))
+    return d
+
+
+def split_masks(day: np.ndarray):
+    tr, va = day_of(TRAIN_END), day_of(VAL_END)
+    return day <= tr, (day > tr) & (day <= va), day > va
+
+
+def fmt(s: Dict) -> str:
+    if s.get('n', 0) == 0:
+        return '        —'
+    return f"n={s['n']:6d} WR={s['wr']:5.1f}% (lo {s['wr_lo']:4.1f}) μ={s['mean']:+6.2f}% PF={s['pf']:4.2f}"
+
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  META: ¿un modelo de contexto separa las buenas de las malas señales?
+# ═════════════════════════════════════════════════════════════════════════
+UNION_COOLDOWN = 5
+
+
+def union_events(EV: Dict, sgn: int):
+    """Un evento por (símbolo, día) uniendo todos los patrones de esa dirección; banderas de qué patrones saltaron."""
+    setups_ = EV['setups']
+    ids = [k for k, sn in enumerate(setups_) if SU.BY_ID[sn].dir == sgn and SU.BY_ID[sn].family not in ('baseline', 'control')]
+    m = np.isin(EV['sid'], ids)
+    sid_m = EV['sid'][m]
+    key = EV['sym'][m].astype(np.int64) * 100000 + EV['day'][m]
+    uk, first = np.unique(key, return_index=True)
+    rows = np.flatnonzero(m)[first]
+    FL = np.zeros((len(uk), len(ids)), np.float32)
+    for c, k in enumerate(ids):
+        FL[np.isin(uk, key[sid_m == k]), c] = 1.0
+    # enfriamiento sin estado: solo el primer evento si no hubo otro en las 4 barras previas del mismo símbolo
+    sym, bi = EV['sym'][rows], EV['bi'][rows]
+    o = np.lexsort((bi, sym))
+    keep = np.ones(len(rows), bool)
+    sy, b = sym[o], bi[o]
+    same = np.concatenate([[False], sy[1:] == sy[:-1]])
+    gap = np.concatenate([[10 ** 6], np.diff(b)])
+    keep_o = ~(same & (gap < UNION_COOLDOWN))
+    keep[o] = keep_o
+    return rows[keep], FL[keep], [setups_[k] for k in ids]
+
+
+
+def topn_mask(p, day, m, n):
+    """Las n mejores señales por día (por probabilidad), dentro de la máscara m."""
+    idx = np.flatnonzero(m)
+    o = idx[np.lexsort((-p[idx], day[idx]))]
+    d = day[o]
+    first = np.concatenate([[0], np.flatnonzero(np.diff(d)) + 1])
+    rank = np.arange(len(o)) - np.repeat(first, np.diff(np.concatenate([first, [len(o)]])))
+    out = np.zeros(len(p), bool); out[o[rank < n]] = True
+    return out
+
+
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  FINAL: planes de salida, política "N mejores por día", salud y registro
+# ═════════════════════════════════════════════════════════════════════════
+PLANS = [
+    {'id': 'rsi_S4_H10', 'role': 'principal', 'label': 'Equilibrado', 'blurb': 'sale cuando el RSI(2) supera 70 (stop 4×ATR, máx. 10 sesiones)'},
+    {'id': 'atr_T1_S4_H10', 'role': 'alta_prob', 'label': 'Alta probabilidad', 'blurb': 'objetivo +1×ATR (stop 4×ATR, máx. 10 sesiones): acierta más, gana menos por operación'},
+]
+N_PER_DAY = 5
+WINDOW_YEARS = 3
+FIRST_WF_YEAR = 2019
+MIN_GROUP_N = 80
+HEALTH_DAYS = 365
+
+
+def wf_predict_linear(EV, rows, FL, y, ok, upto_day: int):
+    """Probabilidad cruda OOS: para cada año Y, modelo lineal entrenado con los 3 años previos. Devuelve (p, base_rate_train)."""
+    import model as MD
+    day = EV['day'][rows]; years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+    p = np.full(len(rows), np.nan); base = np.full(len(rows), np.nan)
+    last_year = int(year_of(np.array([upto_day]))[0])
+    for Y in range(FIRST_WF_YEAR, last_year + 1):
+        trm = (day < day_of(f'{Y}-01-01')) & (day >= day_of(f'{Y - WINDOW_YEARS}-01-01')) & ok
+        tem = (years == Y) & (day <= upto_day)
+        if trm.sum() < 3000 or not tem.any():
+            continue
+        m = MD.LinearLogitModel(fidx, ['f%d' % i for i in range(FL.shape[1])], GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+        p[tem] = m.predict_raw(X[tem], FL[tem], gid[tem])
+        base[tem] = float(y[trm].mean())
+    return p, base
+
+
+def select_policy(p, base, day, gid, ok, allowed_gids):
+    """Las N mejores por día (probabilidad), entre las que superan la tasa base y están en grupos permitidos."""
+    cand = ok & np.isfinite(p) & (p >= base) & np.isin(gid, allowed_gids)
+    return topn_mask(p, day, cand, N_PER_DAY)
+
+
+def _block(pnl, day, sym):
+    st = stats(pnl, day, sym)
+    return {k: round(float(st[k]), 3) for k in ('n', 'wr', 'wr_lo', 'mean', 'pf', 't_day', 'avg_win', 'avg_loss') if k in st}
+
+
+def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True):
+    import model as MD
+    variants = EV['variants']
+    vi = variants.index(plan['id'])
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+    pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl) & (day <= upto_day)
+    y = (pnl > 0).astype(np.float32)
+    p, base = wf_predict_linear(EV, rows, FL, y, ok, upto_day)
+    m = ok & np.isfinite(p)
+    print(f"\n  [{plan['id']} · {plan['label']}] AUC OOS={MD.auc(p[m], y[m]):.3f} · todos los candidatos: {fmt(stats(pnl[m], day[m], sym[m]))}", flush=True)
+    # grupos permitidos: evidencia fuera de muestra con la política aplicada a todos los grupos
+    sel0 = select_policy(p, base, day, gid, ok, list(range(len(GROUPS))))
+    allowed = []
+    for gi, gname in enumerate(GROUPS):
+        mg = sel0 & (gid == gi)
+        if mg.sum() >= MIN_GROUP_N:
+            sg_ = stats(pnl[mg], day[mg], sym[mg])
+            good = sg_['mean'] > 0.05
+            print(f"       grupo {gname:9s} {fmt(sg_)} → {'ok' if good else 'EXCLUIDO'}")
+            if good:
+                allowed.append(gi)
+        elif mg.sum() > 0:
+            print(f"       grupo {gname:9s} n={mg.sum()} (<{MIN_GROUP_N}: sin evidencia) → EXCLUIDO")
+    sel = select_policy(p, base, day, gid, ok, allowed)
+    st = stats(pnl[sel], day[sel], sym[sel])
+    print(f"     política top {N_PER_DAY}/día en {[GROUPS[g] for g in allowed]}: {fmt(st)} · t={st['t_day']:.1f}", flush=True)
+    # por año, por grupo, reciente, sensibilidad a costes ×2
+    by_year = {}
+    for Y in sorted(set(years[sel])):
+        my = sel & (years == Y)
+        if my.sum() >= 20:
+            sy = stats(pnl[my]); by_year[str(int(Y))] = {'n': sy['n'], 'wr': round(sy['wr'], 1), 'mean': round(sy['mean'], 2)}
+    print('     por año: ' + ' '.join(f"{y_}:{v['wr']:.0f}%/{v['mean']:+.2f}" for y_, v in by_year.items()))
+    by_group = {GROUPS[g]: _block(pnl[sel & (gid == g)], day[sel & (gid == g)], sym[sel & (gid == g)]) for g in allowed if (sel & (gid == g)).sum() >= 20}
+    cost_arr = np.array([SM.COST_RT.get(GROUPS[g], 0.30) for g in range(len(GROUPS))])[gid]
+    st2 = stats(pnl[sel] - cost_arr[sel], day[sel], sym[sel])
+    recent = sel & (day >= day_of('2024-01-01'))
+    st_rec = stats(pnl[recent], day[recent], sym[recent]) if recent.sum() >= 50 else None
+    if st_rec:
+        print(f"     desde 2024: {fmt(st_rec)}")
+    print(f"     con costes DOBLES: WR={st2['wr']:.1f}% μ={st2['mean']:+.2f}% PF={st2['pf']:.2f}")
+    # salud: últimos 12 meses con resultado conocido
+    last_known = int(day[sel].max()) if sel.any() else upto_day
+    hm = sel & (day > last_known - HEALTH_DAYS)
+    st_h = stats(pnl[hm], day[hm], sym[hm]) if hm.sum() >= 30 else None
+    paused = bool(st_h and st_h['n'] >= 200 and st_h['mean'] <= 0)
+    print(f"     salud (últimos 12 meses): {fmt(st_h) if st_h else 'datos insuficientes'} → {'PAUSADO' if paused else 'activo'}", flush=True)
+    # calibración isotónica (todas las predicciones OOS) y modelo desplegado (últimos 3 años)
+    cal = MD.LogitModel(fidx, names, GROUPS); cal.set_calibration(p[m], y[m])
+    trm = (day >= upto_day - 365 * WINDOW_YEARS) & (day <= upto_day) & ok
+    fm = MD.LinearLogitModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+    fm.calib = cal.calib
+    base_now = float(y[trm].mean())
+    pc = np.interp(p, [c[0] for c in cal.calib], [c[1] for c in cal.calib]) if len(cal.calib) >= 2 else p
+    v = SM.default_variants()[vi]
+    return {
+        'id': plan['id'], 'role': plan['role'], 'label': plan['label'], 'blurb': plan['blurb'],
+        'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': [GROUPS[g] for g in allowed], 'gids': allowed,
+        'nPerDay': N_PER_DAY, 'floorRaw': round(base_now, 4), 'paused': paused,
+        'ev': {'aw': round(st['avg_win'], 3), 'al': round(st['avg_loss'], 3)},
+        'stats': {'oos': _block(pnl[sel], day[sel], sym[sel]), 'recent': _block(pnl[recent], day[recent], sym[recent]) if st_rec else None,
+                  'cost2x': {k: round(float(st2[k]), 3) for k in ('wr', 'mean', 'pf')}, 'health': _block(pnl[hm], day[hm], sym[hm]) if st_h else None,
+                  'baseWR': round(float(y[m].mean() * 100), 1), 'meanPCal': round(float(pc[sel].mean() * 100), 1), 'byYear': by_year, 'byGroup': by_group},
+        'model': fm}
+
+
+def final(EV: Dict, out_dir: str, universe_n: int):
+    rows, FL, names = union_events(EV, +1)
+    last_day = int(EV['day'].max())
+    last_str = str(np.datetime64('1970-01-01') + np.timedelta64(last_day, 'D'))
+    print(f'\n########  VALIDACIÓN FINAL · {len(rows):,} candidatos · datos hasta {last_str}  ########', flush=True)
+    plans = [build_plan(EV, rows, FL, names, pl, last_day) for pl in PLANS]
+    reg = {'version': 4, 'generatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'dataThrough': last_str, 'universe': universe_n,
+           'design': {'windowYears': WINDOW_YEARS, 'firstWalkForwardYear': FIRST_WF_YEAR, 'nPerDay': N_PER_DAY, 'healthDays': HEALTH_DAYS},
+           'rules': {'nPerDay': N_PER_DAY, 'watchMargin': 0.03},
+           'patterns': [{'id': n, 'label': SU.BY_ID[n].label} for n in names],
+           'strategies': [{**{k: v for k, v in pl.items() if k not in ('model', 'gids')}, 'model': pl['model'].to_json()} for pl in plans]}
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, 'validated.json')
+    json.dump(reg, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'), default=float)
+    print(f'\nregistro escrito: {path} ({os.path.getsize(path) / 1024:.0f} KB) · {len(plans)} planes · pausados: {[p["id"] for p in plans if p["paused"]]}', flush=True)
+
+
+def load_data(args):
+    if args.synthetic:
+        return synthetic_universe(args.synthetic, args.synthetic_ar)
+    uni = UV.load()
+    syms = list(uni.keys())
+    if args.limit:
+        keep = [s for s in syms if uni[s].get('aux')] + [s for s in syms if not uni[s].get('aux')][:args.limit]
+        syms = keep
+    bars, failed = D.fetch_many(syms, rng=args.range, workers=args.workers, cache_path=args.cache, max_age_h=args.max_age_h)
+    uni = {s: uni[s] for s in syms if s in bars}
+    n_ok = len([s for s in uni if not uni[s].get('aux')])
+    if not args.limit and n_ok < 0.7 * (len(syms)):
+        raise SystemExit(f'Descarga incompleta ({n_ok}/{len(syms)} activos): se aborta para no sobrescribir el registro con datos pobres.')
+    return uni, bars
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime'])
+    ap.add_argument('--range', default='10y')
+    ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
+    ap.add_argument('--max-age-h', type=float, default=24 * 14)
+    ap.add_argument('--workers', type=int, default=8)
+    ap.add_argument('--limit', type=int, default=0)
+    ap.add_argument('--synthetic', type=int, default=0)
+    ap.add_argument('--synthetic-ar', type=float, default=0.0)
+    ap.add_argument('--out', default=os.path.join(HERE, 'research_out'))
+    args = ap.parse_args()
+    os.makedirs(args.out, exist_ok=True)
+
+    t0 = time.time()
+    uni, data = load_data(args)
+    print(f'universo con datos: {len([s for s in uni if not uni[s].get("aux")])} activos · {time.time() - t0:.0f}s', flush=True)
+    variants = SM.default_variants()
+    EV = build_events(data, uni, SU.SETUPS, variants)
+    print(f'tabla de eventos lista · {time.time() - t0:.0f}s', flush=True)
+    if args.cmd == 'final':
+        final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
+    else:
+        import lab
+        getattr(lab, {'explore': 'explore', 'meta': 'meta_explore', 'meta2': 'meta2_explore', 'meta3': 'meta3_explore',
+                      'meta4': 'meta4_explore', 'meta5': 'meta5_explore', 'regime': 'regime_explore'}[args.cmd])(EV, args.out)
+    print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
+
+
+if __name__ == '__main__':
+    main()
+
