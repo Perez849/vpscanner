@@ -89,11 +89,14 @@ def _get(url: str, timeout: int = 25) -> str | None:
         return None
 
 
-def _wiki_symbols(page: str, col_names=('Symbol', 'Ticker')) -> list[str]:
-    """Saca los símbolos de la primera tabla de una página de Wikipedia que tenga columna Symbol/Ticker."""
+def _wiki_symbols(page: str, col_names=('Symbol', 'Ticker'), with_sector: bool = False):
+    """
+    Saca los símbolos de la primera tabla de una página de Wikipedia que tenga columna Symbol/Ticker.
+    Con with_sector=True devuelve {símbolo: sector GICS} (si la tabla lo trae) en lugar de la lista.
+    """
     html = _get(f'https://en.wikipedia.org/wiki/{page}')
     if not html:
-        return []
+        return {} if with_sector else []
     try:
         import pandas as pd
         from io import StringIO
@@ -102,12 +105,16 @@ def _wiki_symbols(page: str, col_names=('Symbol', 'Ticker')) -> list[str]:
             for cn in col_names:
                 if cn in cols:
                     syms = [str(s).strip().replace('.', '-') for s in t[cn].tolist()]
-                    syms = [s for s in syms if re.fullmatch(r'[A-Z0-9\-]{1,6}', s)]
-                    if len(syms) >= 25:
-                        return syms
+                    ok = [bool(re.fullmatch(r'[A-Z0-9\-]{1,6}', s)) for s in syms]
+                    if sum(ok) >= 25:
+                        if not with_sector:
+                            return [s for s, o in zip(syms, ok) if o]
+                        sc = next((c for c in cols if 'GICS' in c and 'Sub' not in c), None)
+                        secs = [str(x).strip() for x in t[sc].tolist()] if sc else [''] * len(syms)
+                        return {s: v for s, v, o in zip(syms, secs, ok) if o and v and v != 'nan'}
     except Exception:
         pass
-    return []
+    return {} if with_sector else []
 
 
 def build(refresh: bool = False) -> dict:
@@ -119,16 +126,24 @@ def build(refresh: bool = False) -> dict:
 
     # 2) Listas (vivas si se pide y hay red, si no estáticas)
     sp500, sp400, sp600, ndx = SP500, [], [], NDX_EXTRA
+    gics: dict[str, str] = {}
     if refresh:
-        s = _wiki_symbols('List_of_S%26P_500_companies')
-        if s:
-            sp500 = s
-        sp400 = _wiki_symbols('List_of_S%26P_400_companies')
-        sp600 = _wiki_symbols('List_of_S%26P_600_companies')
-        n = _wiki_symbols('Nasdaq-100')
-        if n:
-            ndx = n
-        print(f'  wikipedia: sp500={len(sp500)} sp400={len(sp400)} sp600={len(sp600)} ndx={len(ndx)}', flush=True)
+        def pair(page):
+            d = _wiki_symbols(page, with_sector=True)
+            return (list(d), d) if d else (_wiki_symbols(page), {})
+        s500, d500 = pair('List_of_S%26P_500_companies')
+        if s500:
+            sp500 = s500
+        sp400, d400 = pair('List_of_S%26P_400_companies')
+        sp600, d600 = pair('List_of_S%26P_600_companies')
+        sn, dn = pair('Nasdaq-100')
+        if sn:
+            ndx = sn
+        for d in (d500, d400, d600):
+            gics.update(d)
+        for k, v in dn.items():
+            gics.setdefault(k, v)
+        print(f'  wikipedia: sp500={len(sp500)} sp400={len(sp400)} sp600={len(sp600)} ndx={len(ndx)} · con sector GICS: {len(gics)}', flush=True)
     for s in sp500 + ndx:
         add(s, 'us_large')
     for s in sp400:
@@ -157,6 +172,9 @@ def build(refresh: bool = False) -> dict:
             uni[y] = {'yahoo': y, 'group': 'thematic', 'sector': m.get('sector', '')}
     for s in AUX:
         uni[s]['aux'] = True
+    for s, v in gics.items():                 # sector GICS (solo para el estudio; no afecta a las alertas)
+        if s in uni:
+            uni[s]['gics'] = v
     return uni
 
 

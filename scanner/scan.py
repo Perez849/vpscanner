@@ -197,6 +197,8 @@ def main():
         for s, mdl in zip(strategies, models):
             if s.get('paused') or g not in s.get('groups', []):
                 continue
+            if float(X[0][feats.FEATURES.index('atrp')]) < s.get('minAtrPct', 0):        # suelo de volatilidad del plan
+                continue
             p_raw = float(mdl.predict_raw(X, FLm, gid)[0])
             if p_raw >= s['floorRaw']:
                 per_plan[s['id']].append({'a': a, 'p_raw': p_raw, 'p': float(mdl.predict(X, FLm, gid)[0])})
@@ -212,10 +214,15 @@ def main():
             F, i, sym, g = a['F'], a['last'], a['sym'], a['g']
             ex = s['exit']
             atr, close = float(F['atr'][i]), float(F['c'][i])
-            ev_pct = float(r['p'] * s['ev']['aw'] + (1 - r['p']) * s['ev']['al'])
+            # Probabilidad HONESTA: el modelo apenas separa ganadoras de perdedoras (AUC ≈ 0,5), así que se muestra el acierto HISTÓRICO
+            # de su puesto en el ranking del día (con el rango por año) y no la probabilidad individual del modelo.
+            st_ = s['stats']; hit = (st_.get('calibration') or {}).get('hit'); rh = (st_.get('byRank') or {}).get(str(rank + 1))
+            p_disp = (rh['wr'] if rh else (hit['wr'] if hit else st_['oos']['wr'])) / 100.0
+            ev_pct = float(rh['mean'] if rh else st_['oos']['mean'])
             trig = exit_trigger(F, i) if ex['kind'] == 'rsi' else None
             tgt = close + ex.get('T', 0.0) * atr if ex['kind'] == 'atr' else None
-            plan = {'strategy': s['id'], 'role': s.get('role'), 'label': s['label'], 'blurb': s.get('blurb'), 'p': round(r['p'], 4),
+            plan = {'strategy': s['id'], 'role': s.get('role'), 'label': s['label'], 'blurb': s.get('blurb'), 'p': round(p_disp, 4), 'pModel': round(r['p'], 4),
+                    'pRange': [hit['yearMin'], hit['yearMax']] if hit and hit.get('yearMin') is not None else None,
                     'ev': round(ev_pct, 2), 'exit': ex, 'rank': rank + 1,
                     'levels': {'stopPct': round(-ex['S'] * atr / close * 100, 2), 'stop': round(close - ex['S'] * atr, 4),
                                'targetPct': round((tgt / close - 1) * 100, 2) if tgt else None, 'target': round(tgt, 4) if tgt else None,
@@ -235,7 +242,7 @@ def main():
                     'dir': 1, 'sigTs': int(F['t'][i] * 1000), 'sigClose': round(close, 4), 'atr': round(atr, 4), 'atrPct': round(atr / close * 100, 2),
                     **({'mode': 'moc'} if pre else {}),
                     'ctx': {k: (None if not np.isfinite(X[0][feats.FEATURES.index(k)]) else round(float(X[0][feats.FEATURES.index(k)]), 2))
-                            for k in ('rsi2', 'ibs', 'ret5', 'ret60', 'dist200', 'dd20', 'dd52', 'vol_ratio', 'spy_up', 'vix', 'vix_z', 'b_up200', 'b_os', 'vp_val_atr')},
+                            for k in ('rsi2', 'ibs', 'ret3', 'ret5', 'ret60', 'dist200', 'atrp', 'dd20', 'dd52', 'vol_ratio', 'spy_up', 'spy_dd60', 'vix', 'vix_z', 'b_up200', 'b_os', 'vp_val_atr')},
                     'plans': []}
             target[sym]['plans'].append(plan)
 
@@ -246,7 +253,7 @@ def main():
             al.update({'p': pr['p'], 'ev': pr['ev'], 'exit': pr['exit'], 'levels': pr['levels'], 'hist': pr['hist'], 'strategy': pr['strategy'],
                        'cell': pr['strategy'], 'pMin': 0.0})
             out.append(al)
-        out.sort(key=lambda x: (-max(pl['p'] for pl in x['plans']), -x['ev']))
+        out.sort(key=lambda x: (min(pl['rank'] for pl in x['plans']), -x['ev']))
         return out
     main_alerts = finish(by_sym)
     watch = [w for w in finish(watch_syms) if w['sym'] not in by_sym][:40]

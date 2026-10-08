@@ -267,7 +267,10 @@ PLANS = [
     {'id': 'rsi_S4_H10', 'role': 'principal', 'label': 'Equilibrado', 'n': 3, 'blurb': 'sale cuando el RSI(2) supera 70 (stop 4×ATR, máx. 10 sesiones)'},
     {'id': 'atr_T1_S4_H10', 'role': 'alta_prob', 'label': 'Alta probabilidad', 'n': 5, 'blurb': 'objetivo +1×ATR (stop 4×ATR, máx. 10 sesiones): acierta más, gana menos por operación'},
 ]
+DRIVERS = {'atrp': 'Volatilidad del valor (ATR, % del precio)', 'dd20': 'Distancia al máximo de 20 sesiones (%)', 'ret3': 'Rentabilidad de las últimas 3 sesiones (%)',
+           'dd52': 'Distancia al máximo de 52 semanas (%)', 'vix': 'VIX', 'spy_dd60': 'Caída del S&P 500 desde su máximo de 60 sesiones (%)'}
 N_PER_DAY = 5
+MIN_ATR_PCT = 2.5          # suelo de volatilidad: con ATR < 2,5 % del precio los costes (fijos en %) se comen el rebote (estudio `reasons2`, R6)
 WINDOW_YEARS = 3
 FIRST_WF_YEAR = 2019
 MIN_GROUP_N = 80
@@ -330,7 +333,9 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
     print(f"\n  [{plan['id']} · {plan['label']}] AUC OOS={MD.auc(p[m], y[m]):.3f} · todos los candidatos: {fmt(stats(pnl[m], day[m], sym[m]))}", flush=True)
     # grupos permitidos: evidencia fuera de muestra con la política aplicada a todos los grupos
     N = int(plan.get('n', N_PER_DAY))
-    sel0 = select_policy(p, base, day, gid, ok, list(range(len(GROUPS))), n=N)
+    atrp_ = X[:, FEATURES.index('atrp')]
+    okp = ok & np.isfinite(atrp_) & (atrp_ >= MIN_ATR_PCT)          # elegibles para la política (el modelo se entrena con todos)
+    sel0 = select_policy(p, base, day, gid, okp, list(range(len(GROUPS))), n=N)
     allowed = []
     for gi, gname in enumerate(GROUPS):
         mg = sel0 & (gid == gi)
@@ -342,7 +347,7 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
                 allowed.append(gi)
         elif mg.sum() > 0:
             print(f"       grupo {gname:9s} n={mg.sum()} (<{MIN_GROUP_N}: sin evidencia) → EXCLUIDO")
-    sel = select_policy(p, base, day, gid, ok, allowed, n=N)
+    sel = select_policy(p, base, day, gid, okp, allowed, n=N)
     st = stats(pnl[sel], day[sel], sym[sel])
     print(f"     política top {N}/día en {[GROUPS[g] for g in allowed]}: {fmt(st)} · t={st['t_day']:.1f}", flush=True)
     # por año, por grupo, reciente, sensibilidad a costes ×2
@@ -366,8 +371,44 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
     st_h = stats(pnl[hm], day[hm], sym[hm]) if hm.sum() >= 30 else None
     paused = bool(st_h and st_h['n'] >= 200 and st_h['mean'] <= 0)
     print(f"     salud (últimos 12 meses): {fmt(st_h) if st_h else 'datos insuficientes'} → {'PAUSADO' if paused else 'activo'}", flush=True)
+    # auditoría de la probabilidad: ¿separa el modelo las ganadoras de las perdedoras? (AUC por año, Brier con calibración ANIDADA, quintiles)
+    elig_c = ok & np.isfinite(p) & np.isin(gid, allowed)
+    ylist = [Y for Y in sorted(set(years[elig_c])) if Y >= FIRST_WF_YEAR]
+    auc_by_year = {str(Y): round(MD.auc(p[elig_c & (years == Y)], y[elig_c & (years == Y)]), 3) for Y in ylist if (elig_c & (years == Y)).sum() > 500}
+    pcn = np.full(len(rows), np.nan)
+    for Y in ylist:
+        trn, tem = elig_c & (years < Y), elig_c & (years == Y)
+        if trn.sum() >= 5000 and tem.any():
+            cm = MD.LogitModel(fidx, names, GROUPS); cm.set_calibration(p[trn], y[trn])
+            if len(cm.calib) >= 2:
+                pcn[tem] = np.interp(p[tem], [c[0] for c in cm.calib], [c[1] for c in cm.calib])
+    mm_ = elig_c & np.isfinite(pcn)
+    b_base, b_cal = float(np.mean((base[mm_] - y[mm_]) ** 2)), float(np.mean((pcn[mm_] - y[mm_]) ** 2))
+    qe_ = np.quantile(p[elig_c], [0, .2, .4, .6, .8, 1.0])
+    quint = []
+    for a_, b_ in zip(qe_[:-1], qe_[1:]):
+        mq = elig_c & (p >= a_) & (p <= b_)
+        quint.append({'p': round(float(p[mq].mean()) * 100, 1), 'real': round(float(y[mq].mean()) * 100, 1), 'n': int(mq.sum())})
+    # motivos MEDIBLES: las variables que separan de forma estable (8 de 8 años en el estudio) y qué pasó históricamente en cada quintil
+    drivers = {}
+    for k_, lab_ in DRIVERS.items():
+        xj = X[:, FEATURES.index(k_)]
+        mk = elig_c & np.isfinite(xj)
+        qe = np.quantile(xj[mk], [0.2, 0.4, 0.6, 0.8]); bk = np.digitize(xj, qe)
+        drivers[k_] = {'label': lab_, 'edges': [round(float(e), 3) for e in qe],
+                       'buckets': [{'mean': round(float(np.nanmean(pnl[mk & (bk == b)])), 2), 'wr': round(float(y[mk & (bk == b)].mean() * 100), 1), 'n': int((mk & (bk == b)).sum())} for b in range(5)]}
+    wr_year = [v['wr'] for v in by_year.values()]
+    n_sel = int(sel.sum()); w_sel = int((pnl[sel] > 0).sum())
+    z_ = 1.96; ph_ = w_sel / n_sel
+    ci_hi = (ph_ + z_ * z_ / (2 * n_sel) + z_ * math.sqrt(ph_ * (1 - ph_) / n_sel + z_ * z_ / (4 * n_sel * n_sel))) / (1 + z_ * z_ / n_sel)
+    calibration = {'aucAll': round(MD.auc(p[elig_c], y[elig_c]), 3), 'aucRecent': round(MD.auc(p[elig_c & (years >= 2023)], y[elig_c & (years >= 2023)]), 3),
+                   'aucByYear': auc_by_year, 'brierSkill': round((1 - b_cal / b_base) * 100, 2), 'quintiles': quint,
+                   'hit': {'wr': round(ph_ * 100, 1), 'lo': round(wilson_lo(w_sel, n_sel) * 100, 1), 'hi': round(ci_hi * 100, 1),
+                           'yearMin': min(wr_year) if wr_year else None, 'yearMax': max(wr_year) if wr_year else None}}
+    print(f"     auditoría de la probabilidad: AUC {calibration['aucAll']:.3f} (desde 2023: {calibration['aucRecent']:.3f}) · Brier calibrado frente a tasa base {calibration['brierSkill']:+.1f}% · acierto por quintil de p: "
+          + ' '.join(f"{q['p']:.0f}→{q['real']:.0f}%" for q in quint), flush=True)
     # resultado por PUESTO del día (con las 5 mejores) y cartera realista con capital limitado frente al S&P 500
-    sel5 = select_policy(p, base, day, gid, ok, allowed, n=5)
+    sel5 = select_policy(p, base, day, gid, okp, allowed, n=5)
     rk5 = rank_in_day(p, day, sel5)
     by_rank = {}
     for r in range(1, 6):
@@ -411,12 +452,12 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
     return {
         'id': plan['id'], 'role': plan['role'], 'label': plan['label'], 'blurb': plan['blurb'],
         'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': [GROUPS[g] for g in allowed], 'gids': allowed,
-        'nPerDay': N, 'floorRaw': round(base_now, 4), 'paused': paused,
+        'nPerDay': N, 'minAtrPct': MIN_ATR_PCT, 'floorRaw': round(base_now, 4), 'paused': paused,
         'ev': {'aw': round(st['avg_win'], 3), 'al': round(st['avg_loss'], 3)},
         'stats': {'oos': _block(pnl[sel], day[sel], sym[sel]), 'recent': _block(pnl[recent], day[recent], sym[recent]) if st_rec else None,
                   'cost2x': {k: round(float(st2[k]), 3) for k in ('wr', 'mean', 'pf')}, 'health': _block(pnl[hm], day[hm], sym[hm]) if st_h else None,
                   'baseWR': round(float(y[m].mean() * 100), 1), 'meanPCal': round(float(pc[sel].mean() * 100), 1), 'byYear': by_year, 'byGroup': by_group,
-                  'byRank': by_rank, **extra},
+                  'byRank': by_rank, 'calibration': calibration, 'drivers': drivers, **extra},
         'model': fm}
 
 
@@ -548,7 +589,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -587,6 +628,9 @@ def main():
     elif args.cmd in ('improve', 'improve2'):
         import lab
         getattr(lab, args.cmd + '_explore')(EV, args.out, data, uni)
+    elif args.cmd in ('reasons', 'reasons2'):
+        import study
+        {'reasons': study.run, 'reasons2': study.run2}[args.cmd](EV, args.out, data, uni)
     else:
         import lab
         getattr(lab, {'explore': 'explore', 'meta': 'meta_explore', 'meta2': 'meta2_explore', 'meta3': 'meta3_explore',

@@ -2,7 +2,7 @@
 
 Escáner diario de ~2.000 activos (S&P 500/400/600, Nasdaq-100, ETF, Europa, cripto…) que avisa de **compras tras una caída dentro de una tendencia alcista** cuando un modelo estadístico, validado año a año, le da probabilidad de salir bien. Todo corre gratis en GitHub Actions; la web (`index.html`) solo lee los JSON.
 
-> **Expectativas realistas.** La ventaja medida es modesta: **≈66 % de acierto y ≈ +0,6 % por operación neto de costes** (plan *Equilibrado*, las 3 mejores del día, positivo en los 8 años 2019–2026), o ≈70 % de acierto y ≈ +0,25 % (plan *Alta probabilidad*, marginal con costes dobles). No existe, en estos datos, una estrategia de ≥75 % de acierto *y* rentable: cuando el acierto sube, cada fallo (−4/−6 %) pesa más que cada acierto (+1/+1,5 %) y la ganancia media se evapora. La prueba definitiva es la pestaña **Seguimiento real**.
+> **Expectativas realistas.** La ventaja medida es modesta: **≈67 % de acierto y ≈ +0,7 % por operación neto de costes** (plan *Equilibrado*, las 3 mejores del día, positivo en los 8 años 2019–2026), o ≈70 % de acierto y ≈ +0,4 % (plan *Alta probabilidad*, sin ventaja apreciable sobre el S&P 500). **Ojo: el acierto de una operación concreta no se puede predecir** (ver «¿Están bien estimadas las probabilidades?»): lo estable es el acierto histórico de cada plan y puesto, no una probabilidad individual. No existe, en estos datos, una estrategia de ≥75 % de acierto *y* rentable: cuando el acierto sube, cada fallo (−4/−6 %) pesa más que cada acierto (+1/+1,5 %) y la ganancia media se evapora. La prueba definitiva es la pestaña **Seguimiento real**.
 
 ## Qué estaba mal en la versión anterior
 
@@ -31,8 +31,8 @@ Causas (todas corregidas):
 
 | Plan | Acierto | Media/op. | Factor beneficio | Desde 2024 | Costes ×2 |
 |---|---|---|---|---|---|
-| Equilibrado (3 mejores/día) | 65,8 % | +0,59 % | 1,35 | 64,4 % / +0,53 % | +0,40 % |
-| Alta probabilidad (5 mejores/día) | 70,1 % | +0,25 % | 1,15 | 69,1 % / +0,19 % | +0,05 % |
+| Equilibrado (3 mejores/día, ATR ≥ 2,5 %) | 66,6 % | +0,70 % | 1,38 | 64,9 % / +0,61 % | +0,49 % |
+| Alta probabilidad (5 mejores/día, ATR ≥ 2,5 %) | 69,5 % | +0,38 % | 1,20 | 69,2 % / +0,31 % | +0,17 % |
 
 Lo que mostró la investigación (`scanner/lab.py`, informes en `scanner/model/last_report.txt`):
 
@@ -71,13 +71,32 @@ Todo con la misma tubería walk-forward (`research.py improve`, `improve2`, `ind
 
 | | Anual | Caída máx. | Sharpe | Meses + | Peor mes |
 |---|---|---|---|---|---|
-| Equilibrado (3 mejores/día) | +23,9 % | 27,6 % | 1,40 | 62 % | −22 % |
-| Alta probabilidad (5 mejores/día) | +15,4 % | 23,9 % | 1,30 | 70 % | −11,5 % |
+| Equilibrado (3 mejores/día) | +31,4 % | 27,6 % | 1,70 | 68 % | −21 % |
+| Alta probabilidad (5 mejores/día) | +18,7 % | 22,0 % | 1,50 | 68 % | −13 % |
 | Comprar y mantener el S&P 500 (2019–2026) | +17,5 % | 33,7 % | 0,94 | | |
 
-- **Hallazgo incómodo**: en las mismas ventanas de cada operación, comprar el propio S&P 500 acertó casi igual (≈ 64 % frente a ≈ 66 %) y rindió +0,39 % frente a +0,59 % (*Equilibrado*, 3 mejores/día). El «alfa» sobre el índice es ≈ +0,20 % (t ≈ 1,9, en el límite de lo apreciable) en *Equilibrado* y ≈ −0,12 % (t ≈ −1,7) en *Alta probabilidad*: **gran parte de la ventaja viene de *cuándo* se compra (tras caídas en un mercado alcista), no de *qué* acción se elige**, y la parte de selección queda además inflada por el sesgo de supervivencia.
+- **Hallazgo incómodo**: en las mismas ventanas de cada operación, comprar el propio S&P 500 acertó casi igual (≈ 65 % frente a ≈ 67 %) y rindió +0,40 % frente a +0,70 % (*Equilibrado*). El «alfa» sobre el índice es ≈ +0,30 % (t ≈ 2,6) en *Equilibrado* y ≈ −0,04 % (t ≈ −0,4) en *Alta probabilidad*: **gran parte de la ventaja viene de *cuándo* se compra (tras caídas en un mercado alcista), no de *qué* acción se elige**, y la parte de selección queda además inflada por el sesgo de supervivencia.
 - La misma idea aplicada **solo a índices** (SPY/QQQ/IWM/DIA, sin modelo y sin sesgo de supervivencia): 513 señales en 10 años, **71 % de acierto, +0,30 % por operación** (t = 2,5; 8 de 10 años positivos), y con VIX tranquilo (z < 0,5) 72 % y +0,36 %. Una cartera «solo SPY» (≈ 15 operaciones al año) dio ≈ +6 % anual con caída máxima ≈ 7 % y 79 % de meses positivos: fiable pero de poca rentabilidad si no se apalanca. No está en producción; es una opción de bajo riesgo.
 - Un 65 % de operaciones ganadoras **no** implica una curva suave: en la simulación solo ≈ 6 de cada 10 meses son positivos y los peores meses superan el −10 %. Usa posiciones pequeñas.
+
+## ¿Están bien estimadas las probabilidades? Estudio ampliado (`research.py reasons | reasons2`)
+
+**No, las individuales no.** Se midió fuera de muestra (walk-forward, 2019–2026) si la probabilidad del modelo separa las operaciones que ganan de las que pierden:
+
+| | *Equilibrado* | *Alta probabilidad* |
+|---|---|---|
+| AUC (0,5 = azar) | 0,52 (0,57–0,58 en 2019–22; **0,51–0,53 desde 2023**) | 0,51 (**≤ 0,51 en 2023–25**) |
+| Brier frente a repetir la tasa base | **peor** (−4 % la cruda, −2 % calibrada solo con años previos) | **peor** (−7 % / −3 %) |
+| Acierto real por décima de «probabilidad» | 61 % → 68 %, casi plano (**plano desde 2023**) | 70 % → 71 %, plano |
+| Probabilidad mostrada − acierto real, por año | error medio 3,6 puntos, hasta −12,5 y +6,2 | 3,8 puntos, hasta −11 y +7,6 |
+
+Es decir: casi todo el «65–72 %» que se mostraba era la **tasa base** con falsa precisión. **Decisión:** la web y los avisos muestran ahora el **acierto histórico del puesto del día** (con su rango por año) y la media histórica, y dicen claramente que no es la probabilidad de esa operación.
+
+**¿Y los motivos de compra?** De los 17 patrones, solo unos pocos mejoran de forma estable la media de los candidatos (≥ 4–5 cierres bajistas seguidos, RSI(2) < 5, caída > 12 % desde máximos, capitulación); otros, como «mínimo de cierre de 5 o 10 sesiones», no aportan nada, y combinar varios patrones a la vez tampoco ayuda (acierto 63,4 % con uno, 63,1 % con cuatro o más). Lo que sí separa de forma estable (mismo signo 8 de 8 años) es la **volatilidad del valor** y la **profundidad de la caída** (ret. 1–3 sesiones, distancia a máximos de 20 días y 52 semanas): cuanto más violenta la caída dentro de una tendencia alcista, mayor el rebote *medio*, pero el porcentaje de aciertos apenas cambia (62–66 %). La web muestra ahora, para cada alerta, esos motivos medibles con lo que pasó históricamente en su quintil.
+
+**Se probó para encontrar más fiabilidad (y no mejoró de forma robusta):** tendencia a revertir de cada valor, régimen de reversión de todo el mercado, caída frente a su sector (GICS), crédito (HYG, diferencial HYG/LQD), tipos (TLT) y dólar (UUP), gradient boosting, mezcla lineal+boosting, reglas de confluencia entre modelos, reglas simples (volatilidad + caída), ordenar por retorno esperado (ridge) y quedarse solo con los patrones que ya habían funcionado hasta cada año. La mayoría empeoró la media o el Sharpe; las pocas que mejoraban una prueba no se repetían con salidas vecinas. El modelo actual sí aporta frente a elegir al azar entre los candidatos (*Equilibrado*: +0,58 % frente a +0,01 %; Sharpe de cartera 1,4 frente a −0,1), pero **ordenando por el tamaño del rebote, no por la probabilidad de ganar**.
+
+**Adoptado: suelo de volatilidad (ATR ≥ 2,5 % del precio).** Los costes son fijos en % y en valores poco volátiles se comen el rebote típico: las operaciones elegidas con ATR < 2 % rindieron −0,09 % de media y las de ATR > 6 % +1,93 % (8 de 8 años positivas). Con el suelo, *Equilibrado* pasa de +0,58 % a +0,70 % (mejor en 6 de 8 años; Sharpe de cartera 1,37 → 1,68) y *Alta probabilidad* de +0,25 % a +0,36 % (7 de 8 años). Se probaron 6 suelos entre 2 % y 5 % y se eligió el más bajo que mejora los dos planes; más alto sube la media pero también la caída máxima.
 
 ## 🚀 Pelotazos (experimental)
 
