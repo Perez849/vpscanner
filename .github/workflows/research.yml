@@ -1,12 +1,12 @@
 name: Laboratorio (manual)
 
 # Ejecuta manualmente el laboratorio de investigación (por defecto la validación final) con 10 años de
-# datos del universo completo y vuelca el informe en la rama claude/research-results. No toca main.
+# datos del universo completo y vuelca el informe en la rama claude/research-results-<cmd>. No toca main.
 on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'final | explore | meta | meta2 | meta3 | meta4 | meta5 | regime'
+        description: 'final | moc | improve | gap | pelotazo | pelotazo2 | explore | meta … meta5 | regime'
         default: 'final'
 
 permissions:
@@ -49,10 +49,12 @@ jobs:
           fi
       - name: Publicar resultados en rama aparte
         if: always()
+        env:
+          INPUT_CMD: ${{ github.event.inputs.cmd }}
         run: |
           cp scanner/universe.json /tmp/out/ || true
           cd /tmp/out
           git init -q && git checkout -q -b res
           git config user.name "vp-scanner-bot"; git config user.email "bot@users.noreply.github.com"
           git add -A && git commit -q -m "research $(date -u +%F-%H%M) sha=${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" res:claude/research-results
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" res:claude/research-results-${INPUT_CMD:-final}

@@ -16,7 +16,7 @@ from typing import Dict, List
 import numpy as np
 
 from research import (FEATURES, GROUPS, SU, SM, TRAIN_END, VAL_END, day_of, year_of, stats, fmt, union_events,
-                      topn_mask as _topn_mask, wf_predict_linear, select_policy, PLANS)
+                      topn_mask as _topn_mask, wf_predict_linear, select_policy, PLANS, portfolio_sim)
 
 # ═════════════════════════════════════════════════════════════════════════
 #  EXPLORE
@@ -829,8 +829,9 @@ def moc_check(uni: Dict, data: Dict, out_dir: str):
     models = [MD.LogitModel.from_json(s['model']) for s in strategies]
     pattern_ids = [p['id'] for p in reg['patterns']]
     variants = {s['id']: SM.Variant(s['exit']['kind'], s['exit']['T'], s['exit']['S'], s['exit']['H']) for s in strategies}
-    us = {'us_large', 'us_mid', 'us_small', 'etf'}
-    syms = [x for x in uni if not uni[x].get('aux') and uni[x]['group'] in us and x in data]
+    us = {'us_large', 'us_mid', 'us_small', 'etf', 'thematic'}
+    import re
+    syms = [x for x in uni if not uni[x].get('aux') and uni[x]['group'] in us and x in data and not re.search(r'\.[A-Z]{1,3}$', x)]   # solo cotizadas en EE.UU. (sin sufijo de bolsa)
     print(f'\n######## MOC · {len(syms)} símbolos de EE.UU.: descargando barras de 60 min…', flush=True)
     intr = D.fetch_intraday_many(syms + ['SPY', '^VIX'], workers=8)
     print(f'  intradía OK: {len(intr)}/{len(syms) + 2}', flush=True)
@@ -892,32 +893,426 @@ def moc_check(uni: Dict, data: Dict, out_dir: str):
                 pc = SM.simulate(Ff, ii, +1, [v], cost, entry_mode='close')[v.name].pnl     # resultado SIEMPRE con el cierre FINAL
                 po = SM.simulate(Ff, ii, +1, [v], cost, entry_mode='open')[v.name].pnl
                 dd = (Ff['t'][ii] // 86400).astype(np.int64)
-                rows[s['id']][tag].append((dd, np.full(len(ii), hash(x) % 10 ** 9), p_raw[sel], pc, po))
+                rows[s['id']][tag].append((dd, np.full(len(ii), hash(x) % 10 ** 9), p_raw[sel], pc, po, np.full(len(ii), gi)))
     print(f"  candidatos en la ventana: finales {n_cand['fin']:,} · provisionales {n_cand['prov']:,}", flush=True)
     for sid in variants:
         res = {}
         for tag in ('fin', 'prov'):
             if not rows[sid][tag]:
                 continue
-            dd, ss, pp, pc, po = [np.concatenate(z) for z in zip(*rows[sid][tag])]
+            dd, ss, pp, pc, po, gg = [np.concatenate(z) for z in zip(*rows[sid][tag])]
             ok = np.isfinite(pc) & np.isfinite(po)
-            dd, ss, pp, pc, po = dd[ok], ss[ok], pp[ok], pc[ok], po[ok]
+            dd, ss, pp, pc, po, gg = dd[ok], ss[ok], pp[ok], pc[ok], po[ok], gg[ok]
             m = np.ones(len(dd), bool)
             top = _topn_mask(pp, dd, m, 5)
-            res[tag] = (dd[top], ss[top], pc[top], po[top])
+            res[tag] = (dd[top], ss[top], pc[top], po[top], gg[top])
         print(f"\n=== {sid} · política top 5/día (ventana ≈ {int(np.median([p[2].sum() for p in pairs.values()]))} días; el modelo vio estos años al entrenar → valen las DIFERENCIAS, no el nivel) ===")
         for tag, lbl in (('fin', 'señal con CIERRE FINAL'), ('prov', 'señal PROVISIONAL (15:30 ET)')):
             if tag not in res:
                 continue
-            dd, ss, pc, po = res[tag]
+            dd, ss, pc, po, gg = res[tag]
             sc, so = stats(pc, dd, ss), stats(po, dd, ss)
             print(f"  {lbl:30s} n={sc['n']:5d} | compra al CIERRE: WR={sc['wr']:4.1f}% μ={sc['mean']:+5.2f}% PF={sc['pf']:4.2f} | compra a la APERTURA: WR={so['wr']:4.1f}% μ={so['mean']:+5.2f}% PF={so['pf']:4.2f}")
+            for gname_ in sorted({GROUPS[g] for g in np.unique(gg)}):
+                mg = gg == GROUPS.index(gname_)
+                if mg.sum() >= 10:
+                    sc_, so_ = stats(pc[mg], dd[mg], ss[mg]), stats(po[mg], dd[mg], ss[mg])
+                    dlt = pc[mg] - po[mg]
+                    print(f"      · {gname_:9s} n={sc_['n']:4d} | CIERRE: WR={sc_['wr']:4.1f}% μ={sc_['mean']:+5.2f}% | APERTURA: WR={so_['wr']:4.1f}% μ={so_['mean']:+5.2f}% | cierre−apertura {np.nanmean(dlt):+.2f}% ± {1.96 * np.nanstd(dlt) / math.sqrt(max(1, mg.sum())):.2f}")
         if 'fin' in res and 'prov' in res:
             kf = set(zip(res['fin'][0].tolist(), res['fin'][1].tolist())); kp = set(zip(res['prov'][0].tolist(), res['prov'][1].tolist()))
+            for gname_ in ('thematic',):
+                gi_ = GROUPS.index(gname_)
+                kpg = {(d, s_) for d, s_, g in zip(res['prov'][0].tolist(), res['prov'][1].tolist(), res['prov'][4].tolist()) if g == gi_}
+                if kpg:
+                    print(f"  {gname_}: {len(kpg)} señales provisionales · {len(kpg & kf) / len(kpg) * 100:.0f}% se confirman con el cierre final")
             print(f"  solapamiento: {len(kf & kp) / max(1, len(kp)) * 100:.0f}% de las señales provisionales también lo son al cierre final · {len(kf & kp) / max(1, len(kf)) * 100:.0f}% de las finales ya estaban avisadas a las 15:30")
             both = np.array([(d, s) in kf for d, s in zip(res['prov'][0].tolist(), res['prov'][1].tolist())])
-            dd, ss, pc, po = res['prov']
+            dd, ss, pc, po, gg = res['prov']
             for lbl, mm in (('provisionales que se CONFIRMAN al cierre', both), ('provisionales que se DESVANECEN', ~both)):
                 if mm.sum() >= 20:
                     s_ = stats(pc[mm], dd[mm], ss[mm]); print(f"    {lbl:42s} n={s_['n']:5d} WR={s_['wr']:4.1f}% μ={s_['mean']:+5.2f}%")
+    sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  IMPROVE: batería PRE-ESPECIFICADA de mejoras de fiabilidad y rentabilidad sobre los planes desplegados
+# ═════════════════════════════════════════════════════════════════════════
+def improve_explore(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict | None = None):
+    """
+    Cada idea se evalúa con la MISMA tubería walk-forward del plan desplegado (modelo con ventana móvil de 3 años,
+    N mejores por día sobre la tasa base, grupos del registro) y se compara con la base año a año.
+    Criterio para adoptar un cambio: mejora la media en ≥ 6 de 8 años, el cambio es coherente a priori y la mejora
+    no depende de un solo año. Con tantas pruebas, una mejora aislada «significativa» puede ser azar: por eso se exige consistencia.
+    """
+    import model as MD
+    import math as _m
+    reg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model', 'validated.json')))
+    groups_of = {s['id']: s['groups'] for s in reg['strategies']}
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym, gid = EV['day'][rows], EV['sym'][rows], EV['grp'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]
+    last_day = int(day.max())
+    yrs = [Y for Y in sorted(set(years)) if Y >= 2019]
+    sector_of = {}
+    if uni is not None:
+        for k, sname in enumerate(EV['sym_names']):
+            sector_of[k] = uni.get(sname, {}).get('sector') or f'#{k}'
+    sec_ids = {s: i for i, s in enumerate(sorted(set(sector_of.values())))}
+    sec = np.array([sec_ids[sector_of[k]] if k in sector_of else k for k in sym], dtype=np.int64) if sector_of else np.arange(len(rows))
+    fi = lambda fs: [FEATURES.index(f) for f in fs]
+
+    def wf_lin(y, ok, window=3, l2=30.0, fnames=None):
+        idxf = fi(fnames or MD.MODEL_FEATURES)
+        p = np.full(len(rows), np.nan); base = np.full(len(rows), np.nan)
+        for Y in yrs:
+            lo = day_of(f'{Y - window}-01-01') if window else -10 ** 9
+            trm = (day < day_of(f'{Y}-01-01')) & (day >= lo) & ok
+            tem = (years == Y)
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LinearLogitModel(idxf, names, GROUPS, l2=l2).fit(X[trm], FL[trm], gid[trm], y[trm])
+            p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem]); base[tem] = float(y[trm].mean())
+        return p, base
+
+    def pick(p, base, ok, allowed, N=5, margin=0.0, cap=None):
+        cand = ok & np.isfinite(p) & (p >= base + margin) & np.isin(gid, allowed)
+        if cap is None:
+            return _topn_mask(p, day, cand, N)
+        idx = np.flatnonzero(cand)
+        o = idx[np.lexsort((-p[idx], day[idx]))]
+        out = np.zeros(len(p), bool)
+        cur, cnt, sc = None, 0, {}
+        for i in o:
+            if day[i] != cur:
+                cur, cnt, sc = day[i], 0, {}
+            if cnt >= N:
+                continue
+            s_ = sec[i]
+            if sc.get(s_, 0) >= cap:
+                continue
+            sc[s_] = sc.get(s_, 0) + 1; cnt += 1; out[i] = True
+        return out
+
+    def ymeans(sel, pnl):
+        return {Y: float(np.nanmean(pnl[sel & (years == Y)])) for Y in yrs if (sel & (years == Y)).sum() >= 20}
+
+    def line(tag, sel, pnl, base_ym=None):
+        st = stats(pnl[sel], day[sel], sym[sel])
+        if st.get('n', 0) == 0:
+            print(f'   {tag:34s} —'); return
+        ym = ymeans(sel, pnl)
+        dev = sel & (years <= 2023); rec = sel & (years >= 2024)
+        d_ = stats(pnl[dev]); r_ = stats(pnl[rec])
+        ud, inv = np.unique(day[sel], return_inverse=True)
+        da = np.bincount(inv, weights=pnl[sel]) / np.bincount(inv)
+        cum = np.cumsum(da); dd = float((np.maximum.accumulate(cum) - cum).max())
+        worst = min(ym.values()) if ym else float('nan')
+        cmp_ = ''
+        if base_ym is not None:
+            both = [Y for Y in ym if Y in base_ym]
+            cmp_ = f" | mejor que base {sum(ym[Y] > base_ym[Y] for Y in both)}/{len(both)} años"
+        print(f"   {tag:34s} n={st['n']:5d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% PF={st['pf']:4.2f} t={st['t_day']:4.1f} | ≤2023 μ={d_.get('mean', float('nan')):+5.2f} · 2024+ μ={r_.get('mean', float('nan')):+5.2f} | peor año {worst:+5.2f} · años+ {sum(v > 0 for v in ym.values())}/{len(ym)} · DD {dd:5.1f}{cmp_}")
+        return ym
+
+    print(f'\n######## IMPROVE · {len(rows):,} candidatos largos · {len(yrs)} años de walk-forward ({yrs[0]}–{yrs[-1]})', flush=True)
+    spy = data.get('SPY') if data else None
+    for plan in PLANS:
+        vi = variants.index(plan['id'])
+        pnl = EV['pnl'][rows, vi]; bars = EV['bars'][rows, vi]
+        ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        allowed = [GROUPS.index(g) for g in groups_of[plan['id']]]
+        p0, b0 = wf_lin(y, ok)
+        sel0 = pick(p0, b0, ok, allowed)
+        print(f"\n================ {plan['id']} · {plan['label']} · grupos {groups_of[plan['id']]} ================")
+        base_ym = line('BASE (desplegado)', sel0, pnl)
+        # ── riesgo constante (posición ∝ 1/ATR) y calibración por año ─────
+        atrp = np.maximum(X[:, FEATURES.index('atrp')], 0.5)
+        S_ = SM.default_variants()[vi].S
+        w_ = 1.0 / atrp
+        mu_w = float(np.nansum(w_[sel0] * pnl[sel0]) / np.nansum(w_[sel0]))
+        ymw = {Y: float(np.nansum((w_ * pnl)[sel0 & (years == Y)]) / np.nansum(w_[sel0 & (years == Y)])) for Y in yrs if (sel0 & (years == Y)).sum() >= 20}
+        ud, inv = np.unique(day[sel0], return_inverse=True)
+        daw = np.bincount(inv, weights=(w_ * pnl)[sel0]) / np.bincount(inv, weights=w_[sel0])
+        cumw = np.cumsum(daw)
+        print(f"   riesgo constante (posición ∝ 1/ATR): μ ponderada={mu_w:+.2f}% · R medio (resultado/distancia al stop)={np.nanmean(pnl[sel0] / (S_ * atrp[sel0])):+.3f} · peor año {min(ymw.values()):+.2f} · DD {float((np.maximum.accumulate(cumw) - cumw).max()):.1f}")
+        print('   calibración por año (p cruda media de las seleccionadas → acierto real): ' + ' '.join(
+            f"{str(Y)[2:]}:{np.mean(p0[sel0 & (years == Y)]) * 100:.0f}→{np.mean(y[sel0 & (years == Y)]) * 100:.0f}" for Y in yrs if (sel0 & (years == Y)).sum() >= 20))
+        # ── referencia sin modelo ─────────────────────────────────────────
+        elig = ok & np.isfinite(p0) & np.isin(gid, allowed)
+        rr = []
+        for sd in (1, 2, 3):
+            rnd = np.random.default_rng(sd).random(len(rows))
+            rr.append(_topn_mask(rnd, day, elig, 5))
+        ymr = [ymeans(s, pnl) for s in rr]
+        mu_r = np.mean([np.nanmean(pnl[s]) for s in rr])
+        print(f"   {'SIN modelo (5 al azar/día, 3 semillas)':34s} n={int(np.mean([s.sum() for s in rr])):5d} μ={mu_r:+5.2f}% | años: " + ' '.join(f"{str(Y)[2:]}:{np.mean([m_.get(Y, np.nan) for m_ in ymr]):+.2f}" for Y in yrs))
+        print(f"   {'valor añadido del modelo por año':34s} " + ' '.join(f"{str(Y)[2:]}:{base_ym.get(Y, np.nan) - np.mean([m_.get(Y, np.nan) for m_ in ymr]):+.2f}" for Y in yrs))
+        bi = EV['setups'].index('B_up') if 'B_up' in EV['setups'] else None
+        if bi is not None:
+            mb = (EV['sid'] == bi) & np.isfinite(EV['pnl'][:, vi]) & np.isin(EV['grp'], allowed)
+            print(f"   {'referencia: entrar sobre SMA200 al azar':34s} n={mb.sum():7d} μ={np.mean(EV['pnl'][mb, vi]):+5.2f}%")
+        # ── alfa frente al S&P 500 (misma ventana de cada operación) ──────
+        if spy is not None:
+            sd_ = (spy['t'] // 86400).astype(np.int64)
+            ii = np.searchsorted(sd_, day[sel0], side='left')
+            e = np.minimum(ii + 1, len(sd_) - 1); x = np.minimum(ii + np.maximum(bars[sel0], 1), len(sd_) - 1)
+            sr = (spy['c'][x] / spy['o'][e] - 1) * 100
+            alp = pnl[sel0] - sr
+            s_a = stats(alp, day[sel0], sym[sel0])
+            ud, inv = np.unique(day[sel0], return_inverse=True)
+            da_p = np.bincount(inv, weights=pnl[sel0]) / np.bincount(inv); da_s = np.bincount(inv, weights=sr) / np.bincount(inv)
+            print(f"   S&P 500 en las mismas ventanas: μ={np.nanmean(sr):+.2f}% · alfa (operación − S&P) μ={s_a['mean']:+.2f}% t={s_a['t_day']:.1f} · correlación diaria con el S&P {np.corrcoef(da_p, da_s)[0, 1]:+.2f}")
+        # ── X1: N por día y margen sobre la tasa base ─────────────────────
+        print('  [X1] número de señales por día / margen sobre la tasa base')
+        opts1 = {}
+        for N in (1, 2, 3, 5, 8, 12):
+            s_ = pick(p0, b0, ok, allowed, N=N); opts1[f'N={N}'] = s_
+            line(f'N={N}', s_, pnl, base_ym)
+        for mg in (0.02, 0.04, 0.06):
+            s_ = pick(p0, b0, ok, allowed, margin=mg); opts1[f'N=5, p ≥ base+{mg:.2f}'] = s_
+            line(f'N=5, p ≥ base+{mg:.2f}', s_, pnl, base_ym)
+        # ── X2: ventana de entrenamiento y regularización ─────────────────
+        print('  [X2] ventana de entrenamiento y regularización')
+        for w in (2, 4, 5, None):
+            pw, bw = wf_lin(y, ok, window=w); line(f"ventana {w if w else 'creciente'}", pick(pw, bw, ok, allowed), pnl, base_ym)
+        for l2 in (10.0, 100.0, 300.0):
+            pw, bw = wf_lin(y, ok, l2=l2); line(f'l2={l2:g}', pick(pw, bw, ok, allowed), pnl, base_ym)
+        # ── X3: variables adicionales (una familia cada vez) ─────────────
+        print('  [X3] variables añadidas al modelo (AUC OOS entre paréntesis; base ' + f"{MD.auc(p0[ok & np.isfinite(p0)], y[ok & np.isfinite(p0)]):.3f})")
+        fams = {'choque/noticias (max_gap5, shock5, max_vr5, rel5)': ['max_gap5', 'shock5', 'max_vr5', 'rel5'],
+                'momentum y fuerza relativa (ret60, rs60, rs120)': ['ret60', 'rs60', 'rs120'],
+                'corto plazo (ret2, ret3, rsi3, up_streak)': ['ret2', 'ret3', 'rsi3', 'up_streak'],
+                'mercado (spy_ret5, dist20, ret20)': ['spy_ret5', 'dist20', 'ret20']}
+        for fn, fl in fams.items():
+            fl = [f for f in fl if f in FEATURES]
+            pw, bw = wf_lin(y, ok, fnames=list(MD.MODEL_FEATURES) + fl)
+            mm = ok & np.isfinite(pw)
+            line(f'+ {fn[:30]} ({MD.auc(pw[mm], y[mm]):.3f})', pick(pw, bw, ok, allowed), pnl, base_ym)
+        # ── X4: puertas de régimen sobre las operaciones seleccionadas ───
+        print('  [X4] puertas de régimen (se descartan las señales seleccionadas que cumplen la condición)')
+        col = lambda n: X[:, FEATURES.index(n)]
+        gates = {'VIX z > 1,0': col('vix_z') > 1.0, 'VIX z > 1,5': col('vix_z') > 1.5, 'VIX z > 2,0': col('vix_z') > 2.0,
+                 'SPY bajo su SMA200': col('spy_up') == 0, 'amplitud < 30% sobre SMA200': col('b_up200') < 30,
+                 'amplitud < 40%': col('b_up200') < 40, 'sobreventa amplia > 15%': col('b_os') > 15, 'sobreventa amplia > 25%': col('b_os') > 25,
+                 'ATR > 5% del precio': col('atrp') > 5, 'ATR > 7% del precio': col('atrp') > 7,
+                 'SPY cae > 4% en 5 sesiones': col('spy_ret5') < -4 if 'spy_ret5' in FEATURES else np.zeros(len(rows), bool)}
+        opts4 = {'sin puerta': sel0}
+        for gname, gm in gates.items():
+            gm = np.nan_to_num(gm.astype(float)).astype(bool)
+            keep, drop = sel0 & ~gm, sel0 & gm
+            s_d = stats(pnl[drop]) if drop.sum() else {}
+            ym = line(f'sin: {gname}', keep, pnl, base_ym)
+            print(f"      descartadas n={int(drop.sum())} ({drop.sum() / sel0.sum() * 100:.0f}%) μ={s_d.get('mean', float('nan')):+.2f}% WR={s_d.get('wr', float('nan')):.0f}%")
+            opts4[gname] = keep
+        # ── X5: tope por sector ──────────────────────────────────────────
+        print('  [X5] máximo de señales por sector y día (diversificación)')
+        for cap in (1, 2, 3):
+            line(f'≤ {cap} por sector', pick(p0, b0, ok, allowed, cap=cap), pnl, base_ym)
+        # ── X6: elección ADAPTATIVA (cada año se elige con los años anteriores) ──
+        for lbl, opts in (('N y margen', opts1), ('puertas de régimen', opts4)):
+            tot, tb = [], []
+            for Y in yrs:
+                if Y < 2022:
+                    continue
+                prior = {k: np.nanmean(pnl[s & (years < Y)]) for k, s in opts.items() if (s & (years < Y)).sum() >= 200}
+                if not prior:
+                    continue
+                best = max(prior, key=prior.get)
+                tot.append(pnl[opts[best] & (years == Y)]); tb.append(pnl[sel0 & (years == Y)])
+            if tot:
+                a, b = np.concatenate(tot), np.concatenate(tb)
+                print(f"  [X6] elección adaptativa de «{lbl}» (cada año se elige con los años previos) 2022–{yrs[-1]}: μ={np.nanmean(a):+.2f}% (n={len(a)}) frente a base {np.nanmean(b):+.2f}% (n={len(b)})")
+        sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  IMPROVE2: puestos del día, réplica de mejoras sospechosas y SIMULACIÓN DE CARTERA con capital limitado
+# ═════════════════════════════════════════════════════════════════════════
+def improve2_explore(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict | None = None):
+    import model as MD
+    reg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model', 'validated.json')))
+    groups_of = {s['id']: s['groups'] for s in reg['strategies']}
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym, gid = EV['day'][rows], EV['sym'][rows], EV['grp'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]
+    yrs = [Y for Y in sorted(set(years)) if Y >= 2019]
+    fi = lambda fs: [FEATURES.index(f) for f in fs]
+
+    def wf_lin(y, ok, window=3, fnames=None):
+        idxf = fi(fnames or MD.MODEL_FEATURES)
+        p = np.full(len(rows), np.nan); base = np.full(len(rows), np.nan)
+        for Y in yrs:
+            lo = day_of(f'{Y - window}-01-01') if window else -10 ** 9
+            trm = (day < day_of(f'{Y}-01-01')) & (day >= lo) & ok
+            tem = (years == Y)
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LinearLogitModel(idxf, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+            p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem]); base[tem] = float(y[trm].mean())
+        return p, base
+
+    def pick(p, base, ok, allowed, N=5):
+        return _topn_mask(p, day, ok & np.isfinite(p) & (p >= base) & np.isin(gid, allowed), N)
+
+    def ymeans(sel, pnl):
+        return {Y: float(np.nanmean(pnl[sel & (years == Y)])) for Y in yrs if (sel & (years == Y)).sum() >= 20}
+
+    def rank_in_day(p, sel):
+        idx = np.flatnonzero(sel)
+        o = idx[np.lexsort((-p[idx], day[idx]))]
+        d = day[o]
+        first = np.concatenate([[0], np.flatnonzero(np.diff(d)) + 1])
+        rk = np.arange(len(o)) - np.repeat(first, np.diff(np.concatenate([first, [len(o)]])))
+        out = np.zeros(len(p), np.int16); out[o] = rk + 1
+        return out
+
+    spy = data.get('SPY') if data else None
+    sd_ = (spy['t'] // 86400).astype(np.int64) if spy is not None else None
+
+    def portfolio(sel, p, pnl, bars, N, M, f, label, alt=None):
+        rk = rank_in_day(p, sel)
+        use = sel & (rk <= N) & np.isfinite(pnl)
+        res = np.where(use, pnl if alt is None else alt, np.nan)
+        ti = np.searchsorted(sd_, day, side='left')
+        r = portfolio_sim(sd_, ti, bars, res, rk, M, f)
+        print(f"   {label:34s} CAGR {r['cagr']:+6.1f}% · DD máx {r['dd']:5.1f}% · Sharpe {r['sharpe']:4.2f} · meses+ {r['monthsPos']:3.0f}% · peor mes {r['worstMonth']:+5.1f}% · {r['tradesYear']:5.0f} op/año")
+        return r
+
+    print(f'\n######## IMPROVE2 · {len(rows):,} candidatos largos', flush=True)
+    if spy is not None:
+        i0 = np.searchsorted(sd_, day_of('2019-01-01'))
+        c = spy['c'][i0:]; r_ = np.diff(c) / c[:-1]; ddm = float(((np.maximum.accumulate(c) - c) / np.maximum.accumulate(c)).max())
+        print(f"  Referencia S&P 500 comprar y mantener desde 2019: CAGR {((c[-1] / c[0]) ** (252 / len(c)) - 1) * 100:+.1f}% · DD máx {ddm * 100:.1f}% · Sharpe {r_.mean() / r_.std() * math.sqrt(252):.2f}")
+    for plan in PLANS:
+        vi = variants.index(plan['id'])
+        pnl = EV['pnl'][rows, vi]; bars = EV['bars'][rows, vi]
+        ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        allowed = [GROUPS.index(g) for g in groups_of[plan['id']]]
+        p0, b0 = wf_lin(y, ok)
+        sel0 = pick(p0, b0, ok, allowed)
+        print(f"\n================ {plan['id']} · {plan['label']} ================")
+        # ── puestos del día ──────────────────────────────────────────────
+        rk = rank_in_day(p0, sel0)
+        print('  [R] resultado por PUESTO en el ranking del día (fuera de muestra, plan desplegado, N=5):')
+        for r in range(1, 6):
+            m = sel0 & (rk == r)
+            if m.sum() >= 50:
+                st = stats(pnl[m], day[m], sym[m]); ym = ymeans(m, pnl)
+                print(f"     puesto {r}: n={st['n']:5d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% PF={st['pf']:4.2f} t={st['t_day']:4.1f} · años+ {sum(v > 0 for v in ym.values())}/{len(ym)}")
+        cnt = np.bincount(np.unique(day[sel0], return_inverse=True)[1])
+        print(f"     señales por día con alguna: media {cnt.mean():.1f} · mediana {np.median(cnt):.0f} · días con señal {len(cnt)} de {len(np.unique(day[ok]))}")
+        # ── réplica de la mejora «variables de mercado» y de la ventana 2 con salidas vecinas ──
+        print('  [Z] réplica: ¿la mejora aislada de X2/X3 se repite con salidas vecinas? (μ de la política y años mejores que la base)')
+        neigh = [v for v in variants if v.startswith(plan['id'].split('_')[0] + '_')][:0]
+        nb = {'rsi_S4_H10': ['rsi_S4_H10', 'rsi_S2.5_H10', 'rsi_S4_H5', 'rsi_S1.5_H10'],
+              'atr_T1_S4_H10': ['atr_T1_S4_H10', 'atr_T0.5_S4_H10', 'atr_T1.5_S4_H10', 'atr_T1_S2.5_H10', 'atr_T1_S4_H5']}[plan['id']]
+        cfgs = {'base': dict(), 'ventana 2': dict(window=2), '+mercado (3)': dict(fnames=list(MD.MODEL_FEATURES) + ['spy_ret5', 'dist20', 'ret20']),
+                '+spy_ret5': dict(fnames=list(MD.MODEL_FEATURES) + ['spy_ret5']), '+dist20': dict(fnames=list(MD.MODEL_FEATURES) + ['dist20']),
+                '+ret20': dict(fnames=list(MD.MODEL_FEATURES) + ['ret20'])}
+        for vn in nb:
+            vj = variants.index(vn)
+            pn = EV['pnl'][rows, vj]; okj = np.isfinite(pn); yj = (pn > 0).astype(np.float32)
+            base_ym = None; out = []
+            for cn, kw in cfgs.items():
+                pp, bb = wf_lin(yj, okj, **kw)
+                sl = pick(pp, bb, okj, allowed)
+                ym = ymeans(sl, pn)
+                if cn == 'base':
+                    base_ym = ym
+                better = sum(ym[Y] > base_ym[Y] for Y in ym if Y in base_ym)
+                out.append(f"{cn}: {np.nanmean(pn[sl]):+.2f}%" + ('' if cn == 'base' else f" ({better}/{len(ym)})"))
+            print(f"     {vn:18s} " + ' | '.join(out), flush=True)
+        # ── cartera con capital limitado ─────────────────────────────────
+        if spy is not None:
+            print('  [P] CARTERA con capital limitado (a partir de 2019; M posiciones máx., cada una el f% del capital actual; resultados netos de costes; curva a precio realizado)')
+            for N in (1, 3, 5):
+                for M, f in ((5, 0.20), (10, 0.10), (20, 0.05)):
+                    portfolio(sel0, p0, pnl, bars, N, M, f, f'N={N} · máx {M} pos. · {int(f * 100)}% c/u')
+            # el mismo calendario de entradas pero comprando el S&P 500 en lugar de la acción
+            ii = np.searchsorted(sd_, day, side='left')
+            e = np.minimum(ii + 1, len(sd_) - 1); xx = np.minimum(ii + np.maximum(bars.astype(int), 1), len(sd_) - 1)
+            alt = (spy['c'][xx] / spy['o'][e] - 1) * 100 - 0.03
+            print('   — y con el MISMO calendario de entradas/salidas pero comprando el S&P 500 (SPY) en vez de la acción:')
+            for N, M, f in ((3, 10, 0.10), (5, 10, 0.10)):
+                portfolio(sel0, p0, pnl, bars, N, M, f, f'SPY · N={N} · máx {M} pos. · {int(f * 100)}% c/u', alt=alt)
+            ms = sel0 & np.isfinite(alt)
+            print(f"   SPY en las mismas ventanas: WR={np.mean(alt[ms] > 0) * 100:.1f}% μ={np.nanmean(alt[ms]):+.2f}% · plan en acciones: WR={np.mean(pnl[ms] > 0) * 100:.1f}% μ={np.nanmean(pnl[ms]):+.2f}%")
+        sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  INDEX: ¿es más fiable aplicar la misma idea (sobreventa en tendencia) a los ÍNDICES (SPY/QQQ/IWM/DIA) que a acciones sueltas?
+# ═════════════════════════════════════════════════════════════════════════
+def index_check(uni: Dict, data: Dict, out_dir: str):
+    import feats
+    import setups as SU_
+    import simulate as SM_
+    from research import portfolio_sim as psim
+    here = os.path.dirname(os.path.abspath(__file__))
+    reg = json.load(open(os.path.join(here, 'model', 'validated.json')))
+    pattern_ids = [p['id'] for p in reg['patterns']]
+    spy, vix = data.get('SPY'), data.get('^VIX')
+    regime = feats.regime_series(spy, vix)
+    bre = feats.Breadth()
+    for sym in [s for s in uni if not uni[s].get('aux') and s in data]:
+        bre.add(feats.build(data[sym]))
+    bd = bre.finalize()
+    print('  amplitud de mercado lista', flush=True)
+    idx_syms = [s for s in ('SPY', 'QQQ', 'IWM', 'DIA') if s in data]
+    variants = [SM_.Variant('rsi', 0.0, 4.0, 10), SM_.Variant('atr', 1.0, 4.0, 10), SM_.Variant('sig', 0.0, 4.0, 10)]
+    modes = (('open', 'APERTURA siguiente'), ('close', 'CIERRE (MOC, idealizado)'))
+    cost = SM_.COST_RT['index']
+    ev = {}                                                    # (sym) → dict con idx, F, resultados por (variante, modo)
+    for s in idx_syms:
+        F = feats.build(data[s]); feats.ensure_regime(F, regime); feats.align_breadth(bd, F['t'], F)
+        idx, FLm = SU_.candidate_bars(F, 'etf', pattern_ids)
+        idx = idx[idx < len(F['c']) - 12]
+        X = feats.event_matrix(F, idx)
+        res = {(v.name, m): SM_.simulate(F, idx, +1, [v], cost, entry_mode=m)[v.name] for v in variants for m, _ in modes}
+        ev[s] = {'F': F, 'idx': idx, 'X': X, 'res': res}
+    col = lambda X, n: X[:, feats.FEATURES.index(n)]
+    filters = {'sin filtro': lambda X: np.ones(len(X), bool),
+               'sobreventa amplia (≥10% del universo con RSI2<10)': lambda X: np.nan_to_num(col(X, 'b_os')) >= 10,
+               'VIX z ≥ 0,5': lambda X: np.nan_to_num(col(X, 'vix_z')) >= 0.5,
+               'VIX z < 0,5 (mercado tranquilo)': lambda X: np.nan_to_num(col(X, 'vix_z'), nan=9) < 0.5}
+    print(f'\n######## ÍNDICES {idx_syms}: candidatos = unión de los 17 patrones de sobreventa en tendencia, SIN modelo ni ranking · coste {cost}%', flush=True)
+    for v in variants:
+        for m, mlbl in modes:
+            print(f'\n=== salida {v.name} · entrada a la {mlbl}')
+            for fn, ff in filters.items():
+                pn, dy, sy = [], [], []
+                for s in idx_syms:
+                    e = ev[s]; k = ff(e['X'])
+                    r = e['res'][(v.name, m)].pnl
+                    ok = k & np.isfinite(r)
+                    pn.append(r[ok]); dy.append((e['F']['t'][e['idx'][ok]] // 86400).astype(np.int64)); sy.append(np.full(ok.sum(), idx_syms.index(s)))
+                pn, dy, sy = np.concatenate(pn), np.concatenate(dy), np.concatenate(sy)
+                st = stats(pn, dy, sy)
+                ys = year_of(dy)
+                ym = {Y: float(np.mean(pn[ys == Y])) for Y in sorted(set(ys)) if (ys == Y).sum() >= 8}
+                persym = ' '.join(f"{s}:{np.mean(ev[s]['res'][(v.name, m)].pnl[ff(ev[s]['X'])]):+.2f}" for s in idx_syms)
+                print(f"   {fn[:44]:44s} n={st['n']:4d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% PF={st['pf']:4.2f} t={st['t_day']:3.1f} | años+ {sum(x > 0 for x in ym.values())}/{len(ym)} peor {min(ym.values()):+.2f} | {persym}")
+            sys.stdout.flush()
+    # cartera: solo SPY, una posición con el 100 % del capital, salida RSI(2) y entrada a la apertura / al cierre
+    print('\n=== CARTERA «solo SPY» (1 posición, 100 % del capital, desde 2019) frente a comprar y mantener', flush=True)
+    e = ev['SPY']; F = e['F']; sd = (F['t'] // 86400).astype(np.int64)
+    sel = (sd[e['idx']] >= day_of('2019-01-01'))
+    for v in variants:
+        for m, mlbl in modes:
+            r = np.full(len(e['idx']), np.nan); r[sel] = e['res'][(v.name, m)].pnl[sel]
+            bars = e['res'][(v.name, m)].bars.astype(np.int64)
+            ti = e['idx'].astype(np.int64)
+            if m == 'close':                                       # entra el mismo día de la señal: equivale a señal en la sesión anterior (y una sesión más hasta la salida)
+                ti = ti - 1; bars = bars + 1
+            o = psim(sd, ti, bars, r, np.zeros(len(r), np.int16), 1, 1.0)
+            print(f"   {v.name:12s} {mlbl:26s} CAGR {o['cagr']:+5.1f}% · DD {o['dd']:5.1f}% · Sharpe {o['sharpe']:4.2f} · meses+ {o['monthsPos']:3.0f}% · peor mes {o['worstMonth']:+5.1f}% · {o['tradesYear']:3.0f} op/año")
+    i0 = np.searchsorted(sd, day_of('2019-01-01')); c = F['c'][i0:]; rr = np.diff(c) / c[:-1]
+    print(f"   comprar y mantener SPY: CAGR {((c[-1] / c[0]) ** (252 / len(c)) - 1) * 100:+.1f}% · DD {float(((np.maximum.accumulate(c) - c) / np.maximum.accumulate(c)).max()) * 100:.1f}% · Sharpe {rr.mean() / rr.std() * math.sqrt(252):.2f}")
     sys.stdout.flush()

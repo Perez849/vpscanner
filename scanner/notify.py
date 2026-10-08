@@ -22,7 +22,7 @@ def _fmt_alert(a: Dict[str, Any], moc: bool = False) -> str:
             sal = f"salida si RSI(2)>70 (hoy ≈ cierre ≥ {lv['exitTrigPct']:+.1f}%)"
         else:
             sal = 'salida por señal'
-        lines.append(f"   {pl['label']}: P={pl['p'] * 100:.0f}% · esperado {pl['ev']:+.2f}% · {sal} · stop {lv['stopPct']:+.1f}% · máx {ex['H']} ses.")
+        lines.append(f"   #{pl.get('rank', '?')} {pl['label']}: P={pl['p'] * 100:.0f}% · esperado {pl['ev']:+.2f}% · {sal} · stop {lv['stopPct']:+.1f}% · máx {ex['H']} ses.")
     return '\n'.join(lines)
 
 

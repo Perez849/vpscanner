@@ -48,6 +48,7 @@ def main():
         assert reg['strategies'], 'sin planes validados en datos con reversión plantada'
         for s in reg['strategies']:
             assert s['model']['type'] == 'linear' and 0.4 < s['floorRaw'] < 0.9 and s['stats']['oos']['n'] > 500
+            assert s['nPerDay'] in (3, 5) and s['stats']['byRank'] and s['stats']['vsSpy'] and s['stats']['portfolio']['10x10']['cagr'] is not None
         inject_fake_pelotazo(os.path.join(reg_dir, 'validated.json'))
         run('scan.py', '--synthetic', '400', '--registry', os.path.join(reg_dir, 'validated.json'), '--out', out, '--no-notify')
         al = json.load(open(os.path.join(out, 'alerts.json')))
@@ -58,6 +59,7 @@ def main():
         assert tr0['stats']['global']['pending'] == sum(len(a['plans']) for a in al['alerts'])
         for a in al['alerts']:
             assert a['plans'] and all(0 < p['p'] < 1 for p in a['plans'])
+            assert all(p['rank'] <= next(x['nPerDay'] for x in reg['strategies'] if x['id'] == p['strategy']) for p in a['plans']), 'más alertas por plan que su N por día'
             assert a['levels']['stop'] < a['sigClose']
         t1 = open(os.path.join(out, 'tracking.json')).read()
         run('scan.py', '--synthetic', '400', '--registry', os.path.join(reg_dir, 'validated.json'), '--out', out, '--no-notify')
