@@ -401,3 +401,68 @@ def run2(uni: Dict, data: Dict, out_dir: str):
                 line += f" [{lo},{hi}) n={int(mm.sum()):6d} μ={x[mm].mean():+.2f}% |"
         print(line)
     sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Tercera tanda (comando `ema3`): ¿ayuda un RSI ALTO (momentum) en los cruces de EMAs? Referencia con el MISMO filtro de RSI.
+# ═════════════════════════════════════════════════════════════════════════
+def run3(uni: Dict, data: Dict, out_dir: str):
+    from research import portfolio_sim
+    E = collect(uni, data)
+    ids = E['ids']
+    day, sym, sid, grp = E['day'], E['sym'], E['sid'], E['grp']
+    years = year_of(day)
+    rsi = E['rsi']
+    sid_idx = {k: i for i, k in enumerate(ids)}
+    spy = data['SPY']
+    cal = (spy['t'] // 86400).astype(np.int64)
+    ti_all = np.searchsorted(cal, day, side='left')
+    prio = np.random.default_rng(11).random(len(day))
+    g_stock = np.isin(grp, [feats.GROUPS.index(g) for g in ('us_large', 'us_mid', 'us_small')])
+    g_etf = grp == feats.GROUPS.index('etf')
+    print(f"\n######## EMA3 · RSI alto en los cruces de EMAs · {len(day):,} eventos", flush=True)
+    refmap = {'B1': 'REF_all', 'B3': 'REF_all', 'B4': 'REF_stack', 'B8': 'REF_up'}
+
+    def sel(k, rmin, vi, extra=None):
+        m = (sid == sid_idx[k]) & np.isfinite(E['pnl'][:, vi]) & (rsi >= rmin)
+        return m if extra is None else m & extra
+
+    print('\n[T1] CRUCES DE EMAs con filtro de RSI mínimo; Δ frente a barras al azar del MISMO régimen con el MISMO filtro de RSI y la misma salida')
+    for vi in (5, 1):
+        print(f'  salida: {VNAMES[vi]}')
+        for k in ('B4', 'B1', 'B3', 'B8'):
+            for rmin in (0, 55, 60, 65, 70):
+                m = sel(k, rmin, vi)
+                mb = (sid == sid_idx[refmap[k]]) & np.isfinite(E['pnl'][:, vi]) & (rsi >= rmin)
+                if m.sum() < 300 or mb.sum() < 300:
+                    continue
+                x, xb = E['pnl'][m, vi], E['pnl'][mb, vi]
+                st = stats(x, day[m], sym[m])
+                dy = [x[years[m] == Y].mean() - xb[years[mb] == Y].mean() for Y in range(2017, 2027) if (m & (years == Y)).sum() >= 15 and (mb & (years == Y)).sum() >= 100]
+                tr, te = m & (years <= 2020), m & (years >= 2021)
+                trb, teb = mb & (years <= 2020), mb & (years >= 2021)
+                d_tr = E['pnl'][tr, vi].mean() - E['pnl'][trb, vi].mean() if tr.sum() > 100 and trb.sum() > 100 else np.nan
+                d_te = E['pnl'][te, vi].mean() - E['pnl'][teb, vi].mean() if te.sum() > 100 and teb.sum() > 100 else np.nan
+                print(f"    {k} RSI≥{rmin:2d}: n={st['n']:6d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% t={st['t_day']:4.1f} | ref μ={xb.mean():+5.2f}% Δ={x.mean() - xb.mean():+5.2f} años Δ>0 {sum(v > 0 for v in dy)}/{len(dy)} | 2016–20 Δ={d_tr:+5.2f} → 2021–26 Δ={d_te:+5.2f}")
+    print('\n[T2] CARTERA (máx. 20 × 5 %, desde 2017) con RSI ≥ 60 y salida al cerrar bajo EMA 89; referencia con el mismo filtro')
+    i0 = int(np.searchsorted(cal, day_of('2017-01-01')))
+    c_ = spy['c'][i0:]; r_ = np.diff(c_) / c_[:-1]
+    print(f"   S&P 500 comprar y mantener: anual {((c_[-1] / c_[0]) ** (252 / len(c_)) - 1) * 100:+.1f}% · caída máx. {float(((np.maximum.accumulate(c_) - c_) / np.maximum.accumulate(c_)).max()) * 100:.1f}% · Sharpe {r_.mean() / r_.std() * np.sqrt(252):.2f}")
+    for scope_name, scope in (('todas', None), ('solo acciones EE.UU.', g_stock), ('solo ETF', g_etf)):
+        print(f'  — {scope_name}')
+        for vi in (5, 1):
+            for k, rmin in (('B4', 0), ('B4', 60), ('B1', 60), ('B3', 60), ('B8', 60), ('REF_stack', 60), ('REF_up', 60), ('REF_all', 60)):
+                m = (sid == sid_idx[k]) & np.isfinite(E['pnl'][:, vi]) & (rsi >= rmin) & (day >= day_of('2017-01-01'))
+                if scope is not None:
+                    m &= scope
+                if m.sum() < 500:
+                    continue
+                res = np.where(m, E['pnl'][:, vi], np.nan)
+                o = portfolio_sim(cal, ti_all, E['bars'][:, vi].astype(np.int64), res, prio, 20, 0.05)
+                print(f"    {VNAMES[vi][:24]:24s} {k:9s} RSI≥{rmin:2d}  anual {o['cagr']:+6.1f}% · caída {o['dd']:5.1f}% · Sharpe {o['sharpe']:4.2f} · meses+ {o['monthsPos']:3.0f}% · peor mes {o['worstMonth']:+5.1f}% · {o['tradesYear']:4.0f} op/año")
+    print('\n[T3] AÑO A AÑO de B4 + RSI≥60 + salida bajo EMA 89 (μ por operación y n) y operaciones al año')
+    m = sel('B4', 60, 5)
+    print('   ' + ' '.join(f"{str(Y)[2:]}:{E['pnl'][m & (years == Y), 5].mean():+.2f}(n={int((m & (years == Y)).sum())})" for Y in range(2017, 2027) if (m & (years == Y)).sum() >= 30))
+    x = E['pnl'][m, 5]
+    print(f"   ganadoras: {np.mean(x > 0) * 100:.1f}% · ganancia media {x[x > 0].mean():+.2f}% · pérdida media {x[x <= 0].mean():+.2f}% · mediana {np.median(x):+.2f}% · mejor 5 % de operaciones aporta el {x[x >= np.percentile(x, 95)].sum() / x[x > 0].sum() * 100:.0f}% de las ganancias brutas")
+    sys.stdout.flush()
