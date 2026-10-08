@@ -1,0 +1,9 @@
+    [diagnóstico] tabla (503, 8): columnas ['symbol', 'security', 'gics sector', 'gics sub-industry', 'headquarters location', 'date added', 'cik'] · primera fila ['MMM', '3M', 'Industrials', 'Industrial Conglomerat', 'Saint Paul, Minnesota', '1957-03-04']
+    [diagnóstico] tabla (11, 2): columnas ['vtes&p 500 companies', 'vtes&p 500 companies.1'] · primera fila ['Communication services', 'Alphabet Inc. AT&T Cha']
+    [diagnóstico] secciones con «change»: []
+    [diagnóstico] búsqueda: ['Historical_components_of_the_S&P_500', 'S&P_500', 'List_of_S&P_600_companies', 'S&P_100', 'List_of_S&P_400_companies', 'Closing_milestones_of_the_S&P_500', 'S&P_500_Dividend_Aristocrats', 'Historical_components_of_the_S&P_400']
+    [diagnóstico] Historical_components_of_the_S&P_500: 412 cambios
+  sp500: 503 miembros actuales · 412 cambios en la tabla (386 retiradas) · desde 1976-07-01
+  sp400: 400 miembros actuales · 623 cambios en la tabla (614 retiradas) · desde 2012-01-13
+  sp600: 603 miembros actuales · 491 cambios en la tabla (491 retiradas) · desde 2019-12-17
+{'sp500': (503, 412), 'sp400': (400, 623), 'sp600': (603, 491)}
