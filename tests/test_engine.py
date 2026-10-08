@@ -251,7 +251,74 @@ def test_ema_exit_kinds():
     print(f'ok · salidas por EMA == referencia escalar ({tot} operaciones)')
 
 
+def test_stockmid():
+    """Búsqueda a medio plazo con acciones: causalidad de las señales, aritmética exacta de la cartera y potencia del contraste del «mejor de miles»."""
+    import io, re, contextlib
+    import pandas as pd
+    import stockmid
+    rng = np.random.default_rng(5)
+    T, n = 1700, 70
+    days, d = [], pd.Timestamp('2014-01-02')
+    while len(days) < T:
+        if d.weekday() < 5:
+            days.append(int(d.timestamp()))
+        d += pd.Timedelta(days=1)
+    t = np.array(days)
+    mkt = rng.normal(0.0004, 0.01, T)
+
+    def make(skill):
+        mu = rng.normal(0, skill, n)
+        data, uni = {}, {}
+        for i in range(n):
+            c = 50 * np.cumprod(1 + mkt * 0.8 + mu[i] + rng.normal(0, 0.015, T))
+            data[f'S{i}'] = {'t': t, 'o': c, 'h': c, 'l': c, 'c': c, 'v': np.full(T, 1e6)}
+            uni[f'S{i}'] = {'group': 'us_large'}
+        c = 100 * np.cumprod(1 + mkt)
+        data['SPY'] = {'t': t, 'o': c, 'h': c, 'l': c, 'c': c, 'v': np.full(T, 1e7)}
+        return uni, data
+
+    # 1) causalidad: alterar los precios posteriores a la fecha de decisión no cambia ninguna señal en esa fecha ni en las anteriores
+    uni, data = make(0.0)
+    cal = (t // 86400).astype(np.int64)
+    R = np.array([i for i in stockmid.month_ends(cal) if 320 <= i < T - 40])
+    P = np.column_stack([data[f'S{i}']['c'] for i in range(n)])
+    F1 = stockmid.build_factors(P, R)
+    k = len(R) // 2
+    P2 = P.copy()
+    P2[R[k] + 1:] *= rng.uniform(0.5, 1.5, size=P2[R[k] + 1:].shape)
+    F2 = stockmid.build_factors(P2, R)
+    for name in F1:
+        assert np.allclose(F1[name][:k + 1], F2[name][:k + 1], equal_nan=True), name
+    # 2) aritmética: h=1 con costes de rotación, y h=3 con tres selecciones solapadas (la que falta antes del mes 0 vale liquidez)
+    C = stockmid.COST_RT
+    RET1 = np.array([[0.10, 0.00, -0.10, 0.20], [0.00, 0.10, 0.00, 0.00], [0.05, 0.05, 0.05, 0.05], [0.01, 0.02, 0.06, 0.04], [0.1, 0.1, 0.1, 0.1]])
+    cash = np.full(5, 0.002)
+    sel = [np.array(x) for x in ([0, 3], [1, 2], [1, 2], [0, 3], [0, 3])]
+    r1 = stockmid._variant_returns(sel, RET1, cash, 1)
+    assert abs(r1[0] - 0.15) < 1e-12
+    assert abs(r1[1] - (0.05 - C)) < 1e-12                                      # {1,2} no solapa con {0,3}: rotación completa
+    assert abs(r1[2] - 0.05) < 1e-12                                            # misma selección: sin coste
+    assert abs(r1[3] - (0.025 - C)) < 1e-12
+    r3 = stockmid._variant_returns(sel, RET1, cash, 3)
+    assert abs(r3[1] - (0.05 + 0.0 + 0.002) / 3) < 1e-12                        # tramos de los meses 1, 0 y (inexistente) -1
+    assert abs(r3[3] - (0.025 + 0.04 + 0.04) / 3) < 1e-12                      # tramos 3, 2, 1; el mes 3 reemplaza al 0 con la misma selección: sin coste
+    assert abs(r3[4] - (0.1 - C / 3)) < 1e-12                                   # el mes 4 reemplaza al 1 ({1,2}→{0,3}): rotación completa de un tercio
+    # 3) potencia: sin habilidad el «mejor de miles» no es significativo; con habilidad sí
+    stockmid.KS, stockmid.HS = (10, 30), (1, 3)
+
+    def pval(skill):
+        uni_, data_ = make(skill)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            stockmid.core(uni_, data_, [f'S{i}' for i in range(n)], False, 'test')
+        return float(re.search(r'p-valor ≈ ([0-9.]+)', buf.getvalue()).group(1))
+    p0, p1 = pval(0.0), pval(0.0008)
+    assert p0 > 0.05 and p1 < 0.05, (p0, p1)
+    print(f'ok · medio plazo con acciones: señales causales, aritmética exacta, contraste sin habilidad p={p0:.2f} / con habilidad p={p1:.3f}')
+
+
 if __name__ == '__main__':
+    test_stockmid()
     test_ema_exit_kinds()
     test_midterm_signals()
     test_portfolio_sim()
