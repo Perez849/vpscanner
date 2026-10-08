@@ -345,6 +345,9 @@ def load_data(args):
         syms = keep
     bars, failed = D.fetch_many(syms, rng=args.range, workers=args.workers, cache_path=args.cache, max_age_h=args.max_age_h)
     uni = {s: uni[s] for s in syms if s in bars}
+    n_ok = len([s for s in uni if not uni[s].get('aux')])
+    if not args.limit and n_ok < 0.7 * (len(syms)):
+        raise SystemExit(f'Descarga incompleta ({n_ok}/{len(syms)} activos): se aborta para no sobrescribir el registro con datos pobres.')
     return uni, bars
 
 

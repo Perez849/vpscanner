@@ -1,28 +1,19 @@
-name: Investigación (validación fuera de muestra)
+name: Laboratorio (manual)
 
-# Descarga 10 años del universo completo, evalúa todos los setups contra un benchmark de
-# entrada aleatoria y vuelca el informe en la rama claude/research-results.
+# Ejecuta manualmente el laboratorio de investigación (por defecto la validación final) con 10 años de
+# datos del universo completo y vuelca el informe en la rama claude/research-results. No toca main.
 on:
-  push:
-    branches: ['claude/vpscanner-rebuild']
-    paths:
-      - 'scanner/**'
-      - '.github/workflows/research.yml'
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'explore | final'
-        default: 'explore'
-      refresh_universe:
-        description: 'Refrescar listas S&P desde Wikipedia (true/false)'
-        default: 'true'
+        description: 'final | explore | meta | meta2 | meta3 | meta4 | meta5 | regime'
+        default: 'final'
 
 permissions:
   contents: write
 
 jobs:
   research:
-    if: "!contains(github.event.head_commit.message, '[no-research]')"
     runs-on: ubuntu-latest
     timeout-minutes: 150
     steps:
@@ -48,7 +39,7 @@ jobs:
         run: |
           mkdir -p /tmp/out
           cd scanner
-          CMD="${INPUT_CMD:-$(cat research_cmd.txt)}"
+          CMD="${INPUT_CMD:-final}"
           python -u research.py $CMD --out /tmp/out 2>&1 | tee /tmp/out/research_log.txt
       - name: Escaneo de prueba con el registro recién generado (datos reales)
         run: |

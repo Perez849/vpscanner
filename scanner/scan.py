@@ -104,6 +104,9 @@ def main():
         bars, failed = D.fetch_many(syms, rng='2y', workers=args.workers, cache_path=args.cache, max_age_h=6)
     print(f'  descarga lista · {time.time() - t0:.0f}s', flush=True)
 
+    expected = len([x for x in uni if not uni[x].get('aux')])
+    if not args.limit and len([x for x in bars if not uni.get(x, {}).get('aux')]) < 0.6 * expected:
+        raise SystemExit(f'Descarga incompleta ({len(bars)}/{expected}): no se sobrescriben los datos publicados.')
     spy, vix = bars.get('SPY'), bars.get('^VIX')
     regime = feats.regime_series(spy, vix) if (spy is not None and vix is not None) else None
 
@@ -236,7 +239,11 @@ def main():
             j2 -= 1
         mk['breadthUp200'] = round(float(bd['b_up200'][j2]), 1)
         mk['breadthOversold'] = round(float(bd['b_os'][j2]), 1)
-    last_day = datetime.fromtimestamp(max(last_ts_all), timezone.utc).strftime('%Y-%m-%d') if last_ts_all else None
+    if last_ts_all:      # fecha más habitual de la última barra completa (algún activo suelto puede ir un día por delante)
+        from collections import Counter
+        last_day = Counter(datetime.fromtimestamp(t, timezone.utc).strftime('%Y-%m-%d') for t in last_ts_all).most_common(1)[0][0]
+    else:
+        last_day = None
     now = datetime.now(timezone.utc).isoformat()
     meta = {'generatedAt': now, 'dataThrough': last_day, 'symbols': len(series_F), 'failed': len(failed),
             'failedList': failed[:80], 'strategies': len(strategies), 'candidates': len(cand), 'alerts': len(main_alerts),

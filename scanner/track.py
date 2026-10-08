@@ -13,6 +13,7 @@ idempotente (re-ejecutar no cambia nada) y usa EXACTAMENTE las reglas del backte
 """
 from __future__ import annotations
 import math
+import time
 from typing import Any, Dict, List, Optional
 import numpy as np
 
@@ -126,6 +127,9 @@ def update(prev: Optional[Dict[str, Any]], alerts: List[Dict[str, Any]], series_
             continue
         F = series_F.get(t['sym'])
         if F is None:
+            # el activo ya no devuelve datos (exclusión, OPA...): tras 45 días se descarta del seguimiento
+            if time.time() * 1000 - t['sigTs'] > 45 * 86400 * 1000:
+                t['status'] = 'descartada'
             continue
         ts = np.asarray(F['t'])
         j = np.flatnonzero(np.abs(ts - t['sigTs'] / 1000.0) < 3600)

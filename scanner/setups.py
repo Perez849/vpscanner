@@ -17,6 +17,7 @@ import numpy as np
 
 MIN_DVOL = 2e6      # liquidez mínima: volumen diario medio en moneda (acciones/ETF)
 MIN_PRICE = 3.0
+MIN_ATRP = 0.8      # % del precio: con rangos menores los costes se comen cualquier objetivo (p. ej. valores en OPA)
 NO_VOLUME_GROUPS = {'fx', 'futures', 'index'}
 
 
@@ -126,6 +127,7 @@ BY_ID: Dict[str, Setup] = {s.id: s for s in SETUPS}
 def tradable_mask(F: Dict[str, np.ndarray], group: str) -> np.ndarray:
     """Filtros de liquidez/precio para que la señal sea operable."""
     ok = np.isfinite(F['atr']) & (F['atr'] > 0) & (F['c'] >= (MIN_PRICE if group not in NO_VOLUME_GROUPS else 0))
+    ok &= np.isfinite(F['atrp']) & (F['atrp'] >= MIN_ATRP)
     if group not in NO_VOLUME_GROUPS:
         ok &= np.isfinite(F['dvol20']) & (F['dvol20'] >= MIN_DVOL)
     return ok
