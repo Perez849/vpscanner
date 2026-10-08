@@ -1,0 +1,339 @@
+  datos: 0 en caché, 1985 por descargar (10y)
+  ... 200/1985 (4s)
+  ... 400/1985 (8s)
+  ... 600/1985 (12s)
+  ... 800/1985 (16s)
+  ... 1000/1985 (20s)
+  ... 1200/1985 (23s)
+  ... 1400/1985 (27s)
+  ... 1600/1985 (31s)
+  ... 1800/1985 (34s)
+  datos: OK 1971 · fallidos 14
+  fallidos: FDXF HONA VYLR ADIG BLFS CWEN-A HLX LEG MBGL MFP QRVO ROG.SW CTRA SATS
+universo con datos: 1967 activos · 43s
+  eventos: 300/1967 símbolos (4s)
+  eventos: 600/1967 símbolos (8s)
+  eventos: 900/1967 símbolos (12s)
+  eventos: 1200/1967 símbolos (16s)
+  eventos: 1500/1967 símbolos (21s)
+  eventos: 1800/1967 símbolos (25s)
+
+######## EMA 34 / 89 / 200 + RSI(14): 3,470,198 eventos · 31 setups × 6 salidas · referencia = entrada aleatoria en el mismo régimen y con la misma salida
+
+=== SALIDA: stop móvil 3×ATR (60 ses.) ===
+   setup                                                            n   WR%     μ%   PF    t |  ref μ     Δμ años Δ>0 |  ≤2023  2024+
+   A0  Precio cruza ↑ EMA34 (sin RSI) · CONTROL                165861  41.0  +0.92 1.27  7.1 |  +1.02  -0.10    4/10  |  +0.82  +1.17
+   A1  Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ idea       134735  40.9  +0.91 1.27  7.3 |  +1.02  -0.11    5/10  |  +0.80  +1.20
+   A2  Precio cruza ↑ EMA34 + RSI 40–60 subiendo               160814  40.9  +0.91 1.27  7.1 |  +1.02  -0.11    4/10  |  +0.80  +1.19
+   A3  Precio cruza ↑ EMA34 + RSI 48–52 subiendo                71381  40.8  +0.84 1.25  7.3 |  +1.02  -0.18    4/10  |  +0.70  +1.19
+   A4  Precio cruza ↑ EMA34 + RSI 45–55 (sin exigir subida)    134735  40.9  +0.91 1.27  7.3 |  +1.02  -0.11    5/10  |  +0.80  +1.20
+   A5  A1 + precio sobre EMA200                                 80709  40.0  +0.75 1.23  6.2 |  +0.57  +0.18    8/10  |  +0.55  +1.17
+   A6  A1 + pila alcista EMA34>89>200                           63118  39.8  +0.68 1.22  5.6 |  +0.56  +0.13    9/10  |  +0.46  +1.16
+   A7  A1 + EMA89 > EMA200                                      79736  40.1  +0.79 1.25  6.3 |  +0.57  +0.22    7/10  |  +0.55  +1.29
+   A8  Precio cruza ↑ EMA34 + RSI cruza ↑ 50 (≤60)             111574  40.8  +0.88 1.26  5.7 |  +1.02  -0.15    4/10  |  +0.74  +1.22
+   A9  Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200           86962  40.0  +0.75 1.23  6.0 |  +0.57  +0.18    9/10  |  +0.56  +1.16
+   B1  EMA34 cruza ↑ EMA89 (sin RSI)                            22805  39.6  +0.57 1.17  4.5 |  +1.02  -0.46    1/10  |  +0.48  +0.79
+   B2  EMA89 cruza ↑ EMA200 (sin RSI)                            9037  38.9  +0.50 1.15  3.3 |  +1.02  -0.53    3/10  |  +0.49  +0.52
+   B3  EMA34 cruza ↑ EMA200 (sin RSI)                           14488  39.1  +0.65 1.20  4.6 |  +1.02  -0.38    2/10  |  +0.50  +1.01
+   B4  Se completa la pila EMA34>89>200 (triple cruce)          18589  39.3  +0.66 1.21  4.1 |  +0.56  +0.11    5/10  |  +0.53  +1.00
+   B5  EMA34↗89 + RSI 50–70 subiendo                            11954  39.9  +0.61 1.19  4.3 |  +1.02  -0.42    1/10  |  +0.56  +0.74
+   B6  EMA89↗200 + RSI 50–70 subiendo                            3804  39.3  +0.53 1.17  2.7 |  +1.02  -0.49    3/10  |  +0.62  +0.32
+   B7  Triple alineación + RSI 50–70 subiendo  ◀ idea            9100  40.0  +0.74 1.24  4.7 |  +0.56  +0.18    4/10  |  +0.66  +0.93
+   B8  EMA34↗89 con precio sobre EMA200                         19576  39.9  +0.64 1.20  4.7 |  +0.57  +0.06    5/10  |  +0.52  +0.92
+   B9  EMA34↗89 + RSI cruza ↑ 50                                 2745  41.2  +0.81 1.25  3.1 |  +1.02  -0.21    4/10  |  +0.86  +0.70
+   C0a Precio cruza ↑ EMA89 (sin RSI) · CONTROL                101518  40.5  +0.76 1.22  6.0 |  +1.02  -0.26    4/10  |  +0.58  +1.21
+   C0b Precio cruza ↑ EMA200 (sin RSI) · CONTROL                64302  40.1  +0.79 1.23  4.9 |  +1.02  -0.24    5/10  |  +0.65  +1.11
+   C1  Precio cruza ↑ EMA89 + RSI 45–55 subiendo                50608  40.3  +0.78 1.23  5.4 |  +1.02  -0.24    5/10  |  +0.56  +1.30
+   C2  Precio cruza ↑ EMA200 + RSI 45–55 subiendo               24497  40.8  +1.08 1.32  4.9 |  +1.02  +0.06    6/10  |  +0.90  +1.50
+   D1  Pila alcista: toca EMA34 y rebota + RSI 40–60 subiendo   77661  39.4  +0.61 1.19  5.4 |  +0.56  +0.06    7/10  |  +0.41  +1.03
+   D2  D1 con RSI ≥ 45                                          77661  39.4  +0.61 1.19  5.4 |  +0.56  +0.06    7/10  |  +0.41  +1.03
+   sA0 CORTO: precio cruza ↓ EMA34 (sin RSI) · CONTROL         166757  30.8  -1.73 0.59 -15.1 |  -1.81  +0.08    6/10  |  -1.64  -1.96
+   sA1 CORTO: precio cruza ↓ EMA34 + RSI 45–55 bajando         126144  30.6  -1.82 0.58 -16.2 |  -1.81  -0.01    5/10  |  -1.78  -1.92
+   sA6 CORTO: sA1 + pila bajista                                35847  29.6  -2.38 0.54 -10.6 |  -2.60  +0.22    8/10  |  -2.56  -1.91
+   sB1 CORTO: EMA34 cruza ↓ EMA89                               23185  31.0  -1.72 0.63 -8.3 |  -1.81  +0.09    3/10  |  -1.45  -2.42
+   sB4 CORTO: se completa la pila bajista                       14142  30.0  -2.55 0.54 -8.4 |  -2.60  +0.05    3/10  |  -2.44  -2.85
+   sB5 CORTO: EMA34↘89 + RSI 30–50 bajando                      11640  30.2  -1.85 0.60 -10.6 |  -1.81  -0.04    3/10  |  -1.63  -2.39
+
+=== SALIDA: stop móvil 4×ATR (60 ses.) ===
+   setup                                                            n   WR%     μ%   PF    t |  ref μ     Δμ años Δ>0 |  ≤2023  2024+
+   A0  Precio cruza ↑ EMA34 (sin RSI) · CONTROL                165861  43.6  +1.57 1.38  9.7 |  +1.74  -0.17    5/10  |  +1.37  +2.06
+   A1  Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ idea       134735  43.6  +1.57 1.38 10.0 |  +1.74  -0.17    4/10  |  +1.34  +2.17
+   A2  Precio cruza ↑ EMA34 + RSI 40–60 subiendo               160814  43.6  +1.56 1.38  9.6 |  +1.74  -0.18    5/10  |  +1.34  +2.11
+   A3  Precio cruza ↑ EMA34 + RSI 48–52 subiendo                71381  43.4  +1.48 1.37 10.1 |  +1.74  -0.26    3/10  |  +1.20  +2.18
+   A4  Precio cruza ↑ EMA34 + RSI 45–55 (sin exigir subida)    134735  43.6  +1.57 1.38 10.0 |  +1.74  -0.17    4/10  |  +1.34  +2.17
+   A5  A1 + precio sobre EMA200                                 80709  42.6  +1.34 1.34  8.6 |  +1.17  +0.17    8/10  |  +0.95  +2.16
+   A6  A1 + pila alcista EMA34>89>200                           63118  42.5  +1.30 1.33  8.1 |  +1.12  +0.17    9/10  |  +0.88  +2.16
+   A7  A1 + EMA89 > EMA200                                      79736  42.7  +1.37 1.34  8.6 |  +1.17  +0.20    8/10  |  +0.93  +2.31
+   A8  Precio cruza ↑ EMA34 + RSI cruza ↑ 50 (≤60)             111574  43.6  +1.52 1.36  8.0 |  +1.74  -0.22    5/10  |  +1.27  +2.15
+   A9  Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200           86962  42.7  +1.33 1.33  8.2 |  +1.17  +0.16    7/10  |  +0.96  +2.10
+   B1  EMA34 cruza ↑ EMA89 (sin RSI)                            22805  42.4  +1.25 1.31  7.6 |  +1.74  -0.49    2/10  |  +1.07  +1.75
+   B2  EMA89 cruza ↑ EMA200 (sin RSI)                            9037  41.7  +1.34 1.34  6.7 |  +1.74  -0.40    4/10  |  +1.48  +1.00
+   B3  EMA34 cruza ↑ EMA200 (sin RSI)                           14488  42.7  +1.39 1.35  7.5 |  +1.74  -0.35    3/10  |  +1.24  +1.76
+   B4  Se completa la pila EMA34>89>200 (triple cruce)          18589  42.3  +1.39 1.36  8.0 |  +1.12  +0.26    5/10  |  +1.24  +1.76
+   B5  EMA34↗89 + RSI 50–70 subiendo                            11954  42.7  +1.27 1.31  6.8 |  +1.74  -0.47    2/10  |  +1.07  +1.80
+   B6  EMA89↗200 + RSI 50–70 subiendo                            3804  41.1  +1.16 1.29  4.4 |  +1.74  -0.58    4/10  |  +1.55  +0.18
+   B7  Triple alineación + RSI 50–70 subiendo  ◀ idea            9100  42.5  +1.34 1.35  7.1 |  +1.12  +0.22    4/10  |  +1.30  +1.46
+   B8  EMA34↗89 con precio sobre EMA200                         19576  42.7  +1.32 1.33  7.5 |  +1.17  +0.14    6/10  |  +1.09  +1.88
+   B9  EMA34↗89 + RSI cruza ↑ 50                                 2745  43.9  +1.22 1.30  3.5 |  +1.74  -0.52    3/10  |  +1.17  +1.32
+   C0a Precio cruza ↑ EMA89 (sin RSI) · CONTROL                101518  43.2  +1.39 1.33  8.5 |  +1.74  -0.35    4/10  |  +1.14  +2.00
+   C0b Precio cruza ↑ EMA200 (sin RSI) · CONTROL                64302  42.6  +1.36 1.31  6.9 |  +1.74  -0.38    3/10  |  +1.12  +1.95
+   C1  Precio cruza ↑ EMA89 + RSI 45–55 subiendo                50608  43.2  +1.40 1.34  7.8 |  +1.74  -0.34    5/10  |  +1.09  +2.13
+   C2  Precio cruza ↑ EMA200 + RSI 45–55 subiendo               24497  43.0  +1.52 1.36  6.0 |  +1.74  -0.22    4/10  |  +1.18  +2.28
+   D1  Pila alcista: toca EMA34 y rebota + RSI 40–60 subiendo   77661  42.0  +1.21 1.31  8.2 |  +1.12  +0.08    7/10  |  +0.86  +1.92
+   D2  D1 con RSI ≥ 45                                          77661  42.0  +1.21 1.31  8.2 |  +1.12  +0.08    7/10  |  +0.86  +1.92
+   sA0 CORTO: precio cruza ↓ EMA34 (sin RSI) · CONTROL         166757  31.2  -2.37 0.58 -16.1 |  -2.48  +0.11    6/10  |  -2.23  -2.72
+   sA1 CORTO: precio cruza ↓ EMA34 + RSI 45–55 bajando         126144  30.9  -2.50 0.56 -17.3 |  -2.48  -0.01    5/10  |  -2.43  -2.66
+   sA6 CORTO: sA1 + pila bajista                                35847  30.5  -3.30 0.52 -11.0 |  -3.57  +0.27    8/10  |  -3.56  -2.63
+   sB1 CORTO: EMA34 cruza ↓ EMA89                               23185  32.3  -2.39 0.61 -9.4 |  -2.48  +0.09    2/10  |  -2.07  -3.21
+   sB4 CORTO: se completa la pila bajista                       14142  31.6  -3.45 0.52 -8.9 |  -3.57  +0.12    4/10  |  -3.42  -3.54
+   sB5 CORTO: EMA34↘89 + RSI 30–50 bajando                      11640  31.8  -2.48 0.59 -11.6 |  -2.48  -0.00    3/10  |  -2.21  -3.14
+
+=== SALIDA: stop 3×ATR + 20 sesiones ===
+   setup                                                            n   WR%     μ%   PF    t |  ref μ     Δμ años Δ>0 |  ≤2023  2024+
+   A0  Precio cruza ↑ EMA34 (sin RSI) · CONTROL                168821  51.0  +0.88 1.26  6.3 |  +0.87  +0.01    5/10  |  +0.88  +0.86
+   A1  Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ idea       137157  50.8  +0.82 1.24  6.3 |  +0.87  -0.05    4/10  |  +0.79  +0.87
+   A2  Precio cruza ↑ EMA34 + RSI 40–60 subiendo               163672  51.0  +0.87 1.25  6.2 |  +0.87  -0.00    4/10  |  +0.86  +0.88
+   A3  Precio cruza ↑ EMA34 + RSI 48–52 subiendo                72814  50.6  +0.70 1.21  5.9 |  +0.87  -0.17    2/10  |  +0.61  +0.92
+   A4  Precio cruza ↑ EMA34 + RSI 45–55 (sin exigir subida)    137157  50.8  +0.82 1.24  6.3 |  +0.87  -0.05    4/10  |  +0.79  +0.87
+   A5  A1 + precio sobre EMA200                                 82446  50.0  +0.58 1.18  4.8 |  +0.52  +0.05    7/10  |  +0.44  +0.86
+   A6  A1 + pila alcista EMA34>89>200                           64552  50.0  +0.57 1.17  4.6 |  +0.52  +0.05    6/10  |  +0.40  +0.89
+   A7  A1 + EMA89 > EMA200                                      81420  50.0  +0.57 1.17  4.8 |  +0.52  +0.04    7/10  |  +0.39  +0.91
+   A8  Precio cruza ↑ EMA34 + RSI cruza ↑ 50 (≤60)             113409  51.1  +0.89 1.26  5.4 |  +0.87  +0.02    5/10  |  +0.89  +0.88
+   A9  Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200           88769  50.2  +0.62 1.19  5.0 |  +0.52  +0.10    7/10  |  +0.50  +0.85
+   B1  EMA34 cruza ↑ EMA89 (sin RSI)                            23234  49.3  +0.47 1.14  3.6 |  +0.87  -0.40    3/10  |  +0.41  +0.61
+   B2  EMA89 cruza ↑ EMA200 (sin RSI)                            9233  49.1  +0.50 1.15  3.4 |  +0.87  -0.37    3/10  |  +0.59  +0.28
+   B3  EMA34 cruza ↑ EMA200 (sin RSI)                           14799  48.9  +0.40 1.12  3.0 |  +0.87  -0.47    2/10  |  +0.32  +0.57
+   B4  Se completa la pila EMA34>89>200 (triple cruce)          18932  49.2  +0.48 1.15  2.6 |  +0.52  -0.04    5/10  |  +0.44  +0.58
+   B5  EMA34↗89 + RSI 50–70 subiendo                            12185  49.8  +0.53 1.16  3.7 |  +0.87  -0.34    3/10  |  +0.43  +0.79
+   B6  EMA89↗200 + RSI 50–70 subiendo                            3890  49.9  +0.55 1.17  2.8 |  +0.87  -0.32    3/10  |  +0.72  +0.18
+   B7  Triple alineación + RSI 50–70 subiendo  ◀ idea            9271  50.1  +0.56 1.17  3.7 |  +0.52  +0.04    3/10  |  +0.54  +0.59
+   B8  EMA34↗89 con precio sobre EMA200                         19933  49.5  +0.48 1.14  3.5 |  +0.52  -0.05    5/10  |  +0.41  +0.63
+   B9  EMA34↗89 + RSI cruza ↑ 50                                 2799  52.2  +0.93 1.28  3.3 |  +0.87  +0.06    5/10  |  +0.95  +0.89
+   C0a Precio cruza ↑ EMA89 (sin RSI) · CONTROL                103458  50.7  +0.72 1.21  5.3 |  +0.87  -0.15    3/10  |  +0.65  +0.87
+   C0b Precio cruza ↑ EMA200 (sin RSI) · CONTROL                65518  50.0  +0.56 1.16  3.7 |  +0.87  -0.31    4/10  |  +0.52  +0.65
+   C1  Precio cruza ↑ EMA89 + RSI 45–55 subiendo                51610  50.4  +0.63 1.19  4.5 |  +0.87  -0.24    2/10  |  +0.51  +0.91
+   C2  Precio cruza ↑ EMA200 + RSI 45–55 subiendo               24934  50.3  +0.61 1.18  3.5 |  +0.87  -0.26    4/10  |  +0.58  +0.67
+   D1  Pila alcista: toca EMA34 y rebota + RSI 40–60 subiendo   79395  49.6  +0.53 1.16  4.5 |  +0.52  +0.01    5/10  |  +0.38  +0.83
+   D2  D1 con RSI ≥ 45                                          79395  49.6  +0.53 1.16  4.5 |  +0.52  +0.01    5/10  |  +0.38  +0.83
+   sA0 CORTO: precio cruza ↓ EMA34 (sin RSI) · CONTROL         170180  41.4  -1.24 0.71 -7.9 |  -1.38  +0.15    6/10  |  -1.11  -1.54
+   sA1 CORTO: precio cruza ↓ EMA34 + RSI 45–55 bajando         128804  41.3  -1.34 0.70 -9.9 |  -1.38  +0.05    5/10  |  -1.30  -1.43
+   sA6 CORTO: sA1 + pila bajista                                36410  40.8  -1.90 0.64 -7.2 |  -2.04  +0.15    8/10  |  -2.06  -1.51
+   sB1 CORTO: EMA34 cruza ↓ EMA89                               23624  40.8  -1.33 0.71 -5.6 |  -1.38  +0.06    3/10  |  -1.14  -1.76
+   sB4 CORTO: se completa la pila bajista                       14328  39.8  -1.98 0.63 -6.3 |  -2.04  +0.06    3/10  |  -1.84  -2.33
+   sB5 CORTO: EMA34↘89 + RSI 30–50 bajando                      11883  41.0  -1.35 0.70 -6.7 |  -1.38  +0.03    3/10  |  -1.15  -1.81
+
+=== SALIDA: objetivo 3×ATR / stop 2×ATR (20 ses.) ===
+   setup                                                            n   WR%     μ%   PF    t |  ref μ     Δμ años Δ>0 |  ≤2023  2024+
+   A0  Precio cruza ↑ EMA34 (sin RSI) · CONTROL                168821  47.6  +0.44 1.14  4.1 |  +0.49  -0.06    4/10  |  +0.42  +0.46
+   A1  Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ idea       137157  47.3  +0.40 1.13  4.0 |  +0.49  -0.10    3/10  |  +0.38  +0.44
+   A2  Precio cruza ↑ EMA34 + RSI 40–60 subiendo               163672  47.6  +0.43 1.14  4.0 |  +0.49  -0.06    4/10  |  +0.41  +0.47
+   A3  Precio cruza ↑ EMA34 + RSI 48–52 subiendo                72814  47.2  +0.32 1.11  3.6 |  +0.49  -0.17    3/10  |  +0.28  +0.43
+   A4  Precio cruza ↑ EMA34 + RSI 45–55 (sin exigir subida)    137157  47.3  +0.40 1.13  4.0 |  +0.49  -0.10    3/10  |  +0.38  +0.44
+   A5  A1 + precio sobre EMA200                                 82446  46.5  +0.22 1.07  2.4 |  +0.18  +0.04    7/10  |  +0.16  +0.32
+   A6  A1 + pila alcista EMA34>89>200                           64552  46.3  +0.19 1.06  2.0 |  +0.17  +0.02    7/10  |  +0.13  +0.31
+   A7  A1 + EMA89 > EMA200                                      81420  46.5  +0.20 1.07  2.3 |  +0.18  +0.02    8/10  |  +0.12  +0.37
+   A8  Precio cruza ↑ EMA34 + RSI cruza ↑ 50 (≤60)             113409  47.6  +0.42 1.13  3.3 |  +0.49  -0.07    4/10  |  +0.40  +0.47
+   A9  Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200           88769  46.9  +0.25 1.08  2.7 |  +0.18  +0.07    6/10  |  +0.19  +0.36
+   B1  EMA34 cruza ↑ EMA89 (sin RSI)                            23234  46.3  +0.16 1.05  1.7 |  +0.49  -0.33    3/10  |  +0.16  +0.18
+   B2  EMA89 cruza ↑ EMA200 (sin RSI)                            9233  45.9  +0.20 1.06  1.8 |  +0.49  -0.30    2/10  |  +0.23  +0.12
+   B3  EMA34 cruza ↑ EMA200 (sin RSI)                           14799  45.7  +0.11 1.03  1.1 |  +0.49  -0.39    3/10  |  +0.13  +0.05
+   B4  Se completa la pila EMA34>89>200 (triple cruce)          18932  46.1  +0.18 1.06  1.4 |  +0.17  +0.01    5/10  |  +0.14  +0.28
+   B5  EMA34↗89 + RSI 50–70 subiendo                            12185  46.8  +0.21 1.07  2.0 |  +0.49  -0.29    3/10  |  +0.20  +0.21
+   B6  EMA89↗200 + RSI 50–70 subiendo                            3890  47.0  +0.31 1.10  2.1 |  +0.49  -0.18    4/10  |  +0.40  +0.11
+   B7  Triple alineación + RSI 50–70 subiendo  ◀ idea            9271  47.0  +0.24 1.08  2.2 |  +0.17  +0.07    3/10  |  +0.25  +0.21
+   B8  EMA34↗89 con precio sobre EMA200                         19933  46.5  +0.19 1.06  1.9 |  +0.18  +0.01    4/10  |  +0.19  +0.19
+   B9  EMA34↗89 + RSI cruza ↑ 50                                 2799  48.8  +0.48 1.16  2.5 |  +0.49  -0.01    3/10  |  +0.51  +0.44
+   C0a Precio cruza ↑ EMA89 (sin RSI) · CONTROL                103458  47.4  +0.34 1.11  3.5 |  +0.49  -0.16    4/10  |  +0.30  +0.41
+   C0b Precio cruza ↑ EMA200 (sin RSI) · CONTROL                65518  46.9  +0.26 1.08  2.3 |  +0.49  -0.23    4/10  |  +0.23  +0.34
+   C1  Precio cruza ↑ EMA89 + RSI 45–55 subiendo                51610  47.1  +0.27 1.09  2.6 |  +0.49  -0.22    2/10  |  +0.19  +0.45
+   C2  Precio cruza ↑ EMA200 + RSI 45–55 subiendo               24934  47.2  +0.33 1.11  2.6 |  +0.49  -0.16    4/10  |  +0.29  +0.43
+   D1  Pila alcista: toca EMA34 y rebota + RSI 40–60 subiendo   79395  46.1  +0.17 1.06  2.0 |  +0.17  +0.00    7/10  |  +0.11  +0.28
+   D2  D1 con RSI ≥ 45                                          79395  46.1  +0.17 1.06  2.0 |  +0.17  +0.00    7/10  |  +0.11  +0.28
+   sA0 CORTO: precio cruza ↓ EMA34 (sin RSI) · CONTROL         170180  39.0  -0.97 0.74 -9.5 |  -1.06  +0.09    5/10  |  -0.93  -1.06
+   sA1 CORTO: precio cruza ↓ EMA34 + RSI 45–55 bajando         128804  38.7  -1.02 0.73 -10.3 |  -1.06  +0.04    4/10  |  -1.03  -1.01
+   sA6 CORTO: sA1 + pila bajista                                36410  37.9  -1.50 0.67 -7.3 |  -1.62  +0.13    7/10  |  -1.60  -1.24
+   sB1 CORTO: EMA34 cruza ↓ EMA89                               23624  38.5  -1.12 0.72 -6.8 |  -1.06  -0.06    3/10  |  -1.00  -1.40
+   sB4 CORTO: se completa la pila bajista                       14328  37.5  -1.65 0.64 -6.9 |  -1.62  -0.03    4/10  |  -1.58  -1.83
+   sB5 CORTO: EMA34↘89 + RSI 30–50 bajando                      11883  38.0  -1.21 0.70 -8.5 |  -1.06  -0.15    3/10  |  -1.06  -1.55
+
+=== SALIDA: sale al cerrar bajo EMA 34 ===
+   setup                                                            n   WR%     μ%   PF    t |  ref μ     Δμ años Δ>0 |  ≤2023  2024+
+   A0  Precio cruza ↑ EMA34 (sin RSI) · CONTROL                165861  27.3  +0.31 1.16  3.7 |  +0.28  +0.03    6/10  |  +0.25  +0.46
+   A1  Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ idea       134735  26.5  +0.23 1.12  3.0 |  +0.28  -0.05    6/10  |  +0.15  +0.41
+   A2  Precio cruza ↑ EMA34 + RSI 40–60 subiendo               160814  27.0  +0.28 1.14  3.4 |  +0.28  -0.00    6/10  |  +0.21  +0.44
+   A3  Precio cruza ↑ EMA34 + RSI 48–52 subiendo                71381  26.5  +0.15 1.09  2.0 |  +0.28  -0.13    4/10  |  +0.07  +0.34
+   A4  Precio cruza ↑ EMA34 + RSI 45–55 (sin exigir subida)    134735  26.5  +0.23 1.12  3.0 |  +0.28  -0.05    6/10  |  +0.15  +0.41
+   A5  A1 + precio sobre EMA200                                 80709  26.4  +0.22 1.12  2.6 |  +0.32  -0.10    6/10  |  +0.12  +0.43
+   A6  A1 + pila alcista EMA34>89>200                           63118  26.4  +0.17 1.09  2.0 |  +0.23  -0.06    5/10  |  +0.05  +0.42
+   A7  A1 + EMA89 > EMA200                                      79736  26.3  +0.20 1.12  2.5 |  +0.32  -0.12    6/10  |  +0.09  +0.45
+   A8  Precio cruza ↑ EMA34 + RSI cruza ↑ 50 (≤60)             111574  26.6  +0.29 1.15  3.0 |  +0.28  +0.02    6/10  |  +0.21  +0.49
+   A9  Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200           86962  27.4  +0.36 1.18  3.9 |  +0.32  +0.04    8/10  |  +0.27  +0.57
+   B1  EMA34 cruza ↑ EMA89 (sin RSI)                            22805  33.7  +0.85 1.26  5.7 |  +0.28  +0.57    8/10  |  +0.71  +1.20
+   B2  EMA89 cruza ↑ EMA200 (sin RSI)                            9037  33.9  +0.73 1.23  4.0 |  +0.28  +0.46    6/10  |  +0.74  +0.71
+   B3  EMA34 cruza ↑ EMA200 (sin RSI)                           14488  34.2  +0.83 1.26  5.3 |  +0.28  +0.56    8/10  |  +0.69  +1.20
+   B4  Se completa la pila EMA34>89>200 (triple cruce)          18589  33.5  +0.86 1.29  5.1 |  +0.23  +0.63    7/10  |  +0.77  +1.09
+   B5  EMA34↗89 + RSI 50–70 subiendo                            11954  33.5  +0.78 1.26  4.9 |  +0.28  +0.51    7/10  |  +0.62  +1.21
+   B6  EMA89↗200 + RSI 50–70 subiendo                            3804  33.2  +0.41 1.14  1.9 |  +0.28  +0.14    5/10  |  +0.49  +0.21
+   B7  Triple alineación + RSI 50–70 subiendo  ◀ idea            9100  33.5  +0.70 1.25  4.4 |  +0.23  +0.48    6/10  |  +0.72  +0.67
+   B8  EMA34↗89 con precio sobre EMA200                         19576  34.3  +0.90 1.28  5.6 |  +0.32  +0.58    7/10  |  +0.74  +1.31
+   B9  EMA34↗89 + RSI cruza ↑ 50                                 2745  32.9  +0.71 1.26  2.4 |  +0.28  +0.44    7/10  |  +0.87  +0.35
+   C0a Precio cruza ↑ EMA89 (sin RSI) · CONTROL                101518  32.5  +0.31 1.15  3.4 |  +0.28  +0.04    5/10  |  +0.26  +0.44
+   C0b Precio cruza ↑ EMA200 (sin RSI) · CONTROL                64302  34.5  +0.32 1.14  2.9 |  +0.28  +0.04    6/10  |  +0.25  +0.47
+   C1  Precio cruza ↑ EMA89 + RSI 45–55 subiendo                50608  30.0  +0.10 1.06  1.3 |  +0.28  -0.18    3/10  |  -0.00  +0.34
+   C2  Precio cruza ↑ EMA200 + RSI 45–55 subiendo               24497  31.6  +0.18 1.12  2.0 |  +0.28  -0.10    6/10  |  +0.10  +0.36
+   D1  Pila alcista: toca EMA34 y rebota + RSI 40–60 subiendo   77661  26.5  +0.16 1.08  2.0 |  +0.23  -0.06    5/10  |  +0.07  +0.36
+   D2  D1 con RSI ≥ 45                                          77661  26.5  +0.16 1.08  2.0 |  +0.23  -0.06    5/10  |  +0.07  +0.36
+   sA0 CORTO: precio cruza ↓ EMA34 (sin RSI) · CONTROL         166757  22.3  -0.90 0.59 -11.7 |  -1.04  +0.14    5/10  |  -0.80  -1.16
+   sA1 CORTO: precio cruza ↓ EMA34 + RSI 45–55 bajando         126144  21.8  -0.88 0.56 -15.5 |  -1.04  +0.16    7/10  |  -0.83  -1.01
+   sA6 CORTO: sA1 + pila bajista                                35847  21.7  -1.12 0.53 -10.8 |  -1.75  +0.63    9/10  |  -1.14  -1.06
+   sB1 CORTO: EMA34 cruza ↓ EMA89                               23185  25.6  -1.81 0.57 -9.6 |  -1.04  -0.77    1/10  |  -1.65  -2.21
+   sB4 CORTO: se completa la pila bajista                       14142  24.9  -2.48 0.48 -8.4 |  -1.75  -0.74    2/10  |  -2.50  -2.44
+   sB5 CORTO: EMA34↘89 + RSI 30–50 bajando                      11640  24.3  -1.76 0.55 -11.8 |  -1.04  -0.72    2/10  |  -1.57  -2.21
+
+=== SALIDA: sale al cerrar bajo EMA 89 ===
+   setup                                                            n   WR%     μ%   PF    t |  ref μ     Δμ años Δ>0 |  ≤2023  2024+
+   A0  Precio cruza ↑ EMA34 (sin RSI) · CONTROL                164508  32.1  +0.76 1.31  7.5 |  +0.98  -0.22    5/10  |  +0.69  +0.92
+   A1  Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ idea       133634  31.9  +0.72 1.30  7.0 |  +0.98  -0.26    4/10  |  +0.64  +0.93
+   A2  Precio cruza ↑ EMA34 + RSI 40–60 subiendo               159497  32.1  +0.72 1.30  7.2 |  +0.98  -0.26    4/10  |  +0.65  +0.90
+   A3  Precio cruza ↑ EMA34 + RSI 48–52 subiendo                70799  30.4  +0.90 1.34  7.3 |  +0.98  -0.09    5/10  |  +0.78  +1.20
+   A4  Precio cruza ↑ EMA34 + RSI 45–55 (sin exigir subida)    133634  31.9  +0.72 1.30  7.0 |  +0.98  -0.26    4/10  |  +0.64  +0.93
+   A5  A1 + precio sobre EMA200                                 80012  27.8  +0.98 1.33  6.8 |  +1.29  -0.31    6/10  |  +0.81  +1.35
+   A6  A1 + pila alcista EMA34>89>200                           62570  27.9  +1.10 1.33  6.8 |  +1.19  -0.09    6/10  |  +0.87  +1.58
+   A7  A1 + EMA89 > EMA200                                      79067  28.6  +0.90 1.31  6.6 |  +1.29  -0.39    6/10  |  +0.70  +1.35
+   A8  Precio cruza ↑ EMA34 + RSI cruza ↑ 50 (≤60)             110735  32.3  +0.58 1.26  5.5 |  +0.98  -0.40    3/10  |  +0.51  +0.76
+   A9  Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200           86237  28.0  +1.00 1.33  6.8 |  +1.29  -0.29    8/10  |  +0.87  +1.27
+   B1  EMA34 cruza ↑ EMA89 (sin RSI)                            22551  30.7  +1.82 1.47  8.6 |  +0.98  +0.84    9/10  |  +1.66  +2.25
+   B2  EMA89 cruza ↑ EMA200 (sin RSI)                            8923  33.7  +2.19 1.50  7.9 |  +0.98  +1.21    5/10  |  +2.29  +1.94
+   B3  EMA34 cruza ↑ EMA200 (sin RSI)                           14312  32.6  +2.00 1.49  8.4 |  +0.98  +1.02    8/10  |  +1.95  +2.13
+   B4  Se completa la pila EMA34>89>200 (triple cruce)          18390  32.7  +2.10 1.54 10.3 |  +1.19  +0.92    7/10  |  +2.07  +2.19
+   B5  EMA34↗89 + RSI 50–70 subiendo                            11824  29.5  +1.67 1.46  7.3 |  +0.98  +0.69    8/10  |  +1.51  +2.11
+   B6  EMA89↗200 + RSI 50–70 subiendo                            3754  32.9  +1.87 1.45  5.5 |  +0.98  +0.89    6/10  |  +2.15  +1.15
+   B7  Triple alineación + RSI 50–70 subiendo  ◀ idea            8999  31.8  +1.85 1.50  8.1 |  +1.19  +0.66    5/10  |  +2.02  +1.40
+   B8  EMA34↗89 con precio sobre EMA200                         19345  31.6  +1.89 1.49  8.5 |  +1.29  +0.60    8/10  |  +1.69  +2.39
+   B9  EMA34↗89 + RSI cruza ↑ 50                                 2715  28.5  +1.72 1.53  3.7 |  +0.98  +0.74    7/10  |  +2.02  +1.03
+   C0a Precio cruza ↑ EMA89 (sin RSI) · CONTROL                100651  23.8  +0.55 1.24  5.0 |  +0.98  -0.43    5/10  |  +0.48  +0.72
+   C0b Precio cruza ↑ EMA200 (sin RSI) · CONTROL                63722  31.5  +0.70 1.29  4.8 |  +0.98  -0.28    5/10  |  +0.71  +0.68
+   C1  Precio cruza ↑ EMA89 + RSI 45–55 subiendo                50217  23.2  +0.47 1.22  4.0 |  +0.98  -0.51    3/10  |  +0.38  +0.68
+   C2  Precio cruza ↑ EMA200 + RSI 45–55 subiendo               24297  31.5  +0.38 1.23  3.4 |  +0.98  -0.60    3/10  |  +0.42  +0.28
+   D1  Pila alcista: toca EMA34 y rebota + RSI 40–60 subiendo   77013  28.3  +1.10 1.32  7.2 |  +1.19  -0.09    7/10  |  +0.93  +1.45
+   D2  D1 con RSI ≥ 45                                          77013  28.3  +1.10 1.32  7.2 |  +1.19  -0.09    7/10  |  +0.93  +1.45
+   sA0 CORTO: precio cruza ↓ EMA34 (sin RSI) · CONTROL         165336  28.0  -1.29 0.51 -15.0 |  -1.69  +0.39    9/10  |  -1.30  -1.27
+   sA1 CORTO: precio cruza ↓ EMA34 + RSI 45–55 bajando         124986  27.7  -1.36 0.49 -14.9 |  -1.69  +0.32   10/10  |  -1.42  -1.23
+   sA6 CORTO: sA1 + pila bajista                                35491  19.0  -2.94 0.44 -11.6 |  -3.59  +0.65    9/10  |  -3.15  -2.36
+   sB1 CORTO: EMA34 cruza ↓ EMA89                               23019  21.1  -2.80 0.47 -13.9 |  -1.69  -1.11    1/10  |  -2.72  -2.99
+   sB4 CORTO: se completa la pila bajista                       14055  21.9  -4.08 0.41 -10.2 |  -3.59  -0.48    3/10  |  -4.21  -3.73
+   sB5 CORTO: EMA34↘89 + RSI 30–50 bajando                      11551  20.2  -2.48 0.48 -16.0 |  -1.69  -0.80    1/10  |  -2.34  -2.84
+
+=== SETUPS QUE SUPERAN LA REFERENCIA con criterio estricto: Δμ > 0, t ≥ 3, mejora en ≥ 6 años y μ > 0 tanto hasta 2023 como desde 2024 ===
+   B4  · Se completa la pila EMA34>89>200 (triple cruce)    · sale al cerrar bajo EMA 89     n= 18390 WR=32.7% μ=+2.10% (Δ +0.92) t=10.3 años Δ>0 7/10 · ≤2023 +2.07 2024+ +2.19
+   B3  · EMA34 cruza ↑ EMA200 (sin RSI)                     · sale al cerrar bajo EMA 89     n= 14312 WR=32.6% μ=+2.00% (Δ +1.02) t=8.4 años Δ>0 8/10 · ≤2023 +1.95 2024+ +2.13
+   B8  · EMA34↗89 con precio sobre EMA200                   · sale al cerrar bajo EMA 89     n= 19345 WR=31.6% μ=+1.89% (Δ +0.60) t=8.5 años Δ>0 8/10 · ≤2023 +1.69 2024+ +2.39
+   B6  · EMA89↗200 + RSI 50–70 subiendo                     · sale al cerrar bajo EMA 89     n=  3754 WR=32.9% μ=+1.87% (Δ +0.89) t=5.5 años Δ>0 6/10 · ≤2023 +2.15 2024+ +1.15
+   B1  · EMA34 cruza ↑ EMA89 (sin RSI)                      · sale al cerrar bajo EMA 89     n= 22551 WR=30.7% μ=+1.82% (Δ +0.84) t=8.6 años Δ>0 9/10 · ≤2023 +1.66 2024+ +2.25
+   B9  · EMA34↗89 + RSI cruza ↑ 50                          · sale al cerrar bajo EMA 89     n=  2715 WR=28.5% μ=+1.72% (Δ +0.74) t=3.7 años Δ>0 7/10 · ≤2023 +2.02 2024+ +1.03
+   B5  · EMA34↗89 + RSI 50–70 subiendo                      · sale al cerrar bajo EMA 89     n= 11824 WR=29.5% μ=+1.67% (Δ +0.69) t=7.3 años Δ>0 8/10 · ≤2023 +1.51 2024+ +2.11
+   A7  · A1 + EMA89 > EMA200                                · stop móvil 4×ATR (60 ses.)     n= 79736 WR=42.7% μ=+1.37% (Δ +0.20) t=8.6 años Δ>0 8/10 · ≤2023 +0.93 2024+ +2.31
+   A5  · A1 + precio sobre EMA200                           · stop móvil 4×ATR (60 ses.)     n= 80709 WR=42.6% μ=+1.34% (Δ +0.17) t=8.6 años Δ>0 8/10 · ≤2023 +0.95 2024+ +2.16
+   A9  · Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200     · stop móvil 4×ATR (60 ses.)     n= 86962 WR=42.7% μ=+1.33% (Δ +0.16) t=8.2 años Δ>0 7/10 · ≤2023 +0.96 2024+ +2.10
+   B8  · EMA34↗89 con precio sobre EMA200                   · stop móvil 4×ATR (60 ses.)     n= 19576 WR=42.7% μ=+1.32% (Δ +0.14) t=7.5 años Δ>0 6/10 · ≤2023 +1.09 2024+ +1.88
+   A6  · A1 + pila alcista EMA34>89>200                     · stop móvil 4×ATR (60 ses.)     n= 63118 WR=42.5% μ=+1.30% (Δ +0.17) t=8.1 años Δ>0 9/10 · ≤2023 +0.88 2024+ +2.16
+   D2  · D1 con RSI ≥ 45                                    · stop móvil 4×ATR (60 ses.)     n= 77661 WR=42.0% μ=+1.21% (Δ +0.08) t=8.2 años Δ>0 7/10 · ≤2023 +0.86 2024+ +1.92
+   D1  · Pila alcista: toca EMA34 y rebota + RSI 40–60 subi · stop móvil 4×ATR (60 ses.)     n= 77661 WR=42.0% μ=+1.21% (Δ +0.08) t=8.2 años Δ>0 7/10 · ≤2023 +0.86 2024+ +1.92
+   C2  · Precio cruza ↑ EMA200 + RSI 45–55 subiendo         · stop móvil 3×ATR (60 ses.)     n= 24497 WR=40.8% μ=+1.08% (Δ +0.06) t=4.9 años Δ>0 6/10 · ≤2023 +0.90 2024+ +1.50
+   B8  · EMA34↗89 con precio sobre EMA200                   · sale al cerrar bajo EMA 34     n= 19576 WR=34.3% μ=+0.90% (Δ +0.58) t=5.6 años Δ>0 7/10 · ≤2023 +0.74 2024+ +1.31
+   B4  · Se completa la pila EMA34>89>200 (triple cruce)    · sale al cerrar bajo EMA 34     n= 18589 WR=33.5% μ=+0.86% (Δ +0.63) t=5.1 años Δ>0 7/10 · ≤2023 +0.77 2024+ +1.09
+   B1  · EMA34 cruza ↑ EMA89 (sin RSI)                      · sale al cerrar bajo EMA 34     n= 22805 WR=33.7% μ=+0.85% (Δ +0.57) t=5.7 años Δ>0 8/10 · ≤2023 +0.71 2024+ +1.20
+   B3  · EMA34 cruza ↑ EMA200 (sin RSI)                     · sale al cerrar bajo EMA 34     n= 14488 WR=34.2% μ=+0.83% (Δ +0.56) t=5.3 años Δ>0 8/10 · ≤2023 +0.69 2024+ +1.20
+   A7  · A1 + EMA89 > EMA200                                · stop móvil 3×ATR (60 ses.)     n= 79736 WR=40.1% μ=+0.79% (Δ +0.22) t=6.3 años Δ>0 7/10 · ≤2023 +0.55 2024+ +1.29
+   B5  · EMA34↗89 + RSI 50–70 subiendo                      · sale al cerrar bajo EMA 34     n= 11954 WR=33.5% μ=+0.78% (Δ +0.51) t=4.9 años Δ>0 7/10 · ≤2023 +0.62 2024+ +1.21
+   A9  · Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200     · stop móvil 3×ATR (60 ses.)     n= 86962 WR=40.0% μ=+0.75% (Δ +0.18) t=6.0 años Δ>0 9/10 · ≤2023 +0.56 2024+ +1.16
+   A5  · A1 + precio sobre EMA200                           · stop móvil 3×ATR (60 ses.)     n= 80709 WR=40.0% μ=+0.75% (Δ +0.18) t=6.2 años Δ>0 8/10 · ≤2023 +0.55 2024+ +1.17
+   B2  · EMA89 cruza ↑ EMA200 (sin RSI)                     · sale al cerrar bajo EMA 34     n=  9037 WR=33.9% μ=+0.73% (Δ +0.46) t=4.0 años Δ>0 6/10 · ≤2023 +0.74 2024+ +0.71
+   B7  · Triple alineación + RSI 50–70 subiendo  ◀ idea     · sale al cerrar bajo EMA 34     n=  9100 WR=33.5% μ=+0.70% (Δ +0.48) t=4.4 años Δ>0 6/10 · ≤2023 +0.72 2024+ +0.67
+   A6  · A1 + pila alcista EMA34>89>200                     · stop móvil 3×ATR (60 ses.)     n= 63118 WR=39.8% μ=+0.68% (Δ +0.13) t=5.6 años Δ>0 9/10 · ≤2023 +0.46 2024+ +1.16
+   A9  · Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200     · stop 3×ATR + 20 sesiones       n= 88769 WR=50.2% μ=+0.62% (Δ +0.10) t=5.0 años Δ>0 7/10 · ≤2023 +0.50 2024+ +0.85
+   D2  · D1 con RSI ≥ 45                                    · stop móvil 3×ATR (60 ses.)     n= 77661 WR=39.4% μ=+0.61% (Δ +0.06) t=5.4 años Δ>0 7/10 · ≤2023 +0.41 2024+ +1.03
+   D1  · Pila alcista: toca EMA34 y rebota + RSI 40–60 subi · stop móvil 3×ATR (60 ses.)     n= 77661 WR=39.4% μ=+0.61% (Δ +0.06) t=5.4 años Δ>0 7/10 · ≤2023 +0.41 2024+ +1.03
+   A5  · A1 + precio sobre EMA200                           · stop 3×ATR + 20 sesiones       n= 82446 WR=50.0% μ=+0.58% (Δ +0.05) t=4.8 años Δ>0 7/10 · ≤2023 +0.44 2024+ +0.86
+   A6  · A1 + pila alcista EMA34>89>200                     · stop 3×ATR + 20 sesiones       n= 64552 WR=50.0% μ=+0.57% (Δ +0.05) t=4.6 años Δ>0 6/10 · ≤2023 +0.40 2024+ +0.89
+   A7  · A1 + EMA89 > EMA200                                · stop 3×ATR + 20 sesiones       n= 81420 WR=50.0% μ=+0.57% (Δ +0.04) t=4.8 años Δ>0 7/10 · ≤2023 +0.39 2024+ +0.91
+   A9  · Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200     · sale al cerrar bajo EMA 34     n= 86962 WR=27.4% μ=+0.36% (Δ +0.04) t=3.9 años Δ>0 8/10 · ≤2023 +0.27 2024+ +0.57
+   A0  · Precio cruza ↑ EMA34 (sin RSI) · CONTROL           · sale al cerrar bajo EMA 34     n=165861 WR=27.3% μ=+0.31% (Δ +0.03) t=3.7 años Δ>0 6/10 · ≤2023 +0.25 2024+ +0.46
+
+=== ¿APORTA EL RSI? media por setup frente al cruce SIN RSI (misma salida; Δ = con RSI − sin RSI) ===
+   A1 (Precio cruza ↑ EMA34 + RSI 45–55 sub) vs A0: -0.01 +0.01 -0.06 -0.04 -0.09 -0.03   (columnas = las 6 salidas, en orden)
+   A2 (Precio cruza ↑ EMA34 + RSI 40–60 sub) vs A0: -0.01 -0.01 -0.01 -0.01 -0.04 -0.04   (columnas = las 6 salidas, en orden)
+   A3 (Precio cruza ↑ EMA34 + RSI 48–52 sub) vs A0: -0.08 -0.08 -0.17 -0.11 -0.17 +0.14   (columnas = las 6 salidas, en orden)
+   A4 (Precio cruza ↑ EMA34 + RSI 45–55 (si) vs A0: -0.01 +0.01 -0.06 -0.04 -0.09 -0.03   (columnas = las 6 salidas, en orden)
+   A8 (Precio cruza ↑ EMA34 + RSI cruza ↑ 5) vs A0: -0.04 -0.05 +0.01 -0.01 -0.02 -0.18   (columnas = las 6 salidas, en orden)
+   C1 (Precio cruza ↑ EMA89 + RSI 45–55 sub) vs C0a: +0.02 +0.01 -0.08 -0.07 -0.21 -0.08   (columnas = las 6 salidas, en orden)
+   C2 (Precio cruza ↑ EMA200 + RSI 45–55 su) vs C0b: +0.29 +0.16 +0.05 +0.07 -0.14 -0.32   (columnas = las 6 salidas, en orden)
+   B5 (EMA34↗89 + RSI 50–70 subiendo) vs B1: +0.04 +0.01 +0.06 +0.04 -0.06 -0.15   (columnas = las 6 salidas, en orden)
+   B6 (EMA89↗200 + RSI 50–70 subiendo) vs B2: +0.03 -0.19 +0.06 +0.12 -0.32 -0.32   (columnas = las 6 salidas, en orden)
+   B7 (Triple alineación + RSI 50–70 subien) vs B4: +0.07 -0.04 +0.08 +0.06 -0.15 -0.25   (columnas = las 6 salidas, en orden)
+   B9 (EMA34↗89 + RSI cruza ↑ 50) vs B1: +0.25 -0.04 +0.47 +0.32 -0.14 -0.10   (columnas = las 6 salidas, en orden)
+
+=== DESGLOSE de A1 · Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ idea (salida: stop móvil 3×ATR) ===
+   por año: 17:+1.31(n=11554) 18:-0.76(n=12703) 19:+1.90(n=12982) 20:+3.41(n=13991) 21:+0.43(n=15387) 22:-1.45(n=15081) 23:+0.85(n=13846) 24:+0.76(n=15074) 25:+1.54(n=15295) 26:+1.37(n=7989)
+   us_large  n= 37650 WR=43.3% μ=+1.27%
+   us_mid    n= 29161 WR=40.8% μ=+1.00%
+   us_small  n= 40316 WR=38.6% μ=+0.51%
+   etf       n=  8256 WR=42.4% μ=+0.98%
+   crypto    n=  1093 WR=41.1% μ=+2.66%
+   thematic  n=  6171 WR=38.4% μ=+0.87%
+   eu        n=  9593 WR=41.4% μ=+0.80%
+   S&P 500 sobre su SMA200    n=103662 WR=39.7% μ=+0.60%
+   S&P 500 bajo su SMA200     n= 23363 WR=45.0% μ=+2.34%
+   ATR% [0,2) n= 30701 WR=41.0% μ=+0.50%
+   ATR% [2,3) n= 50670 WR=39.1% μ=+0.31%
+   ATR% [3,4.5) n= 34426 WR=40.9% μ=+0.94%
+   ATR% [4.5,99) n= 18938 WR=45.2% μ=+3.17%
+
+=== DESGLOSE de A6 · A1 + pila alcista EMA34>89>200 (salida: stop móvil 3×ATR) ===
+   por año: 17:+2.57(n=3035) 18:-0.51(n=6765) 19:+1.42(n=5985) 20:+2.18(n=5300) 21:+0.42(n=10947) 22:-1.81(n=4468) 23:-0.25(n=6013) 24:+1.05(n=9134) 25:+1.32(n=7124) 26:+1.11(n=4347)
+   us_large  n= 19054 WR=41.4% μ=+0.82%
+   us_mid    n= 13624 WR=39.5% μ=+0.72%
+   us_small  n= 17175 WR=38.1% μ=+0.35%
+   etf       n=  4366 WR=41.0% μ=+0.71%
+   crypto    n=   414 WR=42.5% μ=+4.91%
+   thematic  n=  2685 WR=38.4% μ=+1.08%
+   eu        n=  4802 WR=39.8% μ=+0.76%
+   S&P 500 sobre su SMA200    n= 56708 WR=39.8% μ=+0.64%
+   S&P 500 bajo su SMA200     n=  6395 WR=39.7% μ=+1.10%
+   ATR% [0,2) n= 17716 WR=40.0% μ=+0.40%
+   ATR% [2,3) n= 25129 WR=38.6% μ=+0.28%
+   ATR% [3,4.5) n= 14054 WR=40.3% μ=+0.83%
+   ATR% [4.5,99) n=  6219 WR=42.8% μ=+2.80%
+
+=== DESGLOSE de B7 · Triple alineación + RSI 50–70 subiendo  ◀ idea (salida: stop móvil 3×ATR) ===
+   por año: 17:+1.00(n=598) 18:-0.95(n=806) 19:+1.13(n=1042) 20:+4.20(n=1002) 21:+0.17(n=940) 22:-2.11(n=1009) 23:+0.95(n=1122) 24:+0.56(n=913) 25:+1.50(n=1086) 26:+0.43(n=582)
+   us_large  n=  2706 WR=43.0% μ=+1.36%
+   us_mid    n=  2023 WR=37.9% μ=+0.32%
+   us_small  n=  2615 WR=36.4% μ=+0.19%
+   etf       n=   518 WR=45.9% μ=+1.59%
+   thematic  n=   380 WR=40.3% μ=+0.90%
+   eu        n=   672 WR=42.4% μ=+0.60%
+   S&P 500 sobre su SMA200    n=  7738 WR=39.7% μ=+0.56%
+   S&P 500 bajo su SMA200     n=  1331 WR=42.3% μ=+1.79%
+   ATR% [0,2) n=  2514 WR=40.1% μ=+0.35%
+   ATR% [2,3) n=  3737 WR=37.9% μ=+0.15%
+   ATR% [3,4.5) n=  2093 WR=41.0% μ=+1.05%
+   ATR% [4.5,99) n=   756 WR=47.8% μ=+4.03%
+
+=== DESGLOSE de D1 · Pila alcista: toca EMA34 y rebota + RSI 40–60 subiendo (salida: stop móvil 3×ATR) ===
+   por año: 17:+2.46(n=3891) 18:-0.63(n=8505) 19:+1.22(n=7405) 20:+2.30(n=6561) 21:+0.40(n=13157) 22:-1.86(n=5601) 23:-0.21(n=7376) 24:+1.07(n=11126) 25:+1.05(n=8705) 26:+0.92(n=5334)
+   us_large  n= 23435 WR=40.8% μ=+0.70%
+   us_mid    n= 17114 WR=39.5% μ=+0.67%
+   us_small  n= 21851 WR=37.5% μ=+0.26%
+   etf       n=  4441 WR=40.6% μ=+0.59%
+   crypto    n=   551 WR=42.5% μ=+4.84%
+   thematic  n=  3225 WR=40.0% μ=+1.33%
+   eu        n=  5945 WR=39.5% μ=+0.69%
+   S&P 500 sobre su SMA200    n= 69916 WR=39.5% μ=+0.58%
+   S&P 500 bajo su SMA200     n=  7714 WR=38.9% μ=+0.85%
+   ATR% [0,2) n= 21812 WR=39.5% μ=+0.33%
+   ATR% [2,3) n= 31042 WR=38.0% μ=+0.18%
+   ATR% [3,4.5) n= 17268 WR=40.2% μ=+0.78%
+   ATR% [4.5,99) n=  7539 WR=43.1% μ=+2.81%
+
+fin · 77s
