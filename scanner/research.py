@@ -57,6 +57,9 @@ def synthetic_universe(n=60, ar=0.0):
     return synth.universe(n, ar, n_bars=3400)
 
 
+MOC_VARIANTS = [SM.Variant('rsi', 0.0, 4.0, 10), SM.Variant('atr', 1.0, 4.0, 10)]
+
+
 def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: List[SM.Variant],
                  only_last: bool = False, verbose: bool = True):
     """
@@ -73,7 +76,7 @@ def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: Li
         bre.add(feats.build(data[sym]))
     bd = bre.finalize()
     print('  amplitud de mercado lista', flush=True)
-    acc = {k: [] for k in ('sid', 'sym', 'grp', 'day', 'bi', 'X', 'pnl', 'kind', 'bars')}
+    acc = {k: [] for k in ('sid', 'sym', 'grp', 'day', 'bi', 'X', 'pnl', 'kind', 'bars', 'gapin', 'moc')}
     t0 = time.time()
     for n_s, sym in enumerate(sym_list):
         g = uni[sym]['group']
@@ -93,6 +96,11 @@ def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: Li
             K = np.stack([res[v.name].kind for v in variants], 1)
             B = np.stack([res[v.name].bars for v in variants], 1)
             Xs = feats.event_matrix(F, uni_idx)
+            # hueco de entrada (apertura de i+1 frente al cierre de i, en ATR) y entrada AL CIERRE para los planes desplegados
+            nxt = np.minimum(uni_idx + 1, len(F['c']) - 1)
+            gap_in = np.where(uni_idx + 1 < len(F['c']), (F['o'][nxt] - F['c'][uni_idx]) / F['atr'][uni_idx], np.nan).astype(np.float32)
+            moc_res = SM.simulate(F, uni_idx, sgn, MOC_VARIANTS, cost, entry_mode='close')
+            MO = np.stack([moc_res[v.name].pnl for v in MOC_VARIANTS], 1).astype(np.float32)
             for sid in ids:
                 pos = np.searchsorted(uni_idx, ev[sid])
                 acc['sid'].append(np.full(len(pos), sid_of[sid], np.int16))
@@ -102,6 +110,7 @@ def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: Li
                 acc['bi'].append(uni_idx[pos].astype(np.int32))
                 acc['X'].append(Xs[pos]); acc['pnl'].append(P[pos])
                 acc['kind'].append(K[pos]); acc['bars'].append(B[pos])
+                acc['gapin'].append(gap_in[pos]); acc['moc'].append(MO[pos])
         if verbose and (n_s + 1) % 300 == 0:
             print(f'  eventos: {n_s + 1}/{len(sym_list)} símbolos ({time.time() - t0:.0f}s)', flush=True)
     EV = {k: (np.concatenate(v) if v else np.array([])) for k, v in acc.items()}
@@ -353,7 +362,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -376,7 +385,7 @@ def main():
     else:
         import lab
         getattr(lab, {'explore': 'explore', 'meta': 'meta_explore', 'meta2': 'meta2_explore', 'meta3': 'meta3_explore',
-                      'meta4': 'meta4_explore', 'meta5': 'meta5_explore', 'regime': 'regime_explore'}[args.cmd])(EV, args.out)
+                      'meta4': 'meta4_explore', 'meta5': 'meta5_explore', 'regime': 'regime_explore', 'gap': 'gap_explore', 'pelotazo': 'pelotazo_explore'}[args.cmd])(EV, args.out)
     print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
 
 

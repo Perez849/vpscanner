@@ -79,8 +79,12 @@ def _forward(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, hmax: int):
 
 
 def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List[Variant],
-             cost_pct: float | np.ndarray = 0.30) -> Dict[str, Result]:
-    """idx = barras de señal (cierre). sgn=+1 largo, -1 corto. Devuelve {variant.name: Result}."""
+             cost_pct: float | np.ndarray = 0.30, entry_mode: str = 'open') -> Dict[str, Result]:
+    """
+    idx = barras de señal (cierre). sgn=+1 largo, -1 corto. Devuelve {variant.name: Result}.
+    entry_mode: 'open'  → se entra en la apertura de i+1 (por defecto, lo único ejecutable tras ver el cierre);
+                'close' → se entra AL CIERRE de la propia barra de señal (orden MOC colocada antes del cierre).
+    """
     idx = np.asarray(idx, dtype=np.int64)
     out: Dict[str, Result] = {}
     if len(idx) == 0:
@@ -89,7 +93,10 @@ def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List
     O, Hh, Ll, C, S5, R2, PH, valid = _forward(F, idx, sgn, hmax)
     rthr = 70.0 if sgn > 0 else -30.0
     atr = F['atr'][idx]
-    E = O[:, 0]
+    if entry_mode == 'close':
+        E = (F['c'][idx] * sgn).astype(np.float64)       # espacio 'largo': para cortos el precio va con signo negativo
+    else:
+        E = O[:, 0]
     absE = np.abs(E)
     rows = np.arange(len(idx))
     cost = np.broadcast_to(np.asarray(cost_pct, dtype=np.float64), idx.shape)

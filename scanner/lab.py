@@ -16,7 +16,7 @@ from typing import Dict, List
 import numpy as np
 
 from research import (FEATURES, GROUPS, SU, SM, TRAIN_END, VAL_END, day_of, year_of, stats, fmt, union_events,
-                      topn_mask as _topn_mask)
+                      topn_mask as _topn_mask, wf_predict_linear, select_policy, PLANS)
 
 # ═════════════════════════════════════════════════════════════════════════
 #  EXPLORE
@@ -550,3 +550,72 @@ def meta5_explore(EV: Dict, out_dir: str):
                     print(f"        P∈[{a_:.2f},{b_:.2f}): n={mm.sum()} real={y[mm].mean() * 100:.1f}% μ={np.nanmean(pnl[mm]):+.2f}%")
 
 
+
+
+def gap_explore(EV: Dict, out_dir: str):
+    """¿Importa el hueco de apertura? ¿Mejora entrar AL CIERRE (escaneo antes del cierre) frente a la apertura siguiente?"""
+    reg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model', 'validated.json')))
+    groups_of = {s['id']: s['groups'] for s in reg['strategies']}
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    gid = EV['grp'][rows]
+    gap = EV['gapin'][rows]
+    moc = EV['moc'][rows]
+    last_day = int(day.max())
+    yrs = sorted(set(years[years >= 2019]))
+    print(f'\n######## GAP · {len(rows):,} candidatos largos · política top {PLANS and 5}/día de cada plan', flush=True)
+    print('  hueco = (apertura de mañana − cierre de hoy) / ATR  (positivo = abre por encima del cierre)')
+    allg = gap[np.isfinite(gap)]
+    print(f"  todos los candidatos: mediana {np.median(allg):+.2f} ATR · p10 {np.percentile(allg, 10):+.2f} · p90 {np.percentile(allg, 90):+.2f}")
+    for pi, plan in enumerate(PLANS):
+        vi = variants.index(plan['id'])
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        p, base = wf_predict_linear(EV, rows, FL, y, ok, last_day)
+        allowed = [GROUPS.index(g) for g in groups_of.get(plan['id'], GROUPS)]
+        sel = select_policy(p, base, day, gid, ok, allowed) & np.isfinite(gap)
+        pm = moc[:, pi]
+        print(f"\n=== {plan['id']} · {plan['label']} · seleccionadas {sel.sum():,}: {fmt(stats(pnl[sel], day[sel], sym[sel]))}")
+        gs = gap[sel]
+        print(f"  hueco de las seleccionadas: mediana {np.median(gs):+.2f} ATR · >+0.25: {(gs > .25).mean() * 100:.0f}% · >+0.5: {(gs > .5).mean() * 100:.0f}% · >+1: {(gs > 1).mean() * 100:.0f}% · <−0.5: {(gs < -.5).mean() * 100:.0f}%")
+        print('  A) resultado por tramo de hueco (entrando en la APERTURA):')
+        edges = [-99, -1, -0.5, -0.25, 0, 0.25, 0.5, 1, 99]
+        for a_, b_ in zip(edges[:-1], edges[1:]):
+            m = sel & (gap >= a_) & (gap < b_)
+            if m.sum() < 60:
+                continue
+            st = stats(pnl[m], day[m], sym[m])
+            npos = nt = 0
+            for Y in yrs:
+                my = m & (years == Y)
+                if my.sum() >= 20:
+                    nt += 1; npos += np.nanmean(pnl[my]) > 0
+            print(f"     hueco [{a_:>5g},{b_:>5g}) n={st['n']:5d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% PF={st['pf']:4.2f} aW={st['avg_win']:+.2f} aL={st['avg_loss']:+.2f}  años+ {npos}/{nt}")
+        print('  B) regla "no entrar si abre más de X ATR por encima del cierre" (se salta esa señal):')
+        base_st = stats(pnl[sel], day[sel], sym[sel])
+        print(f"     sin regla           n={base_st['n']:5d} WR={base_st['wr']:4.1f}% μ={base_st['mean']:+5.2f}% PF={base_st['pf']:4.2f}")
+        for g_ in (0.15, 0.25, 0.5, 0.75, 1.0):
+            keep = sel & (gap <= g_)
+            drop = sel & (gap > g_)
+            sk = stats(pnl[keep], day[keep], sym[keep]); sd = stats(pnl[drop], day[drop], sym[drop])
+            npos = nt = 0
+            for Y in yrs:
+                my = keep & (years == Y)
+                if my.sum() >= 20:
+                    nt += 1; npos += np.nanmean(pnl[my]) > 0
+            print(f"     salta si > +{g_:4.2f} ATR n={sk['n']:5d} WR={sk['wr']:4.1f}% μ={sk['mean']:+5.2f}% PF={sk['pf']:4.2f} años+ {npos}/{nt}  | saltadas n={sd.get('n', 0)} μ={sd.get('mean', float('nan')):+.2f}%")
+        okm = sel & np.isfinite(pm)
+        so, sm = stats(pnl[okm], day[okm], sym[okm]), stats(pm[okm], day[okm], sym[okm])
+        print(f"  C) MISMAS señales entrando en la apertura siguiente vs AL CIERRE (orden MOC) · n={okm.sum()}")
+        print(f"     apertura: WR={so['wr']:4.1f}% μ={so['mean']:+5.2f}% PF={so['pf']:4.2f}")
+        print(f"     cierre  : WR={sm['wr']:4.1f}% μ={sm['mean']:+5.2f}% PF={sm['pf']:4.2f} t={sm['t_day']:.1f}")
+        line_o = line_m = '     por año  apertura:'
+        line_o = '     por año · apertura: ' + ' '.join(f"{str(Y)[2:]}:{np.nanmean(pnl[okm & (years == Y)]):+.2f}" for Y in yrs if (okm & (years == Y)).sum() >= 20)
+        line_m = '     por año · cierre  : ' + ' '.join(f"{str(Y)[2:]}:{np.nanmean(pm[okm & (years == Y)]):+.2f}" for Y in yrs if (okm & (years == Y)).sum() >= 20)
+        print(line_o); print(line_m, flush=True)
+        # sensibilidad: el cierre "provisional" (20 min antes) difiere del final; si el precio de la señal se mueve ε, cuántas señales cambian
+        okc = okm
+        d = pm[okc] - pnl[okc]
+        print(f"     ganancia media de comprar al cierre en vez de a la apertura: {np.nanmean(d):+.2f}% por operación")
