@@ -887,6 +887,66 @@ def meta4_explore(EV: Dict, out_dir: str):
                 print(line, flush=True)
 
 
+
+def meta5_explore(EV: Dict, out_dir: str):
+    """Perfiles de salida con el modelo lineal de ventana móvil: ¿hay un perfil de alta probabilidad estable? ¿Están calibradas las P?"""
+    import model as MD
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+    vz = X[:, FEATURES.index('vix_z')]
+    yrs = list(range(2019, int(year_of(np.array([int(day.max())]))[0]) + 1))
+    print(f'\n######## META5 largos · modelo lineal con ventana de 3 años · refit anual', flush=True)
+    for vname in ('rsi_S4_H10', 'rsi_S2.5_H10', 'atr_T0.5_S4_H5', 'atr_T0.5_S4_H10', 'atr_T1_S4_H10', 'ph_S4_H10', 'sig_S4_H10'):
+        vi = variants.index(vname)
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        p = np.full(len(rows), np.nan)
+        for Y in yrs:
+            trm = (day < day_of(f'{Y}-01-01')) & (day >= day_of(f'{Y - 3}-01-01')) & ok
+            tem = (years == Y) & ok
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LinearLogitModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+            p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem])
+        m = ok & np.isfinite(p)
+        print(f"\n=== {vname} · AUC={MD.auc(p[m], y[m]):.3f} · todos los candidatos: " + ' '.join(f"{str(Y)[2:]}:{stats(pnl[m & (years == Y)])['wr']:.0f}/{stats(pnl[m & (years == Y)])['mean']:+.2f}" for Y in yrs if (m & (years == Y)).sum() > 30), flush=True)
+        # calibración isotónica con 2019-2023 aplicada a 2024+
+        cal = MD.LogitModel(fidx, names, GROUPS)
+        mc = m & (years <= 2023)
+        cal.set_calibration(p[mc], y[mc])
+        xs = np.array([c[0] for c in cal.calib]); ys_ = np.array([c[1] for c in cal.calib])
+        pc = np.interp(p, xs, ys_) if len(xs) >= 2 else p
+        floor = p >= np.quantile(p[m], 0.5)
+        pols = {'top 3/día': _topn_mask(p, day, m & floor, 3), 'top 5/día': _topn_mask(p, day, m & floor, 5),
+                'top 5/día & VIXz<1': _topn_mask(p, day, m & floor & (vz < 1), 5),
+                'top 5/día & P≥0.70': _topn_mask(p, day, m & floor & (pc >= 0.70), 5)}
+        for pol, sel in pols.items():
+            st = stats(pnl[sel], day[sel], sym[sel])
+            if st.get('n', 0) < 50:
+                print(f"     {pol:20s} (sin datos)"); continue
+            line = f"     {pol:20s} n={st['n']:6d} WR={st['wr']:4.1f} μ={st['mean']:+5.2f} PF={st['pf']:4.2f} t={st['t_day']:4.1f} aW={st['avg_win']:+.2f} aL={st['avg_loss']:+.2f} |"
+            npos = 0; nt = 0
+            for Y in yrs:
+                my = sel & (years == Y)
+                if my.sum() >= 20:
+                    sy = stats(pnl[my]); line += f" {str(Y)[2:]}:{sy['wr']:.0f}/{sy['mean']:+.1f}/{sy['n']}"; nt += 1; npos += sy['mean'] > 0
+                else:
+                    line += f' {str(Y)[2:]}:—'
+            print(line + f"  años+ {npos}/{nt}", flush=True)
+        # calibración en 2024+ de las seleccionadas top 5/día
+        sel = pols['top 5/día'] & (years >= 2024)
+        if sel.sum() >= 100:
+            print(f"     calibración 2024+ (top 5/día, n={sel.sum()}): P media calibrada={pc[sel].mean() * 100:.1f}% · acierto real={y[sel].mean() * 100:.1f}%")
+            for a_, b_ in ((0, .6), (.6, .65), (.65, .7), (.7, 1.01)):
+                mm = sel & (pc >= a_) & (pc < b_)
+                if mm.sum() >= 40:
+                    print(f"        P∈[{a_:.2f},{b_:.2f}): n={mm.sum()} real={y[mm].mean() * 100:.1f}% μ={np.nanmean(pnl[mm]):+.2f}%")
+
+
 def load_data(args):
     if args.synthetic:
         return synthetic_universe(args.synthetic, args.synthetic_ar)
@@ -902,7 +962,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'meta3', 'meta4', 'regime', 'final'])
+    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'final'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -932,6 +992,8 @@ def main():
         regime_explore(EV, args.out)
     elif args.cmd == 'meta4':
         meta4_explore(EV, args.out)
+    elif args.cmd == 'meta5':
+        meta5_explore(EV, args.out)
     else:
         final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
     print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
