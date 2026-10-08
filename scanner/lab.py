@@ -16,7 +16,7 @@ from typing import Dict, List
 import numpy as np
 
 from research import (FEATURES, GROUPS, SU, SM, TRAIN_END, VAL_END, day_of, year_of, stats, fmt, union_events,
-                      topn_mask as _topn_mask, wf_predict_linear, select_policy, PLANS)
+                      topn_mask as _topn_mask, wf_predict_linear, select_policy, PLANS, portfolio_sim)
 
 # ═════════════════════════════════════════════════════════════════════════
 #  EXPLORE
@@ -1176,49 +1176,13 @@ def improve2_explore(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict
     sd_ = (spy['t'] // 86400).astype(np.int64) if spy is not None else None
 
     def portfolio(sel, p, pnl, bars, N, M, f, label, alt=None):
-        """Cartera con capital limitado: como mucho M posiciones abiertas, cada una el % f del capital ACTUAL; se atienden las señales por puesto."""
         rk = rank_in_day(p, sel)
         use = sel & (rk <= N) & np.isfinite(pnl)
-        idx = np.flatnonzero(use)
-        idx = idx[np.lexsort((rk[idx], day[idx]))]
-        ti = np.searchsorted(sd_, day[idx], side='left')           # índice de la sesión de la señal
-        nd = len(sd_)
-        eq = 1.0
-        open_ = []                                                   # (salida_ti, importe, pnl%)
-        curve = np.full(nd, np.nan)
-        pos_i = 0
-        n_taken = 0
-        res = pnl if alt is None else alt
-        order = {}
-        for k, t_ in zip(idx, ti):
-            order.setdefault(int(t_), []).append(k)
-        eq_hist = np.ones(nd)
-        for t in range(int(ti.min()) if len(ti) else 0, nd):
-            # cierres de las operaciones cuya sesión de salida es t
-            still = []
-            for ex_t, amt, r in open_:
-                if ex_t <= t:
-                    eq += amt * r / 100.0
-                else:
-                    still.append((ex_t, amt, r))
-            open_ = still
-            for k in order.get(t - 1, []):                           # señal ayer → entrada hoy
-                if len(open_) >= M:
-                    break
-                b = int(max(bars[k], 1))
-                if not np.isfinite(res[k]):
-                    continue
-                open_.append((t - 1 + b, eq * f, float(res[k]))); n_taken += 1
-            eq_hist[t] = eq
-        eq_hist = eq_hist[int(ti.min()):]
-        dd = float(((np.maximum.accumulate(eq_hist) - eq_hist) / np.maximum.accumulate(eq_hist)).max())
-        rets = np.diff(eq_hist) / eq_hist[:-1]
-        yrs_n = len(eq_hist) / 252.0
-        cagr = eq_hist[-1] ** (1 / yrs_n) - 1
-        sh = rets.mean() / (rets.std() + 1e-12) * math.sqrt(252)
-        mo = np.array([eq_hist[min(i + 21, len(eq_hist) - 1)] / eq_hist[i] - 1 for i in range(0, len(eq_hist) - 1, 21)])
-        print(f"   {label:34s} CAGR {cagr * 100:+6.1f}% · DD máx {dd * 100:5.1f}% · Sharpe {sh:4.2f} · meses+ {np.mean(mo > 0) * 100:3.0f}% · peor mes {mo.min() * 100:+5.1f}% · {n_taken / yrs_n:5.0f} op/año")
-        return eq_hist
+        res = np.where(use, pnl if alt is None else alt, np.nan)
+        ti = np.searchsorted(sd_, day, side='left')
+        r = portfolio_sim(sd_, ti, bars, res, rk, M, f)
+        print(f"   {label:34s} CAGR {r['cagr']:+6.1f}% · DD máx {r['dd']:5.1f}% · Sharpe {r['sharpe']:4.2f} · meses+ {r['monthsPos']:3.0f}% · peor mes {r['worstMonth']:+5.1f}% · {r['tradesYear']:5.0f} op/año")
+        return r
 
     print(f'\n######## IMPROVE2 · {len(rows):,} candidatos largos', flush=True)
     if spy is not None:
@@ -1281,3 +1245,74 @@ def improve2_explore(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict
             ms = sel0 & np.isfinite(alt)
             print(f"   SPY en las mismas ventanas: WR={np.mean(alt[ms] > 0) * 100:.1f}% μ={np.nanmean(alt[ms]):+.2f}% · plan en acciones: WR={np.mean(pnl[ms] > 0) * 100:.1f}% μ={np.nanmean(pnl[ms]):+.2f}%")
         sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  INDEX: ¿es más fiable aplicar la misma idea (sobreventa en tendencia) a los ÍNDICES (SPY/QQQ/IWM/DIA) que a acciones sueltas?
+# ═════════════════════════════════════════════════════════════════════════
+def index_check(uni: Dict, data: Dict, out_dir: str):
+    import feats
+    import setups as SU_
+    import simulate as SM_
+    from research import portfolio_sim as psim
+    here = os.path.dirname(os.path.abspath(__file__))
+    reg = json.load(open(os.path.join(here, 'model', 'validated.json')))
+    pattern_ids = [p['id'] for p in reg['patterns']]
+    spy, vix = data.get('SPY'), data.get('^VIX')
+    regime = feats.regime_series(spy, vix)
+    bre = feats.Breadth()
+    for sym in [s for s in uni if not uni[s].get('aux') and s in data]:
+        bre.add(feats.build(data[sym]))
+    bd = bre.finalize()
+    print('  amplitud de mercado lista', flush=True)
+    idx_syms = [s for s in ('SPY', 'QQQ', 'IWM', 'DIA') if s in data]
+    variants = [SM_.Variant('rsi', 0.0, 4.0, 10), SM_.Variant('atr', 1.0, 4.0, 10), SM_.Variant('sig', 0.0, 4.0, 10)]
+    modes = (('open', 'APERTURA siguiente'), ('close', 'CIERRE (MOC, idealizado)'))
+    cost = SM_.COST_RT['index']
+    ev = {}                                                    # (sym) → dict con idx, F, resultados por (variante, modo)
+    for s in idx_syms:
+        F = feats.build(data[s]); feats.ensure_regime(F, regime); feats.align_breadth(bd, F['t'], F)
+        idx, FLm = SU_.candidate_bars(F, 'etf', pattern_ids)
+        idx = idx[idx < len(F['c']) - 12]
+        X = feats.event_matrix(F, idx)
+        res = {(v.name, m): SM_.simulate(F, idx, +1, [v], cost, entry_mode=m)[v.name] for v in variants for m, _ in modes}
+        ev[s] = {'F': F, 'idx': idx, 'X': X, 'res': res}
+    col = lambda X, n: X[:, feats.FEATURES.index(n)]
+    filters = {'sin filtro': lambda X: np.ones(len(X), bool),
+               'sobreventa amplia (≥10% del universo con RSI2<10)': lambda X: np.nan_to_num(col(X, 'b_os')) >= 10,
+               'VIX z ≥ 0,5': lambda X: np.nan_to_num(col(X, 'vix_z')) >= 0.5,
+               'VIX z < 0,5 (mercado tranquilo)': lambda X: np.nan_to_num(col(X, 'vix_z'), nan=9) < 0.5}
+    print(f'\n######## ÍNDICES {idx_syms}: candidatos = unión de los 17 patrones de sobreventa en tendencia, SIN modelo ni ranking · coste {cost}%', flush=True)
+    for v in variants:
+        for m, mlbl in modes:
+            print(f'\n=== salida {v.name} · entrada a la {mlbl}')
+            for fn, ff in filters.items():
+                pn, dy, sy = [], [], []
+                for s in idx_syms:
+                    e = ev[s]; k = ff(e['X'])
+                    r = e['res'][(v.name, m)].pnl
+                    ok = k & np.isfinite(r)
+                    pn.append(r[ok]); dy.append((e['F']['t'][e['idx'][ok]] // 86400).astype(np.int64)); sy.append(np.full(ok.sum(), idx_syms.index(s)))
+                pn, dy, sy = np.concatenate(pn), np.concatenate(dy), np.concatenate(sy)
+                st = stats(pn, dy, sy)
+                ys = year_of(dy)
+                ym = {Y: float(np.mean(pn[ys == Y])) for Y in sorted(set(ys)) if (ys == Y).sum() >= 8}
+                persym = ' '.join(f"{s}:{np.mean(ev[s]['res'][(v.name, m)].pnl[ff(ev[s]['X'])]):+.2f}" for s in idx_syms)
+                print(f"   {fn[:44]:44s} n={st['n']:4d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% PF={st['pf']:4.2f} t={st['t_day']:3.1f} | años+ {sum(x > 0 for x in ym.values())}/{len(ym)} peor {min(ym.values()):+.2f} | {persym}")
+            sys.stdout.flush()
+    # cartera: solo SPY, una posición con el 100 % del capital, salida RSI(2) y entrada a la apertura / al cierre
+    print('\n=== CARTERA «solo SPY» (1 posición, 100 % del capital, desde 2019) frente a comprar y mantener', flush=True)
+    e = ev['SPY']; F = e['F']; sd = (F['t'] // 86400).astype(np.int64)
+    sel = (sd[e['idx']] >= day_of('2019-01-01'))
+    for v in variants:
+        for m, mlbl in modes:
+            r = np.full(len(e['idx']), np.nan); r[sel] = e['res'][(v.name, m)].pnl[sel]
+            bars = e['res'][(v.name, m)].bars.astype(np.int64)
+            ti = e['idx'].astype(np.int64)
+            if m == 'close':                                       # entra el mismo día de la señal: equivale a señal en la sesión anterior (y una sesión más hasta la salida)
+                ti = ti - 1; bars = bars + 1
+            o = psim(sd, ti, bars, r, np.zeros(len(r), np.int16), 1, 1.0)
+            print(f"   {v.name:12s} {mlbl:26s} CAGR {o['cagr']:+5.1f}% · DD {o['dd']:5.1f}% · Sharpe {o['sharpe']:4.2f} · meses+ {o['monthsPos']:3.0f}% · peor mes {o['worstMonth']:+5.1f}% · {o['tradesYear']:3.0f} op/año")
+    i0 = np.searchsorted(sd, day_of('2019-01-01')); c = F['c'][i0:]; rr = np.diff(c) / c[:-1]
+    print(f"   comprar y mantener SPY: CAGR {((c[-1] / c[0]) ** (252 / len(c)) - 1) * 100:+.1f}% · DD {float(((np.maximum.accumulate(c) - c) / np.maximum.accumulate(c)).max()) * 100:.1f}% · Sharpe {rr.mean() / rr.std() * math.sqrt(252):.2f}")
+    sys.stdout.flush()

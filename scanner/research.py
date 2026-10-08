@@ -161,6 +161,49 @@ def stats(pnl: np.ndarray, day: np.ndarray | None = None, sym: np.ndarray | None
     return d
 
 
+def portfolio_sim(cal: np.ndarray, ti: np.ndarray, bars: np.ndarray, res: np.ndarray, rank: np.ndarray, M: int, f: float) -> Dict:
+    """
+    Cartera con capital limitado. cal = días (enteros, ordenados) de la sesión de cada barra; ti = índice en cal de la sesión de la señal;
+    bars = sesiones hasta la salida; res = resultado % neto de cada operación; rank = puesto en el ranking del día.
+    Como mucho M posiciones abiertas, cada una el f del capital ACTUAL; las señales entran al día siguiente por orden de puesto.
+    La curva de capital se actualiza al CERRAR cada operación (sin valorar a mercado), por lo que el DD queda algo subestimado.
+    """
+    ok = np.isfinite(res)
+    idx = np.flatnonzero(ok)
+    idx = idx[np.lexsort((rank[idx], ti[idx]))]
+    by_t: Dict[int, List[int]] = {}
+    for k in idx:
+        by_t.setdefault(int(ti[k]), []).append(int(k))
+    nd = len(cal)
+    t0 = int(ti[idx].min())
+    eq = 1.0
+    open_: List[tuple] = []
+    hist = np.ones(nd)
+    taken = 0
+    for t in range(t0, nd):
+        still = []
+        for ex_t, amt, r in open_:
+            if ex_t <= t:
+                eq += amt * r / 100.0
+            else:
+                still.append((ex_t, amt, r))
+        open_ = still
+        for k in by_t.get(t - 1, []):
+            if len(open_) >= M:
+                break
+            open_.append((t - 1 + int(max(bars[k], 1)), eq * f, float(res[k]))); taken += 1
+        hist[t] = eq
+    h = hist[t0:]
+    peak = np.maximum.accumulate(h)
+    rets = np.diff(h) / h[:-1]
+    yrs_n = len(h) / 252.0
+    mo = np.array([h[min(i + 21, len(h) - 1)] / h[i] - 1 for i in range(0, len(h) - 1, 21)])
+    act = mo[np.abs(mo) > 1e-9]                                  # meses con alguna operación cerrada (un mes sin cierres no cuenta como positivo ni negativo)
+    return {'cagr': float(h[-1] ** (1 / yrs_n) - 1) * 100, 'dd': float(((peak - h) / peak).max()) * 100,
+            'sharpe': float(rets.mean() / (rets.std() + 1e-12) * math.sqrt(252)), 'monthsPos': float(np.mean(act > 0) * 100) if len(act) else float('nan'),
+            'worstMonth': float(mo.min() * 100), 'tradesYear': float(taken / yrs_n), 'curve': h}
+
+
 def split_masks(day: np.ndarray):
     tr, va = day_of(TRAIN_END), day_of(VAL_END)
     return day <= tr, (day > tr) & (day <= va), day > va
@@ -458,7 +501,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -473,6 +516,11 @@ def main():
     t0 = time.time()
     uni, data = load_data(args)
     print(f'universo con datos: {len([s for s in uni if not uni[s].get("aux")])} activos · {time.time() - t0:.0f}s', flush=True)
+    if args.cmd == 'index':
+        import lab
+        lab.index_check(uni, data, args.out)
+        print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
+        return
     if args.cmd == 'moc':
         import lab
         lab.moc_check(uni, data, args.out)
