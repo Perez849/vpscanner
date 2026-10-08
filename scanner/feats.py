@@ -8,7 +8,7 @@ de las últimas W barras (hasta hoy incluido), que es exactamente lo que se pued
 saber en directo.
 """
 from __future__ import annotations
-from typing import Dict
+from typing import Dict, Optional
 import numpy as np
 import pandas as pd
 
@@ -93,6 +93,13 @@ def build(b: Bars) -> Dict[str, np.ndarray]:
         F['vol_ratio'] = np.where(vprev > 0, v / vprev, np.nan)
         F['dvol20'] = pd.Series(c * v).rolling(20, min_periods=10).mean().to_numpy()
 
+    # choque reciente (proxy de noticias/resultados): huecos, volumen y movimientos extremos de las últimas 5 barras
+    with np.errstate(invalid='ignore', divide='ignore'):
+        gap_atr = np.abs(F['gap']) / F['atrp']
+        shock = np.abs(F['ret1']) / F['atrp']
+        F['max_gap5'] = pd.Series(gap_atr).rolling(5, min_periods=3).max().to_numpy()
+        F['shock5'] = pd.Series(shock).rolling(5, min_periods=3).max().to_numpy()
+        F['max_vr5'] = pd.Series(F['vol_ratio']).rolling(5, min_periods=3).max().to_numpy()
     for k in (3, 5, 10, 20):
         F[f'lowest{k}'] = (c <= pd.Series(c).rolling(k, min_periods=k).min().to_numpy()).astype(np.float64)
         F[f'highest{k}'] = (c >= pd.Series(c).rolling(k, min_periods=k).max().to_numpy()).astype(np.float64)
@@ -198,3 +205,85 @@ def align_regime(reg: Dict[str, np.ndarray], t_sym: np.ndarray) -> Dict[str, np.
         a[~valid] = np.nan
         out[k] = a
     return out
+
+
+# ── Amplitud de mercado (calculada con todo el universo, por día) ─────────
+class Breadth:
+    """Acumula, día a día, qué fracción del universo está sobre su SMA200, sobreventa (RSI2<10) y su rentabilidad media."""
+    def __init__(self, d0: int = 15000, d1: int = 24000):
+        self.d0 = d0
+        n = d1 - d0
+        self.cnt = np.zeros(n); self.up = np.zeros(n); self.os = np.zeros(n)
+        self.r1 = np.zeros(n); self.r5 = np.zeros(n); self.n_r = np.zeros(n)
+
+    def add(self, F: Dict[str, np.ndarray]) -> None:
+        day = (F['t'] // 86400).astype(np.int64) - self.d0
+        ok = (day >= 0) & (day < len(self.cnt)) & np.isfinite(F['sma200']) & (F['dvol20'] > 2e6 if 'dvol20' in F else True)
+        d = day[ok]
+        self.cnt[d] += 1
+        self.up[d] += (F['c'][ok] > F['sma200'][ok])
+        self.os[d] += (F['rsi2'][ok] < 10)
+        r1 = F['ret1'][ok]; r5 = F['ret5'][ok]
+        fin = np.isfinite(r1) & np.isfinite(r5)
+        self.r1[d[fin]] += np.clip(r1[fin], -25, 25); self.r5[d[fin]] += np.clip(r5[fin], -50, 50); self.n_r[d[fin]] += 1
+
+    def finalize(self) -> Dict[str, np.ndarray]:
+        with np.errstate(invalid='ignore', divide='ignore'):
+            ok = self.cnt >= 100
+            out = {'day': np.arange(len(self.cnt)) + self.d0,
+                   'b_up200': np.where(ok, self.up / self.cnt, np.nan) * 100,
+                   'b_os': np.where(ok, self.os / self.cnt, np.nan) * 100,
+                   'b_ret1': np.where(self.n_r >= 100, self.r1 / self.n_r, np.nan),
+                   'b_ret5': np.where(self.n_r >= 100, self.r5 / self.n_r, np.nan)}
+        return out
+
+
+def align_breadth(bd: Optional[Dict[str, np.ndarray]], t_sym: np.ndarray, F: Dict[str, np.ndarray]) -> None:
+    keys = ('b_up200', 'b_os', 'b_ret1', 'b_ret5')
+    if bd is None:
+        for k in keys:
+            F[k] = np.full(len(t_sym), np.nan)
+        return
+    day = (t_sym // 86400).astype(np.int64)
+    # último día con amplitud disponible <= día de la barra (as-of), sin mirar al futuro
+    j = np.searchsorted(bd['day'], day, side='right') - 1
+    j = np.clip(j, 0, len(bd['day']) - 1)
+    for k in keys:
+        F[k] = bd[k][j]
+
+
+# ── Matriz de características por evento (idéntica en investigación y en producción) ──
+FEATURES = ['rsi2', 'rsi3', 'rsi14', 'ibs', 'ret1', 'ret2', 'ret3', 'ret5', 'ret10', 'ret20', 'atrp', 'atr_rel',
+            'dist200', 'dist50', 'dist20', 'slope200', 'dd20', 'dd52', 'pos52', 'bbz', 'vol_ratio',
+            'dn_streak', 'up_streak', 'gap',
+            'spy_up', 'spy_dist200', 'spy_rsi2', 'spy_ret5', 'spy_dd60', 'vix', 'vix_z', 'vix_chg5',
+            'max_gap5', 'shock5', 'max_vr5', 'b_up200', 'b_os', 'b_ret1', 'b_ret5', 'rel5',
+            'vp_poc_atr', 'vp_val_atr', 'vp_pos']
+GROUPS = ['us_large', 'us_mid', 'us_small', 'thematic', 'etf', 'crypto', 'fx', 'futures', 'eu', 'index']
+REGIME_KEYS = ('spy_up', 'spy_dist200', 'spy_rsi2', 'spy_ret5', 'spy_dd60', 'vix', 'vix_z', 'vix_chg5')
+
+
+def event_matrix(F: Dict[str, np.ndarray], idx: np.ndarray) -> np.ndarray:
+    """X[n_eventos, len(FEATURES)] en las barras `idx` (causal: solo mira hasta cada barra)."""
+    idx = np.asarray(idx, dtype=np.int64)
+    poc, vah, val = vp_levels(F, idx)
+    atr = F['atr'][idx]
+    c = F['c'][idx]
+    with np.errstate(invalid='ignore', divide='ignore'):
+        extra = [(poc - c) / atr, (c - val) / atr, (c - val) / (vah - val)]
+    n = len(F['c'])
+    base = []
+    for f in FEATURES[:-3]:
+        if f == 'rel5':           # caída propia frente al mercado (idiosincrática vs. sistemática)
+            base.append(F['ret5'][idx] - F['b_ret5'][idx] if 'b_ret5' in F else np.full(len(idx), np.nan))
+        else:
+            base.append(F[f][idx] if f in F else np.full(len(idx), np.nan))
+    return np.stack(base + extra, 1).astype(np.float32)
+
+
+def ensure_regime(F: Dict[str, np.ndarray], reg: Optional[Dict[str, np.ndarray]]) -> None:
+    if reg is not None:
+        F.update(align_regime(reg, F['t']))
+    else:
+        for k in REGIME_KEYS:
+            F[k] = np.full(len(F['c']), np.nan)

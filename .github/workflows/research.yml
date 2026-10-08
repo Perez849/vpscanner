@@ -44,11 +44,12 @@ jobs:
           python universe.py --refresh || python universe.py
       - name: Investigación
         env:
-          CMD: ${{ github.event.inputs.cmd || 'explore' }}
+          INPUT_CMD: ${{ github.event.inputs.cmd }}
         run: |
           mkdir -p /tmp/out
           cd scanner
-          python -u research.py "$CMD" --out /tmp/out 2>&1 | tee /tmp/out/research_log.txt
+          CMD="${INPUT_CMD:-$(cat research_cmd.txt)}"
+          python -u research.py $CMD --out /tmp/out 2>&1 | tee /tmp/out/research_log.txt
       - name: Publicar resultados en rama aparte
         if: always()
         run: |
