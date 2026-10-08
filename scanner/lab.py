@@ -1127,3 +1127,157 @@ def improve_explore(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict 
                 a, b = np.concatenate(tot), np.concatenate(tb)
                 print(f"  [X6] elección adaptativa de «{lbl}» (cada año se elige con los años previos) 2022–{yrs[-1]}: μ={np.nanmean(a):+.2f}% (n={len(a)}) frente a base {np.nanmean(b):+.2f}% (n={len(b)})")
         sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  IMPROVE2: puestos del día, réplica de mejoras sospechosas y SIMULACIÓN DE CARTERA con capital limitado
+# ═════════════════════════════════════════════════════════════════════════
+def improve2_explore(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict | None = None):
+    import model as MD
+    reg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model', 'validated.json')))
+    groups_of = {s['id']: s['groups'] for s in reg['strategies']}
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym, gid = EV['day'][rows], EV['sym'][rows], EV['grp'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]
+    yrs = [Y for Y in sorted(set(years)) if Y >= 2019]
+    fi = lambda fs: [FEATURES.index(f) for f in fs]
+
+    def wf_lin(y, ok, window=3, fnames=None):
+        idxf = fi(fnames or MD.MODEL_FEATURES)
+        p = np.full(len(rows), np.nan); base = np.full(len(rows), np.nan)
+        for Y in yrs:
+            lo = day_of(f'{Y - window}-01-01') if window else -10 ** 9
+            trm = (day < day_of(f'{Y}-01-01')) & (day >= lo) & ok
+            tem = (years == Y)
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LinearLogitModel(idxf, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+            p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem]); base[tem] = float(y[trm].mean())
+        return p, base
+
+    def pick(p, base, ok, allowed, N=5):
+        return _topn_mask(p, day, ok & np.isfinite(p) & (p >= base) & np.isin(gid, allowed), N)
+
+    def ymeans(sel, pnl):
+        return {Y: float(np.nanmean(pnl[sel & (years == Y)])) for Y in yrs if (sel & (years == Y)).sum() >= 20}
+
+    def rank_in_day(p, sel):
+        idx = np.flatnonzero(sel)
+        o = idx[np.lexsort((-p[idx], day[idx]))]
+        d = day[o]
+        first = np.concatenate([[0], np.flatnonzero(np.diff(d)) + 1])
+        rk = np.arange(len(o)) - np.repeat(first, np.diff(np.concatenate([first, [len(o)]])))
+        out = np.zeros(len(p), np.int16); out[o] = rk + 1
+        return out
+
+    spy = data.get('SPY') if data else None
+    sd_ = (spy['t'] // 86400).astype(np.int64) if spy is not None else None
+
+    def portfolio(sel, p, pnl, bars, N, M, f, label, alt=None):
+        """Cartera con capital limitado: como mucho M posiciones abiertas, cada una el % f del capital ACTUAL; se atienden las señales por puesto."""
+        rk = rank_in_day(p, sel)
+        use = sel & (rk <= N) & np.isfinite(pnl)
+        idx = np.flatnonzero(use)
+        idx = idx[np.lexsort((rk[idx], day[idx]))]
+        ti = np.searchsorted(sd_, day[idx], side='left')           # índice de la sesión de la señal
+        nd = len(sd_)
+        eq = 1.0
+        open_ = []                                                   # (salida_ti, importe, pnl%)
+        curve = np.full(nd, np.nan)
+        pos_i = 0
+        n_taken = 0
+        res = pnl if alt is None else alt
+        order = {}
+        for k, t_ in zip(idx, ti):
+            order.setdefault(int(t_), []).append(k)
+        eq_hist = np.ones(nd)
+        for t in range(int(ti.min()) if len(ti) else 0, nd):
+            # cierres de las operaciones cuya sesión de salida es t
+            still = []
+            for ex_t, amt, r in open_:
+                if ex_t <= t:
+                    eq += amt * r / 100.0
+                else:
+                    still.append((ex_t, amt, r))
+            open_ = still
+            for k in order.get(t - 1, []):                           # señal ayer → entrada hoy
+                if len(open_) >= M:
+                    break
+                b = int(max(bars[k], 1))
+                if not np.isfinite(res[k]):
+                    continue
+                open_.append((t - 1 + b, eq * f, float(res[k]))); n_taken += 1
+            eq_hist[t] = eq
+        eq_hist = eq_hist[int(ti.min()):]
+        dd = float(((np.maximum.accumulate(eq_hist) - eq_hist) / np.maximum.accumulate(eq_hist)).max())
+        rets = np.diff(eq_hist) / eq_hist[:-1]
+        yrs_n = len(eq_hist) / 252.0
+        cagr = eq_hist[-1] ** (1 / yrs_n) - 1
+        sh = rets.mean() / (rets.std() + 1e-12) * math.sqrt(252)
+        mo = np.array([eq_hist[min(i + 21, len(eq_hist) - 1)] / eq_hist[i] - 1 for i in range(0, len(eq_hist) - 1, 21)])
+        print(f"   {label:34s} CAGR {cagr * 100:+6.1f}% · DD máx {dd * 100:5.1f}% · Sharpe {sh:4.2f} · meses+ {np.mean(mo > 0) * 100:3.0f}% · peor mes {mo.min() * 100:+5.1f}% · {n_taken / yrs_n:5.0f} op/año")
+        return eq_hist
+
+    print(f'\n######## IMPROVE2 · {len(rows):,} candidatos largos', flush=True)
+    if spy is not None:
+        i0 = np.searchsorted(sd_, day_of('2019-01-01'))
+        c = spy['c'][i0:]; r_ = np.diff(c) / c[:-1]; ddm = float(((np.maximum.accumulate(c) - c) / np.maximum.accumulate(c)).max())
+        print(f"  Referencia S&P 500 comprar y mantener desde 2019: CAGR {((c[-1] / c[0]) ** (252 / len(c)) - 1) * 100:+.1f}% · DD máx {ddm * 100:.1f}% · Sharpe {r_.mean() / r_.std() * math.sqrt(252):.2f}")
+    for plan in PLANS:
+        vi = variants.index(plan['id'])
+        pnl = EV['pnl'][rows, vi]; bars = EV['bars'][rows, vi]
+        ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        allowed = [GROUPS.index(g) for g in groups_of[plan['id']]]
+        p0, b0 = wf_lin(y, ok)
+        sel0 = pick(p0, b0, ok, allowed)
+        print(f"\n================ {plan['id']} · {plan['label']} ================")
+        # ── puestos del día ──────────────────────────────────────────────
+        rk = rank_in_day(p0, sel0)
+        print('  [R] resultado por PUESTO en el ranking del día (fuera de muestra, plan desplegado, N=5):')
+        for r in range(1, 6):
+            m = sel0 & (rk == r)
+            if m.sum() >= 50:
+                st = stats(pnl[m], day[m], sym[m]); ym = ymeans(m, pnl)
+                print(f"     puesto {r}: n={st['n']:5d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% PF={st['pf']:4.2f} t={st['t_day']:4.1f} · años+ {sum(v > 0 for v in ym.values())}/{len(ym)}")
+        cnt = np.bincount(np.unique(day[sel0], return_inverse=True)[1])
+        print(f"     señales por día con alguna: media {cnt.mean():.1f} · mediana {np.median(cnt):.0f} · días con señal {len(cnt)} de {len(np.unique(day[ok]))}")
+        # ── réplica de la mejora «variables de mercado» y de la ventana 2 con salidas vecinas ──
+        print('  [Z] réplica: ¿la mejora aislada de X2/X3 se repite con salidas vecinas? (μ de la política y años mejores que la base)')
+        neigh = [v for v in variants if v.startswith(plan['id'].split('_')[0] + '_')][:0]
+        nb = {'rsi_S4_H10': ['rsi_S4_H10', 'rsi_S2.5_H10', 'rsi_S4_H5', 'rsi_S1.5_H10'],
+              'atr_T1_S4_H10': ['atr_T1_S4_H10', 'atr_T0.5_S4_H10', 'atr_T1.5_S4_H10', 'atr_T1_S2.5_H10', 'atr_T1_S4_H5']}[plan['id']]
+        cfgs = {'base': dict(), 'ventana 2': dict(window=2), '+mercado (3)': dict(fnames=list(MD.MODEL_FEATURES) + ['spy_ret5', 'dist20', 'ret20']),
+                '+spy_ret5': dict(fnames=list(MD.MODEL_FEATURES) + ['spy_ret5']), '+dist20': dict(fnames=list(MD.MODEL_FEATURES) + ['dist20']),
+                '+ret20': dict(fnames=list(MD.MODEL_FEATURES) + ['ret20'])}
+        for vn in nb:
+            vj = variants.index(vn)
+            pn = EV['pnl'][rows, vj]; okj = np.isfinite(pn); yj = (pn > 0).astype(np.float32)
+            base_ym = None; out = []
+            for cn, kw in cfgs.items():
+                pp, bb = wf_lin(yj, okj, **kw)
+                sl = pick(pp, bb, okj, allowed)
+                ym = ymeans(sl, pn)
+                if cn == 'base':
+                    base_ym = ym
+                better = sum(ym[Y] > base_ym[Y] for Y in ym if Y in base_ym)
+                out.append(f"{cn}: {np.nanmean(pn[sl]):+.2f}%" + ('' if cn == 'base' else f" ({better}/{len(ym)})"))
+            print(f"     {vn:18s} " + ' | '.join(out), flush=True)
+        # ── cartera con capital limitado ─────────────────────────────────
+        if spy is not None:
+            print('  [P] CARTERA con capital limitado (a partir de 2019; M posiciones máx., cada una el f% del capital actual; resultados netos de costes; curva a precio realizado)')
+            for N in (1, 3, 5):
+                for M, f in ((5, 0.20), (10, 0.10), (20, 0.05)):
+                    portfolio(sel0, p0, pnl, bars, N, M, f, f'N={N} · máx {M} pos. · {int(f * 100)}% c/u')
+            # el mismo calendario de entradas pero comprando el S&P 500 en lugar de la acción
+            ii = np.searchsorted(sd_, day, side='left')
+            e = np.minimum(ii + 1, len(sd_) - 1); xx = np.minimum(ii + np.maximum(bars.astype(int), 1), len(sd_) - 1)
+            alt = (spy['c'][xx] / spy['o'][e] - 1) * 100 - 0.03
+            print('   — y con el MISMO calendario de entradas/salidas pero comprando el S&P 500 (SPY) en vez de la acción:')
+            for N, M, f in ((3, 10, 0.10), (5, 10, 0.10)):
+                portfolio(sel0, p0, pnl, bars, N, M, f, f'SPY · N={N} · máx {M} pos. · {int(f * 100)}% c/u', alt=alt)
+            ms = sel0 & np.isfinite(alt)
+            print(f"   SPY en las mismas ventanas: WR={np.mean(alt[ms] > 0) * 100:.1f}% μ={np.nanmean(alt[ms]):+.2f}% · plan en acciones: WR={np.mean(pnl[ms] > 0) * 100:.1f}% μ={np.nanmean(pnl[ms]):+.2f}%")
+        sys.stdout.flush()
