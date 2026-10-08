@@ -824,6 +824,69 @@ def regime_explore(EV: Dict, out_dir: str):
         sys.stdout.flush()
 
 
+
+def _topn_mask(p, day, m, n):
+    """Las n mejores señales por día (por probabilidad), dentro de la máscara m."""
+    idx = np.flatnonzero(m)
+    o = idx[np.lexsort((-p[idx], day[idx]))]
+    d = day[o]
+    first = np.concatenate([[0], np.flatnonzero(np.diff(d)) + 1])
+    rank = np.arange(len(o)) - np.repeat(first, np.diff(np.concatenate([first, [len(o)]])))
+    out = np.zeros(len(p), bool); out[o[rank < n]] = True
+    return out
+
+
+def meta4_explore(EV: Dict, out_dir: str):
+    """Modelos de menor capacidad, ventana móvil y política 'N mejores por día'. Todos los años 2019–2026 (walk-forward)."""
+    import model as MD
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+    last_day = int(day.max())
+    print(f'\n######## META4 largos: {len(rows):,} candidatos · todos los años (walk-forward, refit anual)', flush=True)
+    yrs = list(range(2019, int(year_of(np.array([last_day]))[0]) + 1))
+    for vname in ('rsi_S2.5_H10', 'rsi_S4_H10'):
+        vi = variants.index(vname)
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        print(f"\n=== {vname} · todos los candidatos: " + ' '.join(f"{Y}:{stats(pnl[ok & (years == Y)])['wr']:.0f}/{stats(pnl[ok & (years == Y)])['mean']:+.2f}" for Y in yrs if (ok & (years == Y)).sum() > 30), flush=True)
+        for mname, cls, win in (('binned·expansiva', MD.LogitModel, None), ('binned·3 años', MD.LogitModel, 3),
+                                ('lineal·expansiva', MD.LinearLogitModel, None), ('lineal·3 años', MD.LinearLogitModel, 3),
+                                ('lineal·2 años', MD.LinearLogitModel, 2)):
+            p = np.full(len(rows), np.nan)
+            for Y in yrs:
+                lo = day_of(f'{Y - win}-01-01') if win else -10 ** 9
+                trm = (day < day_of(f'{Y}-01-01')) & (day >= lo) & ok
+                tem = (years == Y) & ok
+                if trm.sum() < 3000 or not tem.any():
+                    continue
+                m1 = cls(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+                p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem])
+            m = ok & np.isfinite(p)
+            if m.sum() < 500:
+                print(f'  [{mname}] (pocos datos)'); continue
+            print(f"  [{mname}] AUC={MD.auc(p[m], y[m]):.3f}", flush=True)
+            for pol, sel in (('top 5% global', m & (p >= np.quantile(p[m], 0.95))), ('top 10% global', m & (p >= np.quantile(p[m], 0.90))),
+                             ('top 3/día', _topn_mask(p, day, m & (p >= np.quantile(p[m], 0.5)), 3)),
+                             ('top 5/día', _topn_mask(p, day, m & (p >= np.quantile(p[m], 0.5)), 5)),
+                             ('top 10/día', _topn_mask(p, day, m & (p >= np.quantile(p[m], 0.5)), 10))):
+                st = stats(pnl[sel], day[sel], sym[sel])
+                line = f"     {pol:15s} n={st['n']:6d} WR={st['wr']:4.1f} μ={st['mean']:+5.2f} PF={st['pf']:4.2f} t={st['t_day']:4.1f} |"
+                for Y in yrs:
+                    my = sel & (years == Y)
+                    if my.sum() >= 20:
+                        sy = stats(pnl[my]); line += f" {str(Y)[2:]}:{sy['wr']:.0f}/{sy['mean']:+.1f}/{sy['n']}"
+                    else:
+                        line += f' {str(Y)[2:]}:—'
+                rec = sel & (years >= 2024)
+                if rec.sum() >= 20:
+                    sr = stats(pnl[rec]); line += f" || 24+: {sr['wr']:.0f}%/{sr['mean']:+.2f}% n={sr['n']}"
+                print(line, flush=True)
+
+
 def load_data(args):
     if args.synthetic:
         return synthetic_universe(args.synthetic, args.synthetic_ar)
@@ -839,7 +902,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'meta3', 'regime', 'final'])
+    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'meta3', 'meta4', 'regime', 'final'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -867,6 +930,8 @@ def main():
         meta3_explore(EV, args.out)
     elif args.cmd == 'regime':
         regime_explore(EV, args.out)
+    elif args.cmd == 'meta4':
+        meta4_explore(EV, args.out)
     else:
         final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
     print(f'\nfin · {time.time() - t0:.0f}s', flush=True)

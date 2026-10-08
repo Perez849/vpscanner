@@ -181,3 +181,28 @@ class RidgeModel(LogitModel):
             Z = self.design(X[a0:a0 + 200000], FL[a0:a0 + 200000], gid[a0:a0 + 200000]).astype(np.float64)
             out[a0:a0 + 200000] = Z @ self.w
         return out
+
+
+class LinearLogitModel(LogitModel):
+    """Logística lineal (poca capacidad): variables winsorizadas (p1–p99) y estandarizadas + banderas + grupo."""
+    def fit_bins(self, X: np.ndarray):
+        self.edges = []
+        for j in self.feat_idx:
+            col = X[:, j]; col = col[np.isfinite(col)]
+            if len(col) < 50:
+                self.edges.append(np.array([0.0, 1.0, 0.0, 1.0])); continue
+            lo, hi = np.percentile(col, [1, 99])
+            c2 = np.clip(col, lo, hi)
+            self.edges.append(np.array([lo, hi, c2.mean(), max(c2.std(), 1e-9)]))
+
+    def design(self, X: np.ndarray, FL: np.ndarray, gid: np.ndarray) -> np.ndarray:
+        n = len(X)
+        cols = []
+        for k, j in enumerate(self.feat_idx):
+            lo, hi, mu, sd = self.edges[k]
+            v = X[:, j]
+            z = (np.clip(v, lo, hi) - mu) / sd
+            cols.append(np.where(np.isfinite(v), z, 0.0)[:, None].astype(np.float32))
+        go = np.zeros((n, len(self.groups)), dtype=np.float32)
+        go[np.arange(n), gid] = 1.0
+        return np.concatenate(cols + [FL.astype(np.float32), go, np.ones((n, 1), np.float32)], axis=1)
