@@ -1,0 +1,124 @@
+  datos: 1971 en caché, 14 por descargar (10y)
+  datos: OK 1971 · fallidos 14
+  fallidos: BLFS LEG VYLR ADIG CWEN-A FDXF HLX HONA MFP MBGL QRVO CTRA SATS ROG.SW
+universo con datos: 1967 activos · 7s
+  amplitud de mercado lista
+  eventos: 300/1967 símbolos (20s)
+  eventos: 600/1967 símbolos (38s)
+  eventos: 900/1967 símbolos (57s)
+  eventos: 1200/1967 símbolos (76s)
+  eventos: 1500/1967 símbolos (94s)
+  eventos: 1800/1967 símbolos (113s)
+tabla de eventos lista · 142s
+
+######## MEDIO PLAZO · calendario S&P 500 2512 sesiones (2016-10-10 → 2026-10-07)
+  liquidez: BIL · ETF disponibles: ['SPY', 'QQQ', 'IWM', 'EFA', 'EEM', 'XLK', 'XLF', 'XLE', 'XLV', 'XLY', 'XLP', 'XLI', 'XLB', 'XLU', 'XLRE', 'XLC', 'TLT', 'IEF', 'HYG', 'GLD', 'DBC', 'VNQ']
+
+=== A y B · ETF, 10 AÑOS DE DATOS (periodo común 2019-01-02 → hoy; todo neto de costes) ===
+   S&P 500 comprar y mantener                     anual  +17.5% · vol 19.2% · Sharpe 0.94 · caída máx.  -33.7% · meses+  67% · peor mes  -12.5%
+   Tendencia SPY (sobre su media de 200)          anual  +12.6% · vol 12.3% · Sharpe 1.02 · caída máx.  -22.4% · meses+  70% · peor mes   -7.9%
+   Tendencia QQQ                                  anual  +19.2% · vol 17.8% · Sharpe 1.08 · caída máx.  -23.2% · meses+  68% · peor mes  -11.6%
+   Tendencia 4 índices (SPY, QQQ, IWM, EFA)       anual  +11.9% · vol 12.4% · Sharpe 0.97 · caída máx.  -17.7% · meses+  68% · peor mes   -6.3%
+   Rotación ETF momentum media 3-6-12m, 3 mejores anual  +11.3% · vol 17.9% · Sharpe 0.69 · caída máx.  -22.2% · meses+  62% · peor mes  -10.1%
+   Rotación ETF momentum 126, 3 mejores           anual   +9.5% · vol 17.9% · Sharpe 0.60 · caída máx.  -21.8% · meses+  58% · peor mes  -10.1%
+   Momentum dual clásico (SPY/EFA/IEF, 12 meses)  anual  +11.7% · vol 14.1% · Sharpe 0.86 · caída máx.  -18.8% · meses+  70% · peor mes   -8.8%
+   año            S&P 500 Tendencia SPY (s Rotación ETF mom Momentum dual cl
+   2019             +31.2            +14.9             +0.6             +5.4
+   2020             +18.3            +17.8            +20.4            +15.9
+   2021             +28.7            +28.7             +7.8            +28.7
+   2022             -18.2            -17.2             +0.5            -12.3
+   2023             +26.2            +13.5            +17.0             +8.3
+   2024             +24.9            +24.9            +10.4            +24.9
+   2025             +17.7            +10.3            +24.5            +14.5
+   2026             +14.9            +10.9             +8.3            +10.6
+   sensibilidad de la rotación (anual / Sharpe / caída máx.; no se elige la mejor, se muestra la dispersión):
+     momentum 63             K=2: +12.0% / 0.68 / -28%
+     momentum 63             K=3: +10.3% / 0.67 / -22%
+     momentum 63             K=5:  +9.0% / 0.66 / -19%
+     momentum 126            K=2:  +5.9% / 0.38 / -37%
+     momentum 126            K=3:  +7.7% / 0.51 / -26%
+     momentum 126            K=5:  +8.5% / 0.60 / -28%
+     momentum 252            K=2: +17.7% / 0.91 / -23%
+     momentum 252            K=3: +15.5% / 0.88 / -22%
+     momentum 252            K=5: +14.8% / 0.98 / -20%
+     momentum [63, 126, 252] K=2: +10.3% / 0.59 / -25%
+     momentum [63, 126, 252] K=3:  +9.8% / 0.61 / -25%
+     momentum [63, 126, 252] K=5: +12.2% / 0.83 / -17%
+
+  historia larga: SPY desde 2002-01-02 · ETF con datos: ['DBC', 'EEM', 'EFA', 'GLD', 'HYG', 'IEF', 'IWM', 'QQQ', 'SHY', 'SPY', 'TLT', 'VNQ', 'XLB', 'XLE', 'XLF', 'XLI', 'XLK', 'XLP', 'XLU', 'XLV', 'XLY']
+
+=== A y B · ETF, HISTORIA LARGA (incluye 2008) (periodo común 2005-01-03 → hoy; todo neto de costes) ===
+   S&P 500 comprar y mantener                     anual  +10.9% · vol 18.9% · Sharpe 0.64 · caída máx.  -55.2% · meses+  67% · peor mes  -16.5%
+   Tendencia SPY (sobre su media de 200)          anual   +8.5% · vol 11.6% · Sharpe 0.76 · caída máx.  -25.1% · meses+  65% · peor mes   -8.2%
+   Tendencia QQQ                                  anual  +12.2% · vol 15.6% · Sharpe 0.82 · caída máx.  -26.5% · meses+  62% · peor mes  -12.2%
+   Tendencia 4 índices (SPY, QQQ, IWM, EFA)       anual   +8.4% · vol 11.9% · Sharpe 0.74 · caída máx.  -21.1% · meses+  61% · peor mes   -7.0%
+   Rotación ETF momentum media 3-6-12m, 3 mejores anual  +10.3% · vol 16.9% · Sharpe 0.66 · caída máx.  -25.2% · meses+  62% · peor mes  -10.1%
+   Rotación ETF momentum 126, 3 mejores           anual   +8.9% · vol 17.1% · Sharpe 0.59 · caída máx.  -26.5% · meses+  59% · peor mes  -11.0%
+   Momentum dual clásico (SPY/EFA/IEF, 12 meses)  anual   +7.7% · vol 13.9% · Sharpe 0.61 · caída máx.  -24.0% · meses+  61% · peor mes   -8.8%
+   año            S&P 500 Tendencia SPY (s Rotación ETF mom Momentum dual cl
+   2005              +4.8             +5.1            +30.1            +13.3
+   2006             +15.8             +8.1            +20.8            +25.8
+   2007              +5.1             -6.2            +24.2            +10.0
+   2008             -36.8             +4.0             +7.2            +16.7
+   2009             +26.4            +19.1            +13.0             -1.0
+   2010             +15.1             -2.5             +9.3             -3.7
+   2011              +1.9             -4.2             +1.2            -13.3
+   2012             +16.0            +13.0             -5.1             +6.5
+   2013             +32.3            +32.3            +26.6            +17.4
+   2014             +13.5             +9.8             +8.7            +13.5
+   2015              +1.2             -8.8            -10.5             -8.0
+   2016             +12.0             +9.6             -2.0             +0.2
+   2017             +21.7            +21.7            +15.2            +19.3
+   2018              -4.6             -3.9             -2.0             -7.7
+   2019             +31.2            +14.6             +0.7             +5.4
+   2020             +18.3            +19.2            +20.4            +15.9
+   2021             +28.7            +28.7             +8.5            +28.7
+   2022             -18.2            -20.1            +10.2            -14.6
+   2023             +26.2            +14.8            +15.1             +8.5
+   2024             +24.9            +24.9             +3.0            +24.9
+   2025             +17.7            +10.0            +32.6            +14.5
+   2026             +14.9            +11.1             +8.3            +10.6
+   sensibilidad de la rotación (anual / Sharpe / caída máx.; no se elige la mejor, se muestra la dispersión):
+     momentum 63             K=2: +11.1% / 0.67 / -47%
+     momentum 63             K=3: +10.7% / 0.71 / -41%
+     momentum 63             K=5: +10.8% / 0.80 / -29%
+     momentum 126            K=2: +10.1% / 0.59 / -33%
+     momentum 126            K=3: +10.2% / 0.66 / -27%
+     momentum 126            K=5: +10.6% / 0.75 / -26%
+     momentum 252            K=2: +11.0% / 0.65 / -42%
+     momentum 252            K=3: +11.7% / 0.74 / -30%
+     momentum 252            K=5: +11.4% / 0.81 / -21%
+     momentum [63, 126, 252] K=2: +11.4% / 0.67 / -29%
+     momentum [63, 126, 252] K=3: +11.2% / 0.72 / -25%
+     momentum [63, 126, 252] K=5: +11.4% / 0.81 / -20%
+
+  acciones S&P 500 con historial completo: 475 de 511 (se excluyen las de salida a bolsa reciente para recortar sesgo)
+
+=== C · MOMENTUM DE ACCIONES (S&P 500 actual; periodo 2019-01-02 → hoy) ===
+   S&P 500 comprar y mantener                     anual  +17.5% · vol 19.2% · Sharpe 0.94 · caída máx.  -33.7% · meses+  67% · peor mes  -12.5%
+   Igual-ponderado del mismo universo (con sesgo) anual  +17.9% · vol 19.6% · Sharpe 0.94 · caída máx.  -38.1% · meses+  67% · peor mes  -16.7%
+   Momentum 12-1, 30 acciones sobre su SMA200     anual  +30.5% · vol 28.8% · Sharpe 1.07 · caída máx.  -39.6% · meses+  68% · peor mes  -17.8%
+   sensibilidad (anual / Sharpe / caída máx., mismo periodo):
+     126-21 sesiones, 20 acciones: +32.4% / 1.06 / -39%
+     126-21 sesiones, 30 acciones: +25.3% / 0.95 / -38%
+     126-21 sesiones, 50 acciones: +21.6% / 0.92 / -39%
+     252-21 sesiones, 20 acciones: +34.7% / 1.08 / -41%
+     252-21 sesiones, 30 acciones: +30.5% / 1.07 / -40%
+     252-21 sesiones, 50 acciones: +23.8% / 0.98 / -38%
+   ventaja del momentum sobre el igual-ponderado del mismo universo: +12.6 puntos anuales (el sesgo de supervivencia afecta a los dos)
+
+=== D · COMBINACIÓN con el sistema de rebotes (Equilibrado, cartera 10×10 %; curva a precio realizado) desde 2019-01-02 ===
+   S&P 500 comprar y mantener                     anual  +17.5% · vol 19.2% · Sharpe 0.94 · caída máx.  -33.7% · meses+  67% · peor mes  -12.5%
+   Rebotes (Equilibrado) solo                     anual  +32.9% · vol 17.2% · Sharpe 1.74 · caída máx.  -27.6% · meses+  63% · peor mes  -20.8%
+   Tendencia SPY (sobre su media de solo          anual  +12.6% · vol 12.3% · Sharpe 1.02 · caída máx.  -22.4% · meses+  70% · peor mes   -7.9%
+      correlación diaria con rebotes: +0.09
+     50 % rebotes + 50 % Tendencia SPY (sobre     anual  +23.0% · vol 11.0% · Sharpe 1.93 · caída máx.  -18.7% · meses+  66% · peor mes  -14.3%
+   Rotación ETF momentum media 3-6- solo          anual  +11.3% · vol 17.9% · Sharpe 0.69 · caída máx.  -22.2% · meses+  62% · peor mes  -10.1%
+      correlación diaria con rebotes: +0.12
+     50 % rebotes + 50 % Rotación ETF momentu     anual  +22.5% · vol 13.1% · Sharpe 1.61 · caída máx.  -19.2% · meses+  67% · peor mes  -13.4%
+   Momentum dual clásico (SPY/EFA/I solo          anual  +11.7% · vol 14.1% · Sharpe 0.86 · caída máx.  -18.8% · meses+  70% · peor mes   -8.8%
+      correlación diaria con rebotes: +0.12
+     50 % rebotes + 50 % Momentum dual clásic     anual  +22.5% · vol 11.7% · Sharpe 1.79 · caída máx.  -22.6% · meses+  67% · peor mes  -13.2%
+     partes iguales: rebotes + 3 de medio plazo   anual  +17.5% · vol 10.9% · Sharpe 1.53 · caída máx.  -16.8% · meses+  68% · peor mes   -9.9%
+
+fin · 150s
