@@ -379,3 +379,184 @@ def _wilson(w: int, n: int, z: float = 1.96):
     c = p + z * z / (2 * n)
     r = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
     return (c - r) / d, (c + r) / d
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Segunda tanda (comando `reasons2`): ¿se puede elegir mejor con reglas simples, retorno esperado o información de crédito/tipos?
+# ═════════════════════════════════════════════════════════════════════════
+def _asof(t_days: np.ndarray, v: np.ndarray, ev_days: np.ndarray) -> np.ndarray:
+    j = np.searchsorted(t_days, ev_days, side='right') - 1
+    return np.where(j >= 0, v[np.clip(j, 0, len(v) - 1)], np.nan)
+
+
+def run2(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict | None = None):
+    import pandas as pd
+    import model as MD
+    from research import portfolio_sim
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    reg = json.load(open(os.path.join(here, 'model', 'validated.json')))
+    groups_of = {s['id']: s['groups'] for s in reg['strategies']}
+    variants = EV['variants']
+    rows, FL, names = union_events(EV, +1)
+    day, sym, gid = EV['day'][rows], EV['sym'][rows], EV['grp'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]
+    yrs = [Y for Y in sorted(set(years)) if Y >= 2019]
+    nF = len(FEATURES)
+    spy = data.get('SPY') if data else None
+    cal_d = (spy['t'] // 86400).astype(np.int64) if spy is not None else None
+    print(f'\n######## REASONS2 · {len(rows):,} candidatos largos · walk-forward {yrs[0]}–{yrs[-1]}', flush=True)
+
+    # variables de crédito, tipos y dólar (ETF líquidos; cada una con su último dato conocido en la fecha de la señal)
+    cr = {}
+    if data is not None:
+        for tk, nm in (('HYG', 'hyg'), ('LQD', 'lqd'), ('TLT', 'tlt'), ('UUP', 'uup')):
+            if tk in data:
+                b = data[tk]; td = (b['t'] // 86400).astype(np.int64); c = pd.Series(b['c'])
+                if nm == 'hyg':
+                    cr['hyg_ret5'] = _asof(td, (c / c.shift(5) - 1).to_numpy() * 100, day)
+                    cr['hyg_dist50'] = _asof(td, (c / c.rolling(50, min_periods=30).mean() - 1).to_numpy() * 100, day)
+                    cr['hyg_dd60'] = _asof(td, (c / c.rolling(60, min_periods=30).max() - 1).to_numpy() * 100, day)
+                elif nm == 'tlt':
+                    cr['tlt_ret20'] = _asof(td, (c / c.shift(20) - 1).to_numpy() * 100, day)
+                elif nm == 'uup':
+                    cr['uup_ret20'] = _asof(td, (c / c.shift(20) - 1).to_numpy() * 100, day)
+                elif nm == 'lqd' and 'HYG' in data:
+                    h = pd.Series(data['HYG']['c']).reindex(range(len(c))).to_numpy() if len(data['HYG']['c']) == len(c) else None
+        if 'HYG' in data and 'LQD' in data:     # diferencial relativo crédito basura / grado de inversión (proxy de estrés de crédito)
+            bh, bl = data['HYG'], data['LQD']
+            th = (bh['t'] // 86400).astype(np.int64); tl = (bl['t'] // 86400).astype(np.int64)
+            common = np.intersect1d(th, tl)
+            ch = pd.Series(bh['c'][np.isin(th, common)]); cl = pd.Series(bl['c'][np.isin(tl, common)])
+            ratio = (ch / cl).to_numpy()
+            rz = (pd.Series(ratio) - pd.Series(ratio).rolling(120, min_periods=60).mean()) / pd.Series(ratio).rolling(120, min_periods=60).std()
+            cr['credit_z'] = _asof(common, rz.to_numpy(), day)
+    print(f'  variables de crédito/tipos/dólar disponibles: {list(cr)}', flush=True)
+    cr_names = list(cr.keys())
+    Xe = np.hstack([X, np.column_stack([cr[k] for k in cr_names]).astype(np.float32)]) if cr_names else X
+    cr_idx = {k: nF + i for i, k in enumerate(cr_names)}
+
+    def wf_lin(Xm, y, ok, cols, window=3):
+        p = np.full(len(rows), np.nan); base = np.full(len(rows), np.nan)
+        for Y in yrs:
+            trm = (day < day_of(f'{Y}-01-01')) & (day >= day_of(f'{Y - window}-01-01')) & ok
+            tem = years == Y
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LinearLogitModel(cols, names, GROUPS).fit(Xm[trm], FL[trm], gid[trm], y[trm])
+            p[tem] = m1.predict_raw(Xm[tem], FL[tem], gid[tem]); base[tem] = float(y[trm].mean())
+        return p, base
+
+    def wf_ridge(Xm, target, ok, cols, window=3):
+        pr = np.full(len(rows), np.nan)
+        for Y in yrs:
+            trm = (day < day_of(f'{Y}-01-01')) & (day >= day_of(f'{Y - window}-01-01')) & ok
+            tem = years == Y
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.RidgeModel(cols, names, GROUPS).fit(Xm[trm], FL[trm], gid[trm], target[trm])
+            pr[tem] = m1.predict_raw(Xm[tem], FL[tem], gid[tem])
+        return pr
+
+    def ymeans(sel, pnl):
+        return {Y: float(np.nanmean(pnl[sel & (years == Y)])) for Y in yrs if (sel & (years == Y)).sum() >= 20}
+
+    def pct(v):
+        s = pd.Series(v).rank(pct=True).to_numpy()
+        return np.where(np.isfinite(v), s, 0.5)
+
+    for plan in PLANS:
+        vi = variants.index(plan['id'])
+        N = int(plan.get('n', 5))
+        S_ = SM.default_variants()[vi].S
+        pnl = EV['pnl'][rows, vi]; bars = EV['bars'][rows, vi]
+        ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        allowed = [GROUPS.index(g) for g in groups_of[plan['id']]]
+        elig_g = np.isin(gid, allowed)
+        base_cols = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+        atrp = np.maximum(X[:, FEATURES.index('atrp')], 0.5)
+        p0, b0 = wf_lin(X, y, ok, base_cols)
+        in_ = ok & elig_g & (years >= 2019)
+        sel0 = topn_mask(p0, day, in_ & np.isfinite(p0) & (p0 >= b0), N)
+        print(f"\n================ {plan['id']} · {plan['label']} (N={N}) ================")
+
+        def report(tag, sel, score, base_ym=None):
+            st = stats(pnl[sel], day[sel], sym[sel])
+            ym = ymeans(sel, pnl)
+            rr = pnl[sel] / (S_ * atrp[sel])
+            w = 1.0 / atrp[sel]
+            muw = float(np.nansum(w * pnl[sel]) / np.nansum(w))
+            cmp_ = ''
+            if base_ym is not None:
+                both = [Y for Y in ym if Y in base_ym]
+                cmp_ = f" | mejor que desplegado {sum(ym[Y] > base_ym[Y] for Y in both)}/{len(both)}"
+            port = ''
+            if cal_d is not None:
+                rk = rank_in_day(score, day, sel)
+                ti = np.searchsorted(cal_d, day, side='left')
+                o = portfolio_sim(cal_d, ti, bars, np.where(sel, pnl, np.nan), rk, 10, 0.10)
+                port = f" | cartera 10×10%: {o['cagr']:+5.1f}% DD {o['dd']:4.1f}% Sharpe {o['sharpe']:.2f}"
+            dev, rec = stats(pnl[sel & (years <= 2023)]), stats(pnl[sel & (years >= 2024)])
+            print(f"   {tag:44s} n={st['n']:5d} WR={st['wr']:4.1f}% μ={st['mean']:+5.2f}% t={st['t_day']:3.1f} R̄={np.nanmean(rr):+.3f} μ(riesgo cte)={muw:+.2f} | ≤2023 {dev.get('mean', float('nan')):+5.2f} · 2024+ {rec.get('mean', float('nan')):+5.2f}{cmp_}{port}", flush=True)
+            return ym
+
+        print('  [R1] ¿Basta una REGLA SIMPLE y transparente? (se eligen las N mejores del día entre TODOS los candidatos del plan, sin modelo ni umbral)')
+        base_ym = report('DESPLEGADO (modelo, N mejores con p ≥ tasa base)', sel0, p0)
+        rnd = np.random.default_rng(1).random(len(rows))
+        report('al azar (N por día)', topn_mask(rnd, day, in_, N), rnd, base_ym)
+        d20, d52, r1, r3 = pct(-X[:, FEATURES.index('dd20')]), pct(-X[:, FEATURES.index('dd52')]), pct(-X[:, FEATURES.index('ret1')]), pct(-X[:, FEATURES.index('ret3')])
+        pa, pv = pct(atrp), pct(X[:, FEATURES.index('vix')])
+        rules = {'volatilidad (ATR%) + caída desde máx. 20d': pa + d20,
+                 'volatilidad + caída 20d + caída 52 sem.': pa + d20 + d52,
+                 'volatilidad + caída 3 sesiones': pa + r3,
+                 'volatilidad + caída 20d + VIX': pa + d20 + pv,
+                 'solo caída 20d': d20, 'solo volatilidad': pa}
+        for rn, sc in rules.items():
+            report(rn, topn_mask(sc, day, in_, N), sc, base_ym)
+        print('  [R2] ¿Mejor ordenar por RETORNO ESPERADO que por probabilidad de ganar? (regresión ridge con ventana móvil de 3 años)')
+        pr = wf_ridge(X, np.clip(pnl, -15, 15), ok, base_cols)
+        report('ridge sobre el resultado %', topn_mask(pr, day, in_ & np.isfinite(pr) & (pr > 0), N), pr, base_ym)
+        rmul = np.clip(pnl / (S_ * atrp), -1.5, 1.5)
+        prr = wf_ridge(X, rmul, ok, base_cols)
+        report('ridge sobre el resultado en R (por riesgo)', topn_mask(prr, day, in_ & np.isfinite(prr) & (prr > 0), N), prr, base_ym)
+        mix = pct(np.nan_to_num(p0, nan=np.nanmedian(p0))) + pct(np.nan_to_num(pr, nan=0.0))
+        report('mezcla probabilidad + retorno esperado', topn_mask(mix, day, in_ & np.isfinite(p0) & np.isfinite(pr) & (p0 >= b0) & (pr > 0), N), mix, base_ym)
+
+        print('  [R3] RETORNO POR UNIDAD DE RIESGO según la volatilidad del valor (candidatos del plan, R = resultado / (stop en %)):')
+        qe = np.quantile(atrp[in_], [0.2, 0.4, 0.6, 0.8])
+        bk = np.digitize(atrp, qe)
+        for b in range(5):
+            m_ = in_ & (bk == b)
+            print(f"     ATR% quintil {b + 1} (≈{np.nanmean(atrp[m_]):.1f}%): n={int(m_.sum()):6d} WR={np.mean(y[m_]) * 100:4.1f}% μ={np.nanmean(pnl[m_]):+5.2f}% R̄={np.nanmean(pnl[m_] / (S_ * atrp[m_])):+.3f}")
+
+        if cr_names:
+            print('  [R4] INFORMACIÓN DE CRÉDITO / TIPOS / DÓLAR añadida al modelo lineal')
+            fams = {'crédito (HYG, diferencial)': [k for k in cr_names if k.startswith('hyg') or k == 'credit_z'],
+                    'tipos y dólar (TLT, UUP)': [k for k in cr_names if k in ('tlt_ret20', 'uup_ret20')], 'todo el bloque': cr_names}
+            for fn, fl in fams.items():
+                if not fl:
+                    continue
+                cols = base_cols + [cr_idx[k] for k in fl]
+                pw, bw = wf_lin(Xe, y, ok, cols)
+                ew = ok & np.isfinite(pw) & elig_g
+                selw = topn_mask(pw, day, in_ & np.isfinite(pw) & (pw >= bw), N)
+                report(f"+ {fn} (AUC {MD.auc(pw[ew], y[ew]):.3f})", selw, pw, base_ym)
+
+        print('  [R5] ¿Ayuda quedarse solo con los patrones que HAN FUNCIONADO hasta cada año? (elección anidada: cada año usa solo años previos)')
+        nsel = np.zeros(len(rows), bool)
+        for Y in yrs:
+            if Y < 2021:
+                continue
+            tr_ = in_ & (years < Y)
+            mu_all = np.nanmean(pnl[tr_])
+            keep = [k for k in range(len(names)) if (tr_ & (FL[:, k] > 0)).sum() >= 200 and np.nanmean(pnl[tr_ & (FL[:, k] > 0)]) > mu_all]
+            has = (FL[:, keep] > 0).any(1) if keep else np.zeros(len(rows), bool)
+            nsel |= in_ & (years == Y) & has & np.isfinite(p0) & (p0 >= b0)
+        selr = topn_mask(p0, day, nsel, N)
+        sel_cmp = sel0 & (years >= 2021)
+        base_ym2 = {Y: v for Y, v in base_ym.items() if Y >= 2021}
+        report('desplegado (solo 2021+, comparable)', sel_cmp, p0, None)
+        report('solo patrones que ya funcionaban', selr, p0, base_ym2)
+        sys.stdout.flush()

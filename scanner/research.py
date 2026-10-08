@@ -548,7 +548,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -587,9 +587,9 @@ def main():
     elif args.cmd in ('improve', 'improve2'):
         import lab
         getattr(lab, args.cmd + '_explore')(EV, args.out, data, uni)
-    elif args.cmd == 'reasons':
+    elif args.cmd in ('reasons', 'reasons2'):
         import study
-        study.run(EV, args.out, data, uni)
+        {'reasons': study.run, 'reasons2': study.run2}[args.cmd](EV, args.out, data, uni)
     else:
         import lab
         getattr(lab, {'explore': 'explore', 'meta': 'meta_explore', 'meta2': 'meta2_explore', 'meta3': 'meta3_explore',
