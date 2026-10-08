@@ -207,7 +207,52 @@ def test_midterm_signals():
     print('ok · señales de medio plazo (tendencia, rotación, fin de mes)')
 
 
+def test_ema_exit_kinds():
+    """Salidas «cierre bajo la EMA 34/89» (solo estudios): el simulador vectorizado coincide con una referencia escalar (largos y cortos)."""
+    import emastudy
+    bad = tot = 0
+    for seed in range(3):
+        F = feats.build(synth(seed=seed + 80, ar=0.05, sig=0.018))
+        F['ema34'], F['ema89'] = emastudy.ema(F['c'], 34), emastudy.ema(F['c'], 89)
+        idx = np.arange(150, 1500, 11)
+        for sgn in (1, -1):
+            for kind, H, S in (('e34', 30, 3.0), ('e89', 40, 4.0)):
+                v = simulate.Variant(kind, 0.0, S, H)
+                res = simulate.simulate(F, idx, sgn, [v], 0.2)[v.name]
+                for q, i in enumerate(idx):
+                    n = len(F['c']); atr = F['atr'][i]
+                    if not np.isfinite(atr) or i + H >= n:
+                        continue
+                    E = F['o'][i + 1]; stop = E - sgn * S * atr
+                    em = F['ema34' if kind == 'e34' else 'ema89']
+                    exit_px, bars = None, 0
+                    for j in range(1, H + 1):
+                        b = i + j
+                        o, h, l, c = F['o'][b], F['h'][b], F['l'][b], F['c'][b]
+                        hit_gap = (o <= stop) if sgn > 0 else (o >= stop)
+                        hit = (l <= stop) if sgn > 0 else (h >= stop)
+                        if hit_gap:
+                            exit_px, bars = o, j; break
+                        if hit:
+                            exit_px, bars = stop, j; break
+                        cond = np.isfinite(em[b]) and ((c < em[b]) if sgn > 0 else (c > em[b]))
+                        if cond:
+                            if j < H:
+                                exit_px, bars = F['o'][b + 1], j + 1
+                            else:
+                                exit_px, bars = c, j
+                            break
+                        if j == H:
+                            exit_px, bars = c, j
+                    ref = sgn * (exit_px - E) / E * 100.0 - 0.2
+                    tot += 1
+                    bad += (abs(ref - res.pnl[q]) > 1e-9) or (bars != res.bars[q])
+    assert tot > 800 and bad == 0, (tot, bad)
+    print(f'ok · salidas por EMA == referencia escalar ({tot} operaciones)')
+
+
 if __name__ == '__main__':
+    test_ema_exit_kinds()
     test_midterm_signals()
     test_portfolio_sim()
     test_resolve_trailing_equals_simulate()
