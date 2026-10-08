@@ -1,0 +1,149 @@
+  datos: 1971 en caché, 14 por descargar (10y)
+  datos: OK 1971 · fallidos 14
+  fallidos: CWEN-A HONA FDXF ADIG BLFS HLX LEG MBGL MFP SATS ROG.SW VYLR QRVO CTRA
+universo con datos: 1967 activos · 7s
+  eventos: 300/1967 símbolos (3s)
+  eventos: 600/1967 símbolos (6s)
+  eventos: 900/1967 símbolos (9s)
+  eventos: 1200/1967 símbolos (12s)
+  eventos: 1500/1967 símbolos (15s)
+  eventos: 1800/1967 símbolos (18s)
+
+######## EMA2 · 3,470,198 eventos
+
+[S1] TIEMPO EN EL MERCADO: sesiones medias por operación y rentabilidad por 20 sesiones (salida / setup / referencia con la misma salida)
+  salida: stop móvil 4×ATR (60 ses.)
+    A1        Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ i n= 134735 WR=43.6% μ=+1.57% sesiones medias= 32.3 → μ por 20 sesiones +0.98%
+    A5        A1 + precio sobre EMA200                       n=  80709 WR=42.6% μ=+1.34% sesiones medias= 31.6 → μ por 20 sesiones +0.85%
+    A6        A1 + pila alcista EMA34>89>200                 n=  63118 WR=42.5% μ=+1.30% sesiones medias= 31.4 → μ por 20 sesiones +0.83%
+    A9        Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200 n=  86962 WR=42.7% μ=+1.33% sesiones medias= 31.7 → μ por 20 sesiones +0.84%
+    B1        EMA34 cruza ↑ EMA89 (sin RSI)                  n=  22805 WR=42.4% μ=+1.25% sesiones medias= 31.9 → μ por 20 sesiones +0.79%
+    B3        EMA34 cruza ↑ EMA200 (sin RSI)                 n=  14488 WR=42.7% μ=+1.39% sesiones medias= 32.3 → μ por 20 sesiones +0.86%
+    B4        Se completa la pila EMA34>89>200 (triple cruce n=  18589 WR=42.3% μ=+1.39% sesiones medias= 31.6 → μ por 20 sesiones +0.88%
+    B8        EMA34↗89 con precio sobre EMA200               n=  19576 WR=42.7% μ=+1.32% sesiones medias= 32.0 → μ por 20 sesiones +0.82%
+    D1        Pila alcista: toca EMA34 y rebota + RSI 40–60  n=  77661 WR=42.0% μ=+1.21% sesiones medias= 31.1 → μ por 20 sesiones +0.78%
+    C2        Precio cruza ↑ EMA200 + RSI 45–55 subiendo     n=  24497 WR=43.0% μ=+1.52% sesiones medias= 33.3 → μ por 20 sesiones +0.91%
+    REF_all   REF · cualquier barra operable                 n= 424520 WR=43.6% μ=+1.74% sesiones medias= 32.2 → μ por 20 sesiones +1.08%
+    REF_stack REF · barra con pila alcista                   n= 202413 WR=41.7% μ=+1.12% sesiones medias= 30.4 → μ por 20 sesiones +0.74%
+    REF_up    REF · barra con precio sobre EMA200            n= 241249 WR=41.8% μ=+1.17% sesiones medias= 30.6 → μ por 20 sesiones +0.77%
+  salida: sale al cerrar bajo EMA 34
+    A1        Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ i n= 134735 WR=26.5% μ=+0.23% sesiones medias= 10.1 → μ por 20 sesiones +0.45%
+    A5        A1 + precio sobre EMA200                       n=  80709 WR=26.4% μ=+0.22% sesiones medias= 10.4 → μ por 20 sesiones +0.42%
+    A6        A1 + pila alcista EMA34>89>200                 n=  63118 WR=26.4% μ=+0.17% sesiones medias= 10.4 → μ por 20 sesiones +0.32%
+    A9        Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200 n=  86962 WR=27.4% μ=+0.36% sesiones medias= 12.4 → μ por 20 sesiones +0.59%
+    B1        EMA34 cruza ↑ EMA89 (sin RSI)                  n=  22805 WR=33.7% μ=+0.85% sesiones medias= 22.1 → μ por 20 sesiones +0.77%
+    B3        EMA34 cruza ↑ EMA200 (sin RSI)                 n=  14488 WR=34.2% μ=+0.83% sesiones medias= 23.0 → μ por 20 sesiones +0.72%
+    B4        Se completa la pila EMA34>89>200 (triple cruce n=  18589 WR=33.5% μ=+0.86% sesiones medias= 21.5 → μ por 20 sesiones +0.80%
+    B8        EMA34↗89 con precio sobre EMA200               n=  19576 WR=34.3% μ=+0.90% sesiones medias= 22.7 → μ por 20 sesiones +0.79%
+    D1        Pila alcista: toca EMA34 y rebota + RSI 40–60  n=  77661 WR=26.5% μ=+0.16% sesiones medias= 11.2 → μ por 20 sesiones +0.29%
+    C2        Precio cruza ↑ EMA200 + RSI 45–55 subiendo     n=  24497 WR=31.6% μ=+0.18% sesiones medias=  8.0 → μ por 20 sesiones +0.45%
+    REF_all   REF · cualquier barra operable                 n= 424520 WR=36.3% μ=+0.28% sesiones medias= 12.2 → μ por 20 sesiones +0.45%
+    REF_stack REF · barra con pila alcista                   n= 202413 WR=34.3% μ=+0.23% sesiones medias= 14.5 → μ por 20 sesiones +0.31%
+    REF_up    REF · barra con precio sobre EMA200            n= 241249 WR=33.6% μ=+0.32% sesiones medias= 15.7 → μ por 20 sesiones +0.41%
+  salida: sale al cerrar bajo EMA 89
+    A1        Precio cruza ↑ EMA34 + RSI 45–55 subiendo  ◀ i n= 133634 WR=31.9% μ=+0.72% sesiones medias= 18.7 → μ por 20 sesiones +0.77%
+    A5        A1 + precio sobre EMA200                       n=  80012 WR=27.8% μ=+0.98% sesiones medias= 24.9 → μ por 20 sesiones +0.78%
+    A6        A1 + pila alcista EMA34>89>200                 n=  62570 WR=27.9% μ=+1.10% sesiones medias= 28.1 → μ por 20 sesiones +0.78%
+    A9        Cruce ↑ EMA34 + RSI>50 subiendo + sobre EMA200 n=  86237 WR=28.0% μ=+1.00% sesiones medias= 25.0 → μ por 20 sesiones +0.80%
+    B1        EMA34 cruza ↑ EMA89 (sin RSI)                  n=  22551 WR=30.7% μ=+1.82% sesiones medias= 34.0 → μ por 20 sesiones +1.07%
+    B3        EMA34 cruza ↑ EMA200 (sin RSI)                 n=  14312 WR=32.6% μ=+2.00% sesiones medias= 36.9 → μ por 20 sesiones +1.08%
+    B4        Se completa la pila EMA34>89>200 (triple cruce n=  18390 WR=32.7% μ=+2.10% sesiones medias= 36.7 → μ por 20 sesiones +1.15%
+    B8        EMA34↗89 con precio sobre EMA200               n=  19345 WR=31.6% μ=+1.89% sesiones medias= 35.1 → μ por 20 sesiones +1.08%
+    D1        Pila alcista: toca EMA34 y rebota + RSI 40–60  n=  77013 WR=28.3% μ=+1.10% sesiones medias= 29.2 → μ por 20 sesiones +0.75%
+    C2        Precio cruza ↑ EMA200 + RSI 45–55 subiendo     n=  24297 WR=31.5% μ=+0.38% sesiones medias= 10.9 → μ por 20 sesiones +0.70%
+    REF_all   REF · cualquier barra operable                 n= 420711 WR=36.9% μ=+0.98% sesiones medias= 22.9 → μ por 20 sesiones +0.86%
+    REF_stack REF · barra con pila alcista                   n= 200302 WR=33.2% μ=+1.19% sesiones medias= 31.9 → μ por 20 sesiones +0.74%
+    REF_up    REF · barra con precio sobre EMA200            n= 238743 WR=32.5% μ=+1.29% sesiones medias= 32.1 → μ por 20 sesiones +0.80%
+
+[S2] CARTERA con capital limitado (máx. 20 posiciones × 5 % del capital, prioridad al azar entre señales del mismo día; netas de costes; desde 2017-01). Referencia: S&P 500 comprar y mantener.
+   S&P 500 comprar y mantener: anual +15.3% · caída máx. 33.7% · Sharpe 0.88
+  — TODAS las acciones y ETF
+    stop móvil 4×ATR (60 ses.) A6        A1 + pila alcista EMA34>89>200     anual   +6.6% · caída  27.9% · Sharpe 0.63 · meses+  61% · peor mes -24.3% ·   168 op/año
+    stop móvil 4×ATR (60 ses.) A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual   +7.5% · caída  29.1% · Sharpe 0.72 · meses+  63% · peor mes -21.3% ·   165 op/año
+    stop móvil 4×ATR (60 ses.) B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual  +10.5% · caída  36.2% · Sharpe 1.00 · meses+  58% · peor mes -12.1% ·   159 op/año
+    stop móvil 4×ATR (60 ses.) B4        Se completa la pila EMA34>89>200 ( anual  +11.6% · caída  26.7% · Sharpe 1.27 · meses+  60% · peor mes  -7.6% ·   155 op/año
+    stop móvil 4×ATR (60 ses.) B8        EMA34↗89 con precio sobre EMA200   anual   +6.7% · caída  32.8% · Sharpe 0.69 · meses+  57% · peor mes  -9.2% ·   161 op/año
+    stop móvil 4×ATR (60 ses.) REF_stack REF · barra con pila alcista       anual  +13.6% · caída  36.7% · Sharpe 1.02 · meses+  62% · peor mes -28.9% ·   171 op/año
+    stop móvil 4×ATR (60 ses.) REF_up    REF · barra con precio sobre EMA20 anual  +10.5% · caída  40.2% · Sharpe 0.78 · meses+  57% · peor mes -32.1% ·   172 op/año
+    sale al cerrar bajo EMA 34 A6        A1 + pila alcista EMA34>89>200     anual   +5.5% · caída  24.3% · Sharpe 0.57 · meses+  49% · peor mes -15.9% ·   513 op/año
+    sale al cerrar bajo EMA 34 A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual   +5.9% · caída  32.2% · Sharpe 0.51 · meses+  58% · peor mes -21.8% ·   440 op/año
+    sale al cerrar bajo EMA 34 B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual  +13.1% · caída  19.4% · Sharpe 1.07 · meses+  55% · peor mes  -6.4% ·   240 op/año
+    sale al cerrar bajo EMA 34 B4        Se completa la pila EMA34>89>200 ( anual  +12.8% · caída  26.5% · Sharpe 1.10 · meses+  56% · peor mes  -7.0% ·   239 op/año
+    sale al cerrar bajo EMA 34 B8        EMA34↗89 con precio sobre EMA200   anual  +10.4% · caída  30.8% · Sharpe 0.88 · meses+  48% · peor mes  -8.6% ·   231 op/año
+    sale al cerrar bajo EMA 34 REF_stack REF · barra con pila alcista       anual   +1.3% · caída  37.2% · Sharpe 0.17 · meses+  56% · peor mes -24.8% ·   495 op/año
+    sale al cerrar bajo EMA 34 REF_up    REF · barra con precio sobre EMA20 anual   +5.0% · caída  34.8% · Sharpe 0.45 · meses+  57% · peor mes -26.1% ·   448 op/año
+    sale al cerrar bajo EMA 89 A6        A1 + pila alcista EMA34>89>200     anual   +7.1% · caída  33.0% · Sharpe 0.67 · meses+  53% · peor mes -19.0% ·   182 op/año
+    sale al cerrar bajo EMA 89 A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual   +9.5% · caída  34.8% · Sharpe 0.77 · meses+  52% · peor mes -24.1% ·   210 op/año
+    sale al cerrar bajo EMA 89 B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual  +12.8% · caída  26.6% · Sharpe 0.85 · meses+  47% · peor mes  -7.3% ·   161 op/año
+    sale al cerrar bajo EMA 89 B4        Se completa la pila EMA34>89>200 ( anual  +14.3% · caída  22.9% · Sharpe 1.09 · meses+  49% · peor mes -10.1% ·   143 op/año
+    sale al cerrar bajo EMA 89 B8        EMA34↗89 con precio sobre EMA200   anual  +12.1% · caída  25.2% · Sharpe 1.12 · meses+  48% · peor mes  -6.9% ·   147 op/año
+    sale al cerrar bajo EMA 89 REF_stack REF · barra con pila alcista       anual   +9.1% · caída  37.4% · Sharpe 0.76 · meses+  55% · peor mes -18.2% ·   218 op/año
+    sale al cerrar bajo EMA 89 REF_up    REF · barra con precio sobre EMA20 anual  +12.4% · caída  30.2% · Sharpe 0.96 · meses+  58% · peor mes -23.6% ·   190 op/año
+  — SOLO ETF (menos sesgo de supervivencia)
+    stop móvil 4×ATR (60 ses.) A6        A1 + pila alcista EMA34>89>200     anual   +9.1% · caída  16.4% · Sharpe 1.11 · meses+  51% · peor mes  -7.7% ·   135 op/año
+    stop móvil 4×ATR (60 ses.) A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual   +9.5% · caída  21.0% · Sharpe 1.12 · meses+  58% · peor mes  -7.5% ·   142 op/año
+    stop móvil 4×ATR (60 ses.) B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual   +7.3% · caída  18.9% · Sharpe 1.29 · meses+  53% · peor mes  -5.3% ·    80 op/año
+    stop móvil 4×ATR (60 ses.) B4        Se completa la pila EMA34>89>200 ( anual   +8.2% · caída  19.6% · Sharpe 1.62 · meses+  52% · peor mes  -3.1% ·    79 op/año
+    stop móvil 4×ATR (60 ses.) B8        EMA34↗89 con precio sobre EMA200   anual   +6.3% · caída  16.4% · Sharpe 1.33 · meses+  52% · peor mes  -4.9% ·    76 op/año
+    stop móvil 4×ATR (60 ses.) REF_stack REF · barra con pila alcista       anual   +6.5% · caída  28.6% · Sharpe 0.76 · meses+  60% · peor mes -20.5% ·   175 op/año
+    stop móvil 4×ATR (60 ses.) REF_up    REF · barra con precio sobre EMA20 anual   +4.1% · caída  27.0% · Sharpe 0.56 · meses+  58% · peor mes -14.4% ·   175 op/año
+    sale al cerrar bajo EMA 34 A6        A1 + pila alcista EMA34>89>200     anual   +6.0% · caída  10.2% · Sharpe 0.96 · meses+  53% · peor mes  -3.8% ·   298 op/año
+    sale al cerrar bajo EMA 34 A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual   +4.2% · caída  16.6% · Sharpe 0.65 · meses+  49% · peor mes  -5.3% ·   313 op/año
+    sale al cerrar bajo EMA 34 B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual   +6.5% · caída   8.2% · Sharpe 1.33 · meses+  44% · peor mes  -4.4% ·    90 op/año
+    sale al cerrar bajo EMA 34 B4        Se completa la pila EMA34>89>200 ( anual   +7.6% · caída   8.8% · Sharpe 1.57 · meses+  47% · peor mes  -2.8% ·    88 op/año
+    sale al cerrar bajo EMA 34 B8        EMA34↗89 con precio sobre EMA200   anual   +5.1% · caída   9.8% · Sharpe 1.20 · meses+  43% · peor mes  -3.1% ·    85 op/año
+    sale al cerrar bajo EMA 34 REF_stack REF · barra con pila alcista       anual   +5.3% · caída  18.0% · Sharpe 0.73 · meses+  53% · peor mes  -8.1% ·   445 op/año
+    sale al cerrar bajo EMA 34 REF_up    REF · barra con precio sobre EMA20 anual   +7.0% · caída  12.9% · Sharpe 0.94 · meses+  52% · peor mes  -7.3% ·   423 op/año
+    sale al cerrar bajo EMA 89 A6        A1 + pila alcista EMA34>89>200     anual   +6.5% · caída  19.7% · Sharpe 0.91 · meses+  48% · peor mes  -4.4% ·   133 op/año
+    sale al cerrar bajo EMA 89 A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual   +4.6% · caída  23.5% · Sharpe 0.62 · meses+  44% · peor mes  -5.4% ·   161 op/año
+    sale al cerrar bajo EMA 89 B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual   +8.2% · caída  12.7% · Sharpe 1.39 · meses+  45% · peor mes  -5.0% ·    76 op/año
+    sale al cerrar bajo EMA 89 B4        Se completa la pila EMA34>89>200 ( anual   +9.7% · caída   9.7% · Sharpe 1.60 · meses+  50% · peor mes  -3.4% ·    75 op/año
+    sale al cerrar bajo EMA 89 B8        EMA34↗89 con precio sobre EMA200   anual   +6.6% · caída  14.8% · Sharpe 1.23 · meses+  41% · peor mes  -5.3% ·    74 op/año
+    sale al cerrar bajo EMA 89 REF_stack REF · barra con pila alcista       anual   +5.7% · caída  18.7% · Sharpe 0.80 · meses+  51% · peor mes -11.3% ·   209 op/año
+    sale al cerrar bajo EMA 89 REF_up    REF · barra con precio sobre EMA20 anual   +7.8% · caída  15.8% · Sharpe 1.03 · meses+  51% · peor mes  -9.2% ·   191 op/año
+  — SOLO acciones de EE.UU.
+    stop móvil 4×ATR (60 ses.) A6        A1 + pila alcista EMA34>89>200     anual  +11.6% · caída  29.9% · Sharpe 1.01 · meses+  60% · peor mes -27.1% ·   166 op/año
+    stop móvil 4×ATR (60 ses.) A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual  +11.3% · caída  30.6% · Sharpe 0.89 · meses+  60% · peor mes -28.2% ·   168 op/año
+    stop móvil 4×ATR (60 ses.) B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual  +10.0% · caída  28.7% · Sharpe 0.96 · meses+  57% · peor mes  -7.9% ·   154 op/año
+    stop móvil 4×ATR (60 ses.) B4        Se completa la pila EMA34>89>200 ( anual  +10.6% · caída  28.9% · Sharpe 1.14 · meses+  59% · peor mes  -9.0% ·   154 op/año
+    stop móvil 4×ATR (60 ses.) B8        EMA34↗89 con precio sobre EMA200   anual  +10.3% · caída  30.4% · Sharpe 1.02 · meses+  58% · peor mes  -8.8% ·   157 op/año
+    stop móvil 4×ATR (60 ses.) REF_stack REF · barra con pila alcista       anual   +9.2% · caída  37.5% · Sharpe 0.77 · meses+  60% · peor mes -32.1% ·   174 op/año
+    stop móvil 4×ATR (60 ses.) REF_up    REF · barra con precio sobre EMA20 anual   +4.4% · caída  36.4% · Sharpe 0.39 · meses+  54% · peor mes -32.0% ·   177 op/año
+    sale al cerrar bajo EMA 34 A6        A1 + pila alcista EMA34>89>200     anual   +7.3% · caída  23.8% · Sharpe 0.75 · meses+  54% · peor mes -19.9% ·   489 op/año
+    sale al cerrar bajo EMA 34 A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual   +6.2% · caída  35.3% · Sharpe 0.54 · meses+  54% · peor mes -26.6% ·   433 op/año
+    sale al cerrar bajo EMA 34 B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual  +14.2% · caída  38.0% · Sharpe 1.08 · meses+  57% · peor mes  -9.0% ·   235 op/año
+    sale al cerrar bajo EMA 34 B4        Se completa la pila EMA34>89>200 ( anual  +12.3% · caída  24.4% · Sharpe 1.15 · meses+  57% · peor mes  -9.4% ·   238 op/año
+    sale al cerrar bajo EMA 34 B8        EMA34↗89 con precio sobre EMA200   anual  +10.0% · caída  39.9% · Sharpe 0.88 · meses+  53% · peor mes -10.1% ·   227 op/año
+    sale al cerrar bajo EMA 34 REF_stack REF · barra con pila alcista       anual   +0.5% · caída  37.8% · Sharpe 0.10 · meses+  53% · peor mes -25.8% ·   529 op/año
+    sale al cerrar bajo EMA 34 REF_up    REF · barra con precio sobre EMA20 anual   +5.7% · caída  31.1% · Sharpe 0.54 · meses+  53% · peor mes -24.7% ·   458 op/año
+    sale al cerrar bajo EMA 89 A6        A1 + pila alcista EMA34>89>200     anual  +11.1% · caída  32.3% · Sharpe 0.93 · meses+  52% · peor mes -21.0% ·   187 op/año
+    sale al cerrar bajo EMA 89 A9        Cruce ↑ EMA34 + RSI>50 subiendo +  anual  +11.7% · caída  38.1% · Sharpe 0.90 · meses+  53% · peor mes -25.3% ·   208 op/año
+    sale al cerrar bajo EMA 89 B1        EMA34 cruza ↑ EMA89 (sin RSI)      anual  +15.5% · caída  24.7% · Sharpe 1.10 · meses+  53% · peor mes  -8.9% ·   157 op/año
+    sale al cerrar bajo EMA 89 B4        Se completa la pila EMA34>89>200 ( anual  +14.6% · caída  27.1% · Sharpe 1.20 · meses+  52% · peor mes  -7.6% ·   144 op/año
+    sale al cerrar bajo EMA 89 B8        EMA34↗89 con precio sobre EMA200   anual  +16.6% · caída  29.1% · Sharpe 1.34 · meses+  50% · peor mes  -8.9% ·   144 op/año
+    sale al cerrar bajo EMA 89 REF_stack REF · barra con pila alcista       anual   +5.1% · caída  32.1% · Sharpe 0.50 · meses+  49% · peor mes -23.8% ·   234 op/año
+    sale al cerrar bajo EMA 89 REF_up    REF · barra con precio sobre EMA20 anual  +13.9% · caída  34.2% · Sharpe 1.06 · meses+  59% · peor mes -28.1% ·   199 op/año
+
+[S3] SELECCIÓN HONESTA: se elige el mejor (setup × salida) con los datos 2016–2020 (Δμ frente a su referencia con t ≥ 3) y se mide en 2021–2026, sin tocar nada
+   mejores 12 en 2016–2020 → su resultado en 2021–2026:
+     B2  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +2.69 → 2021–26 Δμ +0.29 (μ +0.73% frente a la referencia +0.45%, n=5460)
+     B6  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +2.30 → 2021–26 Δμ -0.05 (μ +0.40% frente a la referencia +0.45%, n=2255)
+     B3  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +2.16 → 2021–26 Δμ +0.38 (μ +0.83% frente a la referencia +0.45%, n=8942)
+     B7  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +1.56 → 2021–26 Δμ +0.04 (μ +0.80% frente a la referencia +0.76%, n=5551)
+     B9  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +1.53 → 2021–26 Δμ +0.29 (μ +0.74% frente a la referencia +0.45%, n=1684)
+     B4  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +1.50 → 2021–26 Δμ +0.43 (μ +1.19% frente a la referencia +0.76%, n=11059)
+     B1  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +1.42 → 2021–26 Δμ +0.52 (μ +0.96% frente a la referencia +0.45%, n=13954)
+     B2  · sale al cerrar bajo EMA 34     · 2016–20 Δμ +1.34 → 2021–26 Δμ -0.08 (μ -0.04% frente a la referencia +0.04%, n=5574)
+     B7  · stop móvil 4×ATR (60 ses.)     · 2016–20 Δμ +1.18 → 2021–26 Δμ -0.40 (μ +0.42% frente a la referencia +0.82%, n=5652)
+     B5  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +1.15 → 2021–26 Δμ +0.43 (μ +0.88% frente a la referencia +0.45%, n=7292)
+     B8  · sale al cerrar bajo EMA 89     · 2016–20 Δμ +1.09 → 2021–26 Δμ +0.32 (μ +1.07% frente a la referencia +0.75%, n=12399)
+     B3  · sale al cerrar bajo EMA 34     · 2016–20 Δμ +1.08 → 2021–26 Δμ +0.27 (μ +0.31% frente a la referencia +0.04%, n=9118)
+   media de Δμ en 2021–2026 de esas 12 elecciones: +0.20% (positivo = la elección anterior se sostiene)  ·  de las 12, 9 siguen superando a la referencia
+
+[S4] ¿IMPORTA LA ZONA DEL RSI(14) en la señal? μ por tramo de RSI (todos los cruces precio↑EMA34, A0, y triple alineación, B4)
+   A0 / stop móvil 4×ATR (60 ses.): [45,50) n= 18604 μ=+1.50% | [50,55) n=112232 μ=+1.59% | [55,60) n= 29666 μ=+1.50% | [60,70) n=  4827 μ=+1.75% | [70,101) n=   466 μ=+1.78% |
+   A0 / sale al cerrar bajo EMA 89: [45,50) n= 18452 μ=+1.49% | [50,55) n=111318 μ=+0.61% | [55,60) n= 29418 μ=+0.64% | [60,70) n=  4788 μ=+1.65% | [70,101) n=   466 μ=+3.84% |
+   B4 / sale al cerrar bajo EMA 89: [45,50) n=   436 μ=+1.11% | [50,55) n=  1810 μ=+1.20% | [55,60) n=  3994 μ=+1.74% | [60,70) n=  8399 μ=+2.14% | [70,101) n=  3504 μ=+3.21% |
+   B1 / sale al cerrar bajo EMA 89: [50,55) n=  1896 μ=+0.44% | [55,60) n=  4892 μ=+1.53% | [60,70) n= 11148 μ=+1.86% | [70,101) n=  4592 μ=+2.60% |
+
+fin · 43s
