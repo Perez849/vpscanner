@@ -98,6 +98,23 @@ Es decir: casi todo el «65–72 %» que se mostraba era la **tasa base** con fa
 
 **Adoptado: suelo de volatilidad (ATR ≥ 2,5 % del precio).** Los costes son fijos en % y en valores poco volátiles se comen el rebote típico: las operaciones elegidas con ATR < 2 % rindieron −0,09 % de media y las de ATR > 6 % +1,93 % (8 de 8 años positivas). Con el suelo, *Equilibrado* pasa de +0,58 % a +0,70 % (mejor en 6 de 8 años; Sharpe de cartera 1,37 → 1,68) y *Alta probabilidad* de +0,25 % a +0,36 % (7 de 8 años). Se probaron 6 suelos entre 2 % y 5 % y se eligió el más bajo que mejora los dos planes; más alto sube la media pero también la caída máxima.
 
+## Medio plazo: ¿más tiempo, menos ruido, más fiabilidad? (`research.py midterm`, pestaña «Medio plazo»)
+
+Se probaron, con parámetros fijados de antemano y netas de costes (señal con el cierre, ejecución al cierre del día siguiente), tres ideas de semanas–meses. **Historia larga 2005–2026 (21 años, incluye 2008), ETF:**
+
+| | Anual | Volatilidad | Sharpe | Caída máx. | Peor mes |
+|---|---|---|---|---|---|
+| S&P 500 comprar y mantener | +10,9 % | 18,9 % | 0,64 | −55,2 % | −16,5 % |
+| Tendencia SPY (sobre su media de 200) | +8,5 % | 11,6 % | 0,76 | −25,1 % | −8,2 % |
+| Tendencia QQQ | +12,2 % | 15,6 % | 0,82 | −26,5 % | −12,2 % |
+| Rotación de ETF por momentum (3 mejores, mensual) | +10,3 % | 16,9 % | 0,66 | −25,2 % | −10,1 % |
+
+- **Más tiempo ≠ más rentabilidad, pero sí menos caídas**: la tendencia y la rotación recortan la caída máxima a la mitad (−55 % → −25 %) y el peor mes, con Sharpe parecido o algo mejor. En 2008: S&P 500 −36,8 %, tendencia +4,0 %, rotación +7,2 %. **No son infalibles**: en 2022 la tendencia llegó tarde (−20,1 %; la rotación, +10,2 %) y en 2019–2026 por separado comprar y mantener ganó más (+17,5 % frente a +12,6 %).
+- **Robustez**: la rotación con ventanas de 3, 6 o 12 meses y 2, 3 o 5 ETF dio entre +9 % y +12 % anual y Sharpe 0,6–0,8 en los 21 años (sin depender de una elección afortunada); en la muestra corta de 10 años la dispersión fue mucho mayor (+6 % a +17,7 %), por eso hacen falta muchos años para juzgarlas.
+- **Momentum de acciones (12-1, 30 valores del S&P 500)**: +30,5 % anual frente a +17,9 % del igual-ponderado del mismo universo, **pero** con volatilidad 28,8 %, caída máxima −39,6 % y Sharpe 1,07 frente a 0,94, y el universo (componentes actuales) tiene sesgo de supervivencia: no hay ventaja clara ajustada al riesgo. No está en producción.
+- **Combinación con el sistema de rebotes** (correlación diaria ≈ +0,1, 2019–2026, curva a precio realizado): 50 % rebotes + 50 % tendencia SPY → +23,0 % anual, caída máx. −18,7 %, Sharpe 1,93, peor mes −14 % (rebotes solos: +32,9 %, −27,6 %, 1,74, −21 %). A partes iguales con las tres ideas de medio plazo: +17,5 %, −16,8 %, Sharpe 1,53. Menos rentabilidad, bastante menos riesgo.
+- **Producción:** la pestaña «Medio plazo» muestra a diario la tendencia de SPY/QQQ/IWM/EFA y la cartera vigente de la rotación (se revisa a fin de mes). Es **informativa**: no genera alertas ni entra en el seguimiento. Conclusión honesta: sirve para reducir el riesgo de una cartera, no para ganar más.
+
 ## 🚀 Pelotazos (experimental)
 
 Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
@@ -119,6 +136,8 @@ scanner/
   model.py                 modelo de probabilidad (NumPy, serializable a JSON)
   research.py              construye la tabla de eventos y VALIDA → model/validated.json
   lab.py                   laboratorio exploratorio (cómo se llegó al diseño)
+  midsig.py                señales de medio plazo (tendencia, rotación de ETF) → data/midterm.json
+  study.py / midterm.py    estudios ampliados (calibración, motivos, medio plazo); se lanzan con research.py reasons | reasons2 | midterm
   scan.py                  robot diario → data/alerts.json, tracking.json, candles.json, …
                            (--mode preclose: aviso previo al cierre → alerts_pre.json)
   track.py / notify.py     seguimiento en vivo / avisos (Telegram, resumen en Actions)

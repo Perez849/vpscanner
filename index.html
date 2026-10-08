@@ -110,7 +110,7 @@
 const qs=new URLSearchParams(location.search);
 const BASE=qs.get('base')||'https://raw.githubusercontent.com/Perez849/vpscanner/main/scanner/data/';
 const bust=()=>'?t='+Math.floor(Date.now()/60000);
-const S={alerts:null,track:null,candles:null,reg:null,meta:null,pre:null,view:'alertas',q:'',sort:'p',dir:-1};
+const S={alerts:null,track:null,candles:null,reg:null,meta:null,pre:null,mid:null,view:'alertas',q:'',sort:'p',dir:-1};
 const f=(x,d=2)=>x==null||isNaN(x)?'—':Number(x).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 const sg=(x,d=2)=>x==null||isNaN(x)?'—':(x>=0?'+':'')+f(x,d);
 const col=v=>v>=0?'var(--emerald)':'var(--ember)';
@@ -129,9 +129,9 @@ const alt=a=>a.plans.find(p=>p.role!=='principal');
 async function loadAll(){
   const get=n=>fetch(BASE+n+bust()).then(r=>r.ok?r.json():null).catch(()=>null);
   try{
-    const [a,t,c,r,m,pre]=await Promise.all([get('alerts.json'),get('tracking.json'),get('candles.json'),get('registry.json'),get('meta.json'),get('alerts_pre.json')]);
+    const [a,t,c,r,m,pre,mid]=await Promise.all([get('alerts.json'),get('tracking.json'),get('candles.json'),get('registry.json'),get('meta.json'),get('alerts_pre.json'),get('midterm.json')]);
     if(!a)throw new Error('alerts.json no disponible');
-    Object.assign(S,{alerts:a,track:t,candles:c,reg:r,meta:m,pre});render();
+    Object.assign(S,{alerts:a,track:t,candles:c,reg:r,meta:m,pre,mid});render();
   }catch(e){
     document.getElementById('app').innerHTML='<div class="err"><b>No pude leer los datos.</b><br>Comprueba que el robot ha corrido y existe:<br><span class="mono">'+BASE+'alerts.json</span><br><br>Detalle: '+e.message+'</div>';
   }
@@ -334,6 +334,25 @@ function validView(){
   h+=`<p class="dim mono" style="font-size:11px;margin-top:14px">Validado con datos hasta ${R.dataThrough||'—'} · revalidación automática cada domingo</p>`;
   return h;
 }
+function midView(){
+  const M=S.mid;
+  if(!M)return `<div class="note">Las señales de medio plazo aún no están disponibles (se generan en el próximo escaneo).</div>`;
+  const st=M.stats,pc=v=>(v>=0?'+':'')+f(v,1)+'%';
+  let h=`<div class="note warn"><b>📆 Medio plazo · semanas–meses · informativo.</b> Estas dos reglas simples no «ganan más» que el S&amp;P 500: <b>recortan las grandes caídas</b>. En ${st.period} (netas de costes): comprar y mantener el S&amp;P 500 dio ${pc(st.rows[0].cagr)} anual con una caída máxima de ${f(st.rows[0].dd,0)}%; la tendencia sobre la media de 200 sesiones, ${pc(st.rows[1].cagr)} con ${f(st.rows[1].dd,0)}%. No generan alertas ni entran en el seguimiento: son una guía de régimen y de cartera «núcleo».</div>`;
+  h+=`<table><thead><tr><td>Estrategia (${st.period})</td><td style="text-align:right">Anual</td><td style="text-align:right">Volatilidad</td><td style="text-align:right">Sharpe</td><td style="text-align:right">Caída máx.</td><td style="text-align:right">Peor mes</td></tr></thead><tbody>${st.rows.map(r=>`<tr style="cursor:default"><td>${r.name}</td><td class="mono" style="text-align:right">${pc(r.cagr)}</td><td class="mono" style="text-align:right">${f(r.vol,1)}%</td><td class="mono" style="text-align:right">${f(r.sharpe)}</td><td class="mono" style="text-align:right;color:var(--ember)">${f(r.dd,0)}%</td><td class="mono" style="text-align:right;color:var(--ember)">${f(r.worstMonth,0)}%</td></tr>`).join('')}</tbody></table>
+    <div class="note">Años de crisis (S&amp;P 500 / tendencia / rotación): 2008 ${pc(st.crises['2008'].sp500)} / ${pc(st.crises['2008'].trend)} / ${pc(st.crises['2008'].rotation)} · 2018 ${pc(st.crises['2018'].sp500)} / ${pc(st.crises['2018'].trend)} / ${pc(st.crises['2018'].rotation)} · 2022 ${pc(st.crises['2022'].sp500)} / ${pc(st.crises['2022'].trend)} / ${pc(st.crises['2022'].rotation)}. <b>No son infalibles</b>: la tendencia llegó tarde en 2022 y ambas se quedaron fuera de buena parte de las subidas (2019, 2023–24). Con 2019–2026 por separado, comprar y mantener el S&amp;P 500 ganó más (+17,5% anual) que la tendencia (+12,6%).</div>`;
+  h+=`<h2>Tendencia de los índices <span class="dim mono" style="font-size:11px">· datos hasta ${M.asOf} · regla: dentro si el cierre está sobre su media de 200 sesiones; si no, liquidez</span></h2>
+    <table><thead><tr><td>Índice</td><td style="text-align:right">Cierre</td><td style="text-align:right">Media 200</td><td style="text-align:right">Distancia</td><td>Estado</td><td style="text-align:right">Desde hace</td><td style="text-align:right">Cambios (20 ses.)</td></tr></thead><tbody>${(M.trend||[]).map(t=>`<tr style="cursor:default"><td class="sym">${t.sym}</td><td class="mono" style="text-align:right">${f(t.close)}</td><td class="mono" style="text-align:right">${f(t.sma200)}</td><td class="mono" style="text-align:right;color:${col(t.distPct)}">${sg(t.distPct,1)}%</td><td>${t.above?'🟢 sobre la media: dentro':'🔴 bajo la media: liquidez'}</td><td class="mono" style="text-align:right">${t.daysSince} ses.</td><td class="mono" style="text-align:right;color:${t.flips20>=2?'var(--amber)':'inherit'}">${t.flips20}${t.flips20>=2?' ⚠ zona de dudas':''}</td></tr>`).join('')}</tbody></table>`;
+  const R=M.rotation||{},hold=(R.holdings||[]),prev=(R.previewHoldings||[]);
+  const names=l=>l.length?l.map(x=>x.sym).join(' · '):'todo en liquidez';
+  h+=`<h2>Rotación de ETF por momentum <span class="dim mono" style="font-size:11px">· se revisa a fin de mes</span></h2>
+    <div class="note"><b>Cartera vigente</b> (señal del cierre del ${R.cut}, se ejecuta al cierre del día siguiente y se mantiene todo el mes): <b>${names(hold)}</b>${hold.length?` · ${f(100/3,0)}% cada uno${R.cashW>0?` · ${f(R.cashW*100,0)}% liquidez`:''}`:''}.<br><span class="dim">Si se rebalanceara hoy: <b>${names(prev)}</b>${prev.map(x=>x.sym).join()===hold.map(x=>x.sym).join()?' (sin cambios)':' — cambiaría; la señal oficial es la de fin de mes ('+R.nextRebalance+')'}.</span></div>
+    <table><thead><tr><td>#</td><td>ETF</td><td style="text-align:right">3 meses</td><td style="text-align:right">6 meses</td><td style="text-align:right">12 meses</td><td style="text-align:right">Media</td></tr></thead><tbody>${(R.ranking||[]).map(x=>`<tr style="cursor:default${prev.some(p=>p.sym===x.sym)?';font-weight:700':''}"><td class="mono">${x.rank}</td><td class="sym">${x.sym}</td><td class="mono" style="text-align:right;color:${col(x.m63)}">${sg(x.m63,1)}%</td><td class="mono" style="text-align:right;color:${col(x.m126)}">${sg(x.m126,1)}%</td><td class="mono" style="text-align:right;color:${col(x.m252)}">${sg(x.m252,1)}%</td><td class="mono" style="text-align:right;color:${col(x.avg)}">${sg(x.avg,1)}%</td></tr>`).join('')}</tbody></table>
+    <p class="dim" style="font-size:11.5px">Se compran los 3 con mejor momentum medio (3, 6 y 12 meses) <b>siempre que sea positivo</b>; lo que falte hasta 3 queda en liquidez. Probado con otras ventanas (3, 6 o 12 meses) y 2, 3 o 5 ETF: entre +9% y +12% anual y Sharpe 0,6–0,8 en 2005–2026, es decir, sin depender de una elección afortunada.</p>`;
+  const cb=st.combo2019;
+  h+=`<h2>Cómo encaja con el sistema de rebotes</h2><div class="note">Las dos ideas son casi independientes (correlación diaria ≈ +0,1). ${cb.note}: <b>${pc(cb.mix.cagr)} anual, caída máxima ${f(cb.mix.dd,0)}%, Sharpe ${f(cb.mix.sharpe)}</b>, frente a ${pc(cb.dip.cagr)}, ${f(cb.dip.dd,0)}% y ${f(cb.dip.sharpe)} del sistema de rebotes solo: menos rentabilidad, bastante menos riesgo. Son cifras de un simulador (curva a precio realizado), de un periodo alcista y con sesgo de supervivencia en la parte de acciones: úsalas como orden de magnitud.</div>`;
+  return h;
+}
 function render(){
   const m=S.meta;
   document.getElementById('meta').innerHTML=m?`datos hasta <b>${m.dataThrough||'—'}</b> · act. ${fmtDate(m.generatedAt)}`:'';
@@ -342,8 +361,9 @@ function render(){
     <button class="${S.view==='alertas'?'on':''}" onclick="S.view='alertas';render()">📡 Alertas de hoy${S.alerts?.alerts?.length?`<span class="pill">${S.alerts.alerts.length}</span>`:''}</button>
     <button class="${S.view==='seguimiento'?'on':''}" onclick="S.view='seguimiento';render()">📈 Seguimiento real${open?`<span class="pill">${open}</span>`:''}</button>
     <button class="${S.view==='pelotazos'?'on':''}" onclick="S.view='pelotazos';render()">🚀 Pelotazos${S.alerts?.pelotazos?.length?`<span class="pill">${S.alerts.pelotazos.length}</span>`:''}</button>
+    <button class="${S.view==='medio'?'on':''}" onclick="S.view='medio';render()">📆 Medio plazo</button>
     <button class="${S.view==='validacion'?'on':''}" onclick="S.view='validacion';render()">🧪 Cómo se validó</button></div>`;
-  document.getElementById('app').innerHTML=tabs+(S.view==='alertas'?alertasView():S.view==='seguimiento'?trackView():S.view==='pelotazos'?pelotazoView():validView());
+  document.getElementById('app').innerHTML=tabs+(S.view==='alertas'?alertasView():S.view==='seguimiento'?trackView():S.view==='pelotazos'?pelotazoView():S.view==='medio'?midView():validView());
   const q=document.getElementById('q');
   if(q){q.addEventListener('input',e=>{S.q=e.target.value;const p=e.target.selectionStart;render();const n=document.getElementById('q');n.focus();n.setSelectionRange(p,p);});}
   document.querySelectorAll('thead td[data-s]').forEach(td=>td.addEventListener('click',()=>{const k=td.dataset.s;if(S.sort===k)S.dir*=-1;else{S.sort=k;S.dir=k==='sym'?1:-1;}render();}));
