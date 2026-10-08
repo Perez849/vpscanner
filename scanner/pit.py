@@ -163,6 +163,8 @@ def fetch_membership() -> Dict[str, Dict]:
         iv = intervals(cur, chg)
         rem = sum(1 for _, _, r in chg if r)
         print(f'  {k}: {len(cur)} miembros actuales · {len(chg)} cambios en la tabla ({rem} retiradas) · desde {pd.to_datetime(min([c[0] for c in chg], default=0) * 86400, unit="s").date()}', flush=True)
+        yrs = pd.to_datetime(np.array([c[0] for c in chg]) * 86400, unit='s').year if chg else []
+        print('    cambios por año (2005–2026): ' + ' '.join(f'{y}:{int((np.asarray(yrs) == y).sum())}' for y in range(2005, 2027, 1)), flush=True)
         res[k] = {'cur': cur, 'chg': chg, 'iv': iv}
     return res
 
