@@ -140,6 +140,19 @@ Se probaron, con parámetros fijados de antemano y netas de costes (señal con e
 - **ETF**: la correlación de rangos del momentum con la rentabilidad del mes siguiente es ≈ 0 (IC −0,025 a +0,055, |t| ≤ 1,5, 22 ETF, 104 meses): los «mejores ETF» del pasado no son los mejores del futuro, y por eso la rotación no bate al índice (solo reduce la caída máxima).
 - **Conclusión:** no se despliega nada. Un resultado así solo sería creíble con constituyentes históricos del índice en cada fecha (incluidos los que salieron), que no hay en estos datos.
 
+## ¿Es real el mecanismo de los rebotes? Prueba en 19 índices y hasta 65 años (`research.py longidx`)
+
+El sistema se afinó con acciones de 2016–2026, con sesgo de supervivencia y en una sola época. Un índice no tiene sesgo de supervivencia y hay décadas distintas. Se aplicaron los **mismos 17 patrones de sobreventa en tendencia alcista** (sin modelo ni ranking) a 19 índices (S&P 500 desde 1961, Nasdaq, Russell 2000, Dow, FTSE, DAX, CAC, Nikkei, Hang Seng, Bovespa…) y se compararon con **entrar al azar en tendencia alcista con la misma salida** (coste 0,10 %, entrada a la apertura siguiente).
+
+| Salida | Operaciones | Acierto | Media neta | Al azar | Ventaja | Índices donde supera al azar |
+|---|---|---|---|---|---|---|
+| RSI(2) > 70 («Equilibrado») | 8.641 | 68,0 % (al azar 61–67 %) | +0,11 % (t=3,6) | +0,04 % | **+0,07 pts** | **17 de 19** |
+| Objetivo +1×ATR («Alta probabilidad») | 8.641 | 72,5 % | +0,04 % (t=1,2) | +0,01 % | +0,03 pts (no significativa) | 13 de 19 |
+
+- **El mecanismo es real y generaliza**: con la salida por RSI supera al azar en 17 de 19 índices y en todas las décadas desde 1980 (+0,06 a +0,13 pts por operación, error típico 0,04–0,07). En los años 60 y 70 (solo S&P 500, 84 y 99 operaciones) sale negativo pero dentro del ruido. Y confirma lo visto con acciones: **el plan con salida por RSI tiene ventaja de pago; el de objetivo +1×ATR solo acierta más a menudo, sin ganar más que entrar al azar** (en acciones: alfa frente al S&P 500 −0,04 %).
+- **Es pequeño en un índice**: +0,07 pts por operación sobre un ATR de ~1 %. Una cartera «solo S&P 500» con este sistema estuvo el 26 % del tiempo en mercado y rindió +1,0 % anual frente a +7,5 % de comprar y mantener (sin dividendos, 65 años): **solo con un índice no se gana dinero**. La ventaja necesita activos volátiles (ATR ≥ 2,5 %) donde el mismo rebote paga más en % — de ahí el suelo de volatilidad y que las acciones den +0,7 % por operación.
+- **No protege en mercados bajistas fuertes**: 2000–02 −0,34 % por operación (al azar −0,33 %), 2008 −0,94 % (al azar −0,75 %). El filtro de tendencia (sobre la SMA200) llega tarde en las caídas rápidas.
+
 ## 🚀 Pelotazos (experimental)
 
 Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
