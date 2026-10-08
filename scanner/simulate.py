@@ -28,14 +28,14 @@ COST_RT = {
 
 
 class Variant(NamedTuple):
-    kind: str            # 'atr' (objetivo+stop+tiempo) | 'sig' (cierre sobre/bajo SMA5, stop, tiempo)
+    kind: str            # 'atr' (objetivo+stop+tiempo) | 'sig' (cierre sobre SMA5) | 'rsi' (RSI2>70) | 'ph' (cierre > máx. previo)
     T: float             # objetivo en ATR (solo 'atr')
     S: float             # stop en ATR
     H: int               # barras máximas
 
     @property
     def name(self) -> str:
-        return f'{self.kind}_T{self.T:g}_S{self.S:g}_H{self.H}' if self.kind == 'atr' else f'sig_S{self.S:g}_H{self.H}'
+        return f'{self.kind}_T{self.T:g}_S{self.S:g}_H{self.H}' if self.kind == 'atr' else f'{self.kind}_S{self.S:g}_H{self.H}'
 
 
 def default_variants() -> List[Variant]:
@@ -47,6 +47,9 @@ def default_variants() -> List[Variant]:
     for H in (5, 10):
         for S in (2.5, 4.0):
             v.append(Variant('sig', 0.0, S, H))
+    for kind in ('rsi', 'ph'):
+        for H in (5, 10):
+            v.append(Variant(kind, 0.0, 4.0, H))
     return v
 
 
@@ -63,10 +66,13 @@ def _forward(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, hmax: int):
     cols = idx[:, None] + 1 + np.arange(hmax)[None, :]
     valid = cols < n
     cc = np.minimum(cols, n - 1)
-    O, Hh, Ll, C, S5 = F['o'][cc], F['h'][cc], F['l'][cc], F['c'][cc], F['sma5'][cc]
+    O, Hh, Ll, C, S5, R2 = F['o'][cc], F['h'][cc], F['l'][cc], F['c'][cc], F['sma5'][cc], F['rsi2'][cc]
+    sig_h = F['h'][idx]
     if sgn < 0:
-        O, Hh, Ll, C, S5 = -O, -Ll, -Hh, -C, -S5
-    return O, Hh, Ll, C, S5, valid
+        O, Hh, Ll, C, S5, R2 = -O, -Ll, -Hh, -C, -S5, -R2
+        sig_h = -F['l'][idx]
+    PH = np.concatenate([sig_h[:, None], Hh[:, :-1]], 1)     # máximo de la barra anterior (en espacio 'largo')
+    return O, Hh, Ll, C, S5, R2, PH, valid
 
 
 def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List[Variant],
@@ -77,7 +83,8 @@ def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List
     if len(idx) == 0:
         return out
     hmax = max(v.H for v in variants)
-    O, Hh, Ll, C, S5, valid = _forward(F, idx, sgn, hmax)
+    O, Hh, Ll, C, S5, R2, PH, valid = _forward(F, idx, sgn, hmax)
+    rthr = 70.0 if sgn > 0 else -30.0
     atr = F['atr'][idx]
     E = O[:, 0]
     absE = np.abs(E)
@@ -106,7 +113,12 @@ def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List
             bars = np.where(any_ev, k + 1, H)
             kind = np.where(any_ev, np.where(exit_px >= tgt - 1e-12 * absE, 1, -1), 0)
         else:
-            cond = (C[:, :H] > S5[:, :H]) & np.isfinite(S5[:, :H])
+            if v.kind == 'sig':
+                cond = (C[:, :H] > S5[:, :H]) & np.isfinite(S5[:, :H])
+            elif v.kind == 'rsi':
+                cond = (R2[:, :H] > rthr) if sgn > 0 else (R2[:, :H] > rthr)
+            else:
+                cond = C[:, :H] > PH[:, :H]
             has_c = cond.any(1)
             kc = np.where(has_c, cond.argmax(1), 10 ** 6)
             has_s = stop_hit.any(1)

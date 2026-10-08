@@ -1,0 +1,46 @@
+name: Revalidación del modelo
+
+# Cada domingo se vuelve a ejecutar TODO el procedimiento de validación con los datos nuevos:
+# selección de patrones, modelo de probabilidad y prueba ciega. Si la ventaja desaparece,
+# el registro queda vacío y el scanner deja de emitir alertas (no opera a ciegas).
+on:
+  schedule:
+    - cron: '17 4 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  revalidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencias
+        run: pip install numpy pandas lxml
+      - name: Universo actualizado
+        run: |
+          cd scanner
+          python universe.py --refresh || true
+      - name: Validar
+        run: |
+          mkdir -p scanner/model /tmp/out
+          cd scanner
+          python -u research.py final --out model 2>&1 | tee /tmp/out/final_log.txt
+      - name: Guardar registro e informe
+        run: |
+          cp /tmp/out/final_log.txt scanner/model/last_report.txt
+          git config user.name  "vp-scanner-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add scanner/model scanner/universe.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "modelo: revalidación $(date -u +%Y-%m-%d)"
+            git pull --rebase -q origin "${GITHUB_REF_NAME}" || true
+            git push
+          fi

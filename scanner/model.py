@@ -151,3 +151,29 @@ def auc(p: np.ndarray, y: np.ndarray) -> float:
         return float('nan')
     r = np.argsort(np.argsort(p)) + 1
     return float((r[y].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
+
+
+class RidgeModel(LogitModel):
+    """Misma discretización que LogitModel pero regresión lineal (ridge) sobre el resultado neto de la operación."""
+    def fit(self, X, FL, gid, y, l2: float = 300.0, chunk: int = 150000, max_rows: int = 600000, seed: int = 0):
+        self.fit_bins(X)
+        if len(X) > max_rows:
+            sel = np.sort(np.random.default_rng(seed).choice(len(X), max_rows, replace=False))
+            X, FL, gid, y = X[sel], FL[sel], gid[sel], y[sel]
+        d = self.design(X[:2], FL[:2], gid[:2]).shape[1]
+        A = np.diag(np.full(d, l2)); A[-1, -1] = 1e-3
+        b = np.zeros(d)
+        yy = np.clip(y.astype(np.float64), -15, 15)
+        for a0 in range(0, len(X), chunk):
+            Z = self.design(X[a0:a0 + chunk], FL[a0:a0 + chunk], gid[a0:a0 + chunk]).astype(np.float64)
+            A += Z.T @ Z
+            b += Z.T @ yy[a0:a0 + chunk]
+        self.w = np.linalg.solve(A, b)
+        return self
+
+    def predict_raw(self, X, FL, gid) -> np.ndarray:
+        out = np.empty(len(X))
+        for a0 in range(0, len(X), 200000):
+            Z = self.design(X[a0:a0 + 200000], FL[a0:a0 + 200000], gid[a0:a0 + 200000]).astype(np.float64)
+            out[a0:a0 + 200000] = Z @ self.w
+        return out

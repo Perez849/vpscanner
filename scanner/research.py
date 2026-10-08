@@ -662,6 +662,77 @@ def meta_explore(EV: Dict, out_dir: str):
         print('   grupos:', {g: round(float(w), 2) for g, w in zip(GROUPS, mm.w[off + len(names):off + len(names) + len(GROUPS)])}, flush=True)
 
 
+
+def _top_table(tag, score, pnl, day, sym, years, m, qs=(0.9, 0.95, 0.98)):
+    out = []
+    for q in qs:
+        thr = np.quantile(score[m], q)
+        mm = m & (score >= thr)
+        st = stats(pnl[mm], day[mm], sym[mm])
+        line = ''
+        for Y in range(2019, 2024):
+            my = mm & (years == Y)
+            sy = stats(pnl[my])
+            line += f" {Y}:{sy['wr']:.0f}%/{sy['mean']:+.2f}" if sy.get('n', 0) >= 20 else f' {Y}:—'
+        print(f"   {tag:7s} top{100 * (1 - q):3.0f}% n={st['n']:6d} WR={st['wr']:5.1f}% (lo {st['wr_lo']:4.1f}) μ={st['mean']:+5.2f}% PF={st['pf']:4.2f} t={st['t_day']:4.1f} |{line}")
+
+
+def meta2_explore(EV: Dict, out_dir: str):
+    """Compara modelos (logístico / gradient boosting / ridge de expectativa) en walk-forward, solo largos y solo DEV."""
+    import model as MD
+    try:
+        from sklearn.ensemble import HistGradientBoostingClassifier
+    except Exception:
+        HistGradientBoostingClassifier = None
+    variants = EV['variants']
+    cut = day_of(VAL_END)
+    rows, FL, names = union_events(EV, +1)
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    years = year_of(day)
+    X = EV['X'][rows]; gid = EV['grp'][rows]
+    fidx = [FEATURES.index(f) for f in MD.MODEL_FEATURES]
+    Xm = X[:, fidx]
+    print(f'\n######## META2 largos: {len(rows):,} eventos (DEV {(day <= cut).sum():,}) · sklearn={"sí" if HistGradientBoostingClassifier else "no"}', flush=True)
+    for vname in ('sig_S4_H10', 'rsi_S4_H10', 'ph_S4_H10', 'ph_S4_H5', 'atr_T1.5_S4_H10'):
+        vi = variants.index(vname)
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        y = (pnl > 0).astype(np.float32)
+        preds = {k: np.full(len(rows), np.nan) for k in ('logit', 'ridge', 'gbm')}
+        for Y in range(2019, 2024):
+            trm = (day < day_of(f'{Y}-01-01')) & ok
+            tem = (years == Y) & ok
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LogitModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+            preds['logit'][tem] = m1.predict_raw(X[tem], FL[tem], gid[tem])
+            m2 = MD.RidgeModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], pnl[trm])
+            preds['ridge'][tem] = m2.predict_raw(X[tem], FL[tem], gid[tem])
+            if HistGradientBoostingClassifier is not None:
+                Z = np.concatenate([Xm, FL, gid[:, None].astype(np.float32)], 1)
+                good = [j for j in range(Z.shape[1]) if np.isfinite(Z[trm][:, j]).sum() > 100]
+                Z = Z[:, good]
+                cat = np.zeros(Z.shape[1], bool); cat[-1] = True
+                g = HistGradientBoostingClassifier(max_depth=4, learning_rate=0.05, max_iter=250, min_samples_leaf=300,
+                                                   l2_regularization=5.0, categorical_features=cat, random_state=0)
+                g.fit(Z[trm], y[trm])
+                preds['gbm'][tem] = g.predict_proba(Z[tem])[:, 1]
+        m = ok & (day <= cut) & np.isfinite(preds['logit'])
+        print(f"\n=== {vname} · {m.sum():,} eventos OOS (2019–2023) · sin modelo: {fmt(stats(pnl[m], day[m], sym[m]))}")
+        for k in ('logit', 'ridge', 'gbm'):
+            if not np.isfinite(preds[k][m]).all():
+                continue
+            auc_ = MD.auc(preds[k][m], y[m]) if k != 'ridge' else MD.auc(preds[k][m], y[m])
+            print(f"  [{k}] AUC(win)={auc_:.3f}")
+            _top_table(k, preds[k], pnl, day, sym, years, m)
+        # mezcla de rangos logit+ridge(+gbm)
+        def rk(a):
+            r = np.full(len(a), np.nan); idx = np.flatnonzero(m); r[idx] = np.argsort(np.argsort(a[idx])) / len(idx); return r
+        ens = rk(preds['logit']) + rk(preds['ridge']) + (rk(preds['gbm']) if np.isfinite(preds['gbm'][m]).all() else 0)
+        print('  [mezcla de rangos]')
+        _top_table('ens', ens, pnl, day, sym, years, m)
+        sys.stdout.flush()
+
+
 def load_data(args):
     if args.synthetic:
         return synthetic_universe(args.synthetic)
@@ -677,7 +748,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['explore', 'meta', 'final'])
+    ap.add_argument('cmd', choices=['explore', 'meta', 'meta2', 'final'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -698,6 +769,8 @@ def main():
         explore(EV, args.out)
     elif args.cmd == 'meta':
         meta_explore(EV, args.out)
+    elif args.cmd == 'meta2':
+        meta2_explore(EV, args.out)
     else:
         final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
     print(f'\nfin · {time.time() - t0:.0f}s', flush=True)

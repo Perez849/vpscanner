@@ -17,6 +17,18 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 
+def _exit_cond(F, b: int, sgn: int, kind: str, c: float) -> bool:
+    """Condición de salida por señal evaluada al cierre de la barra b."""
+    if kind == 'sig':
+        return bool(np.isfinite(F['sma5'][b]) and ((c > F['sma5'][b]) if sgn > 0 else (c < F['sma5'][b])))
+    if kind == 'rsi':
+        r = F['rsi2'][b]
+        return bool(np.isfinite(r) and ((r > 70.0) if sgn > 0 else (r < 30.0)))
+    if kind == 'ph':
+        return bool((c > F['h'][b - 1]) if sgn > 0 else (c < F['l'][b - 1]))
+    return False
+
+
 def resolve(F: Dict[str, np.ndarray], i: int, sgn: int, ex: Dict[str, Any], cost: float) -> Dict[str, Any]:
     """
     Estado de una operación con señal en la barra i, con los datos disponibles.
@@ -46,7 +58,7 @@ def resolve(F: Dict[str, np.ndarray], i: int, sgn: int, ex: Dict[str, Any], cost
                 exit_px, reason = stop, 'stop'; break
             if tgt is not None and h >= tgt:
                 exit_px, reason = tgt, 'objetivo'; break
-            sig = kind == 'sig' and np.isfinite(F['sma5'][b]) and c > F['sma5'][b]
+            sig = _exit_cond(F, b, +1, kind, c)
         else:
             if o >= stop:
                 exit_px, reason = o, 'stop'; break
@@ -56,7 +68,7 @@ def resolve(F: Dict[str, np.ndarray], i: int, sgn: int, ex: Dict[str, Any], cost
                 exit_px, reason = stop, 'stop'; break
             if tgt is not None and l <= tgt:
                 exit_px, reason = tgt, 'objetivo'; break
-            sig = kind == 'sig' and np.isfinite(F['sma5'][b]) and c < F['sma5'][b]
+            sig = _exit_cond(F, b, -1, kind, c)
         if sig:
             if j < H:
                 if b + 1 < n:
