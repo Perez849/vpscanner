@@ -458,7 +458,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -489,6 +489,9 @@ def main():
     if args.cmd == 'final':
         EV_pel = build_events(data, uni, SU.PEL_SETUPS + [SU.BY_ID['B_up']], PEL_VARIANTS, with_moc=False)
         final(EV, EV_pel, args.out, len([s for s in uni if not uni[s].get('aux')]))
+    elif args.cmd == 'improve':
+        import lab
+        lab.improve_explore(EV, args.out, data, uni)
     else:
         import lab
         getattr(lab, {'explore': 'explore', 'meta': 'meta_explore', 'meta2': 'meta2_explore', 'meta3': 'meta3_explore',
