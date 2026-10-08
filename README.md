@@ -171,6 +171,19 @@ El S&P 500 comprar y mantener: +17,5 % anual, caída −33,7 %. Con la pertenenc
 
 **Medio plazo con acciones, con pertenencia histórica:** el «efecto grande» de 2018–2026 era casi todo hindsight. Con el S&P 500 de cada fecha: contraste del «mejor de 2.730» p=0,24 (con las 300 más negociadas, p=0,48); el 85 % de las variantes no bate al S&P 500; persistencia entre mitades +0,15; la selección honesta rinde +15,7 % (Sharpe 0,91) frente a +14,9 % (1,05) del índice; el momentum clásico 12-1 pasa de +29,5 % (Sharpe 1,20) a +15,7 % (0,82). **No hay habilidad demostrable en elegir acciones a medio plazo.**
 
+**Cómo repartir el dinero (2008–2026, rebotes con pertenencia histórica, curva a precio realizado, resto en liquidez BIL):**
+
+| | Anual | Volatilidad | Sharpe | Caída máx. | 2008 | 2018 | 2022 |
+|---|---|---|---|---|---|---|---|
+| S&P 500 comprar y mantener | +11,4 % | 19,7 % | 0,65 | −51,9 % | −36 % | −5 % | −18 % |
+| Tendencia (S&P 500 sobre su SMA200, si no liquidez) | +10,0 % | 11,7 % | 0,87 | −20,6 % | −2 % | 0 % | −14 % |
+| Rebotes (Equilibrado, 10 × 10 %) | +11,4 % | 12,7 % | 0,91 | −37,6 % | +10 % | −24 % | +10 % |
+| 50 % tendencia + 50 % rebotes | +11,1 % | 8,9 % | **1,22** | **−20,3 %** | +4 % | −12 % | −2 % |
+| 70 % tendencia + 30 % rebotes | +10,7 % | 9,3 % | 1,14 | −17,3 % | +1 % | −8 % | −7 % |
+| 70/30 apalancado ×1,5 (sin coste de financiación) | +16,1 % | 13,9 % | 1,14 | −25,0 % | +2 % | −12 % | −11 % |
+
+Lectura honesta: **ninguna combinación bate al S&P 500 en rentabilidad sin apalancamiento**; lo que mejora es el riesgo (misma rentabilidad con caídas de −17 % a −20 % en vez de −52 %). Apalancando ×1,5 se llega a ≈+16 % anual con −25 % de caída, pero el coste de financiación (≈2 puntos al año) no está descontado y la caída de los rebotes está subestimada (la curva se actualiza al cerrar cada operación). El sesgo residual de las retiradas sin datos empuja todo ello a la baja.
+
 **Qué se hizo en producción:** la validación semanal (`research.py final`) usa ahora esta pertenencia histórica y aborta si no puede reconstruirla (no sustituye el registro por uno con sesgo). La web lo indica en «Cómo se validó».
 
 ## 🚀 Pelotazos (experimental)
