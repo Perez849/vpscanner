@@ -1,0 +1,116 @@
+  datos: 1971 en caché, 14 por descargar (10y)
+  datos: OK 1971 · fallidos 14
+  fallidos: CWEN-A VYLR FDXF BLFS LEG HONA HLX MBGL QRVO CTRA MFP ADIG ROG.SW SATS
+universo con datos: 1967 activos · 7s
+  eventos: 300/1967 símbolos (4s)
+  eventos: 600/1967 símbolos (8s)
+  eventos: 900/1967 símbolos (12s)
+  eventos: 1200/1967 símbolos (16s)
+  eventos: 1500/1967 símbolos (20s)
+  eventos: 1800/1967 símbolos (24s)
+
+######## EMA3 · RSI alto en los cruces de EMAs · 3,470,198 eventos
+
+[T1] CRUCES DE EMAs con filtro de RSI mínimo; Δ frente a barras al azar del MISMO régimen con el MISMO filtro de RSI y la misma salida
+  salida: sale al cerrar bajo EMA 89
+    B4 RSI≥ 0: n= 18390 WR=32.7% μ=+2.10% t=10.3 | ref μ=+1.19% Δ=+0.92 años Δ>0 7/10 | 2016–20 Δ=+1.50 → 2021–26 Δ=+0.43
+    B4 RSI≥55: n= 15897 WR=33.9% μ=+2.27% t=10.6 | ref μ=+1.62% Δ=+0.66 años Δ>0 8/10 | 2016–20 Δ=+1.21 → 2021–26 Δ=+0.27
+    B4 RSI≥60: n= 11903 WR=35.4% μ=+2.45% t= 9.8 | ref μ=+1.76% Δ=+0.69 años Δ>0 10/10 | 2016–20 Δ=+1.44 → 2021–26 Δ=+0.22
+    B4 RSI≥65: n=  7262 WR=37.0% μ=+2.64% t= 8.4 | ref μ=+1.92% Δ=+0.73 años Δ>0 9/10 | 2016–20 Δ=+1.52 → 2021–26 Δ=+0.26
+    B4 RSI≥70: n=  3504 WR=38.6% μ=+3.21% t= 6.9 | ref μ=+2.01% Δ=+1.19 años Δ>0 9/10 | 2016–20 Δ=+1.90 → 2021–26 Δ=+0.79
+    B1 RSI≥ 0: n= 22551 WR=30.7% μ=+1.82% t= 8.6 | ref μ=+0.98% Δ=+0.84 años Δ>0 9/10 | 2016–20 Δ=+1.43 → 2021–26 Δ=+0.52
+    B1 RSI≥55: n= 20632 WR=31.5% μ=+1.95% t= 8.6 | ref μ=+1.68% Δ=+0.27 años Δ>0 7/10 | 2016–20 Δ=+0.73 → 2021–26 Δ=+0.11
+    B1 RSI≥60: n= 15740 WR=32.9% μ=+2.08% t= 8.0 | ref μ=+1.87% Δ=+0.20 años Δ>0 7/10 | 2016–20 Δ=+0.67 → 2021–26 Δ=+0.06
+    B1 RSI≥65: n=  9678 WR=34.6% μ=+2.32% t= 7.0 | ref μ=+2.07% Δ=+0.25 años Δ>0 8/10 | 2016–20 Δ=+0.63 → 2021–26 Δ=+0.17
+    B1 RSI≥70: n=  4592 WR=35.9% μ=+2.60% t= 5.7 | ref μ=+2.27% Δ=+0.33 años Δ>0 6/10 | 2016–20 Δ=+1.18 → 2021–26 Δ=-0.04
+    B3 RSI≥ 0: n= 14312 WR=32.6% μ=+2.00% t= 8.4 | ref μ=+0.98% Δ=+1.02 años Δ>0 8/10 | 2016–20 Δ=+2.17 → 2021–26 Δ=+0.38
+    B3 RSI≥55: n= 13333 WR=33.0% μ=+2.07% t= 8.3 | ref μ=+1.68% Δ=+0.39 años Δ>0 5/10 | 2016–20 Δ=+1.39 → 2021–26 Δ=-0.08
+    B3 RSI≥60: n= 10441 WR=34.2% μ=+2.30% t= 7.9 | ref μ=+1.87% Δ=+0.43 años Δ>0 5/10 | 2016–20 Δ=+1.57 → 2021–26 Δ=-0.11
+    B3 RSI≥65: n=  6750 WR=35.3% μ=+2.48% t= 6.7 | ref μ=+2.07% Δ=+0.41 años Δ>0 5/10 | 2016–20 Δ=+1.55 → 2021–26 Δ=-0.12
+    B3 RSI≥70: n=  3471 WR=35.6% μ=+2.53% t= 5.1 | ref μ=+2.27% Δ=+0.26 años Δ>0 6/10 | 2016–20 Δ=+0.96 → 2021–26 Δ=-0.01
+    B8 RSI≥ 0: n= 19345 WR=31.6% μ=+1.89% t= 8.5 | ref μ=+1.29% Δ=+0.60 años Δ>0 8/10 | 2016–20 Δ=+1.09 → 2021–26 Δ=+0.32
+    B8 RSI≥55: n= 18189 WR=32.2% μ=+1.99% t= 8.5 | ref μ=+1.68% Δ=+0.30 años Δ>0 7/10 | 2016–20 Δ=+0.70 → 2021–26 Δ=+0.12
+    B8 RSI≥60: n= 14304 WR=33.4% μ=+2.12% t= 7.9 | ref μ=+1.82% Δ=+0.31 años Δ>0 7/10 | 2016–20 Δ=+0.78 → 2021–26 Δ=+0.10
+    B8 RSI≥65: n=  9021 WR=34.8% μ=+2.25% t= 6.8 | ref μ=+1.92% Δ=+0.33 años Δ>0 7/10 | 2016–20 Δ=+0.76 → 2021–26 Δ=+0.15
+    B8 RSI≥70: n=  4362 WR=36.0% μ=+2.46% t= 5.5 | ref μ=+2.06% Δ=+0.40 años Δ>0 6/10 | 2016–20 Δ=+1.22 → 2021–26 Δ=-0.02
+  salida: stop móvil 4×ATR (60 ses.)
+    B4 RSI≥ 0: n= 18589 WR=42.3% μ=+1.39% t= 8.0 | ref μ=+1.12% Δ=+0.26 años Δ>0 5/10 | 2016–20 Δ=+0.81 → 2021–26 Δ=-0.16
+    B4 RSI≥55: n= 16072 WR=42.3% μ=+1.36% t= 7.9 | ref μ=+0.80% Δ=+0.56 años Δ>0 8/10 | 2016–20 Δ=+1.08 → 2021–26 Δ=+0.22
+    B4 RSI≥60: n= 12034 WR=42.2% μ=+1.30% t= 6.9 | ref μ=+0.75% Δ=+0.56 años Δ>0 8/10 | 2016–20 Δ=+1.08 → 2021–26 Δ=+0.23
+    B4 RSI≥65: n=  7351 WR=41.7% μ=+1.20% t= 5.4 | ref μ=+0.70% Δ=+0.50 años Δ>0 7/10 | 2016–20 Δ=+1.04 → 2021–26 Δ=+0.18
+    B4 RSI≥70: n=  3543 WR=42.2% μ=+1.20% t= 4.0 | ref μ=+0.73% Δ=+0.47 años Δ>0 7/10 | 2016–20 Δ=+0.76 → 2021–26 Δ=+0.32
+    B1 RSI≥ 0: n= 22805 WR=42.4% μ=+1.25% t= 7.6 | ref μ=+1.74% Δ=-0.48 años Δ>0 2/10 | 2016–20 Δ=-0.18 → 2021–26 Δ=-0.63
+    B1 RSI≥55: n= 20862 WR=42.4% μ=+1.23% t= 7.2 | ref μ=+1.07% Δ=+0.16 años Δ>0 5/10 | 2016–20 Δ=+0.68 → 2021–26 Δ=-0.06
+    B1 RSI≥60: n= 15911 WR=41.9% μ=+1.15% t= 6.1 | ref μ=+0.93% Δ=+0.22 años Δ>0 6/10 | 2016–20 Δ=+0.76 → 2021–26 Δ=-0.01
+    B1 RSI≥65: n=  9796 WR=41.6% μ=+1.09% t= 4.8 | ref μ=+0.80% Δ=+0.29 años Δ>0 7/10 | 2016–20 Δ=+0.67 → 2021–26 Δ=+0.16
+    B1 RSI≥70: n=  4643 WR=41.2% μ=+1.03% t= 3.4 | ref μ=+0.76% Δ=+0.27 años Δ>0 7/10 | 2016–20 Δ=+0.48 → 2021–26 Δ=+0.24
+    B3 RSI≥ 0: n= 14488 WR=42.7% μ=+1.39% t= 7.5 | ref μ=+1.74% Δ=-0.35 años Δ>0 3/10 | 2016–20 Δ=+0.25 → 2021–26 Δ=-0.64
+    B3 RSI≥55: n= 13504 WR=42.8% μ=+1.37% t= 7.3 | ref μ=+1.07% Δ=+0.31 años Δ>0 6/10 | 2016–20 Δ=+1.05 → 2021–26 Δ=-0.03
+    B3 RSI≥60: n= 10576 WR=42.5% μ=+1.33% t= 6.4 | ref μ=+0.93% Δ=+0.41 años Δ>0 7/10 | 2016–20 Δ=+1.11 → 2021–26 Δ=+0.09
+    B3 RSI≥65: n=  6839 WR=41.5% μ=+1.12% t= 4.5 | ref μ=+0.80% Δ=+0.32 años Δ>0 6/10 | 2016–20 Δ=+0.84 → 2021–26 Δ=+0.12
+    B3 RSI≥70: n=  3514 WR=40.1% μ=+0.84% t= 2.6 | ref μ=+0.76% Δ=+0.07 años Δ>0 6/10 | 2016–20 Δ=+0.11 → 2021–26 Δ=+0.16
+    B8 RSI≥ 0: n= 19576 WR=42.7% μ=+1.32% t= 7.5 | ref μ=+1.17% Δ=+0.14 años Δ>0 6/10 | 2016–20 Δ=+0.68 → 2021–26 Δ=-0.16
+    B8 RSI≥55: n= 18406 WR=42.7% μ=+1.31% t= 7.3 | ref μ=+0.95% Δ=+0.36 años Δ>0 7/10 | 2016–20 Δ=+0.85 → 2021–26 Δ=+0.13
+    B8 RSI≥60: n= 14471 WR=42.3% μ=+1.22% t= 6.2 | ref μ=+0.85% Δ=+0.37 años Δ>0 7/10 | 2016–20 Δ=+0.89 → 2021–26 Δ=+0.11
+    B8 RSI≥65: n=  9138 WR=41.8% μ=+1.07% t= 4.6 | ref μ=+0.71% Δ=+0.36 años Δ>0 7/10 | 2016–20 Δ=+0.66 → 2021–26 Δ=+0.25
+    B8 RSI≥70: n=  4413 WR=41.2% μ=+0.97% t= 3.2 | ref μ=+0.65% Δ=+0.32 años Δ>0 7/10 | 2016–20 Δ=+0.49 → 2021–26 Δ=+0.25
+
+[T2] CARTERA (máx. 20 × 5 %, desde 2017) con RSI ≥ 60 y salida al cerrar bajo EMA 89; referencia con el mismo filtro
+   S&P 500 comprar y mantener: anual +15.3% · caída máx. 33.7% · Sharpe 0.88
+  — todas
+    sale al cerrar bajo EMA  B4        RSI≥ 0  anual  +10.6% · caída  19.8% · Sharpe 0.95 · meses+  50% · peor mes  -9.5% ·  141 op/año
+    sale al cerrar bajo EMA  B4        RSI≥60  anual  +11.0% · caída  33.8% · Sharpe 0.94 · meses+  47% · peor mes  -8.0% ·  119 op/año
+    sale al cerrar bajo EMA  B1        RSI≥60  anual  +16.3% · caída  21.2% · Sharpe 1.22 · meses+  50% · peor mes  -8.2% ·  131 op/año
+    sale al cerrar bajo EMA  B3        RSI≥60  anual  +19.8% · caída  19.3% · Sharpe 1.52 · meses+  56% · peor mes  -7.6% ·  120 op/año
+    sale al cerrar bajo EMA  B8        RSI≥60  anual  +18.5% · caída  24.7% · Sharpe 1.10 · meses+  47% · peor mes  -8.1% ·  132 op/año
+    sale al cerrar bajo EMA  REF_stack RSI≥60  anual   +8.9% · caída  23.3% · Sharpe 0.75 · meses+  60% · peor mes -14.4% ·  112 op/año
+    sale al cerrar bajo EMA  REF_up    RSI≥60  anual  +10.3% · caída  21.9% · Sharpe 0.91 · meses+  55% · peor mes -15.6% ·  113 op/año
+    sale al cerrar bajo EMA  REF_all   RSI≥60  anual  +11.2% · caída  27.9% · Sharpe 0.84 · meses+  54% · peor mes -18.1% ·  124 op/año
+    stop móvil 4×ATR (60 ses B4        RSI≥ 0  anual  +13.8% · caída  22.6% · Sharpe 1.49 · meses+  65% · peor mes  -6.7% ·  157 op/año
+    stop móvil 4×ATR (60 ses B4        RSI≥60  anual  +13.4% · caída  32.1% · Sharpe 1.37 · meses+  57% · peor mes  -6.8% ·  154 op/año
+    stop móvil 4×ATR (60 ses B1        RSI≥60  anual  +10.2% · caída  31.1% · Sharpe 1.01 · meses+  62% · peor mes  -9.6% ·  155 op/año
+    stop móvil 4×ATR (60 ses B3        RSI≥60  anual  +11.0% · caída  33.1% · Sharpe 1.09 · meses+  58% · peor mes -10.1% ·  154 op/año
+    stop móvil 4×ATR (60 ses B8        RSI≥60  anual   +8.2% · caída  34.5% · Sharpe 0.85 · meses+  57% · peor mes  -8.1% ·  161 op/año
+    stop móvil 4×ATR (60 ses REF_stack RSI≥60  anual   +6.4% · caída  29.6% · Sharpe 0.68 · meses+  56% · peor mes -16.0% ·  175 op/año
+    stop móvil 4×ATR (60 ses REF_up    RSI≥60  anual   +2.9% · caída  39.7% · Sharpe 0.34 · meses+  51% · peor mes -14.6% ·  177 op/año
+    stop móvil 4×ATR (60 ses REF_all   RSI≥60  anual   +3.1% · caída  36.8% · Sharpe 0.33 · meses+  58% · peor mes -17.2% ·  180 op/año
+  — solo acciones EE.UU.
+    sale al cerrar bajo EMA  B4        RSI≥ 0  anual  +15.0% · caída  21.7% · Sharpe 1.26 · meses+  51% · peor mes  -8.1% ·  144 op/año
+    sale al cerrar bajo EMA  B4        RSI≥60  anual  +18.6% · caída  16.7% · Sharpe 1.47 · meses+  52% · peor mes  -6.2% ·  117 op/año
+    sale al cerrar bajo EMA  B1        RSI≥60  anual  +13.5% · caída  28.6% · Sharpe 1.16 · meses+  48% · peor mes -10.1% ·  130 op/año
+    sale al cerrar bajo EMA  B3        RSI≥60  anual  +16.6% · caída  23.0% · Sharpe 1.45 · meses+  54% · peor mes  -7.0% ·  118 op/año
+    sale al cerrar bajo EMA  B8        RSI≥60  anual  +14.8% · caída  26.1% · Sharpe 1.25 · meses+  50% · peor mes  -7.8% ·  129 op/año
+    sale al cerrar bajo EMA  REF_stack RSI≥60  anual   +6.3% · caída  34.0% · Sharpe 0.63 · meses+  50% · peor mes -16.2% ·  115 op/año
+    sale al cerrar bajo EMA  REF_up    RSI≥60  anual  +13.7% · caída  25.3% · Sharpe 1.16 · meses+  59% · peor mes -20.5% ·  112 op/año
+    sale al cerrar bajo EMA  REF_all   RSI≥60  anual   +6.7% · caída  31.7% · Sharpe 0.65 · meses+  58% · peor mes -20.1% ·  122 op/año
+    stop móvil 4×ATR (60 ses B4        RSI≥ 0  anual  +10.8% · caída  24.7% · Sharpe 1.18 · meses+  58% · peor mes  -8.2% ·  156 op/año
+    stop móvil 4×ATR (60 ses B4        RSI≥60  anual  +12.3% · caída  26.2% · Sharpe 1.31 · meses+  61% · peor mes  -7.3% ·  150 op/año
+    stop móvil 4×ATR (60 ses B1        RSI≥60  anual  +12.9% · caída  32.8% · Sharpe 1.25 · meses+  64% · peor mes  -9.6% ·  149 op/año
+    stop móvil 4×ATR (60 ses B3        RSI≥60  anual  +10.2% · caída  27.2% · Sharpe 1.04 · meses+  58% · peor mes  -8.6% ·  147 op/año
+    stop móvil 4×ATR (60 ses B8        RSI≥60  anual   +9.5% · caída  32.3% · Sharpe 0.95 · meses+  60% · peor mes  -9.1% ·  153 op/año
+    stop móvil 4×ATR (60 ses REF_stack RSI≥60  anual   +4.6% · caída  29.8% · Sharpe 0.48 · meses+  57% · peor mes -16.4% ·  174 op/año
+    stop móvil 4×ATR (60 ses REF_up    RSI≥60  anual   +5.2% · caída  38.5% · Sharpe 0.53 · meses+  62% · peor mes -19.5% ·  177 op/año
+    stop móvil 4×ATR (60 ses REF_all   RSI≥60  anual   +6.3% · caída  36.0% · Sharpe 0.62 · meses+  57% · peor mes -16.4% ·  175 op/año
+  — solo ETF
+    sale al cerrar bajo EMA  B4        RSI≥ 0  anual   +9.2% · caída   9.8% · Sharpe 1.57 · meses+  49% · peor mes  -3.4% ·   75 op/año
+    sale al cerrar bajo EMA  B4        RSI≥60  anual   +7.6% · caída  11.3% · Sharpe 1.44 · meses+  44% · peor mes  -4.0% ·   52 op/año
+    sale al cerrar bajo EMA  B1        RSI≥60  anual   +6.0% · caída  16.4% · Sharpe 1.21 · meses+  42% · peor mes  -4.4% ·   56 op/año
+    sale al cerrar bajo EMA  B3        RSI≥60  anual   +5.8% · caída  10.4% · Sharpe 1.19 · meses+  44% · peor mes  -2.7% ·   45 op/año
+    sale al cerrar bajo EMA  B8        RSI≥60  anual   +5.9% · caída  16.1% · Sharpe 1.19 · meses+  40% · peor mes  -5.2% ·   56 op/año
+    sale al cerrar bajo EMA  REF_stack RSI≥60  anual   +6.7% · caída  19.9% · Sharpe 1.05 · meses+  48% · peor mes  -4.8% ·   90 op/año
+    sale al cerrar bajo EMA  REF_up    RSI≥60  anual   +6.3% · caída  17.5% · Sharpe 0.88 · meses+  46% · peor mes  -6.4% ·  100 op/año
+    sale al cerrar bajo EMA  REF_all   RSI≥60  anual   +5.9% · caída  19.2% · Sharpe 0.85 · meses+  44% · peor mes  -7.4% ·  104 op/año
+    stop móvil 4×ATR (60 ses B4        RSI≥ 0  anual   +7.7% · caída  19.9% · Sharpe 1.55 · meses+  53% · peor mes  -3.1% ·   79 op/año
+    stop móvil 4×ATR (60 ses B4        RSI≥60  anual   +5.7% · caída  16.3% · Sharpe 1.42 · meses+  52% · peor mes  -4.2% ·   57 op/año
+    stop móvil 4×ATR (60 ses B1        RSI≥60  anual   +3.8% · caída  17.8% · Sharpe 0.94 · meses+  44% · peor mes  -5.1% ·   59 op/año
+    stop móvil 4×ATR (60 ses B3        RSI≥60  anual   +4.8% · caída  11.0% · Sharpe 1.32 · meses+  48% · peor mes  -2.1% ·   48 op/año
+    stop móvil 4×ATR (60 ses B8        RSI≥60  anual   +4.4% · caída  16.9% · Sharpe 1.10 · meses+  48% · peor mes  -5.6% ·   57 op/año
+    stop móvil 4×ATR (60 ses REF_stack RSI≥60  anual   +6.3% · caída  16.2% · Sharpe 1.01 · meses+  48% · peor mes  -4.2% ·  135 op/año
+    stop móvil 4×ATR (60 ses REF_up    RSI≥60  anual   +5.3% · caída  20.2% · Sharpe 0.82 · meses+  49% · peor mes  -5.7% ·  147 op/año
+    stop móvil 4×ATR (60 ses REF_all   RSI≥60  anual   +4.1% · caída  20.5% · Sharpe 0.69 · meses+  52% · peor mes  -5.7% ·  147 op/año
+
+[T3] AÑO A AÑO de B4 + RSI≥60 + salida bajo EMA 89 (μ por operación y n) y operaciones al año
+   17:+3.24(n=884) 18:-0.20(n=937) 19:+1.18(n=1501) 20:+11.80(n=1217) 21:+1.69(n=1114) 22:-2.78(n=1202) 23:+2.18(n=1717) 24:+1.20(n=1232) 25:+3.90(n=1421) 26:+1.64(n=678)
+   ganadoras: 35.4% · ganancia media +19.08% · pérdida media -6.66% · mediana -3.32% · mejor 5 % de operaciones aporta el 45% de las ganancias brutas
+
+fin · 41s
