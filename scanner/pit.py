@@ -112,6 +112,43 @@ def intervals(cur: set, chg: List[Tuple[int, str | None, str | None]]) -> Dict[s
     return out
 
 
+def _api(query: str):
+    import json
+    txt = UV._get(f'https://en.wikipedia.org/w/api.php?{query}&format=json')
+    try:
+        return json.loads(txt) if txt else None
+    except Exception:
+        return None
+
+
+def changes_elsewhere(page: str, label: str) -> List[Tuple[int, str | None, str | None]]:
+    """Si la página del índice no trae la tabla de cambios (p. ej. porque se movió a otro artículo), la busca por secciones transcluidas y por búsqueda."""
+    from urllib.parse import quote
+    cands: List[str] = []
+    j = _api(f'action=parse&page={page}&prop=sections')
+    if j and 'parse' in j:
+        secs = j['parse'].get('sections', [])
+        print(f'    [diagnóstico] secciones con «change»: {[(s.get("line"), s.get("fromtitle")) for s in secs if "hange" in s.get("line", "")]}', flush=True)
+        cands += [s['fromtitle'].replace(' ', '_') for s in secs if 'hange' in s.get('line', '') and s.get('fromtitle') and s['fromtitle'].replace(' ', '_') != page]
+    j = _api('action=query&list=search&srlimit=8&srsearch=' + quote(f'{label} component changes'))
+    if j and 'query' in j:
+        found = [r['title'].replace(' ', '_') for r in j['query'].get('search', [])]
+        print(f'    [diagnóstico] búsqueda: {found}', flush=True)
+        cands += found
+    for c in dict.fromkeys(cands):
+        html = UV._get(f'https://en.wikipedia.org/wiki/{quote(c)}')
+        if not html:
+            continue
+        try:
+            _, chg = parse_page(html, min_rows=10 ** 9)
+        except Exception:
+            continue
+        print(f'    [diagnóstico] {c}: {len(chg)} cambios', flush=True)
+        if len(chg) >= 50 and any(r for _, _, r in chg):
+            return chg
+    return []
+
+
 def fetch_membership() -> Dict[str, Dict]:
     """Descarga las tres páginas. Devuelve {índice: {'cur': set, 'chg': [...], 'iv': {ticker: [(a,b)]}}} (vacío si no hay red)."""
     res: Dict[str, Dict] = {}
@@ -121,6 +158,8 @@ def fetch_membership() -> Dict[str, Dict]:
             print(f'  {k}: página no disponible', flush=True)
             continue
         cur, chg = parse_page(html)
+        if cur and not chg:
+            chg = changes_elsewhere(PAGES[k], {'sp500': 'S&P 500', 'sp400': 'S&P 400', 'sp600': 'S&P 600'}[k])
         iv = intervals(cur, chg)
         rem = sum(1 for _, _, r in chg if r)
         print(f'  {k}: {len(cur)} miembros actuales · {len(chg)} cambios en la tabla ({rem} retiradas) · desde {pd.to_datetime(min([c[0] for c in chg], default=0) * 86400, unit="s").date()}', flush=True)
