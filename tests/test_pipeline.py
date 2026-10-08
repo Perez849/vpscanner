@@ -53,6 +53,8 @@ def main():
         run('scan.py', '--synthetic', '400', '--registry', os.path.join(reg_dir, 'validated.json'), '--out', out, '--no-notify')
         al = json.load(open(os.path.join(out, 'alerts.json')))
         assert al['alerts'], 'el scanner no emitió alertas'
+        pub = json.load(open(os.path.join(out, 'registry.json')))
+        assert pub['pit'] == {'on': False}, 'el registro público debe indicar si la validación usa pertenencia histórica'
         mid = json.load(open(os.path.join(out, 'midterm.json')))
         assert mid['asOf'] and mid['trend'][0]['sym'] == 'SPY' and 'rotation' in mid and mid['stats']['rows'], 'faltan las señales de medio plazo'
         assert al['pelotazos'] and all(p['exit']['kind'] == 'trl' and 0 < p['pBig'] < 1 and p['levels']['stop'] < p['sigClose'] for p in al['pelotazos'])

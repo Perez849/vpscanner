@@ -28,6 +28,7 @@ jobs:
           python universe.py --refresh || true
       - name: Validar
         run: |
+          set -o pipefail
           mkdir -p scanner/model /tmp/out
           cd scanner
           python -u research.py final --out model 2>&1 | tee /tmp/out/final_log.txt

@@ -369,7 +369,7 @@ def main():
     jdump(candles, 'candles.json', args.out)
     jdump(meta, 'meta.json', args.out)
     jdump({'generatedAt': reg.get('generatedAt'), 'dataThrough': reg.get('dataThrough'), 'universe': reg.get('universe'),
-           'design': reg.get('design'), 'rules': rules,
+           'design': reg.get('design'), 'rules': rules, 'pit': reg.get('pit') or {'on': False},
            'patterns': reg.get('patterns'),
            'strategies': [{k: v for k, v in s.items() if k != 'model'} for s in strategies],
            'pelotazo': ({k: v for k, v in pel.items() if k != 'model'} if pel else None)}, 'registry.json', args.out)
