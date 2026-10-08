@@ -1,0 +1,54 @@
+  datos: 1971 en caché, 14 por descargar (10y)
+  datos: OK 1971 · fallidos 14
+  fallidos: BLFS FDXF VYLR CWEN-A HLX HONA ADIG LEG MBGL CTRA QRVO ROG.SW SATS MFP
+universo con datos: 1967 activos · 8s
+  amplitud de mercado lista
+
+######## ÍNDICES ['SPY', 'QQQ', 'IWM', 'DIA']: candidatos = unión de los 17 patrones de sobreventa en tendencia, SIN modelo ni ranking · coste 0.1%
+
+=== salida rsi_S4_H10 · entrada a la APERTURA siguiente
+   sin filtro                                   n= 513 WR=71.2% μ=+0.30% PF=1.49 t=2.5 | años+ 8/10 peor -0.50 | SPY:+0.35 QQQ:+0.52 IWM:+0.24 DIA:+0.09
+   sobreventa amplia (≥10% del universo con RSI n= 363 WR=68.9% μ=+0.20% PF=1.28 t=1.3 | años+ 7/10 peor -0.94 | SPY:+0.31 QQQ:+0.48 IWM:+0.02 DIA:-0.01
+   VIX z ≥ 0,5                                  n= 104 WR=67.3% μ=+0.08% PF=1.08 t=0.2 | años+ 3/5 peor -0.68 | SPY:-0.03 QQQ:+0.52 IWM:-0.29 DIA:-0.03
+   VIX z < 0,5 (mercado tranquilo)              n= 409 WR=72.1% μ=+0.36% PF=1.71 t=3.3 | años+ 7/9 peor -0.32 | SPY:+0.47 QQQ:+0.51 IWM:+0.34 DIA:+0.12
+
+=== salida rsi_S4_H10 · entrada a la CIERRE (MOC, idealizado)
+   sin filtro                                   n= 513 WR=71.2% μ=+0.33% PF=1.51 t=2.7 | años+ 8/10 peor -0.63 | SPY:+0.45 QQQ:+0.55 IWM:+0.23 DIA:+0.08
+   sobreventa amplia (≥10% del universo con RSI n= 363 WR=68.9% μ=+0.25% PF=1.34 t=1.6 | años+ 8/10 peor -1.11 | SPY:+0.43 QQQ:+0.49 IWM:-0.03 DIA:+0.11
+   VIX z ≥ 0,5                                  n= 104 WR=64.4% μ=-0.06% PF=0.96 t=-0.1 | años+ 4/5 peor -0.94 | SPY:+0.08 QQQ:+0.49 IWM:-0.56 DIA:-0.52
+   VIX z < 0,5 (mercado tranquilo)              n= 409 WR=72.9% μ=+0.42% PF=1.87 t=3.9 | años+ 7/9 peor -0.31 | SPY:+0.57 QQQ:+0.56 IWM:+0.37 DIA:+0.21
+
+=== salida atr_T1_S4_H10 · entrada a la APERTURA siguiente
+   sin filtro                                   n= 513 WR=74.5% μ=+0.23% PF=1.31 t=1.9 | años+ 8/10 peor -0.83 | SPY:+0.34 QQQ:+0.37 IWM:+0.11 DIA:+0.10
+   sobreventa amplia (≥10% del universo con RSI n= 363 WR=74.4% μ=+0.19% PF=1.24 t=1.3 | años+ 8/10 peor -1.18 | SPY:+0.39 QQQ:+0.35 IWM:-0.01 DIA:+0.02
+   VIX z ≥ 0,5                                  n= 104 WR=72.1% μ=+0.18% PF=1.19 t=0.5 | años+ 3/5 peor -1.25 | SPY:+0.18 QQQ:+0.44 IWM:+0.11 DIA:-0.08
+   VIX z < 0,5 (mercado tranquilo)              n= 409 WR=75.1% μ=+0.24% PF=1.34 t=2.0 | años+ 8/9 peor -0.24 | SPY:+0.39 QQQ:+0.35 IWM:+0.11 DIA:+0.14
+
+=== salida atr_T1_S4_H10 · entrada a la CIERRE (MOC, idealizado)
+   sin filtro                                   n= 513 WR=74.7% μ=+0.19% PF=1.24 t=1.6 | años+ 7/10 peor -0.57 | SPY:+0.31 QQQ:+0.39 IWM:+0.02 DIA:+0.01
+   sobreventa amplia (≥10% del universo con RSI n= 363 WR=75.2% μ=+0.16% PF=1.19 t=1.1 | años+ 7/10 peor -1.11 | SPY:+0.33 QQQ:+0.38 IWM:-0.12 DIA:+0.02
+   VIX z ≥ 0,5                                  n= 104 WR=69.2% μ=-0.17% PF=0.86 t=-0.4 | años+ 2/5 peor -1.09 | SPY:-0.01 QQQ:+0.37 IWM:-0.66 DIA:-0.65
+   VIX z < 0,5 (mercado tranquilo)              n= 409 WR=76.0% μ=+0.27% PF=1.40 t=2.4 | años+ 7/9 peor -0.15 | SPY:+0.41 QQQ:+0.40 IWM:+0.14 DIA:+0.16
+
+=== salida sig_S4_H10 · entrada a la APERTURA siguiente
+   sin filtro                                   n= 513 WR=63.4% μ=+0.18% PF=1.33 t=1.8 | años+ 8/10 peor -0.47 | SPY:+0.23 QQQ:+0.41 IWM:-0.01 DIA:+0.09
+   sobreventa amplia (≥10% del universo con RSI n= 363 WR=61.4% μ=+0.09% PF=1.13 t=0.6 | años+ 7/10 peor -0.83 | SPY:+0.14 QQQ:+0.39 IWM:-0.19 DIA:-0.01
+   VIX z ≥ 0,5                                  n= 104 WR=56.7% μ=-0.05% PF=0.95 t=-0.1 | años+ 3/5 peor -0.71 | SPY:-0.11 QQQ:+0.37 IWM:-0.61 DIA:-0.04
+   VIX z < 0,5 (mercado tranquilo)              n= 409 WR=65.0% μ=+0.24% PF=1.53 t=2.7 | años+ 7/9 peor -0.23 | SPY:+0.34 QQQ:+0.42 IWM:+0.09 DIA:+0.12
+
+=== salida sig_S4_H10 · entrada a la CIERRE (MOC, idealizado)
+   sin filtro                                   n= 513 WR=66.1% μ=+0.21% PF=1.37 t=2.0 | años+ 9/10 peor -0.60 | SPY:+0.34 QQQ:+0.45 IWM:-0.02 DIA:+0.08
+   sobreventa amplia (≥10% del universo con RSI n= 363 WR=63.4% μ=+0.14% PF=1.21 t=1.1 | años+ 7/10 peor -0.99 | SPY:+0.27 QQQ:+0.42 IWM:-0.23 DIA:+0.11
+   VIX z ≥ 0,5                                  n= 104 WR=58.7% μ=-0.17% PF=0.85 t=-0.5 | años+ 3/5 peor -0.96 | SPY:+0.03 QQQ:+0.34 IWM:-0.85 DIA:-0.53
+   VIX z < 0,5 (mercado tranquilo)              n= 409 WR=68.0% μ=+0.31% PF=1.72 t=3.5 | años+ 7/9 peor -0.22 | SPY:+0.44 QQQ:+0.48 IWM:+0.12 DIA:+0.21
+
+=== CARTERA «solo SPY» (1 posición, 100 % del capital, desde 2019) frente a comprar y mantener
+   rsi_S4_H10   APERTURA siguiente         CAGR  +6.4% · DD   7.3% · Sharpe 1.00 · meses+  79% · peor mes  -5.1% ·  15 op/año
+   rsi_S4_H10   CIERRE (MOC, idealizado)   CAGR  +8.9% · DD   6.3% · Sharpe 1.29 · meses+  76% · peor mes  -5.3% ·  15 op/año
+   atr_T1_S4_H10 APERTURA siguiente         CAGR  +5.0% · DD   8.0% · Sharpe 0.78 · meses+  76% · peor mes  -8.0% ·  14 op/año
+   atr_T1_S4_H10 CIERRE (MOC, idealizado)   CAGR  +6.0% · DD   6.5% · Sharpe 0.95 · meses+  76% · peor mes  -5.0% ·  14 op/año
+   sig_S4_H10   APERTURA siguiente         CAGR  +4.3% · DD   6.5% · Sharpe 0.78 · meses+  68% · peor mes  -5.1% ·  15 op/año
+   sig_S4_H10   CIERRE (MOC, idealizado)   CAGR  +6.9% · DD   6.3% · Sharpe 1.16 · meses+  73% · peor mes  -5.3% ·  15 op/año
+   comprar y mantener SPY: CAGR +17.5% · DD 33.7% · Sharpe 0.94
+
+fin · 18s
