@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'final | moc | improve | gap | pelotazo | explore | meta … meta5 | regime | midterm | ema … ema3 | stockmid | stockmid_long'
+        description: 'final | moc | improve | gap | pelotazo | explore | meta … meta5 | regime | midterm | ema … ema3 | stockmid | stockmid_long | pit | pit_mid'
         default: 'final'
 
 permissions:

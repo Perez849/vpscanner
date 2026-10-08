@@ -317,7 +317,41 @@ def test_stockmid():
     print(f'ok · medio plazo con acciones: señales causales, aritmética exacta, contraste sin habilidad p={p0:.2f} / con habilidad p={p1:.3f}')
 
 
+def test_pit_membership():
+    """Pertenencia histórica a un índice: lectura de la tabla de cambios de Wikipedia, intervalos y máscara de eventos."""
+    import pit
+    import pandas as pd
+    cons = ''.join(f'<tr><td>M{i}</td><td>Sec</td></tr>' for i in range(6))
+    html = f"""<html><body>
+    <table><tr><th>Symbol</th><th>Security</th></tr>{cons}<tr><td>NEW</td><td>Newco</td></tr><tr><td>BRK.B</td><td>Berkshire</td></tr></table>
+    <table><tr><th rowspan=2>Effective Date</th><th colspan=2>Added</th><th colspan=2>Removed</th><th rowspan=2>Reason</th></tr>
+    <tr><th>Ticker</th><th>Security</th><th>Ticker</th><th>Security</th></tr>
+    <tr><td>March 23, 2020</td><td>NEW</td><td>Newco</td><td>OLD</td><td>Oldco</td><td>x</td></tr>
+    <tr><td>June 1, 2018</td><td>OLD</td><td>Oldco</td><td></td><td></td><td>y</td></tr>
+    <tr><td>January 5, 2022</td><td></td><td></td><td>GONE</td><td>Goneco</td><td>z</td></tr>
+    </table></body></html>"""
+    cur, chg = pit.parse_page(html, min_rows=5)
+    assert cur == {f'M{i}' for i in range(6)} | {'NEW', 'BRK-B'}, cur
+    assert len(chg) == 3 and any(a == 'NEW' and r == 'OLD' for _, a, r in chg)
+    iv = pit.intervals(cur, chg)
+    d = lambda s_: int(pd.Timestamp(s_).value // 86400 // 10 ** 9)
+    assert iv['M0'] == [(pit.NEG, pit.POS)] and iv['BRK-B'] == [(pit.NEG, pit.POS)]
+    assert iv['NEW'] == [(d('2020-03-23'), pit.POS)]                              # alta en 2020: antes NO era miembro
+    assert iv['OLD'] == [(d('2018-06-01'), d('2020-03-23'))]                      # alta 2018, baja 2020
+    assert iv['GONE'] == [(pit.NEG, d('2022-01-05'))]                             # primera noticia = baja: ya era miembro antes
+    names = ['M0', 'NEW', 'OLD', 'GONE', 'ETF1']
+    sym = np.array([0, 1, 1, 2, 2, 2, 3, 3, 4]); day = np.array([d('2019-01-01'), d('2019-01-01'), d('2021-01-01'), d('2017-01-01'), d('2019-01-01'), d('2021-01-01'), d('2021-12-31'), d('2022-01-05'), d('2019-01-01')])
+    ok = pit.event_mask(names, sym, day, iv)
+    assert ok.tolist() == [True, False, True, False, True, False, True, False, True], ok.tolist()
+    ok2 = pit.event_mask(names, sym, day, iv, require_info=True)
+    assert not ok2[-1] and ok2[0]
+    Mx = pit.member_matrix(names, np.array([d('2019-01-01'), d('2021-01-01')]), iv, True)
+    assert Mx.tolist() == [[True, False, True, True, True], [True, True, False, True, True]]
+    print('ok · pertenencia histórica a índices (lectura de tabla, intervalos, máscaras)')
+
+
 if __name__ == '__main__':
+    test_pit_membership()
     test_stockmid()
     test_ema_exit_kinds()
     test_midterm_signals()

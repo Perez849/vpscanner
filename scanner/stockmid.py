@@ -147,7 +147,8 @@ def _variant_returns(sel: List[np.ndarray], RET1: np.ndarray, cash_ret: np.ndarr
     return r
 
 
-def core(uni: Dict, data: Dict, stk: List[str], liquid_universe: bool, title: str):
+def core(uni: Dict, data: Dict, stk: List[str], liquid_universe: bool, title: str, member=None):
+    """`member(nombres, días) -> (miembro del S&P 500 en la fecha, miembro de algún índice en la fecha)` activa la pertenencia histórica (módulo pit)."""
     spy = data['SPY']
     cal = (spy['t'] // 86400).astype(np.int64)
     T = len(cal)
@@ -181,9 +182,14 @@ def core(uni: Dict, data: Dict, stk: List[str], liquid_universe: bool, title: st
     names = list(F)
     print(f'  señales: {len(names)} · variantes por universo: {len(names) * len(KS) * len(HS) * len(FILTERS):,}', flush=True)
 
-    universes = {'S&P 500 actual': np.broadcast_to(large[None, :], (nP, len(stk))) & np.isfinite(P[R])}
+    if member is not None:
+        m500, many = member(stk, cal[R])
+        universes = {'S&P 500 en cada fecha (histórico)': m500 & np.isfinite(P[R])}
+    else:
+        many = None
+        universes = {'S&P 500 actual': np.broadcast_to(large[None, :], (nP, len(stk))) & np.isfinite(P[R])}
     if liquid_universe:
-        dv_at = np.where(np.isfinite(dv60[R]) & np.isfinite(P[R]), dv60[R], np.nan)
+        dv_at = np.where(np.isfinite(dv60[R]) & np.isfinite(P[R]) & (many if many is not None else True), dv60[R], np.nan)
         rank_dv = pd.DataFrame(dv_at).rank(axis=1, ascending=False).to_numpy()
         universes['las 300 acciones más negociadas en cada fecha (EE.UU.)'] = rank_dv <= 300
     per_year = 12.0
