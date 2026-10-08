@@ -1,0 +1,74 @@
+  datos: 1971 en caché, 14 por descargar (10y)
+  datos: OK 1971 · fallidos 14
+  fallidos: HONA CWEN-A LEG HLX BLFS ADIG VYLR FDXF MBGL CTRA QRVO MFP ROG.SW SATS
+universo con datos: 1967 activos · 7s
+  amplitud de mercado lista
+  eventos: 300/1967 símbolos (14s)
+  eventos: 600/1967 símbolos (27s)
+  eventos: 900/1967 símbolos (40s)
+  eventos: 1200/1967 símbolos (54s)
+  eventos: 1500/1967 símbolos (69s)
+  eventos: 1800/1967 símbolos (83s)
+tabla de eventos lista · 106s
+
+######## IMPROVE2 · 198,450 candidatos largos
+  Referencia S&P 500 comprar y mantener desde 2019: CAGR +17.5% · DD máx 33.7% · Sharpe 0.94
+
+================ rsi_S4_H10 · Equilibrado ================
+  [R] resultado por PUESTO en el ranking del día (fuera de muestra, plan desplegado, N=5):
+     puesto 1: n= 1589 WR=66.7% μ=+0.80% PF=1.43 t= 3.9 · años+ 7/8
+     puesto 2: n= 1435 WR=65.4% μ=+0.52% PF=1.32 t= 3.5 · años+ 5/8
+     puesto 3: n= 1336 WR=65.0% μ=+0.41% PF=1.26 t= 2.6 · años+ 6/8
+     puesto 4: n= 1276 WR=66.5% μ=+0.34% PF=1.22 t= 2.2 · años+ 6/8
+     puesto 5: n= 1230 WR=65.6% μ=+0.39% PF=1.28 t= 2.8 · años+ 6/8
+     señales por día con alguna: media 4.3 · mediana 5 · días con señal 1589 de 2660
+  [Z] réplica: ¿la mejora aislada de X2/X3 se repite con salidas vecinas? (μ de la política y años mejores que la base)
+     rsi_S4_H10         base: +0.51% | ventana 2: +0.48% (3/8) | +mercado (3): +0.49% (3/8) | +spy_ret5: +0.49% (2/8) | +dist20: +0.49% (5/8) | +ret20: +0.44% (1/8)
+     rsi_S2.5_H10       base: +0.42% | ventana 2: +0.38% (2/8) | +mercado (3): +0.36% (2/8) | +spy_ret5: +0.41% (5/8) | +dist20: +0.42% (3/8) | +ret20: +0.37% (3/8)
+     rsi_S4_H5          base: +0.23% | ventana 2: +0.26% (2/8) | +mercado (3): +0.20% (2/8) | +spy_ret5: +0.23% (4/8) | +dist20: +0.22% (4/8) | +ret20: +0.24% (4/8)
+     rsi_S1.5_H10       base: +0.28% | ventana 2: +0.29% (2/8) | +mercado (3): +0.28% (3/8) | +spy_ret5: +0.28% (5/8) | +dist20: +0.30% (6/8) | +ret20: +0.29% (3/8)
+  [P] CARTERA con capital limitado (a partir de 2019; M posiciones máx., cada una el f% del capital actual; resultados netos de costes; curva a precio realizado)
+   N=1 · máx 5 pos. · 20% c/u         CAGR  +26.3% · DD máx  34.0% · Sharpe 1.12 · meses+  56% · peor mes -17.2% ·   184 op/año
+   N=1 · máx 10 pos. · 10% c/u        CAGR  +17.1% · DD máx  15.8% · Sharpe 1.37 · meses+  60% · peor mes  -8.3% ·   205 op/año
+   N=1 · máx 20 pos. · 5% c/u         CAGR   +8.4% · DD máx   8.1% · Sharpe 1.37 · meses+  60% · peor mes  -4.2% ·   205 op/año
+   N=3 · máx 5 pos. · 20% c/u         CAGR  +27.6% · DD máx  34.9% · Sharpe 1.10 · meses+  56% · peor mes -20.6% ·   242 op/año
+   N=3 · máx 10 pos. · 10% c/u        CAGR  +24.7% · DD máx  26.3% · Sharpe 1.42 · meses+  58% · peor mes -20.9% ·   427 op/año
+   N=3 · máx 20 pos. · 5% c/u         CAGR  +17.4% · DD máx  16.5% · Sharpe 1.75 · meses+  60% · peor mes -12.3% ·   559 op/año
+   N=5 · máx 5 pos. · 20% c/u         CAGR  +26.5% · DD máx  34.9% · Sharpe 1.06 · meses+  58% · peor mes -20.6% ·   247 op/año
+   N=5 · máx 10 pos. · 10% c/u        CAGR  +23.3% · DD máx  27.4% · Sharpe 1.31 · meses+  61% · peor mes -18.7% ·   466 op/año
+   N=5 · máx 20 pos. · 5% c/u         CAGR  +18.9% · DD máx  21.5% · Sharpe 1.60 · meses+  59% · peor mes -15.8% ·   771 op/año
+   — y con el MISMO calendario de entradas/salidas pero comprando el S&P 500 (SPY) en vez de la acción:
+   SPY · N=3 · máx 10 pos. · 10% c/u  CAGR  +16.9% · DD máx  17.4% · Sharpe 2.21 · meses+  73% · peor mes  -9.0% ·   427 op/año
+   SPY · N=5 · máx 10 pos. · 10% c/u  CAGR  +17.7% · DD máx  18.8% · Sharpe 2.11 · meses+  69% · peor mes  -9.7% ·   466 op/año
+   SPY en las mismas ventanas: WR=64.4% μ=+0.39% · plan en acciones: WR=65.9% μ=+0.51%
+
+================ atr_T1_S4_H10 · Alta probabilidad ================
+  [R] resultado por PUESTO en el ranking del día (fuera de muestra, plan desplegado, N=5):
+     puesto 1: n= 1327 WR=71.6% μ=+0.48% PF=1.31 t= 3.5 · años+ 7/8
+     puesto 2: n= 1223 WR=68.9% μ=+0.17% PF=1.10 t= 1.2 · años+ 5/8
+     puesto 3: n= 1147 WR=70.7% μ=+0.22% PF=1.14 t= 1.5 · años+ 5/7
+     puesto 4: n= 1097 WR=69.5% μ=+0.22% PF=1.15 t= 1.7 · años+ 5/7
+     puesto 5: n= 1046 WR=70.6% μ=+0.08% PF=1.05 t= 0.6 · años+ 5/7
+     señales por día con alguna: media 4.4 · mediana 5 · días con señal 1327 de 2660
+  [Z] réplica: ¿la mejora aislada de X2/X3 se repite con salidas vecinas? (μ de la política y años mejores que la base)
+     atr_T1_S4_H10      base: +0.24% | ventana 2: +0.35% (4/8) | +mercado (3): +0.37% (7/8) | +spy_ret5: +0.25% (4/8) | +dist20: +0.32% (5/8) | +ret20: +0.29% (6/8)
+     atr_T0.5_S4_H10    base: +0.03% | ventana 2: +0.08% (4/8) | +mercado (3): +0.11% (8/8) | +spy_ret5: +0.06% (5/8) | +dist20: +0.07% (8/8) | +ret20: +0.05% (5/8)
+     atr_T1.5_S4_H10    base: +0.39% | ventana 2: +0.52% (3/8) | +mercado (3): +0.49% (7/8) | +spy_ret5: +0.42% (5/8) | +dist20: +0.44% (6/8) | +ret20: +0.39% (5/8)
+     atr_T1_S2.5_H10    base: +0.27% | ventana 2: +0.33% (3/8) | +mercado (3): +0.25% (3/8) | +spy_ret5: +0.27% (4/8) | +dist20: +0.27% (5/8) | +ret20: +0.27% (4/8)
+     atr_T1_S4_H5       base: +0.17% | ventana 2: +0.18% (4/8) | +mercado (3): +0.16% (5/8) | +spy_ret5: +0.18% (5/8) | +dist20: +0.17% (4/8) | +ret20: +0.16% (4/8)
+  [P] CARTERA con capital limitado (a partir de 2019; M posiciones máx., cada una el f% del capital actual; resultados netos de costes; curva a precio realizado)
+   N=1 · máx 5 pos. · 20% c/u         CAGR  +16.1% · DD máx  19.8% · Sharpe 1.24 · meses+  62% · peor mes -12.3% ·   150 op/año
+   N=1 · máx 10 pos. · 10% c/u        CAGR   +8.2% · DD máx  10.4% · Sharpe 1.21 · meses+  65% · peor mes  -8.0% ·   171 op/año
+   N=1 · máx 20 pos. · 5% c/u         CAGR   +4.1% · DD máx   5.2% · Sharpe 1.21 · meses+  65% · peor mes  -4.0% ·   171 op/año
+   N=3 · máx 5 pos. · 20% c/u         CAGR  +16.6% · DD máx  27.6% · Sharpe 1.08 · meses+  58% · peor mes -13.6% ·   197 op/año
+   N=3 · máx 10 pos. · 10% c/u        CAGR  +15.0% · DD máx  20.8% · Sharpe 1.39 · meses+  63% · peor mes  -9.9% ·   346 op/año
+   N=3 · máx 20 pos. · 5% c/u         CAGR   +7.1% · DD máx  14.5% · Sharpe 1.08 · meses+  65% · peor mes -10.7% ·   473 op/año
+   N=5 · máx 5 pos. · 20% c/u         CAGR  +15.3% · DD máx  28.4% · Sharpe 0.98 · meses+  59% · peor mes -14.0% ·   202 op/año
+   N=5 · máx 10 pos. · 10% c/u        CAGR  +17.6% · DD máx  21.2% · Sharpe 1.52 · meses+  65% · peor mes -10.4% ·   378 op/año
+   N=5 · máx 20 pos. · 5% c/u         CAGR  +10.4% · DD máx  17.9% · Sharpe 1.29 · meses+  65% · peor mes -12.3% ·   631 op/año
+   — y con el MISMO calendario de entradas/salidas pero comprando el S&P 500 (SPY) en vez de la acción:
+   SPY · N=3 · máx 10 pos. · 10% c/u  CAGR  +15.8% · DD máx  18.6% · Sharpe 2.25 · meses+  72% · peor mes  -8.1% ·   346 op/año
+   SPY · N=5 · máx 10 pos. · 10% c/u  CAGR  +17.2% · DD máx  18.2% · Sharpe 2.29 · meses+  71% · peor mes  -9.1% ·   378 op/año
+   SPY en las mismas ventanas: WR=64.8% μ=+0.37% · plan en acciones: WR=70.3% μ=+0.24%
+
+fin · 207s
