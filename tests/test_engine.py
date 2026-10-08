@@ -350,7 +350,25 @@ def test_pit_membership():
     print('ok · pertenencia histórica a índices (lectura de tabla, intervalos, máscaras)')
 
 
+def test_longidx_clean():
+    """Índices largos: se descarta el tramo sin máximos/mínimos reales y lo anterior a un salto de más de 15 días."""
+    import longidx
+    uni, data = _synth.universe(2, 0.0, n_bars=5000)
+    b = {k: v.copy() for k, v in data['SPY'].items()}
+    n = len(b['c'])
+    b2 = {k: v.copy() for k, v in b.items()}
+    b2['h'][:1500] = b2['c'][:1500]; b2['l'][:1500] = b2['c'][:1500]
+    seg = longidx.clean_series(b2)
+    assert seg is not None and abs(len(seg['c']) - (n - 1500)) <= 30, len(seg['c'])
+    b3 = {k: v.copy() for k, v in b.items()}
+    b3['t'][3000:] += 40 * 86400
+    seg3 = longidx.clean_series(b3)
+    assert seg3 is not None and len(seg3['c']) == n - 3000
+    print('ok · índices largos: limpieza de tramos (OHLC real, saltos)')
+
+
 if __name__ == '__main__':
+    test_longidx_clean()
     test_pit_membership()
     test_stockmid()
     test_ema_exit_kinds()
