@@ -29,7 +29,7 @@ FROM_YEAR = '2015-06-01'                      # retiradas anteriores no pueden t
 
 
 def _norm(s) -> str | None:
-    s = str(s).strip().replace('.', '-')
+    s = re.sub(r'\[[^\]]*\]', '', str(s)).strip().replace('.', '-')
     return s if TICK.fullmatch(s) else None
 
 
@@ -38,9 +38,18 @@ def _flat(c) -> str:
     return ' '.join(dict.fromkeys(str(x).strip().lower() for x in parts))
 
 
+_DATE_RES = (re.compile(r'([A-Z][a-z]{2,8}\.? \d{1,2},? \d{4})'), re.compile(r'(\d{1,2} [A-Z][a-z]{2,8}\.? \d{4})'), re.compile(r'(\d{4}-\d{2}-\d{2})'))
+
+
 def _day(x) -> int | None:
-    t = pd.to_datetime(str(x), errors='coerce')
-    return None if pd.isna(t) else int(t.value // 86400 // 10 ** 9)
+    txt = re.sub(r'\[[^\]]*\]', '', str(x))
+    for rx in _DATE_RES:
+        m = rx.search(txt)
+        if m:
+            t = pd.to_datetime(m.group(1), errors='coerce')
+            if not pd.isna(t):
+                return int(t.value // 86400 // 10 ** 9)
+    return None
 
 
 def parse_page(html: str, min_rows: int = 25) -> Tuple[set, List[Tuple[int, str | None, str | None]]]:
@@ -49,8 +58,10 @@ def parse_page(html: str, min_rows: int = 25) -> Tuple[set, List[Tuple[int, str 
     chg: List[Tuple[int, str | None, str | None]] = []
     for t in pd.read_html(StringIO(html)):
         cols = [_flat(c) for c in t.columns]
-        ia = next((i for i, c in enumerate(cols) if 'added' in c and ('ticker' in c or 'symbol' in c)), None)
-        ir = next((i for i, c in enumerate(cols) if 'removed' in c and ('ticker' in c or 'symbol' in c)), None)
+        def pick(word):
+            cand = [i for i, c in enumerate(cols) if word in c and 'date' not in c]
+            return next((i for i in cand if 'ticker' in cols[i] or 'symbol' in cols[i]), cand[0] if cand else None)
+        ia, ir = pick('added'), pick('removed')
         idt = next((i for i, c in enumerate(cols) if 'date' in c and 'added' not in c), None)
         if ia is not None and ir is not None and idt is not None:
             for row in t.itertuples(index=False):
@@ -64,6 +75,9 @@ def parse_page(html: str, min_rows: int = 25) -> Tuple[set, List[Tuple[int, str 
                 ok = [s for s in syms if s]
                 if len(ok) >= min_rows:
                     cur = set(ok)
+    if cur and not chg:
+        for t in pd.read_html(StringIO(html)):
+            print(f'    [diagnóstico] tabla {t.shape}: columnas {[_flat(c)[:30] for c in t.columns][:7]} · primera fila {[str(x)[:22] for x in t.iloc[0].tolist()][:6] if len(t) else []}', flush=True)
     return cur, chg
 
 
