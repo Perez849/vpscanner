@@ -1,0 +1,136 @@
+  datos: 0 en caché, 1985 por descargar (10y)
+  ... 200/1985 (4s)
+  ... 400/1985 (7s)
+  ... 600/1985 (11s)
+  ... 800/1985 (14s)
+  ... 1000/1985 (17s)
+  ... 1200/1985 (20s)
+  ... 1400/1985 (23s)
+  ... 1600/1985 (27s)
+  ... 1800/1985 (30s)
+  datos: OK 1971 · fallidos 14
+  fallidos: FDXF HONA VYLR ADIG BLFS CWEN-A HLX LEG MBGL MFP QRVO ROG.SW CTRA SATS
+universo con datos: 1967 activos · 38s
+
+######## MEDIO PLAZO CON ACCIONES · 10 AÑOS · 104 meses de decisión (2018-01-31 → 2026-08-31)
+  acciones con historial completo: 1285 (S&P 500 actual: 475) · liquidez: BIL
+  señales: 91 · variantes por universo: 2,730
+
+================ UNIVERSO: S&P 500 actual (≈ 475 acciones por fecha) ================
+  [IC] correlación de rangos señal → rentabilidad del MES SIGUIENTE (las 10 con mayor |t|; con 91 señales probadas, unas 4 saldrían con |t|>2 solo por azar):
+    mom42_21                           IC -0.023 ·  50% meses+ · t=-1.6
+    lv126+rev21                        IC -0.027 ·  42% meses+ · t=-1.5
+    mom42_5                            IC -0.024 ·  48% meses+ · t=-1.5
+    lv252                              IC -0.036 ·  47% meses+ · t=-1.5
+    lv126                              IC -0.035 ·  46% meses+ · t=-1.4
+    mom252_21+lv126+rev21              IC -0.026 ·  48% meses+ · t=-1.4
+    hi52+lv126+rev21                   IC -0.031 ·  47% meses+ · t=-1.4
+    mom126_21+lv126+rev21              IC -0.023 ·  47% meses+ · t=-1.3
+    mv126+lv126+rev21                  IC -0.023 ·  46% meses+ · t=-1.3
+    lv126+rev21+dist200                IC -0.027 ·  47% meses+ · t=-1.3
+    (referencia) mom252_21              IC +0.001 ·  58% meses+ · t=+0.1
+    (referencia) mom126_21              IC -0.005 ·  50% meses+ · t=-0.3
+    (referencia) hi52                   IC -0.011 ·  54% meses+ · t=-0.5
+    (referencia) lv126                  IC -0.035 ·  46% meses+ · t=-1.4
+    (referencia) rev21                  IC -0.004 ·  48% meses+ · t=-0.2
+
+  2,730 variantes · 102 meses · referencias: universo a partes iguales +16.0% anual (Sharpe 0.91, caída -28%) · S&P 500 +15.4% (Sharpe 0.94, caída -24%)
+  Sharpe: mediana 0.84 · p90 1.14 · máx 1.41 | rentabilidad anual: mediana +14.4% · p90 +27.6% · máx +47.2%
+  superan al S&P 500 en rentabilidad: 46% · en Sharpe: 36% | superan al universo a partes iguales en rentabilidad: 43% · en Sharpe: 39%
+  EXCESO sobre el universo a partes iguales (habilidad de elegir): mediana -1.30 puntos/año · ratio de información mediano -0.11 · >0 en 44% de las variantes
+  por filtro:  none: rent. mediana +17.5%/Sharpe 0.94/exceso +1.6 pts · sma200: rent. mediana +16.9%/Sharpe 0.94/exceso +0.8 pts · market: rent. mediana +9.5%/Sharpe 0.72/exceso -6.5 pts
+  por familia de señal (mediana de las variantes con filtro «ninguno»):
+    baja volatilidad                     rent.  +9.7% · Sharpe 0.71 · exceso -6.16 pts/año · IR -0.55 · supera al universo en Sharpe:   0%
+    cercanía a máximos                   rent. +12.5% · Sharpe 0.85 · exceso -3.57 pts/año · IR -0.45 · supera al universo en Sharpe:  10%
+    combinación de señales               rent. +15.4% · Sharpe 0.86 · exceso -0.56 pts/año · IR -0.06 · supera al universo en Sharpe:  43%
+    distancia a la media                 rent. +22.7% · Sharpe 1.03 · exceso +6.13 pts/año · IR +0.50 · supera al universo en Sharpe: 100%
+    momentum (rentabilidad pasada)       rent. +24.4% · Sharpe 1.10 · exceso +8.29 pts/año · IR +0.61 · supera al universo en Sharpe:  87%
+    momentum ajustado por volatilidad    rent. +19.0% · Sharpe 1.04 · exceso +2.61 pts/año · IR +0.27 · supera al universo en Sharpe:  77%
+    reversión (el que más cayó)          rent. +18.5% · Sharpe 0.78 · exceso +4.81 pts/año · IR +0.39 · supera al universo en Sharpe:  30%
+  las 8 MEJORES por Sharpe (elegidas mirando el futuro: NO son operables tal cual):
+    mom126_21+mv126                              filtro=sma200 K= 10 cartera 3m → +40.4% anual · Sharpe 1.41 · caída  -21% · exceso +21.4 pts
+    mom126_21+mv126                              filtro=none   K= 10 cartera 3m → +40.5% anual · Sharpe 1.40 · caída  -22% · exceso +21.5 pts
+    mom84_0                                      filtro=sma200 K= 10 cartera 1m → +43.4% anual · Sharpe 1.40 · caída  -24% · exceso +24.1 pts
+    mv126+dist200                                filtro=sma200 K= 10 cartera 3m → +41.2% anual · Sharpe 1.39 · caída  -21% · exceso +22.2 pts
+    mv126                                        filtro=none   K= 10 cartera 3m → +35.3% anual · Sharpe 1.39 · caída  -22% · exceso +16.8 pts
+    mom126_21+mv126+dist200                      filtro=sma200 K= 10 cartera 3m → +43.0% anual · Sharpe 1.38 · caída  -22% · exceso +23.9 pts
+    mom126_21+mv126+dist200                      filtro=none   K= 10 cartera 3m → +43.0% anual · Sharpe 1.38 · caída  -22% · exceso +23.9 pts
+    mom84_0                                      filtro=none   K= 10 cartera 1m → +42.7% anual · Sharpe 1.38 · caída  -24% · exceso +23.7 pts
+  la IDEA CLÁSICA, sin elegir nada (momentum 12-1 meses, 50 acciones, mensual):
+    filtro=none   → +23.6% anual · Sharpe 1.08 · caída  -25% · exceso +7.2 pts · lugar 416 de 2,730
+    filtro=sma200 → +21.2% anual · Sharpe 1.02 · caída  -25% · exceso +5.1 pts · lugar 651 de 2,730
+    filtro=market → +12.5% anual · Sharpe 0.79 · caída  -22% · exceso -3.4 pts · lugar 1528 de 2,730
+  CONTRASTE «mejor de 2,730» (habilidad = exceso sobre el universo): mejor ratio de información observado 1.15 · sin habilidad el máximo mediano sería 0.75 (p95 1.12) → p-valor ≈ 0.043
+  PERSISTENCIA: correlación de rangos entre la 1.ª y la 2.ª mitad de la muestra → exceso (IR) +0.75 · Sharpe +0.40. El 10 % mejor de la 1.ª mitad tiene en la 2.ª un exceso mediano de +16.27 pts/año (el conjunto entero: -1.39).
+  SELECCIÓN HONESTA (cada año se elige con los años anteriores · 68 meses fuera de muestra, 2021–2026):
+    la de mejor Sharpe en los años previos         +39.4% anual · Sharpe 1.21 · caída  -26%
+    la de mejor exceso (IR) en los años previos    +36.4% anual · Sharpe 1.20 · caída  -24%
+    promedio de las 20 mejores en Sharpe           +34.0% anual · Sharpe 1.17 · caída  -21%
+    una variante cualquiera (promedio de todas)    +15.4% anual · Sharpe 1.12 · caída  -12%
+    universo a partes iguales (mismos meses)       +14.8% anual · Sharpe 1.02 · caída  -17%
+    S&P 500 comprar y mantener (mismos meses)      +14.9% anual · Sharpe 1.05 · caída  -22%
+    por año (la mejor por Sharpe previo | universo | S&P 500): 2021: +14|+26|+22 · 2022: +22|+3|-8 · 2023: +30|+13|+21 · 2024: +44|+20|+24 · 2025: +58|+15|+18 · 2026: +59|+7|+11
+
+================ UNIVERSO: las 300 acciones más negociadas en cada fecha (EE.UU.) (≈ 300 acciones por fecha) ================
+  [IC] correlación de rangos señal → rentabilidad del MES SIGUIENTE (las 10 con mayor |t|; con 91 señales probadas, unas 4 saldrían con |t|>2 solo por azar):
+    mom42_5                            IC -0.027 ·  48% meses+ · t=-1.6
+    mom42_21                           IC -0.024 ·  48% meses+ · t=-1.5
+    mom42_0                            IC -0.022 ·  50% meses+ · t=-1.3
+    mom63_21                           IC -0.022 ·  49% meses+ · t=-1.2
+    mv63                               IC -0.021 ·  50% meses+ · t=-1.1
+    mom63_5                            IC -0.020 ·  49% meses+ · t=-1.0
+    dist50                             IC -0.014 ·  50% meses+ · t=-0.8
+    mom63_0                            IC -0.016 ·  52% meses+ · t=-0.8
+    hi52+lv126+rev21                   IC -0.017 ·  49% meses+ · t=-0.7
+    lv126                              IC -0.017 ·  51% meses+ · t=-0.7
+    (referencia) mom252_21              IC +0.004 ·  58% meses+ · t=+0.2
+    (referencia) mom126_21              IC +0.000 ·  55% meses+ · t=+0.0
+    (referencia) hi52                   IC -0.004 ·  54% meses+ · t=-0.2
+    (referencia) lv126                  IC -0.017 ·  51% meses+ · t=-0.7
+    (referencia) rev21                  IC -0.001 ·  46% meses+ · t=-0.1
+
+  2,730 variantes · 102 meses · referencias: universo a partes iguales +14.7% anual (Sharpe 0.82, caída -28%) · S&P 500 +15.4% (Sharpe 0.94, caída -24%)
+  Sharpe: mediana 0.71 · p90 0.93 · máx 1.07 | rentabilidad anual: mediana +13.3% · p90 +28.6% · máx +57.2%
+  superan al S&P 500 en rentabilidad: 41% · en Sharpe: 9% | superan al universo a partes iguales en rentabilidad: 44% · en Sharpe: 34%
+  EXCESO sobre el universo a partes iguales (habilidad de elegir): mediana -1.08 puntos/año · ratio de información mediano -0.09 · >0 en 46% de las variantes
+  por filtro:  none: rent. mediana +16.2%/Sharpe 0.82/exceso +1.5 pts · sma200: rent. mediana +15.6%/Sharpe 0.83/exceso +0.9 pts · market: rent. mediana +8.0%/Sharpe 0.60/exceso -6.9 pts
+  por familia de señal (mediana de las variantes con filtro «ninguno»):
+    baja volatilidad                     rent.  +9.2% · Sharpe 0.68 · exceso -5.84 pts/año · IR -0.48 · supera al universo en Sharpe:   0%
+    cercanía a máximos                   rent. +11.3% · Sharpe 0.75 · exceso -3.65 pts/año · IR -0.50 · supera al universo en Sharpe:   0%
+    combinación de señales               rent. +13.7% · Sharpe 0.77 · exceso -0.92 pts/año · IR -0.09 · supera al universo en Sharpe:  43%
+    distancia a la media                 rent. +21.3% · Sharpe 0.87 · exceso +7.51 pts/año · IR +0.44 · supera al universo en Sharpe:  55%
+    momentum (rentabilidad pasada)       rent. +23.7% · Sharpe 0.90 · exceso +10.45 pts/año · IR +0.52 · supera al universo en Sharpe:  77%
+    momentum ajustado por volatilidad    rent. +20.3% · Sharpe 0.94 · exceso +5.29 pts/año · IR +0.44 · supera al universo en Sharpe:  77%
+    reversión (el que más cayó)          rent. +16.7% · Sharpe 0.69 · exceso +3.72 pts/año · IR +0.30 · supera al universo en Sharpe:   5%
+  las 8 MEJORES por Sharpe (elegidas mirando el futuro: NO son operables tal cual):
+    mom252_21                                    filtro=none   K= 10 cartera 1m → +38.7% anual · Sharpe 1.07 · caída  -29% · exceso +24.3 pts
+    mv126+rev21+dist200                          filtro=none   K= 10 cartera 3m → +25.8% anual · Sharpe 1.07 · caída  -25% · exceso +10.4 pts
+    mv126+rev21+dist200                          filtro=sma200 K= 10 cartera 3m → +25.3% anual · Sharpe 1.07 · caída  -25% · exceso +10.0 pts
+    mv252                                        filtro=none   K= 10 cartera 1m → +35.2% anual · Sharpe 1.06 · caída  -31% · exceso +20.5 pts
+    mv126                                        filtro=none   K= 20 cartera 3m → +27.8% anual · Sharpe 1.06 · caída  -25% · exceso +12.4 pts
+    mv126                                        filtro=sma200 K= 20 cartera 3m → +27.7% anual · Sharpe 1.06 · caída  -24% · exceso +12.2 pts
+    mom126_21+mv126                              filtro=none   K= 30 cartera 3m → +26.3% anual · Sharpe 1.06 · caída  -25% · exceso +11.0 pts
+    mv126                                        filtro=sma200 K= 30 cartera 3m → +24.1% anual · Sharpe 1.05 · caída  -25% · exceso +8.7 pts
+  la IDEA CLÁSICA, sin elegir nada (momentum 12-1 meses, 50 acciones, mensual):
+    filtro=none   → +23.0% anual · Sharpe 0.95 · caída  -25% · exceso +8.3 pts · lugar 193 de 2,730
+    filtro=sma200 → +20.3% anual · Sharpe 0.89 · caída  -26% · exceso +5.9 pts · lugar 589 de 2,730
+    filtro=market → +11.7% anual · Sharpe 0.64 · caída  -31% · exceso -2.5 pts · lugar 1849 de 2,730
+  CONTRASTE «mejor de 2,730» (habilidad = exceso sobre el universo): mejor ratio de información observado 0.87 · sin habilidad el máximo mediano sería 0.74 (p95 1.12) → p-valor ≈ 0.278
+  PERSISTENCIA: correlación de rangos entre la 1.ª y la 2.ª mitad de la muestra → exceso (IR) +0.75 · Sharpe +0.39. El 10 % mejor de la 1.ª mitad tiene en la 2.ª un exceso mediano de +11.94 pts/año (el conjunto entero: -3.66).
+  SELECCIÓN HONESTA (cada año se elige con los años anteriores · 68 meses fuera de muestra, 2021–2026):
+    la de mejor Sharpe en los años previos         +20.5% anual · Sharpe 0.73 · caída  -25%
+    la de mejor exceso (IR) en los años previos    +22.0% anual · Sharpe 0.78 · caída  -24%
+    promedio de las 20 mejores en Sharpe           +16.9% anual · Sharpe 0.77 · caída  -21%
+    una variante cualquiera (promedio de todas)    +11.5% anual · Sharpe 0.82 · caída  -15%
+    universo a partes iguales (mismos meses)       +12.5% anual · Sharpe 0.85 · caída  -21%
+    S&P 500 comprar y mantener (mismos meses)      +14.9% anual · Sharpe 1.05 · caída  -22%
+    por año (la mejor por Sharpe previo | universo | S&P 500): 2021: +15|+22|+22 · 2022: +15|-1|-8 · 2023: +19|+12|+21 · 2024: +9|+16|+24 · 2025: +22|+16|+18 · 2026: +36|+7|+11
+
+[ETF] ¿PERSISTEN LOS «MEJORES ETF»? IC mensual entre el ranking de momentum y la rentabilidad del mes siguiente (22 ETF, 104 meses)
+    momentum  63 sesiones (salto  0): IC -0.025 ·  45% meses+ · t=-0.6
+    momentum 126 sesiones (salto  0): IC -0.003 ·  55% meses+ · t=-0.1
+    momentum 252 sesiones (salto  0): IC +0.023 ·  56% meses+ · t=+0.6
+    momentum 252 sesiones (salto 21): IC +0.012 ·  53% meses+ · t=+0.3
+    momentum  21 sesiones (salto  0): IC +0.055 ·  55% meses+ · t=+1.5
+
+fin · 76s
