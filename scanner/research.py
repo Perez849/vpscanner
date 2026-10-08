@@ -589,7 +589,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -604,9 +604,9 @@ def main():
     t0 = time.time()
     uni, data = load_data(args)
     print(f'universo con datos: {len([s for s in uni if not uni[s].get("aux")])} activos · {time.time() - t0:.0f}s', flush=True)
-    if args.cmd == 'ema':
+    if args.cmd in ('ema', 'ema2'):
         import emastudy
-        emastudy.run(uni, data, args.out)
+        {'ema': emastudy.run, 'ema2': emastudy.run2}[args.cmd](uni, data, args.out)
         print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
         return
     if args.cmd == 'index':

@@ -300,3 +300,104 @@ def run(uni: Dict, data: Dict, out_dir: str):
             if mm.sum() >= 200:
                 print(f"   ATR% [{lo:g},{hi:g}) n={int(mm.sum()):6d} WR={np.mean(x[mm] > 0) * 100:4.1f}% μ={x[mm].mean():+.2f}%")
     sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Segunda tanda (comando `ema2`): ¿sobrevive lo que mejor salió a tiempo en mercado, cartera, selección honesta y universo sin sesgo?
+# ═════════════════════════════════════════════════════════════════════════
+def run2(uni: Dict, data: Dict, out_dir: str):
+    from research import portfolio_sim
+    E = collect(uni, data)
+    ids = E['ids']
+    day, sym, sid, grp = E['day'], E['sym'], E['sid'], E['grp']
+    years = year_of(day)
+    sid_idx = {k: i for i, k in enumerate(ids)}
+    spy = data['SPY']
+    cal = (spy['t'] // 86400).astype(np.int64)
+    ti_all = np.searchsorted(cal, day, side='left')
+    rng = np.random.default_rng(7)
+    prio = rng.random(len(day))
+    g_stock = np.isin(grp, [feats.GROUPS.index(g) for g in ('us_large', 'us_mid', 'us_small')])
+    g_etf = grp == feats.GROUPS.index('etf')
+    print(f"\n######## EMA2 · {len(day):,} eventos", flush=True)
+
+    def rows(k, extra=None):
+        m = sid == sid_idx[k]
+        return m if extra is None else (m & extra)
+
+    # ── S1: exposición en el mercado ──
+    print('\n[S1] TIEMPO EN EL MERCADO: sesiones medias por operación y rentabilidad por 20 sesiones (salida / setup / referencia con la misma salida)')
+    keys = ['A1', 'A5', 'A6', 'A9', 'B1', 'B3', 'B4', 'B8', 'D1', 'C2']
+    for vi in (1, 4, 5):
+        print(f'  salida: {VNAMES[vi]}')
+        for k in keys + ['REF_all', 'REF_stack', 'REF_up']:
+            kk = k if k.startswith('REF') else k
+            m = rows(kk)
+            x = E['pnl'][m, vi]; b = E['bars'][m, vi].astype(float); ok = np.isfinite(x)
+            if ok.sum() < 300:
+                continue
+            nm = DEFS[kk][1][:46] if kk in DEFS else BASES[kk[4:]][1]
+            print(f"    {kk:9s} {nm:46s} n={int(ok.sum()):7d} WR={np.mean(x[ok] > 0) * 100:4.1f}% μ={x[ok].mean():+5.2f}% sesiones medias={b[ok].mean():5.1f} → μ por 20 sesiones {x[ok].mean() / b[ok].mean() * 20:+5.2f}%")
+
+    # ── S2: carteras con capital limitado ──
+    print('\n[S2] CARTERA con capital limitado (máx. 20 posiciones × 5 % del capital, prioridad al azar entre señales del mismo día; netas de costes; desde 2017-01). Referencia: S&P 500 comprar y mantener.')
+    i0 = int(np.searchsorted(cal, day_of('2017-01-01')))
+    c_ = spy['c'][i0:]; r_ = np.diff(c_) / c_[:-1]
+    print(f"   S&P 500 comprar y mantener: anual {((c_[-1] / c_[0]) ** (252 / len(c_)) - 1) * 100:+.1f}% · caída máx. {float(((np.maximum.accumulate(c_) - c_) / np.maximum.accumulate(c_)).max()) * 100:.1f}% · Sharpe {r_.mean() / r_.std() * np.sqrt(252):.2f}")
+
+    def port(k, vi, scope, M=20, f=0.05):
+        m = rows(k, scope) & np.isfinite(E['pnl'][:, vi]) & (day >= day_of('2017-01-01'))
+        if m.sum() < 500:
+            return None
+        res = np.where(m, E['pnl'][:, vi], np.nan)
+        o = portfolio_sim(cal, ti_all, E['bars'][:, vi].astype(np.int64), res, prio, M, f)
+        return o
+    for scope_name, scope in (('TODAS las acciones y ETF', None), ('SOLO ETF (menos sesgo de supervivencia)', g_etf), ('SOLO acciones de EE.UU.', g_stock)):
+        print(f'  — {scope_name}')
+        for vi in (1, 4, 5):
+            for k in ['A6', 'A9', 'B1', 'B4', 'B8', 'REF_stack', 'REF_up']:
+                o = port(k, vi, scope)
+                if o is None:
+                    continue
+                nm = DEFS[k][1][:34] if k in DEFS else BASES[k[4:]][1][:34]
+                print(f"    {VNAMES[vi][:26]:26s} {k:9s} {nm:34s} anual {o['cagr']:+6.1f}% · caída {o['dd']:5.1f}% · Sharpe {o['sharpe']:4.2f} · meses+ {o['monthsPos']:3.0f}% · peor mes {o['worstMonth']:+5.1f}% · {o['tradesYear']:5.0f} op/año")
+        sys.stdout.flush()
+
+    # ── S3: selección HONESTA: se elige con 2016–2020 y se mide en 2021–2026 ──
+    print('\n[S3] SELECCIÓN HONESTA: se elige el mejor (setup × salida) con los datos 2016–2020 (Δμ frente a su referencia con t ≥ 3) y se mide en 2021–2026, sin tocar nada')
+    cands = []
+    for vi in range(len(VARIANTS)):
+        for k, (d, lbl, ref) in DEFS.items():
+            if d < 0:
+                continue
+            for per, lo, hi in (('A', 2016, 2020), ('B', 2021, 2026)):
+                pass
+            m = (sid == sid_idx[k]) & np.isfinite(E['pnl'][:, vi])
+            mb = (sid == sid_idx['REF_' + ref]) & np.isfinite(E['pnl'][:, vi])
+            tr, te = m & (years <= 2020), m & (years >= 2021)
+            trb, teb = mb & (years <= 2020), mb & (years >= 2021)
+            if tr.sum() < 500 or te.sum() < 500 or trb.sum() < 500 or teb.sum() < 500:
+                continue
+            st = stats(E['pnl'][tr, vi], day[tr], sym[tr])
+            cands.append((E['pnl'][tr, vi].mean() - E['pnl'][trb, vi].mean(), st['t_day'], k, vi,
+                          E['pnl'][te, vi].mean() - E['pnl'][teb, vi].mean(), E['pnl'][te, vi].mean(), E['pnl'][teb, vi].mean(), int(te.sum())))
+    cands.sort(key=lambda r: -r[0])
+    print('   mejores 12 en 2016–2020 → su resultado en 2021–2026:')
+    for d_tr, t_tr, k, vi, d_te, mu_te, mu_ref, n_te in [(c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]) for c in cands if c[1] >= 3][:12]:
+        print(f"     {k:3s} · {VNAMES[vi][:30]:30s} · 2016–20 Δμ {d_tr:+.2f} → 2021–26 Δμ {d_te:+.2f} (μ {mu_te:+.2f}% frente a la referencia {mu_ref:+.2f}%, n={n_te})")
+    top = [c for c in cands if c[1] >= 3][:12]
+    if top:
+        print(f"   media de Δμ en 2021–2026 de esas 12 elecciones: {np.mean([c[4] for c in top]):+.2f}% (positivo = la elección anterior se sostiene)  ·  de las 12, {sum(c[4] > 0 for c in top)} siguen superando a la referencia")
+
+    # ── S4: ¿importa en qué zona está el RSI? ──
+    print('\n[S4] ¿IMPORTA LA ZONA DEL RSI(14) en la señal? μ por tramo de RSI (todos los cruces precio↑EMA34, A0, y triple alineación, B4)')
+    for k, vi in (('A0', 1), ('A0', 5), ('B4', 5), ('B1', 5)):
+        m = rows(k) & np.isfinite(E['pnl'][:, vi])
+        r_ = E['rsi'][m]; x = E['pnl'][m, vi]
+        line = f"   {k} / {VNAMES[vi][:26]:26s}:"
+        for lo, hi in ((0, 40), (40, 45), (45, 50), (50, 55), (55, 60), (60, 70), (70, 101)):
+            mm = (r_ >= lo) & (r_ < hi)
+            if mm.sum() >= 300:
+                line += f" [{lo},{hi}) n={int(mm.sum()):6d} μ={x[mm].mean():+.2f}% |"
+        print(line)
+    sys.stdout.flush()
