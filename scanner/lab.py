@@ -619,3 +619,88 @@ def gap_explore(EV: Dict, out_dir: str):
         okc = okm
         d = pm[okc] - pnl[okc]
         print(f"     ganancia media de comprar al cierre en vez de a la apertura: {np.nanmean(d):+.2f}% por operación")
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  PELOTAZOS
+# ═════════════════════════════════════════════════════════════════════════
+PEL_VARIANTS = [SM.Variant('trl', 2.5, 2.5, 20), SM.Variant('trl', 3.5, 3.5, 40), SM.Variant('trl', 5.0, 5.0, 60),
+                SM.Variant('atr', 4.0, 2.0, 20), SM.Variant('atr', 6.0, 2.5, 40)]
+
+
+def _tail_stats(x: np.ndarray) -> str:
+    x = x[np.isfinite(x)]
+    if len(x) == 0:
+        return '—'
+    gp, gl = x[x > 0].sum(), -x[x < 0].sum()
+    return (f"n={len(x):6d} WR={np.mean(x > 0) * 100:4.1f} μ={x.mean():+6.2f} med={np.median(x):+5.2f} PF={(gp / gl if gl > 0 else 99):4.2f} "
+            f"P≥10%={np.mean(x >= 10) * 100:4.1f} P≥20%={np.mean(x >= 20) * 100:4.1f} P≥30%={np.mean(x >= 30) * 100:4.1f} p95={np.percentile(x, 95):+6.1f}")
+
+
+def pelotazo_explore(EV: Dict, out_dir: str):
+    import model as MD
+    setups_, variants = EV['setups'], EV['variants']
+    sid, day, sym, grp = EV['sid'], EV['day'], EV['sym'], EV['grp']
+    years = year_of(day)
+    yrs = list(range(2017, 2027))
+    base_i = setups_.index('B_up')
+    print(f'\n######## PELOTAZOS · {len(sid):,} eventos · variantes {variants}', flush=True)
+    for vi, vname in enumerate(variants):
+        pnl = EV['pnl'][:, vi]
+        print(f'\n=== salida {vname} ===')
+        bm = (sid == base_i)
+        st_b = stats(pnl[bm], day[bm], sym[bm])
+        print(f"  {'BENCHMARK entrada aleatoria':32s} {_tail_stats(pnl[bm])}")
+        for si, sname in enumerate(setups_):
+            if SU.BY_ID[sname].family != 'pelotazo':
+                continue
+            m = (sid == si) & np.isfinite(pnl)
+            if m.sum() < 150:
+                continue
+            st = stats(pnl[m], day[m], sym[m])
+            t_edge = (st['mean'] - st_b['mean']) / math.sqrt(st['se'] ** 2 + st_b['se'] ** 2 + 1e-12)
+            npos = nt = 0
+            for Y in yrs:
+                my = m & (years == Y)
+                if my.sum() >= 20:
+                    nt += 1; npos += np.nanmean(pnl[my]) > 0
+            print(f"  {sname:12s} {_tail_stats(pnl[m])} | edge={st['mean'] - st_b['mean']:+.2f} t={t_edge:4.1f} años+ {npos}/{nt}")
+    # ¿puede un modelo separar los pelotazos? walk-forward con ventana de 3 años; etiqueta: ganar ≥ +12 %
+    rows, FL, names = union_events(EV, +1)
+    dayr, symr = day[rows], sym[rows]
+    yearsr = year_of(dayr)
+    X = EV['X'][rows]; gid = grp[rows]
+    feats_ = list(MD.MODEL_FEATURES) + ['ret60', 'ret120', 'rs60', 'rs120', 'max_gap5', 'shock5', 'max_vr5']
+    fidx = [FEATURES.index(f) for f in feats_]
+    last_day = int(dayr.max())
+    print(f'\n######## MODELO sobre la unión de setups ({len(rows):,} eventos): ¿se pueden ordenar los candidatos? (walk-forward, ventana 3 años)', flush=True)
+    for vi, vname in enumerate(variants):
+        if vname not in ('trl_T3.5_S3.5_H40', 'trl_T5_S5_H60', 'atr_T6_S2.5_H40', 'trl_T2.5_S2.5_H20'):
+            continue
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        y = (pnl >= 12).astype(np.float32)
+        p = np.full(len(rows), np.nan)
+        for Y in range(2019, int(year_of(np.array([last_day]))[0]) + 1):
+            trm = (dayr < day_of(f'{Y}-01-01')) & (dayr >= day_of(f'{Y - 3}-01-01')) & ok
+            tem = (yearsr == Y) & ok
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LinearLogitModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+            p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem])
+        m = ok & np.isfinite(p)
+        print(f"\n=== {vname} · etiqueta P(≥+12%) · AUC={MD.auc(p[m], y[m]):.3f} · base rate={y[m].mean() * 100:.1f}%")
+        print(f"  todos los candidatos   {_tail_stats(pnl[m])}")
+        for lbl, sel in (('top 1/día', _topn_mask(p, dayr, m, 1)), ('top 3/día', _topn_mask(p, dayr, m, 3)), ('top 5%', m & (p >= np.quantile(p[m], 0.95))), ('top 1%', m & (p >= np.quantile(p[m], 0.99)))):
+            line = f"  {lbl:20s} {_tail_stats(pnl[sel])}"
+            print(line)
+            yl = '      por año: '
+            for Y in range(2019, 2027):
+                my = sel & (yearsr == Y)
+                if my.sum() >= 20:
+                    yl += f" {str(Y)[2:]}:{np.nanmean(pnl[my]):+.1f}/{np.mean(pnl[my] >= 12) * 100:.0f}%/{my.sum()}"
+            print(yl, flush=True)
+        # dependencia de unos pocos aciertos gordos
+        sel = _topn_mask(p, dayr, m, 3)
+        x = np.sort(pnl[sel][np.isfinite(pnl[sel])])[::-1]
+        tot = x.sum()
+        print(f"  top 3/día: el 1% de las operaciones mejores aporta el {x[:max(1, len(x) // 100)].sum() / tot * 100 if tot > 0 else float('nan'):.0f}% del beneficio total ({len(x)} ops); el 5%: {x[:max(1, len(x) // 20)].sum() / tot * 100 if tot > 0 else float('nan'):.0f}%")

@@ -28,14 +28,14 @@ COST_RT = {
 
 
 class Variant(NamedTuple):
-    kind: str            # 'atr' (objetivo+stop+tiempo) | 'sig' (cierre sobre SMA5) | 'rsi' (RSI2>70) | 'ph' (cierre > máx. previo)
+    kind: str            # 'atr' (objetivo+stop+tiempo) | 'sig' (cierre sobre SMA5) | 'rsi' (RSI2>70) | 'ph' (cierre > máx. previo) | 'trl' (trailing stop)
     T: float             # objetivo en ATR (solo 'atr')
     S: float             # stop en ATR
     H: int               # barras máximas
 
     @property
     def name(self) -> str:
-        return f'{self.kind}_T{self.T:g}_S{self.S:g}_H{self.H}' if self.kind == 'atr' else f'{self.kind}_S{self.S:g}_H{self.H}'
+        return f'{self.kind}_T{self.T:g}_S{self.S:g}_H{self.H}' if self.kind in ('atr', 'trl') else f'{self.kind}_S{self.S:g}_H{self.H}'
 
 
 def default_variants() -> List[Variant]:
@@ -107,6 +107,21 @@ def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List
         stop = E - v.S * atr
         stop_hit = Ll[:, :H] <= stop[:, None]
         gap_stop = O[:, :H] <= stop[:, None]
+        if v.kind == 'trl':
+            # stop de seguimiento (chandelier): máx. alcanzado hasta la barra ANTERIOR − T×ATR, solo sube; arranca en S×ATR bajo la entrada
+            hh = np.maximum.accumulate(Hh[:, :H], axis=1)
+            prev_hh = np.concatenate([E[:, None], hh[:, :-1]], 1)
+            stop_j = np.maximum((E - v.S * atr)[:, None], prev_hh - v.T * atr[:, None])
+            hit = Ll[:, :H] <= stop_j
+            any_hit = hit.any(1)
+            k = hit.argmax(1)
+            px = np.minimum(O[rows, k], stop_j[rows, k])         # hueco por debajo del stop → se sale a la apertura
+            exit_px = np.where(any_hit, px, C[:, H - 1])
+            bars = np.where(any_hit, k + 1, H)
+            kind = np.where(any_hit, -1, 0)
+            pnl = (exit_px - E) / absE * 100.0 - cost
+            out[v.name] = Result(np.where(ok_all, pnl, np.nan), kind.astype(np.int8), bars.astype(np.int16), np.where(sgn < 0, -E, E))
+            continue
         if v.kind == 'atr':
             tgt = E + v.T * atr
             tgt_hit = Hh[:, :H] >= tgt[:, None]

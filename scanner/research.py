@@ -61,7 +61,7 @@ MOC_VARIANTS = [SM.Variant('rsi', 0.0, 4.0, 10), SM.Variant('atr', 1.0, 4.0, 10)
 
 
 def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: List[SM.Variant],
-                 only_last: bool = False, verbose: bool = True):
+                 only_last: bool = False, verbose: bool = True, with_moc: bool = True):
     """
     Recorre el universo y devuelve la tabla de eventos en arrays NumPy:
       sid, sym_i, grp_i, day, X[n, len(FEATURES)], pnl[n,V], kind[n,V], bars[n,V]
@@ -99,8 +99,11 @@ def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: Li
             # hueco de entrada (apertura de i+1 frente al cierre de i, en ATR) y entrada AL CIERRE para los planes desplegados
             nxt = np.minimum(uni_idx + 1, len(F['c']) - 1)
             gap_in = np.where(uni_idx + 1 < len(F['c']), (F['o'][nxt] - F['c'][uni_idx]) / F['atr'][uni_idx], np.nan).astype(np.float32)
-            moc_res = SM.simulate(F, uni_idx, sgn, MOC_VARIANTS, cost, entry_mode='close')
-            MO = np.stack([moc_res[v.name].pnl for v in MOC_VARIANTS], 1).astype(np.float32)
+            if with_moc:
+                moc_res = SM.simulate(F, uni_idx, sgn, MOC_VARIANTS, cost, entry_mode='close')
+                MO = np.stack([moc_res[v.name].pnl for v in MOC_VARIANTS], 1).astype(np.float32)
+            else:
+                MO = np.full((len(uni_idx), 2), np.nan, np.float32)
             for sid in ids:
                 pos = np.searchsorted(uni_idx, ev[sid])
                 acc['sid'].append(np.full(len(pos), sid_of[sid], np.int16))
@@ -377,8 +380,13 @@ def main():
     t0 = time.time()
     uni, data = load_data(args)
     print(f'universo con datos: {len([s for s in uni if not uni[s].get("aux")])} activos · {time.time() - t0:.0f}s', flush=True)
-    variants = SM.default_variants()
-    EV = build_events(data, uni, SU.SETUPS, variants)
+    if args.cmd == 'pelotazo':
+        import lab
+        variants = lab.PEL_VARIANTS
+        EV = build_events(data, uni, SU.PEL_SETUPS + [SU.BY_ID['B_up']], variants, with_moc=False)
+    else:
+        variants = SM.default_variants()
+        EV = build_events(data, uni, SU.SETUPS, variants)
     print(f'tabla de eventos lista · {time.time() - t0:.0f}s', flush=True)
     if args.cmd == 'final':
         final(EV, args.out, len([s for s in uni if not uni[s].get('aux')]))
