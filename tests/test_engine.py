@@ -107,7 +107,70 @@ def test_exit_trigger_formula():
     print(f'ok · fórmula del precio de activación de la salida RSI(2)>70 ({n} casos)')
 
 
+def test_trailing_stop_and_close_entry():
+    """El trailing stop vectorizado y la entrada al cierre coinciden con una implementación escalar barra a barra."""
+    bad = tot = 0
+    for seed in range(5):
+        F = feats.build(synth(seed=seed + 30, ar=0.05, sig=0.02))
+        n = len(F['c'])
+        idx = np.flatnonzero(np.isfinite(F['atr']))[200:260 + 300:3][:250]
+        idx = idx[idx + 70 < n]
+        for sgn in (1, -1):
+            for (K, S0, H) in ((2.5, 2.5, 20), (3.5, 3.5, 40), (5.0, 5.0, 60)):
+                v = simulate.Variant('trl', K, S0, H)
+                res = simulate.simulate(F, idx, sgn, [v], 0.2)[v.name]
+                for q, i in enumerate(idx):
+                    E = F['o'][i + 1]; atr = F['atr'][i]
+                    hh = E if sgn > 0 else E       # extremo favorable alcanzado hasta la barra anterior
+                    stop = E - sgn * S0 * atr
+                    ex = None
+                    for j in range(1, H + 1):
+                        b = i + j
+                        o, h, l, c = F['o'][b], F['h'][b], F['l'][b], F['c'][b]
+                        if sgn > 0:
+                            stop = max(E - S0 * atr, hh - K * atr)
+                            if l <= stop:
+                                ex = min(o, stop); break
+                            hh = max(hh, h)
+                        else:
+                            stop = min(E + S0 * atr, hh + K * atr)
+                            if h >= stop:
+                                ex = max(o, stop); break
+                            hh = min(hh, l)
+                    if ex is None:
+                        ex = F['c'][i + H]
+                    ref = sgn * (ex - E) / E * 100 - 0.2
+                    tot += 1
+                    bad += abs(ref - res.pnl[q]) > 1e-9
+    assert tot > 3000 and bad == 0, (tot, bad)
+    # entrada al cierre: el precio de entrada es el cierre de la barra de señal
+    F = feats.build(synth(seed=3))
+    idx = np.array([400, 500, 600])
+    for sgn in (1, -1):
+        r = simulate.simulate(F, idx, sgn, [simulate.Variant('rsi', 0, 4, 10)], 0.0, entry_mode='close')
+        assert np.allclose(r['rsi_S4_H10'].entry, F['c'][idx])
+    print(f'ok · trailing stop == referencia escalar ({tot} operaciones) y entrada al cierre')
+
+
+def test_resolve_trailing_equals_simulate():
+    bad = tot = 0
+    for seed in range(3):
+        F = feats.build(synth(seed=seed + 60, ar=0.05, sig=0.02))
+        idx = np.arange(300, 1500, 9)
+        for sgn in (1, -1):
+            v = simulate.Variant('trl', 5.0, 5.0, 60)
+            res = simulate.simulate(F, idx, sgn, [v], 0.2)[v.name]
+            for q, i in enumerate(idx):
+                r = track.resolve(F, int(i), sgn, {'kind': 'trl', 'T': 5.0, 'S': 5.0, 'H': 60}, 0.2)
+                tot += 1
+                bad += (r['status'] != 'cerrada') or abs(r['pnl'] - res.pnl[q]) > 1e-9
+    assert tot > 500 and bad == 0, (tot, bad)
+    print(f'ok · seguimiento (trailing) == simulador en {tot} operaciones')
+
+
 if __name__ == '__main__':
+    test_resolve_trailing_equals_simulate()
+    test_trailing_stop_and_close_entry()
     test_exit_trigger_formula()
     test_causality()
     test_vectorized_equals_scalar()

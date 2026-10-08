@@ -43,7 +43,7 @@ def _get(url: str, timeout: int = 25) -> Optional[bytes]:
     return None
 
 
-def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None) -> Optional[Dict[str, np.ndarray]]:
+def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None, keep_partial: bool = False) -> Optional[Dict[str, np.ndarray]]:
     url = (f'https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(ysym, safe="")}'
            f'?interval=1d&range={rng}&includeAdjustedClose=true&events=div%7Csplit')
     raw = _get(url)
@@ -80,13 +80,20 @@ def fetch_yahoo(ysym: str, rng: str = '2y', now: Optional[float] = None) -> Opti
         reg = (res.get('meta') or {}).get('currentTradingPeriod', {}).get('regular', {})
         start, end = reg.get('start'), reg.get('end')
         now = time.time() if now is None else now
+        partial = False
         if start and end and t[-1] >= start and now < end:
-            t, o, h, l, c, v = t[:-1], o[:-1], h[:-1], l[:-1], c[:-1], v[:-1]
+            if keep_partial and (end - now) < 4 * 3600 and now > start:     # sesión en curso: se conserva como barra PROVISIONAL
+                partial = True
+            else:
+                t, o, h, l, c, v = t[:-1], o[:-1], h[:-1], l[:-1], c[:-1], v[:-1]
         if len(t) < MIN_BARS:
             return None
         # duplicados de timestamp (Yahoo a veces repite la última barra)
         keep = np.concatenate([[True], np.diff(t) > 0])
-        return {'t': t[keep], 'o': o[keep], 'h': h[keep], 'l': l[keep], 'c': c[keep], 'v': v[keep]}
+        out = {'t': t[keep], 'o': o[keep], 'h': h[keep], 'l': l[keep], 'c': c[keep], 'v': v[keep]}
+        if partial:
+            out['partial'] = np.array([1.0])          # la última barra es provisional
+        return out
     except Exception:
         return None
 
@@ -109,7 +116,7 @@ def save_cache(path: str, cache: dict) -> None:
 
 def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
                cache_path: Optional[str] = None, max_age_h: float = 18.0,
-               verbose: bool = True):
+               verbose: bool = True, keep_partial: bool = False):
     """Descarga todas las series (reutilizando caché fresca). Devuelve ({sym: serie}, [fallidos])."""
     symbols = list(dict.fromkeys(symbols))
     cache = load_cache(cache_path) if cache_path else {}
@@ -128,7 +135,7 @@ def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
     t0 = time.time()
     done = 0
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = {ex.submit(fetch_yahoo, s, rng): s for s in todo}
+        futs = {ex.submit(fetch_yahoo, s, rng, None, keep_partial): s for s in todo}
         for fu in as_completed(futs):
             s = futs[fu]
             done += 1
@@ -140,7 +147,8 @@ def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
                 failed.append(s)
             else:
                 out[s] = bars
-                cache[s] = {'rng': rng, 'fetched': now, 'bars': bars}
+                if not keep_partial:
+                    cache[s] = {'rng': rng, 'fetched': now, 'bars': bars}
             if verbose and done % 200 == 0:
                 print(f'  ... {done}/{len(todo)} ({time.time() - t0:.0f}s)', flush=True)
     if cache_path and todo:
@@ -150,3 +158,40 @@ def fetch_many(symbols: Iterable[str], rng: str = '2y', workers: int = 8,
         if failed:
             print('  fallidos:', ' '.join(failed[:60]) + (' …' if len(failed) > 60 else ''), flush=True)
     return out, failed
+
+
+def fetch_intraday(ysym: str, interval: str = '60m', rng: str = '730d'):
+    """Barras intradía (sesión regular). Devuelve dict de arrays + 'off' (desfase horario en segundos) o None."""
+    url = (f'https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(ysym, safe="")}'
+           f'?interval={interval}&range={rng}&includePrePost=false')
+    raw = _get(url)
+    if not raw:
+        return None
+    try:
+        res = json.loads(raw)['chart']['result'][0]
+        ts = res.get('timestamp')
+        if not ts:
+            return None
+        q = res['indicators']['quote'][0]
+        t = np.array(ts, dtype=np.float64)
+        arr = {k: np.array([np.nan if x is None else x for x in q[k]], dtype=np.float64) for k in ('open', 'high', 'low', 'close')}
+        v = np.array([0.0 if x is None else x for x in q.get('volume', [0] * len(ts))], dtype=np.float64)
+        ok = np.isfinite(arr['open']) & np.isfinite(arr['high']) & np.isfinite(arr['low']) & np.isfinite(arr['close'])
+        off = float((res.get('meta') or {}).get('gmtoffset', 0))
+        return {'t': t[ok], 'o': arr['open'][ok], 'h': arr['high'][ok], 'l': arr['low'][ok], 'c': arr['close'][ok], 'v': v[ok], 'off': off}
+    except Exception:
+        return None
+
+
+def fetch_intraday_many(symbols, workers: int = 8, **kw):
+    out = {}
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(fetch_intraday, s, **kw): s for s in symbols}
+        for fu in as_completed(futs):
+            try:
+                r = fu.result()
+            except Exception:
+                r = None
+            if r is not None:
+                out[futs[fu]] = r
+    return out

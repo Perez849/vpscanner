@@ -112,9 +112,11 @@ def build(b: Bars) -> Dict[str, np.ndarray]:
         F['max_gap5'] = pd.Series(gap_atr).rolling(5, min_periods=3).max().to_numpy()
         F['shock5'] = pd.Series(shock).rolling(5, min_periods=3).max().to_numpy()
         F['max_vr5'] = pd.Series(F['vol_ratio']).rolling(5, min_periods=3).max().to_numpy()
-    for k in (3, 5, 10, 20):
+    for k in (3, 5, 10, 20, 55, 252):
         F[f'lowest{k}'] = (c <= pd.Series(c).rolling(k, min_periods=k).min().to_numpy()).astype(np.float64)
         F[f'highest{k}'] = (c >= pd.Series(c).rolling(k, min_periods=k).max().to_numpy()).astype(np.float64)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        F['rng_atr'] = (h - l) / F['atr']
     F['dn_streak'] = _streak(c < cp)
     F['up_streak'] = _streak(c > cp)
     # velas con cierre bajo la mínima previa (impulso bajista) y semana/volatilidad relativa

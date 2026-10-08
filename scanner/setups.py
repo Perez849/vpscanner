@@ -29,6 +29,7 @@ class Setup:
     label: str
     fn: Callable[[Dict[str, np.ndarray]], np.ndarray]
     needs_vp: bool = False
+    cooldown: int = 10
 
 
 def _lt(a, x):
@@ -146,7 +147,7 @@ def attach_vp(F: Dict[str, np.ndarray], W: int = 60) -> None:
 
 
 def detect(F: Dict[str, np.ndarray], group: str, setups: List[Setup] | None = None,
-           cooldown: int = 10) -> Dict[str, np.ndarray]:
+           cooldown: int | None = None) -> Dict[str, np.ndarray]:
     """Devuelve {setup.id: índices de barras de señal} aplicando liquidez y enfriamiento."""
     setups = setups or SETUPS
     trad = tradable_mask(F, group)
@@ -155,11 +156,12 @@ def detect(F: Dict[str, np.ndarray], group: str, setups: List[Setup] | None = No
         if s.needs_vp and 'vp_val' not in F:
             attach_vp(F)
         m = s.fn(F) & trad
-        if cooldown > 1:
+        cooldown_s = cooldown if cooldown is not None else s.cooldown
+        if cooldown_s > 1:
             # sin estado: solo cuenta la PRIMERA señal tras (cooldown-1) barras sin disparo
             cs = np.concatenate([[0], np.cumsum(m.astype(np.int64))])
             n = len(m)
-            lo = np.maximum(np.arange(n) - (cooldown - 1), 0)
+            lo = np.maximum(np.arange(n) - (cooldown_s - 1), 0)
             prev = cs[np.arange(n)] - cs[lo]            # disparos en las cooldown-1 barras previas
             m = m & (prev == 0)
         idx = np.flatnonzero(m).astype(np.int64)
@@ -173,6 +175,22 @@ UNION_COOLDOWN = 5
 def long_pattern_ids() -> List[str]:
     """Patrones que generan candidatos (largos, sin benchmark ni controles). Orden = banderas del modelo."""
     return [s.id for s in SETUPS if s.dir > 0 and s.family not in ('baseline', 'control')]
+
+
+def candidate_bars(F: Dict[str, np.ndarray], group: str, pattern_ids: List[str]):
+    """Barras candidatas (mismo criterio que candidate_at_last) y matriz de banderas [n_candidatas, n_patrones]."""
+    n = len(F['c'])
+    ev = detect(F, group, [BY_ID[i] for i in pattern_ids])
+    fire = np.zeros(n, dtype=bool)
+    flags = np.zeros((n, len(pattern_ids)), dtype=np.float32)
+    for c, pid in enumerate(pattern_ids):
+        fire[ev[pid]] = True
+        flags[ev[pid], c] = 1.0
+    cs = np.concatenate([[0], np.cumsum(fire.astype(np.int64))])
+    lo = np.maximum(np.arange(n) - (UNION_COOLDOWN - 1), 0)
+    prev = cs[np.arange(n)] - cs[lo]
+    idx = np.flatnonzero(fire & (prev == 0))
+    return idx, flags[idx]
 
 
 def candidate_at_last(F: Dict[str, np.ndarray], group: str, pattern_ids: List[str]):
@@ -189,3 +207,30 @@ def candidate_at_last(F: Dict[str, np.ndarray], group: str, pattern_ids: List[st
     if not fire[last] or fire[max(0, last - (UNION_COOLDOWN - 1)):last].any():
         return None
     return np.array([1.0 if (len(ev[i]) and ev[i][-1] == last) else 0.0 for i in pattern_ids], dtype=np.float32)
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  PELOTAZOS: setups de cola gruesa (acierto bajo, ganancia grande cuando aciertan). Largos, entrada en la apertura siguiente.
+# ═════════════════════════════════════════════════════════════════════════
+def _rs120(F):
+    return F['ret120'] - F['spy_ret120'] if 'spy_ret120' in F else np.full(len(F['c']), np.nan)
+
+
+def _build_pelotazo() -> List[Setup]:
+    S: List[Setup] = []
+    up = _up
+    S.append(Setup('P_brk55v', +1, 'pelotazo', 'Ruptura de máximos de 55 sesiones con volumen x1,5', lambda F: up(F) & (F['highest55'] > 0) & _ge(F['vol_ratio'], 1.5) & _ge(F['ibs'], 0.6), cooldown=20))
+    S.append(Setup('P_52wh', +1, 'pelotazo', 'Máximo de 52 semanas con volumen', lambda F: up(F) & (F['highest252'] > 0) & _ge(F['vol_ratio'], 1.2) & _ge(F['ibs'], 0.6), cooldown=20))
+    S.append(Setup('P_vcp', +1, 'pelotazo', 'Ruptura tras contracción de volatilidad (tendencia fuerte)', lambda F: (F['highest20'] > 0) & _lt(F['atr_rel'], 0.8) & _gt(F['sma50'] - F['sma200'], 0)
+                   & (F['c'] > F['sma50']) & _ge(F['vol_ratio'], 1.3), cooldown=20))
+    S.append(Setup('P_gapgo', +1, 'pelotazo', 'Hueco alcista ≥4% con volumen x2,5 que aguanta (catalizador)', lambda F: up(F) & _ge(F['gap'], 4.0) & _ge(F['vol_ratio'], 2.5) & _ge(F['ibs'], 0.7), cooldown=20))
+    S.append(Setup('P_gapgo8', +1, 'pelotazo', 'Hueco alcista ≥8% con volumen x3 (gran catalizador)', lambda F: _ge(F['gap'], 8.0) & _ge(F['vol_ratio'], 3.0) & _ge(F['ibs'], 0.5), cooldown=20))
+    S.append(Setup('P_capit', +1, 'pelotazo', 'Capitulación: −25% en 10 sesiones, RSI(2)≤15, volátil', lambda F: _lt(F['ret10'], -25.0) & _lt(F['rsi2'], 15) & _ge(F['atrp'], 3.5), cooldown=20))
+    S.append(Setup('P_capit_up', +1, 'pelotazo', 'Caída ≥20% en 10 sesiones dentro de tendencia alcista', lambda F: up(F) & _lt(F['ret10'], -20.0) & _lt(F['rsi2'], 20) & _ge(F['atrp'], 3.0), cooldown=20))
+    S.append(Setup('P_rs_pull', +1, 'pelotazo', 'Líder de fuerza relativa que retrocede 4–12% desde máximos', lambda F: up(F) & _ge(_rs120(F), 20.0) & _lt(F['dd20'], -4) & _gt(F['dd20'], -12) & _lt(F['rsi14'], 50), cooldown=20))
+    return S
+
+
+PEL_SETUPS: List[Setup] = _build_pelotazo()
+for _s in PEL_SETUPS:
+    BY_ID[_s.id] = _s
