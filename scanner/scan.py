@@ -32,6 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import data as D
 import feats
+import midsig
 import model as MD
 import notify
 import setups as SU
@@ -356,6 +357,13 @@ def main():
             'paused': [s['id'] for s in strategies if s.get('paused')] + ([pel['id']] if pel and pel.get('paused') else []), 'watch': len(watch), 'pelotazos': len(pelotazos), 'market': mk, 'oversoldUptrend': n_os, 'rules': rules,
             'validatedAt': reg.get('generatedAt'), 'validatedThrough': reg.get('dataThrough'), 'secs': round(time.time() - t0)}
 
+    try:
+        mid = midsig.compute(bars)                          # señales de medio plazo (tendencia y rotación de ETF): informativas, sin alertas
+    except Exception as e:                                  # pragma: no cover
+        print(f'  (señales de medio plazo no disponibles: {e})', flush=True)
+        mid = None
+    if mid:
+        jdump({'generatedAt': now, **mid}, 'midterm.json', args.out)
     jdump({'generatedAt': now, 'dataThrough': last_day, 'alerts': main_alerts, 'watch': watch, 'pelotazos': pelotazos}, 'alerts.json', args.out)
     jdump(tracking, 'tracking.json', args.out)
     jdump(candles, 'candles.json', args.out)

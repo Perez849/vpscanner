@@ -185,7 +185,30 @@ def test_portfolio_sim():
     print('ok · simulación de cartera con capital limitado (aritmética exacta)')
 
 
+def test_midterm_signals():
+    """Tendencia y rotación de medio plazo: lógica determinista con series construidas a mano."""
+    import midsig
+    n = 400
+    t0 = int(np.datetime64('2025-01-02').astype('datetime64[s]').astype(np.int64))
+    t = (t0 + np.arange(n) * 86400).astype(float)
+    mk = lambda c: {'t': t, 'o': c, 'h': c, 'l': c, 'c': c, 'v': np.full(n, 1e6)}
+    up = np.linspace(100, 200, n); down = np.linspace(200, 100, n); flat = np.full(n, 100.0)
+    bars = {'SPY': mk(up), 'QQQ': mk(down), 'IWM': mk(flat), 'EFA': mk(up * 1.0), 'XLK': mk(up * 2), 'XLE': mk(down)}
+    last_day = int(t[-1] // 86400)
+    r = midsig.rotation_at(bars, last_day, pool=['SPY', 'QQQ', 'IWM', 'EFA', 'XLK', 'XLE'])
+    held = {h['sym'] for h in r['holdings']}
+    assert held <= {'SPY', 'EFA', 'XLK'} and len(held) == 3 and abs(r['cashW']) < 1e-9, held       # solo los de momentum positivo
+    r2 = midsig.rotation_at(bars, last_day, pool=['QQQ', 'IWM', 'XLE'])
+    assert r2['holdings'] == [] and abs(r2['cashW'] - 1.0) < 1e-9                                     # sin momentum positivo → todo a liquidez
+    assert midsig.trend_status(mk(up))['above'] is True and midsig.trend_status(mk(down))['above'] is False
+    # fin de mes: 2026-10-30 (viernes) cierra octubre; 2026-10-07 queda dentro de octubre → el corte es el 30-sep
+    d = lambda s_: int(np.datetime64(s_).astype('datetime64[D]').astype(np.int64))
+    assert midsig.month_end_before(d('2026-10-30')) == d('2026-10-30') and midsig.month_end_before(d('2026-10-07')) == d('2026-09-30')
+    print('ok · señales de medio plazo (tendencia, rotación, fin de mes)')
+
+
 if __name__ == '__main__':
+    test_midterm_signals()
     test_portfolio_sim()
     test_resolve_trailing_equals_simulate()
     test_trailing_stop_and_close_entry()
