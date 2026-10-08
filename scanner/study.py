@@ -544,6 +544,17 @@ def run2(EV: Dict, out_dir: str, data: Dict | None = None, uni: Dict | None = No
                 selw = topn_mask(pw, day, in_ & np.isfinite(pw) & (pw >= bw), N)
                 report(f"+ {fn} (AUC {MD.auc(pw[ew], y[ew]):.3f})", selw, pw, base_ym)
 
+        print('  [R6] SUELO DE VOLATILIDAD: los costes son fijos en % y en valores poco volátiles se comen el rebote. Operaciones SELECCIONADAS por tramo de ATR%:')
+        for lo_, hi_ in ((0, 2.0), (2.0, 3.0), (3.0, 4.0), (4.0, 6.0), (6.0, 999)):
+            m_ = sel0 & (atrp >= lo_) & (atrp < hi_)
+            if m_.sum() >= 40:
+                st_ = stats(pnl[m_], day[m_], sym[m_]); ym_ = ymeans(m_, pnl)
+                print(f"     ATR% [{lo_:g},{hi_:g}) n={st_['n']:5d} WR={st_['wr']:4.1f}% μ={st_['mean']:+5.2f}% R̄={np.nanmean(pnl[m_] / (S_ * atrp[m_])):+.3f} años+ {sum(v > 0 for v in ym_.values())}/{len(ym_)}")
+        print('     política con suelo de ATR% (se aplica ANTES de elegir las N mejores del día):')
+        report('sin suelo (desplegado)', sel0, p0, base_ym)
+        for fl_ in (2.0, 2.5, 3.0, 3.5, 4.0, 5.0):
+            selF = topn_mask(p0, day, in_ & np.isfinite(p0) & (p0 >= b0) & (atrp >= fl_), N)
+            report(f'suelo ATR ≥ {fl_:g}%', selF, p0, base_ym)
         print('  [R5] ¿Ayuda quedarse solo con los patrones que HAN FUNCIONADO hasta cada año? (elección anidada: cada año usa solo años previos)')
         nsel = np.zeros(len(rows), bool)
         for Y in yrs:

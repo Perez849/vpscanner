@@ -22,7 +22,7 @@ def _fmt_alert(a: Dict[str, Any], moc: bool = False) -> str:
             sal = f"salida si RSI(2)>70 (hoy ≈ cierre ≥ {lv['exitTrigPct']:+.1f}%)"
         else:
             sal = 'salida por señal'
-        lines.append(f"   #{pl.get('rank', '?')} {pl['label']}: P={pl['p'] * 100:.0f}% · esperado {pl['ev']:+.2f}% · {sal} · stop {lv['stopPct']:+.1f}% · máx {ex['H']} ses.")
+        lines.append(f"   #{pl.get('rank', '?')} {pl['label']}: acierto hist. {pl['p'] * 100:.0f}% · media hist. {pl['ev']:+.2f}% · {sal} · stop {lv['stopPct']:+.1f}% · máx {ex['H']} ses.")
     return '\n'.join(lines)
 
 
@@ -95,12 +95,12 @@ def step_summary(alerts, watch, meta, tracking, pelotazos=None) -> None:
              f"{meta['symbols']} activos · {meta['alerts']} alertas · {meta['watch']} en vigilancia · "
              f"seguimiento: {g['open']} abiertas, {g['n']} cerradas" + (f", acierto real {g['wr']}%" if g['n'] else ''), '']
     if alerts:
-        lines += ['| Activo | Plan | P(acierto) | Esperado | Stop | Salida | Máx. sesiones |', '|---|---|---|---|---|---|---|']
+        lines += ['| Activo | Plan | Acierto hist. | Media hist. | Stop | Salida | Máx. sesiones |', '|---|---|---|---|---|---|---|']
         for a in alerts:
             for pl in a['plans']:
                 lv = pl['levels']
                 sal = ('%+.1f%%' % lv['targetPct']) if lv.get('targetPct') is not None else ('RSI(2)>70 ≈ cierre %+.1f%%' % lv['exitTrigPct'] if lv.get('exitTrigPct') is not None else 'señal')
-                lines.append(f"| {a['sym']} | {pl['label']} | {pl['p'] * 100:.0f}% | {pl['ev']:+.2f}% | {lv['stopPct']:+.1f}% | {sal} | {pl['exit']['H']} |")
+                lines.append(f"| {a['sym']} | {pl['label']} | {pl['p'] * 100:.0f}% (hist.) | {pl['ev']:+.2f}% | {lv['stopPct']:+.1f}% | {sal} | {pl['exit']['H']} |")
     else:
         lines.append('_Sin alertas hoy._')
     if pelotazos:
@@ -117,9 +117,9 @@ def step_summary_pre(alerts, sig_date) -> None:
         return
     lines = [f"## VP Scanner · previo al cierre · sesión {sig_date}", f"{len(alerts)} avisos para comprar AL CIERRE (orden MOC antes de las 15:50 ET)", '']
     if alerts:
-        lines += ['| Activo | Plan | P(acierto) | Esperado | Stop | Máx. sesiones |', '|---|---|---|---|---|---|']
+        lines += ['| Activo | Plan | Acierto hist. | Media hist. | Stop | Máx. sesiones |', '|---|---|---|---|---|---|']
         for a in alerts:
             for pl in a['plans']:
-                lines.append(f"| {a['sym']} | {pl['label']} | {pl['p'] * 100:.0f}% | {pl['ev']:+.2f}% | {pl['levels']['stopPct']:+.1f}% | {pl['exit']['H']} |")
+                lines.append(f"| {a['sym']} | {pl['label']} | {pl['p'] * 100:.0f}% (hist.) | {pl['ev']:+.2f}% | {pl['levels']['stopPct']:+.1f}% | {pl['exit']['H']} |")
     with open(path, 'a', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
