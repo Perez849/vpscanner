@@ -86,7 +86,7 @@ def main():
 
     reg = json.load(open(args.registry, encoding='utf-8')) if os.path.exists(args.registry) else {'strategies': [], 'patterns': []}
     strategies = reg.get('strategies', [])
-    rules = {'maxAlerts': 15, 'watchMargin': 0.05, **reg.get('rules', {})}
+    rules = {'nPerDay': 5, 'watchMargin': 0.03, **reg.get('rules', {})}
     pattern_ids = [p['id'] for p in reg.get('patterns', [])]
     labels = {p['id']: p['label'] for p in reg.get('patterns', [])}
     models = [MD.LogitModel.from_json(s['model']) for s in strategies]
@@ -139,51 +139,79 @@ def main():
         if fl is not None:
             cand.append({'sym': sym, 'g': g, 'F': F, 'last': last, 'fl': fl})
 
-    alerts: List[Dict[str, Any]] = []
+    # probabilidad de cada candidato en cada plan; cada plan elige sus N mejores del día
+    per_plan: Dict[str, List[Dict[str, Any]]] = {s['id']: [] for s in strategies}
     for a in cand:
-        F, i, sym, g = a['F'], a['last'], a['sym'], a['g']
+        F, i, g = a['F'], a['last'], a['g']
         X = feats.event_matrix(F, np.array([i]))
         FLm = a['fl'][None, :]
         gid = np.array([feats.GROUPS.index(g)])
-        best = None
+        a['X'] = X
         for s, mdl in zip(strategies, models):
-            if g not in s.get('groups', feats.GROUPS):
+            if s.get('paused') or g not in s.get('groups', []):
                 continue
-            p = float(mdl.predict(X, FLm, gid)[0])
-            if best is None or p - s['thr'] > best[0] - best[1]['thr']:
-                best = (p, s)
-        if best is None:
-            continue
-        p, s = best
-        ex = s['exit']
-        ev_pct = float(p * s['ev']['aw'] + (1 - p) * s['ev']['al'])
-        atr, close = float(F['atr'][i]), float(F['c'][i])
-        trig = exit_trigger(F, i) if ex['kind'] == 'rsi' else None
-        tgt = close + ex.get('T', 0.0) * atr if ex['kind'] == 'atr' else None
-        flagged = [pid for pid, v in zip(pattern_ids, a['fl']) if v > 0]
-        alerts.append({
-            'id': f"{sym}|1|{int(F['t'][i] * 1000)}", 'sym': sym, 'group': g, 'sector': uni[sym].get('sector', ''),
-            'setup': flagged[0] if flagged else '', 'cell': s['id'], 'strategy': s['id'],
-            'label': ' · '.join(labels.get(f, f) for f in flagged[:3]), 'patterns': flagged,
-            'dir': 1, 'sigTs': int(F['t'][i] * 1000), 'sigClose': round(close, 4), 'atr': round(atr, 4),
-            'atrPct': round(atr / close * 100, 2), 'p': round(p, 4), 'pMin': s['thr'], 'ev': round(ev_pct, 2), 'exit': ex,
-            'levels': {'stopPct': round(-ex['S'] * atr / close * 100, 2), 'stop': round(close - ex['S'] * atr, 4),
-                       'targetPct': round((tgt / close - 1) * 100, 2) if tgt else None, 'target': round(tgt, 4) if tgt else None,
-                       'exitTrig': round(trig, 4) if trig else None,
-                       'exitTrigPct': round((trig / close - 1) * 100, 2) if trig else None},
-            'hist': {'wr': s['stats']['oos']['wr'], 'n': s['stats']['oos']['n'], 'mean': s['stats']['oos']['mean'],
-                     'pf': s['stats']['oos']['pf']},
-            'ctx': {k: (None if not np.isfinite(X[0][feats.FEATURES.index(k)]) else round(float(X[0][feats.FEATURES.index(k)]), 2))
-                    for k in ('rsi2', 'ibs', 'ret5', 'dist200', 'dd20', 'vol_ratio', 'spy_up', 'vix', 'vix_z', 'b_up200', 'b_os', 'vp_val_atr')},
-        })
-    alerts.sort(key=lambda x: (-(x['p'] - x['pMin']), -x['ev']))
-    main_alerts = [a for a in alerts if a['p'] >= a['pMin'] and a['ev'] > 0][:rules['maxAlerts']]
-    n_over_cap = len([a for a in alerts if a['p'] >= a['pMin'] and a['ev'] > 0]) - len(main_alerts)
-    watch = [a for a in alerts if a not in main_alerts and a['p'] >= a['pMin'] - rules['watchMargin']][:60]
+            p_raw = float(mdl.predict_raw(X, FLm, gid)[0])
+            if p_raw >= s['floorRaw']:
+                per_plan[s['id']].append({'a': a, 'p_raw': p_raw, 'p': float(mdl.predict(X, FLm, gid)[0])})
+    for lst in per_plan.values():
+        lst.sort(key=lambda r: -r['p_raw'])
+
+    by_sym: Dict[str, Dict[str, Any]] = {}
+    watch_syms: Dict[str, Dict[str, Any]] = {}
+    for s in strategies:
+        n_day = int(s.get('nPerDay', rules['nPerDay']))
+        for rank, r in enumerate(per_plan[s['id']]):
+            a = r['a']
+            F, i, sym, g = a['F'], a['last'], a['sym'], a['g']
+            ex = s['exit']
+            atr, close = float(F['atr'][i]), float(F['c'][i])
+            ev_pct = float(r['p'] * s['ev']['aw'] + (1 - r['p']) * s['ev']['al'])
+            trig = exit_trigger(F, i) if ex['kind'] == 'rsi' else None
+            tgt = close + ex.get('T', 0.0) * atr if ex['kind'] == 'atr' else None
+            plan = {'strategy': s['id'], 'role': s.get('role'), 'label': s['label'], 'blurb': s.get('blurb'), 'p': round(r['p'], 4),
+                    'ev': round(ev_pct, 2), 'exit': ex, 'rank': rank + 1,
+                    'levels': {'stopPct': round(-ex['S'] * atr / close * 100, 2), 'stop': round(close - ex['S'] * atr, 4),
+                               'targetPct': round((tgt / close - 1) * 100, 2) if tgt else None, 'target': round(tgt, 4) if tgt else None,
+                               'exitTrig': round(trig, 4) if trig else None,
+                               'exitTrigPct': round((trig / close - 1) * 100, 2) if trig else None},
+                    'hist': {'wr': s['stats']['oos']['wr'], 'n': s['stats']['oos']['n'], 'mean': s['stats']['oos']['mean'], 'pf': s['stats']['oos']['pf']}}
+            target = by_sym if rank < n_day else watch_syms
+            if rank >= n_day and rank >= n_day + 20:
+                continue
+            if sym not in target:
+                flagged = [pid for pid, v in zip(pattern_ids, a['fl']) if v > 0]
+                X = a['X']
+                target[sym] = {
+                    'id': f"{sym}|1|{int(F['t'][i] * 1000)}", 'sym': sym, 'group': g, 'sector': uni[sym].get('sector', ''),
+                    'setup': flagged[0] if flagged else '', 'label': ' · '.join(labels.get(f, f) for f in flagged[:3]), 'patterns': flagged,
+                    'dir': 1, 'sigTs': int(F['t'][i] * 1000), 'sigClose': round(close, 4), 'atr': round(atr, 4), 'atrPct': round(atr / close * 100, 2),
+                    'ctx': {k: (None if not np.isfinite(X[0][feats.FEATURES.index(k)]) else round(float(X[0][feats.FEATURES.index(k)]), 2))
+                            for k in ('rsi2', 'ibs', 'ret5', 'ret60', 'dist200', 'dd20', 'dd52', 'vol_ratio', 'spy_up', 'vix', 'vix_z', 'b_up200', 'b_os', 'vp_val_atr')},
+                    'plans': []}
+            target[sym]['plans'].append(plan)
+
+    def finish(d):
+        out = []
+        for al in d.values():
+            pr = next((pl for pl in al['plans'] if pl.get('role') == 'principal'), al['plans'][0])
+            al.update({'p': pr['p'], 'ev': pr['ev'], 'exit': pr['exit'], 'levels': pr['levels'], 'hist': pr['hist'], 'strategy': pr['strategy'],
+                       'cell': pr['strategy'], 'pMin': 0.0})
+            out.append(al)
+        out.sort(key=lambda x: (-max(pl['p'] for pl in x['plans']), -x['ev']))
+        return out
+    main_alerts = finish(by_sym)
+    watch = [w for w in finish(watch_syms) if w['sym'] not in by_sym][:40]
+    n_over_cap = 0
+    alerts = main_alerts
 
     # ── seguimiento en vivo ───────────────────────────────────────────────
     prev = jload('tracking.json', args.out)
-    tracking = TR.update(prev, main_alerts, series_F, cost_of)
+    plan_trades = []
+    for al in main_alerts:
+        for pl in al['plans']:
+            plan_trades.append({'id': f"{al['sym']}|{pl['strategy']}|{al['sigTs']}", 'sym': al['sym'], 'group': al['group'], 'setup': pl['strategy'],
+                                'cell': pl['strategy'], 'dir': 1, 'exit': pl['exit'], 'sigTs': al['sigTs'], 'p': pl['p'], 'sigClose': al['sigClose']})
+    tracking = TR.update(prev, plan_trades, series_F, cost_of)
     for t in tracking['trades']:
         if t['status'] in ('abierta', 'pendiente') and t['exit']['kind'] == 'rsi' and t['sym'] in series_F:
             F = series_F[t['sym']]
@@ -212,7 +240,7 @@ def main():
     now = datetime.now(timezone.utc).isoformat()
     meta = {'generatedAt': now, 'dataThrough': last_day, 'symbols': len(series_F), 'failed': len(failed),
             'failedList': failed[:80], 'strategies': len(strategies), 'candidates': len(cand), 'alerts': len(main_alerts),
-            'overCap': max(0, n_over_cap), 'watch': len(watch), 'market': mk, 'oversoldUptrend': n_os, 'rules': rules,
+            'paused': [s['id'] for s in strategies if s.get('paused')], 'watch': len(watch), 'market': mk, 'oversoldUptrend': n_os, 'rules': rules,
             'validatedAt': reg.get('generatedAt'), 'validatedThrough': reg.get('dataThrough'), 'secs': round(time.time() - t0)}
 
     jdump({'generatedAt': now, 'dataThrough': last_day, 'alerts': main_alerts, 'watch': watch}, 'alerts.json', args.out)
@@ -220,15 +248,18 @@ def main():
     jdump(candles, 'candles.json', args.out)
     jdump(meta, 'meta.json', args.out)
     jdump({'generatedAt': reg.get('generatedAt'), 'dataThrough': reg.get('dataThrough'), 'universe': reg.get('universe'),
-           'periods': reg.get('periods'), 'criteria': reg.get('criteria'), 'rules': rules, 'summary': reg.get('summary'),
+           'design': reg.get('design'), 'rules': rules,
            'patterns': reg.get('patterns'),
            'strategies': [{k: v for k, v in s.items() if k != 'model'} for s in strategies]}, 'registry.json', args.out)
 
-    print(f"\nActivos: {len(series_F)} · fallidos {len(failed)} · candidatos {len(cand)} · alertas {len(main_alerts)} (+{max(0, n_over_cap)} sobre el tope) · vigilancia {len(watch)} · {time.time() - t0:.0f}s", flush=True)
+    print(f"\nActivos: {len(series_F)} · fallidos {len(failed)} · candidatos {len(cand)} · alertas {len(main_alerts)} · vigilancia {len(watch)} · {time.time() - t0:.0f}s", flush=True)
     for a in main_alerts[:15]:
-        print(f"  {a['sym']:10s} P={a['p'] * 100:4.0f}% (mín {a['pMin'] * 100:.0f}%) EV={a['ev']:+.2f}%  {a['label'][:70]}", flush=True)
+        print(f"  {a['sym']:10s} " + ' | '.join(f"{pl['label']}: P={pl['p'] * 100:.0f}% EV={pl['ev']:+.2f}%" for pl in a['plans']) + f"  {a['label'][:60]}", flush=True)
     if not strategies:
-        print('  ⚠ Registro sin estrategias validadas: el sistema no emite alertas (la ventaja no superó la validación).', flush=True)
+        print('  ⚠ Registro sin planes validados: el sistema no emite alertas.', flush=True)
+    for s_ in strategies:
+        if s_.get('paused'):
+            print(f"  ⏸ Plan «{s_['label']}» en PAUSA: el chequeo de salud (últimos 12 meses) no es rentable.", flush=True)
     if not args.no_notify:
         notify.send(main_alerts, meta, tracking)
     notify.step_summary(main_alerts, watch, meta, tracking)

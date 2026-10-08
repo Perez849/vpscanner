@@ -26,6 +26,8 @@ NB = 5
 
 
 class LogitModel:
+    kind = 'logit'
+
     def __init__(self, feat_idx: List[int], flag_names: List[str], groups: List[str], nb: int = NB, l2: float = 30.0):
         self.nb = nb
         self.l2 = l2
@@ -134,13 +136,14 @@ class LogitModel:
 
     # ── JSON ──────────────────────────────────────────────────────────────
     def to_json(self) -> Dict:
-        return {'feat_idx': self.feat_idx, 'flag_names': self.flag_names, 'groups': self.groups,
+        return {'type': self.kind, 'feat_idx': self.feat_idx, 'flag_names': self.flag_names, 'groups': self.groups,
                 'edges': [e.round(6).tolist() for e in self.edges], 'w': self.w.round(5).tolist(),
                 'calib': [[round(a, 4), round(b, 4)] for a, b in self.calib]}
 
     @staticmethod
     def from_json(d: Dict) -> 'LogitModel':
-        m = LogitModel(d['feat_idx'], d['flag_names'], d['groups'])
+        cls = {'logit': LogitModel, 'linear': LinearLogitModel, 'ridge': RidgeModel}[d.get('type', 'logit')]
+        m = cls(d['feat_idx'], d['flag_names'], d['groups'])
         m.edges = [np.array(e) for e in d['edges']]
         m.w = np.array(d['w'])
         m.calib = d.get('calib', [])
@@ -158,6 +161,7 @@ def auc(p: np.ndarray, y: np.ndarray) -> float:
 
 
 class RidgeModel(LogitModel):
+    kind = 'ridge'
     """Misma discretización que LogitModel pero regresión lineal (ridge) sobre el resultado neto de la operación."""
     def fit(self, X, FL, gid, y, l2: float = 300.0, chunk: int = 150000, max_rows: int = 600000, seed: int = 0):
         self.fit_bins(X)
@@ -184,6 +188,7 @@ class RidgeModel(LogitModel):
 
 
 class LinearLogitModel(LogitModel):
+    kind = 'linear'
     """Logística lineal (poca capacidad): variables winsorizadas (p1–p99) y estandarizadas + banderas + grupo."""
     def fit_bins(self, X: np.ndarray):
         self.edges = []

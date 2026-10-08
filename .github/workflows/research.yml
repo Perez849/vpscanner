@@ -50,6 +50,12 @@ jobs:
           cd scanner
           CMD="${INPUT_CMD:-$(cat research_cmd.txt)}"
           python -u research.py $CMD --out /tmp/out 2>&1 | tee /tmp/out/research_log.txt
+      - name: Escaneo de prueba con el registro recién generado (datos reales)
+        run: |
+          if [ -f /tmp/out/validated.json ]; then
+            cd scanner
+            python -u scan.py --registry /tmp/out/validated.json --out /tmp/out/scan --no-notify 2>&1 | tee /tmp/out/scan_log.txt
+          fi
       - name: Publicar resultados en rama aparte
         if: always()
         run: |
