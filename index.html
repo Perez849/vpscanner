@@ -281,11 +281,11 @@ function render(){
   document.querySelectorAll('thead td[data-s]').forEach(td=>td.addEventListener('click',()=>{const k=td.dataset.s;if(S.sort===k)S.dir*=-1;else{S.sort=k;S.dir=k==='sym'?1:-1;}render();}));
 }
 // ── Detalle (modal) ───────────────────────────────────────────────────
-function planBox(pl,sym){
+function planBox(pl,sym,ref){
   const lv=pl.levels,ex=pl.exit;
-  const salida=ex.kind==='rsi'?`<b>sal cuando el RSI(2) supere 70</b> (hoy equivale a un cierre ≥ ${f(lv.exitTrig)}, ${sg(lv.exitTrigPct,1)}% sobre la referencia; ese nivel se actualiza cada día en «Seguimiento») — se ejecuta en la apertura siguiente`
-    :ex.kind==='atr'?`<b>objetivo</b> a ${ex.T}×ATR (≈ ${sg(lv.targetPct,1)}%, precio ${f(lv.target)})`:`<b>sal cuando cierre sobre el máximo previo</b>`;
-  return `<div class="scn" style="margin-bottom:8px"><b>Plan «${pl.label}» · P(acierto) ${Math.round(pl.p*100)}% · ganancia esperada ${sg(pl.ev)}%</b><br>Tras entrar fija el <b>stop</b> a ${ex.S}×ATR (≈ ${sg(lv.stopPct,1)}%, precio ${f(lv.stop)}) y ${salida}. Si en ${ex.H} sesiones no se ha resuelto, cierra al cierre de la sesión ${ex.H}.<div class="dim" style="font-size:11px;margin-top:4px">Tamaño orientativo: si arriesgas el 1% de tu capital hasta el stop, la posición sería ≈ ${f(100/Math.abs(lv.stopPct),0)}% del capital (1% ÷ ${f(Math.abs(lv.stopPct),1)}%).</div><div class="dim" style="font-size:11px;margin-top:4px">Histórico fuera de muestra de este plan: ${f(pl.hist.wr,0)}% de acierto, ${sg(pl.hist.mean)}% por operación (${pl.hist.n.toLocaleString('es-ES')} operaciones)</div></div>`;
+  const salida=ex.kind==='rsi'?`<b>sal cuando el RSI(2) supere 70</b> (con la referencia equivale a un cierre ≥ ${f(lv.exitTrig)}, ${sg(lv.exitTrigPct,1)}%; ese nivel se actualiza cada día en «Seguimiento») — se ejecuta en la apertura siguiente`
+    :ex.kind==='atr'?`<b>objetivo</b> a ${ex.T}×ATR por encima de tu entrada (≈ ${sg(lv.targetPct,1)}%)`:`<b>sal cuando cierre sobre el máximo previo</b>`;
+  return `<div class="scn" style="margin-bottom:8px"><b>Plan «${pl.label}» · P(acierto) ${Math.round(pl.p*100)}% · ganancia esperada ${sg(pl.ev)}%</b><br>Tras entrar fija el <b>stop</b> a ${ex.S}×ATR por debajo de <b>tu precio de entrada</b> (≈ ${sg(lv.stopPct,1)}%) y ${salida}. Si en ${ex.H} sesiones no se ha resuelto, cierra al cierre de la sesión ${ex.H}.<div class="dim" style="font-size:11px;margin-top:4px">Ejemplo entrando a la referencia ${f(ref)}: stop ${f(lv.stop)}${lv.target!=null?` · objetivo ${f(lv.target)}`:''}. Tamaño orientativo: si arriesgas el 1% de tu capital hasta el stop, la posición sería ≈ ${f(100/Math.abs(lv.stopPct),0)}% del capital.</div><div class="dim" style="font-size:11px;margin-top:4px">Histórico fuera de muestra de este plan: ${f(pl.hist.wr,0)}% de acierto, ${sg(pl.hist.mean)}% por operación (${pl.hist.n.toLocaleString('es-ES')} operaciones)</div></div>`;
 }
 function openModal(id,fromTrack){
   const a=(S.alerts.alerts||[]).concat(S.alerts.watch||[]).find(x=>x.id===id);
@@ -296,8 +296,10 @@ function openModal(id,fromTrack){
   let body='',ref,stop,target,sigTs;
   if(a){
     const lv=a.levels;ref=a.sigClose;stop=lv.stop;target=lv.target;sigTs=a.sigTs;
-    body+=`<div class="m-sec">Qué hacer</div><div class="scn" style="margin-bottom:8px"><b>COMPRA</b> ${sym} en la <b>apertura de la próxima sesión</b>. Si la apertura ya está por debajo del stop, no entres. ATR(14) = ${f(a.atr)} (${f(a.atrPct,1)}%). Elige el plan según prefieras acertar más (alta probabilidad) o ganar más por operación (equilibrado):</div>`;
-    body+=a.plans.map(pl=>planBox(pl,sym)).join('');
+    body+=`<div class="m-sec">Qué hacer</div><div class="scn" style="margin-bottom:8px"><b>COMPRA</b> ${sym} en la <b>apertura de la próxima sesión</b>. ATR(14) = ${f(a.atr)} (${f(a.atrPct,1)}%). <b>Los niveles se miden desde tu precio de ENTRADA real, no desde el cierre de ayer</b>: si abre con hueco al alza, el stop y la salida se desplazan con él.</div>
+      <div class="scn" style="margin-bottom:8px;border-left:3px solid var(--amber)"><b>Hueco de apertura.</b> Precio máximo orientativo de entrada: <b>${f(a.sigClose+0.5*a.atr)}</b> (referencia + 0,5 ATR ≈ ${sg(0.5*a.atrPct,1)}%). En 2019–2026, cuando la acción abría por encima de eso el plan <i>Equilibrado</i> perdió de media (−0,8% por operación, 306 casos, positivo solo 1 de 7 años); el de <i>Alta probabilidad</i> no se resintió (+0,1%). Con huecos menores no hay diferencia apreciable. Por debajo del stop, no entres.</div>
+      <div class="note" style="margin:0 0 8px">Elige el plan según prefieras acertar más (alta probabilidad) o ganar más por operación (equilibrado):</div>`;
+    body+=a.plans.map(pl=>planBox(pl,sym,a.sigClose)).join('');
     const c=a.ctx||{};
     body+=`<div class="m-sec">Contexto de la señal</div><div class="lvls">${lvl('RSI(2)',f(c.rsi2,0))}${lvl('Posición en la vela (IBS)',f(c.ibs,2))}${lvl('Rend. 5 sesiones',sg(c.ret5,1)+'%')}${lvl('Rend. 60 sesiones',sg(c.ret60,1)+'%')}${lvl('Distancia a SMA200',sg(c.dist200,1)+'%')}${lvl('Caída desde máx. 20d',sg(c.dd20,1)+'%')}${lvl('Dist. a máx. 52 sem.',sg(c.dd52,1)+'%')}${lvl('Volumen vs media',f(c.vol_ratio,1)+'×')}${lvl('VIX',f(c.vix,1)+' (z '+f(c.vix_z,1)+')')}${lvl('Universo sobre SMA200',c.b_up200!=null?f(c.b_up200,0)+'%':'—')}${lvl('Universo en sobreventa',c.b_os!=null?f(c.b_os,1)+'%':'—')}</div>`;
     body+=`<div class="m-sec">Patrones que saltaron</div><div class="scn">${a.label||'—'}</div>`;

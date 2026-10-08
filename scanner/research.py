@@ -365,7 +365,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -380,7 +380,7 @@ def main():
     t0 = time.time()
     uni, data = load_data(args)
     print(f'universo con datos: {len([s for s in uni if not uni[s].get("aux")])} activos · {time.time() - t0:.0f}s', flush=True)
-    if args.cmd == 'pelotazo':
+    if args.cmd in ('pelotazo', 'pelotazo2'):
         import lab
         variants = lab.PEL_VARIANTS
         EV = build_events(data, uni, SU.PEL_SETUPS + [SU.BY_ID['B_up']], variants, with_moc=False)
@@ -393,7 +393,7 @@ def main():
     else:
         import lab
         getattr(lab, {'explore': 'explore', 'meta': 'meta_explore', 'meta2': 'meta2_explore', 'meta3': 'meta3_explore',
-                      'meta4': 'meta4_explore', 'meta5': 'meta5_explore', 'regime': 'regime_explore', 'gap': 'gap_explore', 'pelotazo': 'pelotazo_explore'}[args.cmd])(EV, args.out)
+                      'meta4': 'meta4_explore', 'meta5': 'meta5_explore', 'regime': 'regime_explore', 'gap': 'gap_explore', 'pelotazo': 'pelotazo_explore', 'pelotazo2': 'pelotazo2_explore'}[args.cmd])(EV, args.out)
     print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
 
 

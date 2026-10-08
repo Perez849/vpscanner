@@ -704,3 +704,78 @@ def pelotazo_explore(EV: Dict, out_dir: str):
         x = np.sort(pnl[sel][np.isfinite(pnl[sel])])[::-1]
         tot = x.sum()
         print(f"  top 3/día: el 1% de las operaciones mejores aporta el {x[:max(1, len(x) // 100)].sum() / tot * 100 if tot > 0 else float('nan'):.0f}% del beneficio total ({len(x)} ops); el 5%: {x[:max(1, len(x) // 20)].sum() / tot * 100 if tot > 0 else float('nan'):.0f}%")
+
+
+def pelotazo2_explore(EV: Dict, out_dir: str):
+    """Robustez del pelotazo: por grupo, sin días de pánico, descuento por quiebras, calibración y composición."""
+    import model as MD
+    setups_, variants = EV['setups'], EV['variants']
+    sid, day, sym, grp = EV['sid'], EV['day'], EV['sym'], EV['grp']
+    rows, FL, names = union_events(EV, +1)
+    dayr, symr = day[rows], sym[rows]
+    yearsr = year_of(dayr)
+    X = EV['X'][rows]; gid = grp[rows]
+    feats_ = list(MD.MODEL_FEATURES) + ['ret60', 'ret120', 'rs60', 'rs120', 'max_gap5', 'shock5', 'max_vr5']
+    fidx = [FEATURES.index(f) for f in feats_]
+    fi = {f: j for j, f in enumerate(FEATURES)}
+    last_day = int(dayr.max())
+    print(f'\n######## PELOTAZO · robustez · {len(rows):,} eventos', flush=True)
+    for vname in ('trl_T5_S5_H60', 'trl_T3.5_S3.5_H40'):
+        vi = variants.index(vname)
+        pnl = EV['pnl'][rows, vi]; ok = np.isfinite(pnl)
+        bars = EV['bars'][rows, vi]
+        y = (pnl >= 12).astype(np.float32)
+        p = np.full(len(rows), np.nan)
+        for Y in range(2019, int(year_of(np.array([last_day]))[0]) + 1):
+            trm = (dayr < day_of(f'{Y}-01-01')) & (dayr >= day_of(f'{Y - 3}-01-01')) & ok
+            tem = (yearsr == Y) & ok
+            if trm.sum() < 3000 or not tem.any():
+                continue
+            m1 = MD.LinearLogitModel(fidx, names, GROUPS).fit(X[trm], FL[trm], gid[trm], y[trm])
+            p[tem] = m1.predict_raw(X[tem], FL[tem], gid[tem])
+        m = ok & np.isfinite(p)
+        sel = _topn_mask(p, dayr, m, 3)
+        print(f"\n=== {vname} · política top 3/día · {sel.sum():,} operaciones · duración media {np.nanmean(bars[sel]):.1f} sesiones")
+        print(f"  TODAS            {_tail_stats(pnl[sel])}")
+        print('  por grupo de activo:')
+        for gi, gname in enumerate(GROUPS):
+            mg = sel & (gid == gi)
+            if mg.sum() >= 40:
+                print(f"    {gname:9s} {_tail_stats(pnl[mg])}")
+        print('  por año y grupo (μ/n):')
+        for gname in ('us_large', 'us_mid', 'us_small', 'etf', 'thematic', 'eu'):
+            gi = GROUPS.index(gname); line = f"    {gname:9s}"
+            for Y in range(2019, 2027):
+                my = sel & (gid == gi) & (yearsr == Y)
+                line += f" {str(Y)[2:]}:{np.nanmean(pnl[my]):+.1f}/{my.sum()}" if my.sum() >= 15 else f' {str(Y)[2:]}:—'
+            print(line)
+        # sin días de pánico de mercado
+        bos = X[:, fi['b_os']]; vz = X[:, fi['vix_z']]; spyd = X[:, fi['spy_dd60']]
+        calm = sel & (bos < 20) & (vz < 1.5)
+        panic = sel & ~((bos < 20) & (vz < 1.5))
+        print(f"  días SIN pánico (b_os<20% y VIXz<1.5): {_tail_stats(pnl[calm])}")
+        print(f"  días CON pánico                          {_tail_stats(pnl[panic])}")
+        for Y in range(2019, 2027):
+            mc = calm & (yearsr == Y)
+            if mc.sum() >= 20:
+                print(f"     sin pánico {Y}: n={mc.sum()} μ={np.nanmean(pnl[mc]):+.2f}% P≥20%={np.mean(pnl[mc] >= 20) * 100:.0f}% PF={stats(pnl[mc])['pf']:.2f}")
+        # composición por patrón
+        print('  patrones que saltaron en las seleccionadas (% de las operaciones / μ):')
+        for c, n_ in enumerate(names):
+            mm = sel & (FL[:, c] > 0)
+            if mm.sum() >= 40:
+                print(f"    {n_:11s} {mm.sum() / sel.sum() * 100:4.0f}% μ={np.nanmean(pnl[mm]):+.2f}% P≥20%={np.mean(pnl[mm] >= 20) * 100:.0f}%")
+        # sensibilidad a sesgo de supervivencia: una fracción f de operaciones acaba en catástrofe (-60 %)
+        mu = np.nanmean(pnl[sel])
+        print('  descuento por quiebras/supervivencia (fracción f de operaciones que acabarían en −60 %):', ' '.join(f"f={f * 100:.0f}%→μ={(1 - f) * mu + f * -60:+.2f}%" for f in (0, 0.02, 0.05, 0.08, 0.10)))
+        # costes dobles
+        cost_arr = np.array([SM.COST_RT.get(GROUPS[g], 0.30) for g in range(len(GROUPS))])[gid]
+        print(f"  costes dobles: μ={np.nanmean(pnl[sel] - cost_arr[sel]):+.2f}%")
+        # calibración 2024+: P(≥12%)
+        pc_sel = sel & (yearsr >= 2024)
+        if pc_sel.sum() > 200:
+            qs = np.quantile(p[pc_sel], [0, .25, .5, .75, 1])
+            for a_, b_ in zip(qs[:-1], qs[1:]):
+                mm = pc_sel & (p >= a_) & (p <= b_)
+                print(f"  calibración 2024+: p∈[{a_:.2f},{b_:.2f}] n={mm.sum()} predicho≈{np.mean(p[mm]) * 100:.0f}% real P(≥12%)={y[mm].mean() * 100:.0f}% μ={np.nanmean(pnl[mm]):+.1f}%")
+        sys.stdout.flush()
