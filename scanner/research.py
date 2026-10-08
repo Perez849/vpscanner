@@ -270,6 +270,7 @@ PLANS = [
 DRIVERS = {'atrp': 'Volatilidad del valor (ATR, % del precio)', 'dd20': 'Distancia al máximo de 20 sesiones (%)', 'ret3': 'Rentabilidad de las últimas 3 sesiones (%)',
            'dd52': 'Distancia al máximo de 52 semanas (%)', 'vix': 'VIX', 'spy_dd60': 'Caída del S&P 500 desde su máximo de 60 sesiones (%)'}
 N_PER_DAY = 5
+MIN_ATR_PCT = 2.5          # suelo de volatilidad: con ATR < 2,5 % del precio los costes (fijos en %) se comen el rebote (estudio `reasons2`, R6)
 WINDOW_YEARS = 3
 FIRST_WF_YEAR = 2019
 MIN_GROUP_N = 80
@@ -332,7 +333,9 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
     print(f"\n  [{plan['id']} · {plan['label']}] AUC OOS={MD.auc(p[m], y[m]):.3f} · todos los candidatos: {fmt(stats(pnl[m], day[m], sym[m]))}", flush=True)
     # grupos permitidos: evidencia fuera de muestra con la política aplicada a todos los grupos
     N = int(plan.get('n', N_PER_DAY))
-    sel0 = select_policy(p, base, day, gid, ok, list(range(len(GROUPS))), n=N)
+    atrp_ = X[:, FEATURES.index('atrp')]
+    okp = ok & np.isfinite(atrp_) & (atrp_ >= MIN_ATR_PCT)          # elegibles para la política (el modelo se entrena con todos)
+    sel0 = select_policy(p, base, day, gid, okp, list(range(len(GROUPS))), n=N)
     allowed = []
     for gi, gname in enumerate(GROUPS):
         mg = sel0 & (gid == gi)
@@ -344,7 +347,7 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
                 allowed.append(gi)
         elif mg.sum() > 0:
             print(f"       grupo {gname:9s} n={mg.sum()} (<{MIN_GROUP_N}: sin evidencia) → EXCLUIDO")
-    sel = select_policy(p, base, day, gid, ok, allowed, n=N)
+    sel = select_policy(p, base, day, gid, okp, allowed, n=N)
     st = stats(pnl[sel], day[sel], sym[sel])
     print(f"     política top {N}/día en {[GROUPS[g] for g in allowed]}: {fmt(st)} · t={st['t_day']:.1f}", flush=True)
     # por año, por grupo, reciente, sensibilidad a costes ×2
@@ -405,7 +408,7 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
     print(f"     auditoría de la probabilidad: AUC {calibration['aucAll']:.3f} (desde 2023: {calibration['aucRecent']:.3f}) · Brier calibrado frente a tasa base {calibration['brierSkill']:+.1f}% · acierto por quintil de p: "
           + ' '.join(f"{q['p']:.0f}→{q['real']:.0f}%" for q in quint), flush=True)
     # resultado por PUESTO del día (con las 5 mejores) y cartera realista con capital limitado frente al S&P 500
-    sel5 = select_policy(p, base, day, gid, ok, allowed, n=5)
+    sel5 = select_policy(p, base, day, gid, okp, allowed, n=5)
     rk5 = rank_in_day(p, day, sel5)
     by_rank = {}
     for r in range(1, 6):
@@ -449,7 +452,7 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None)
     return {
         'id': plan['id'], 'role': plan['role'], 'label': plan['label'], 'blurb': plan['blurb'],
         'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': [GROUPS[g] for g in allowed], 'gids': allowed,
-        'nPerDay': N, 'floorRaw': round(base_now, 4), 'paused': paused,
+        'nPerDay': N, 'minAtrPct': MIN_ATR_PCT, 'floorRaw': round(base_now, 4), 'paused': paused,
         'ev': {'aw': round(st['avg_win'], 3), 'al': round(st['avg_loss'], 3)},
         'stats': {'oos': _block(pnl[sel], day[sel], sym[sel]), 'recent': _block(pnl[recent], day[recent], sym[recent]) if st_rec else None,
                   'cost2x': {k: round(float(st2[k]), 3) for k in ('wr', 'mean', 'pf')}, 'health': _block(pnl[hm], day[hm], sym[hm]) if st_h else None,

@@ -197,6 +197,8 @@ def main():
         for s, mdl in zip(strategies, models):
             if s.get('paused') or g not in s.get('groups', []):
                 continue
+            if float(X[0][feats.FEATURES.index('atrp')]) < s.get('minAtrPct', 0):        # suelo de volatilidad del plan
+                continue
             p_raw = float(mdl.predict_raw(X, FLm, gid)[0])
             if p_raw >= s['floorRaw']:
                 per_plan[s['id']].append({'a': a, 'p_raw': p_raw, 'p': float(mdl.predict(X, FLm, gid)[0])})
