@@ -187,6 +187,10 @@ Lectura honesta: **ninguna combinación bate al S&P 500 en rentabilidad sin apal
 
 **Qué se hizo en producción:** la validación semanal (`research.py final`) usa ahora esta pertenencia histórica y aborta si no puede reconstruirla (no sustituye el registro por uno con sesgo). La web lo indica en «Cómo se validó».
 
+## Renta fija: ¿puede 60 % TLT + 30 % MBB batir al índice en 5 años? (`research.py bonds`)
+
+Comprobación con rentabilidad total (cupones incluidos, datos de Yahoo hasta 2026-10-08, pesos fijos con rebalanceo mensual, sin costes). **No: en los últimos 5 años la cartera 60 TLT / 30 MBB / 10 liquidez rinde −21,4 % frente a −2,2 % de AGG** (TLT −34,3 %, MBB −1,3 %). Tampoco gana en 1 año (−5,5 % frente a −1,6 %), 3 años (+8,9 % frente a +14,5 %) ni 10 años (−9,2 % frente a +13,0 %); además tiene casi el doble de volatilidad (11,3 % frente a 6,1 %) y una caída máxima de −33 % frente a −17 %. Solo supera a AGG en ventanas de 5 años que **terminan entre 2012 y 2021** (el 62 % de todas las ventanas desde 2012, diferencia media de +2 a +18 puntos), cuando los tipos bajaban; las que terminan en 2022–2026 la pierden por entre 1 y 21 puntos. Años naturales: 2019 (+10,8 % frente a +8,5 %) y 2020 (+12,4 % frente a +7,5 %) a favor; 2022 (−23,2 % frente a −13,0 %), 2024 (−4,1 % frente a +1,3 %) y 2026 (−5,2 % frente a −2,3 %) en contra. Lo único en lo que TLT/MBB están por delante es el **rendimiento por distribuciones** (TLT 5,0 %, MBB 4,5 %, AGG 4,2 %), que no es rentabilidad total.
+
 ## 🚀 Pelotazos (experimental)
 
 Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
