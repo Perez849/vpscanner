@@ -35,7 +35,10 @@ def fetch_full(sym: str, period1: int) -> Optional[Dict]:
         res = json.loads(raw)['chart']['result'][0]
         ts = res['timestamp']
         close = np.array([np.nan if x is None else x for x in res['indicators']['quote'][0]['close']], float)
-        adj = np.array([np.nan if x is None else x for x in res['indicators']['adjclose'][0]['adjclose']], float)
+        try:
+            adj = np.array([np.nan if x is None else x for x in res['indicators']['adjclose'][0]['adjclose']], float)
+        except Exception:
+            adj = close.copy()
         divs = res.get('events', {}).get('dividends', {})
         dv = sorted((int(v['date']), float(v['amount'])) for v in divs.values())
         idx = pd.to_datetime(np.array(ts) // 86400 * 86400, unit='s')
@@ -194,4 +197,113 @@ def run(uni, data, out_dir):
     tl, mb, ag = [(1 + sub[c]).prod() - 1 for c in ('TLT', 'MBB', 'AGG')]
     print(f'\n  ÚLTIMOS 5 AÑOS: TLT {tl * 100:+.1f}% · MBB {mb * 100:+.1f}% · AGG {ag * 100:+.1f}%. Con peso fijo en TLT y MBB la media ponderada 60/30 (+10 % liquidez) '
           f'es ≈ {(0.6 * tl + 0.3 * mb) * 100:+.1f}% frente a {ag * 100:+.1f}% del índice (la diferencia solo puede salir de la liquidez, de otro índice o de pesos no fijos).')
+    sys.stdout.flush()
+
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  «Reloj» de renta fija: 2/3 TLT + 1/3 MBB con interrupciones tácticas
+# ═════════════════════════════════════════════════════════════════════════
+ALT = ['SHY', 'TIP', 'DBC', 'GLD']
+SW_COST = 0.0005          # 0,05 % por cada cambio de activo (ida y vuelta de la parte que se mueve, aproximación)
+
+
+def sma(s: pd.Series, n: int) -> pd.Series:
+    return s.rolling(n, min_periods=int(n * 0.9)).mean()
+
+
+def tactical(rets: pd.DataFrame, flag: pd.Series, alt: str, w_tlt: float = 2 / 3, w_mbb: float = 1 / 3, whole: bool = False) -> pd.Series:
+    """Rentabilidad diaria: 2/3 TLT + 1/3 MBB; cuando `flag` (decidida con el cierre de AYER) está activa, la parte de TLT (o toda la cartera si whole) pasa a `alt`."""
+    f = flag.shift(1).fillna(False).astype(bool)
+    r_tlt = np.where(f, rets[alt], rets['TLT'])
+    r_mbb = np.where(f & whole, rets[alt], rets['MBB'])
+    out = w_tlt * r_tlt + w_mbb * r_mbb
+    switches = (f != f.shift(1)).fillna(False)
+    cost = switches.to_numpy() * SW_COST * (1.0 if whole else w_tlt)
+    return pd.Series(out - cost, index=rets.index)
+
+
+def run2(uni, data, out_dir):
+    p1 = int(pd.Timestamp('2003-01-02').timestamp())
+    S = {}
+    for t in ['TLT', 'MBB', 'AGG', 'IEF', 'SHY', 'TIP', 'DBC', 'GLD', '^TNX']:
+        o = fetch_full(t, p1)
+        if o is not None:
+            S[t] = o['df']
+    print(f'\n######## «RELOJ» DE RENTA FIJA · descargados {sorted(S)}', flush=True)
+    tr = pd.DataFrame({t: v['adj'] for t, v in S.items() if t != '^TNX'}).dropna(subset=['TLT', 'MBB', 'AGG', 'SHY'])
+    tnx = S['^TNX']['close'].reindex(tr.index).ffill()
+    rets = tr.pct_change().fillna(0.0)
+    end = tr.index[-1]
+
+    def cum(r, a, b):
+        x = r[(r.index > a) & (r.index <= b)]
+        return float((1 + x).prod() - 1) * 100
+
+    starts = {'1-ene-2021': pd.Timestamp('2021-01-04'), '5 años exactos (2021-10-08)': end - pd.DateOffset(years=5), '1-ene-2022': pd.Timestamp('2022-01-03')}
+    agg = rets['AGG']
+    static = 2 / 3 * rets['TLT'] + 1 / 3 * rets['MBB']
+    print('\n  A. CARTERA ESTÁTICA 2/3 TLT + 1/3 MBB (pesos fijos, rebalanceo diario) frente a AGG, rentabilidad total hasta ' + str(end.date()))
+    for lab, a in starts.items():
+        print(f"    desde {lab:28s} estática {cum(static, a, end):+7.1f}% · TLT {cum(rets['TLT'], a, end):+7.1f}% · MBB {cum(rets['MBB'], a, end):+6.1f}% · AGG {cum(agg, a, end):+6.1f}% · SHY {cum(rets['SHY'], a, end):+5.1f}%")
+    a5 = starts['5 años exactos (2021-10-08)']
+
+    # B. ¿cuántos meses de interrupción hacen falta? (con conocimiento del futuro: cota superior)
+    m = static[static.index > a5].groupby([static[static.index > a5].index.year, static[static.index > a5].index.month]).apply(lambda x: (1 + x).prod() - 1)
+    m_agg = cum(agg, a5, end)
+    msh = rets['SHY'][rets.index > a5].groupby([rets['SHY'][rets.index > a5].index.year, rets['SHY'][rets.index > a5].index.month]).apply(lambda x: (1 + x).prod() - 1)
+    order = m.sort_values().index
+    print(f'\n  B. COTA CON CONOCIMIENTO DEL FUTURO (5 años, {len(m)} meses): si los k PEORES meses de la cartera estática se pasaran a liquidez (SHY), ¿se bate a AGG ({m_agg:+.1f}%)?')
+    need = None
+    for k in (0, 2, 4, 6, 8, 10, 12, 15):
+        mm = m.copy()
+        mm.loc[order[:k]] = msh.loc[order[:k]]
+        tot = float((1 + mm).prod() - 1) * 100
+        if need is None and tot > m_agg:
+            need = k
+        print(f'    k={k:2d} meses fuera → {tot:+6.1f}%' + ('  ← ya bate a AGG' if tot > m_agg else ''))
+    wm = m.sort_values().head(10)
+    print('    los 10 peores meses de la estática: ' + ' '.join(f'{y}-{mo:02d}:{v * 100:+.1f}%' for (y, mo), v in wm.items()))
+    print(f'    (con conocimiento perfecto bastan ≈ {need} meses de 60: una interrupción «corta» puede dar la vuelta al resultado SI se acierta cuándo)')
+
+    # C. reglas de «sobrecalentamiento» sin mirar al futuro
+    trend_tlt = tr['TLT'] < sma(tr['TLT'], 200)
+    tnx_up = tnx > sma(tnx, 200)
+    tnx_shock = (tnx - tnx.shift(63)) > 0.40
+    be = tr['TIP'] / tr['IEF']
+    infl_up = be > sma(be, 200)
+    mom_neg = tr['TLT'] / tr['TLT'].shift(126) - 1 < 0
+    rules = {'TLT bajo su media de 200 sesiones': trend_tlt, 'rentabilidad del bono a 10 años sobre su media de 200': tnx_up,
+             'subida de >0,40 puntos del 10 años en 3 meses': tnx_shock, 'expectativas de inflación al alza (TIP/IEF sobre su media de 200)': infl_up,
+             'TLT con momentum negativo a 6 meses': mom_neg}
+    print(f'\n  C. REGLAS SIN MIRAR AL FUTURO (señal con el cierre de ayer; {SW_COST * 100:.2f} % por cambio): 2/3 TLT + 1/3 MBB y, si la regla marca «sobrecalentamiento», la parte de TLT pasa al activo alternativo')
+    print(f'     5 años hasta {end.date()}: estática {cum(static, a5, end):+.1f}% · AGG {cum(agg, a5, end):+.1f}%')
+    print('     ' + 'regla'.ljust(62) + 'alt'.ljust(5) + ' 5 años  vs AGG  %días en alerta  cambios  caída   | ventanas de 5 años desde 2008: bate a AGG en · dif. mediana · peor')
+    ends = [d for d in tr.index[::21] if d >= pd.Timestamp('2008-06-30') + pd.DateOffset(years=5)]
+    rows = []
+    for rn, fl in rules.items():
+        for alt in ALT:
+            if alt not in rets:
+                continue
+            r = tactical(rets, fl, alt)
+            win = []
+            for e in ends:
+                s_ = e - pd.DateOffset(years=5)
+                win.append(cum(r, s_, e) - cum(agg, s_, e))
+            win = np.array(win)
+            x = r[r.index > a5]
+            eq = (1 + x).cumprod()
+            fl5 = fl.shift(1).fillna(False)[fl.index > a5]
+            sw = int((fl5 != fl5.shift(1)).sum())
+            rows.append((rn, alt, cum(r, a5, end), cum(agg, a5, end), float(fl5.mean() * 100), sw, float((eq / eq.cummax() - 1).min() * 100), float((win > 0).mean() * 100), float(np.median(win)), float(win.min())))
+    for rn, alt, t5, ta, pdays, sw, dd, wp, wmed, wmin in rows:
+        print(f'     {rn[:60]:62s}{alt:5s}{t5:+6.1f}% {t5 - ta:+6.1f}  {pdays:10.0f} %   {sw:6d}  {dd:6.1f}% | {wp:4.0f} % · {wmed:+6.1f} pts · {wmin:+6.1f} pts')
+    beat = sum(1 for r in rows if r[2] > r[3])
+    print(f'     → {beat} de {len(rows)} variantes baten a AGG en los últimos 5 años; en las ventanas móviles de 5 años desde 2008 la mediana de variantes bate a AGG en {np.median([r[7] for r in rows]):.0f} % de las ventanas')
+    base_w = np.array([cum(static, e - pd.DateOffset(years=5), e) - cum(agg, e - pd.DateOffset(years=5), e) for e in ends])
+    print(f'     referencia: la estática 2/3 TLT + 1/3 MBB bate a AGG en {np.mean(base_w > 0) * 100:.0f} % de esas ventanas · dif. mediana {np.median(base_w):+.1f} pts · peor {base_w.min():+.1f} pts')
+
+    # D. la mejor regla: ¿en qué meses se movió?
+    best = max(rows, key=lambda r: r[2])
+    print(f'\n  D. LA MEJOR de las {len(rows)} (OJO: elegida mirando estos mismos 5 años): «{best[0]}» → {best[1]}: {best[2]:+.1f}% frente a AGG {best[3]:+.1f}%')
     sys.stdout.flush()
