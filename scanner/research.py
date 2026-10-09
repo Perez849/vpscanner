@@ -600,7 +600,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'pit_deep', 'longidx', 'wikidiag'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'pit_deep', 'longidx', 'wikidiag', 'bonds'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -614,6 +614,10 @@ def main():
     os.makedirs(args.out, exist_ok=True)
 
     t0 = time.time()
+    if args.cmd == 'bonds':
+        import bonds
+        bonds.run(None, None, args.out)
+        return
     if args.cmd == 'wikidiag':
         import pit
         mem = pit.fetch_membership()
