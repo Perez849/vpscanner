@@ -1,0 +1,74 @@
+
+######## RENTA FIJA · descargados ['AGG', 'BIL', 'BND', 'GOVT', 'HYG', 'IEF', 'LQD', 'MBB', 'SHY', 'SPY', 'TIP', 'TLT', 'VGLT'] · hasta 2026-10-08
+  TLT   desde 2007-01-03 · 4973 barras
+  MBB   desde 2007-03-16 · 4923 barras
+  AGG   desde 2007-01-03 · 4973 barras
+  BND   desde 2007-04-10 · 4907 barras
+  IEF   desde 2007-01-03 · 4973 barras
+  SHY   desde 2007-01-03 · 4973 barras
+  BIL   desde 2007-05-30 · 4872 barras
+  TIP   desde 2007-01-03 · 4973 barras
+  GOVT  desde 2012-02-24 · 3677 barras
+  LQD   desde 2007-01-03 · 4973 barras
+  HYG   desde 2007-04-11 · 4906 barras
+  VGLT  desde 2010-01-04 · 4217 barras
+  SPY   desde 2007-01-03 · 4973 barras
+
+  RENDIMIENTO POR DISTRIBUCIONES (suma de dividendos de los últimos 12 meses / último precio):
+    TLT   5.00 %
+    MBB   4.54 %
+    AGG   4.19 %
+    BND   4.19 %
+    IEF   4.15 %
+    SHY   3.63 %
+
+  RENTABILIDAD TOTAL acumulada (con cupones y dividendos) hasta la última fecha
+    ventana         TLT      MBB      AGG      BND      IEF      SHY      TIP      SPY
+    1 años        -8.7%    -1.5%    -1.6%    -1.6%    -3.5%     1.6%    -1.9%    16.2%
+    2 años       -10.4%     3.4%     2.6%     2.6%     0.5%     6.1%     2.6%    38.1%
+    3 años         2.0%    14.9%    13.3%    13.3%     9.6%    12.2%    12.0%    85.6%
+    4 años        -8.1%    15.4%    14.8%    14.8%     8.6%    15.3%    12.9%   126.4%
+    5 años       -34.3%    -1.3%    -2.2%    -2.2%    -8.9%     9.4%    -0.9%    89.0%
+    7 años       -33.8%     2.0%     2.4%     2.5%    -6.3%    12.5%    14.0%   196.5%
+    10 años      -22.1%     9.2%    13.0%    13.7%     2.7%    17.9%    22.9%   319.2%
+
+  SOLO PRECIO (sin contar cupones/dividendos): lo que se ve en un gráfico de precio
+    ventana         TLT      MBB      AGG      BND      IEF      SHY      TIP      SPY
+    1 años       -12.8%    -5.7%    -5.5%    -5.5%    -7.2%    -1.9%    -6.0%    15.0%
+    2 años       -18.0%    -5.0%    -5.2%    -5.2%    -7.0%    -1.6%    -4.5%    35.0%
+    3 años       -10.3%     1.6%     1.0%     1.1%    -1.9%     0.2%     1.3%    79.0%
+    4 años       -21.7%    -1.3%    -0.7%    -0.6%    -5.5%     0.2%    -0.4%   115.0%
+    5 años       -45.1%   -16.8%   -17.1%   -17.3%   -21.8%    -5.6%   -18.2%    76.8%
+    7 años       -46.4%   -17.1%   -16.7%   -17.2%   -21.3%    -4.5%   -10.4%   168.2%
+    10 años      -41.5%   -18.2%   -15.2%   -15.8%   -18.9%    -4.3%    -9.5%   258.0%
+
+  CARTERAS DE PESOS FIJOS (rebalanceo mensual, rentabilidad total, sin costes)
+    cartera                                      1 años     3 años     5 años    10 años   vol 5a   caída 5a
+    60 TLT / 30 MBB / 10 liquidez (SHY)          -5.5%       8.9%     -21.4%      -9.2%    11.3%    -32.8%
+    60 TLT / 30 MBB / 10 AGG                     -5.9%       9.0%     -22.4%      -9.8%    11.8%    -33.9%
+    60 TLT / 30 MBB / 10 TIP                     -5.9%       8.9%     -22.3%      -9.0%    11.7%    -33.6%
+    60 TLT / 30 MBB / 10 HYG                     -5.6%      10.2%     -20.9%      -6.9%    11.6%    -33.2%
+    60 TLT / 40 MBB                              -5.8%       9.2%     -22.4%     -10.1%    11.8%    -33.9%
+    AGG (el índice)                              -1.6%      14.5%      -2.2%      13.0%     6.1%    -17.3%
+    BND                                          -1.6%      14.4%      -2.2%      13.6%     6.1%    -17.4%
+    100 TLT                                      -8.7%       4.4%     -34.3%     -22.5%    15.7%    -43.7%
+    100 MBB                                      -1.5%      16.2%      -1.3%       9.2%     7.0%    -16.8%
+
+  AÑOS NATURALES (rentabilidad total):
+    año            AGG (el índice)                 100 TLT                 100 MBB  60 TLT / 30 MBB / 10 l
+    2018                     +0.3%                   -1.6%                   +0.8%                   -0.5%
+    2019                     +8.5%                  +14.1%                   +6.2%                  +10.8%
+    2020                     +7.5%                  +18.2%                   +4.1%                  +12.4%
+    2021                     -1.8%                   -4.6%                   -1.4%                   -3.1%
+    2022                    -13.0%                  -31.2%                  -11.7%                  -23.2%
+    2023                     +5.7%                   +2.8%                   +5.0%                   +3.8%
+    2024                     +1.3%                   -8.1%                   +1.3%                   -4.1%
+    2025                     +7.2%                   +4.2%                   +8.4%                   +5.6%
+    2026                     -2.3%                   -7.5%                   -2.7%                   -5.2%
+
+  VENTANAS MÓVILES DE 5 AÑOS (fin de cada mes desde 2012-04-17): la cartera 60/30/10 bate a AGG en 109 de 175 (62 %) · diferencia mediana +3.5 pts
+    por año de finalización de la ventana (media de la diferencia cartera − AGG, en puntos de rentabilidad acumulada a 5 años):
+    2012: +18.4 · 2013: +4.5 · 2014: +5.7 · 2015: +16.4 · 2016: +15.6 · 2017: +2.5 · 2018: +6.4 · 2019: +7.9 · 2020: +11.4 · 2021: +2.0 · 2022: -1.3 · 2023: -7.2 · 2024: -12.8 · 2025: -20.5 · 2026: -17.8
+    la última ventana (hasta 2026-10-08): AGG -2.2% · cartera 60/30/10 -21.4%
+
+  ÚLTIMOS 5 AÑOS: TLT -34.3% · MBB -1.3% · AGG -2.2%. Con peso fijo en TLT y MBB la media ponderada 60/30 (+10 % liquidez) es ≈ -21.0% frente a -2.2% del índice (la diferencia solo puede salir de la liquidez, de otro índice o de pesos no fijos).
