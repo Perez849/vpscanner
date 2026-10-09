@@ -1,0 +1,47 @@
+
+######## «RELOJ» DE RENTA FIJA · descargados ['AGG', 'DBC', 'GLD', 'IEF', 'MBB', 'SHY', 'TIP', 'TLT', '^TNX']
+
+  A. CARTERA ESTÁTICA 2/3 TLT + 1/3 MBB (pesos fijos, rebalanceo diario) frente a AGG, rentabilidad total hasta 2026-10-08
+    desde 1-ene-2021                   estática   -29.0% · TLT   -40.2% · MBB   -2.4% · AGG   -4.1% · SHY  +9.1%
+    desde 5 años exactos (2021-10-08)  estática   -24.3% · TLT   -34.3% · MBB   -1.3% · AGG   -2.2% · SHY  +9.4%
+    desde 1-ene-2022                   estática   -25.2% · TLT   -35.7% · MBB   -0.5% · AGG   -1.9% · SHY +10.1%
+
+  B. COTA CON CONOCIMIENTO DEL FUTURO (5 años, 61 meses): si los k PEORES meses de la cartera estática se pasaran a liquidez (SHY), ¿se bate a AGG (-2.2%)?
+    k= 0 meses fuera →  -24.3%
+    k= 2 meses fuera →  -13.4%
+    k= 4 meses fuera →   -2.9%
+    k= 6 meses fuera →   +6.8%  ← ya bate a AGG
+    k= 8 meses fuera →  +14.8%  ← ya bate a AGG
+    k=10 meses fuera →  +25.7%  ← ya bate a AGG
+    k=12 meses fuera →  +34.7%  ← ya bate a AGG
+    k=15 meses fuera →  +47.5%  ← ya bate a AGG
+    los 10 peores meses de la estática: 2022-04:-7.5% 2022-09:-7.2% 2023-09:-6.4% 2024-04:-5.3% 2024-12:-4.9% 2026-09:-4.7% 2024-10:-4.6% 2022-03:-4.4% 2022-10:-4.4% 2023-10:-4.3%
+    (con conocimiento perfecto bastan ≈ 6 meses de 60: una interrupción «corta» puede dar la vuelta al resultado SI se acierta cuándo)
+
+  C. REGLAS SIN MIRAR AL FUTURO (señal con el cierre de ayer; 0.05 % por cambio): 2/3 TLT + 1/3 MBB y, si la regla marca «sobrecalentamiento», la parte de TLT pasa al activo alternativo
+     5 años hasta 2026-10-08: estática -24.3% · AGG -2.2%
+     regla                                                         alt   5 años  vs AGG  %días en alerta  cambios  caída   | ventanas de 5 años desde 2008: bate a AGG en · dif. mediana · peor
+     TLT bajo su media de 200 sesiones                             SHY   -24.6%  -22.4          65 %       95   -27.8% |   40 % ·   -2.8 pts ·  -26.9 pts
+     TLT bajo su media de 200 sesiones                             TIP   -24.2%  -22.0          65 %       95   -27.9% |   47 % ·   -0.7 pts ·  -23.9 pts
+     TLT bajo su media de 200 sesiones                             DBC   -10.0%   -7.8          65 %       95   -35.2% |   45 % ·   -5.9 pts ·  -36.7 pts
+     TLT bajo su media de 200 sesiones                             GLD    +9.3%  +11.5          65 %       95   -18.5% |   39 % ·   -4.6 pts ·  -37.1 pts
+     rentabilidad del bono a 10 años sobre su media de 200         SHY   -20.2%  -18.0          72 %       65   -21.6% |   38 % ·   -3.5 pts ·  -24.8 pts
+     rentabilidad del bono a 10 años sobre su media de 200         TIP   -21.2%  -19.0          72 %       65   -23.1% |   49 % ·   -0.3 pts ·  -21.3 pts
+     rentabilidad del bono a 10 años sobre su media de 200         DBC    +0.0%   +2.2          72 %       65   -30.2% |   50 % ·   +0.5 pts ·  -38.1 pts
+     rentabilidad del bono a 10 años sobre su media de 200         GLD    -1.9%   +0.3          72 %       65   -18.9% |   51 % ·   +0.4 pts ·  -33.6 pts
+     subida de >0,40 puntos del 10 años en 3 meses                 SHY    -9.9%   -7.8          28 %       48   -21.2% |   76 % ·   +4.3 pts ·  -20.5 pts
+     subida de >0,40 puntos del 10 años en 3 meses                 TIP   -16.2%  -14.0          28 %       48   -26.2% |   72 % ·   +4.6 pts ·  -14.8 pts
+     subida de >0,40 puntos del 10 años en 3 meses                 DBC    -8.6%   -6.4          28 %       48   -19.9% |   85 % ·  +11.3 pts ·  -16.6 pts
+     subida de >0,40 puntos del 10 años en 3 meses                 GLD    -8.4%   -6.2          28 %       48   -23.7% |   65 % ·   +4.3 pts ·  -22.3 pts
+     expectativas de inflación al alza (TIP/IEF sobre su media de  SHY    -2.9%   -0.7          69 %       53   -10.1% |   68 % ·   +4.8 pts ·  -25.1 pts
+     expectativas de inflación al alza (TIP/IEF sobre su media de  TIP   -10.3%   -8.1          69 %       53   -16.4% |   83 % ·   +9.0 pts ·  -14.2 pts
+     expectativas de inflación al alza (TIP/IEF sobre su media de  DBC    +4.4%   +6.6          69 %       53   -27.2% |   62 % ·   +9.7 pts ·  -30.0 pts
+     expectativas de inflación al alza (TIP/IEF sobre su media de  GLD    +9.5%  +11.7          69 %       53   -20.7% |   74 % ·   +8.9 pts ·  -24.8 pts
+     TLT con momentum negativo a 6 meses                           SHY   -10.8%   -8.6          62 %       68   -20.2% |   74 % ·   +8.4 pts ·  -19.2 pts
+     TLT con momentum negativo a 6 meses                           TIP   -14.4%  -12.2          62 %       68   -23.4% |   77 % ·   +7.1 pts ·  -15.5 pts
+     TLT con momentum negativo a 6 meses                           DBC    +4.7%   +6.9          62 %       68   -29.4% |   60 % ·   +5.4 pts ·  -18.5 pts
+     TLT con momentum negativo a 6 meses                           GLD    +7.3%   +9.5          62 %       68   -18.5% |   55 % ·   +3.4 pts ·  -23.5 pts
+     → 7 de 20 variantes baten a AGG en los últimos 5 años; en las ventanas móviles de 5 años desde 2008 la mediana de variantes bate a AGG en 61 % de las ventanas
+     referencia: la estática 2/3 TLT + 1/3 MBB bate a AGG en 62 % de esas ventanas · dif. mediana +4.3 pts · peor -25.7 pts
+
+  D. LA MEJOR de las 20 (OJO: elegida mirando estos mismos 5 años): «expectativas de inflación al alza (TIP/IEF sobre su media de 200)» → GLD: +9.5% frente a AGG -2.2%
