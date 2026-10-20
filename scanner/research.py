@@ -617,11 +617,6 @@ def main():
     os.makedirs(args.out, exist_ok=True)
 
     t0 = time.time()
-    if args.cmd == 'stops':
-        import stops
-        stops.run(uni, data, args, args.out)
-        print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
-        return
     if args.cmd in ('bonds', 'bonds2'):
         import bonds
         {'bonds': bonds.run, 'bonds2': bonds.run2}[args.cmd](None, None, args.out)
@@ -638,6 +633,11 @@ def main():
     if args.cmd == 'final' and not args.synthetic and not args.no_pit:
         import pit
         uni, data, row_ok, pit_info = pit.prepare(uni, data, args)
+    if args.cmd == 'stops':
+        import stops
+        stops.run(uni, data, args, args.out)
+        print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
+        return
     if args.cmd == 'longidx':
         import longidx
         longidx.run(uni, data, args.out)
