@@ -272,6 +272,7 @@ DRIVERS = {'atrp': 'Volatilidad del valor (ATR, % del precio)', 'dd20': 'Distanc
            'dd52': 'Distancia al máximo de 52 semanas (%)', 'vix': 'VIX', 'spy_dd60': 'Caída del S&P 500 desde su máximo de 60 sesiones (%)'}
 N_PER_DAY = 5
 MIN_ATR_PCT = 2.5          # suelo de volatilidad: con ATR < 2,5 % del precio los costes (fijos en %) se comen el rebote (estudio `reasons2`, R6)
+MAX_ATR_PCT = 7.0          # techo de volatilidad: con ATR ≥ 7 % el stop de 4×ATR queda a ≥ 28 % o no existe y las colas de pérdida (−30 % a −65 %) salen de ahí (estudio `stops`)
 WINDOW_YEARS = 3
 FIRST_WF_YEAR = 2019
 MIN_GROUP_N = 80
@@ -336,7 +337,7 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None,
     # grupos permitidos: evidencia fuera de muestra con la política aplicada a todos los grupos
     N = int(plan.get('n', N_PER_DAY))
     atrp_ = X[:, FEATURES.index('atrp')]
-    okp = ok & np.isfinite(atrp_) & (atrp_ >= MIN_ATR_PCT)          # elegibles para la política (el modelo se entrena con todos)
+    okp = ok & np.isfinite(atrp_) & (atrp_ >= MIN_ATR_PCT) & (atrp_ < MAX_ATR_PCT)          # elegibles para la política (el modelo se entrena con todos)
     sel0 = select_policy(p, base, day, gid, okp, list(range(len(GROUPS))), n=N)
     allowed = []
     for gi, gname in enumerate(GROUPS):
@@ -458,7 +459,7 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None,
     return {
         'id': plan['id'], 'role': plan['role'], 'label': plan['label'], 'blurb': plan['blurb'],
         'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': [GROUPS[g] for g in allowed], 'gids': allowed,
-        'nPerDay': N, 'minAtrPct': MIN_ATR_PCT, 'floorRaw': round(base_now, 4), 'paused': paused,
+        'nPerDay': N, 'minAtrPct': MIN_ATR_PCT, 'maxAtrPct': MAX_ATR_PCT, 'floorRaw': round(base_now, 4), 'paused': paused,
         'ev': {'aw': round(st['avg_win'], 3), 'al': round(st['avg_loss'], 3)},
         'stats': {'oos': _block(pnl[sel], day[sel], sym[sel]), 'recent': _block(pnl[recent], day[recent], sym[recent]) if st_rec else None,
                   'cost2x': {k: round(float(st2[k]), 3) for k in ('wr', 'mean', 'pf')}, 'health': _block(pnl[hm], day[hm], sym[hm]) if st_h else None,

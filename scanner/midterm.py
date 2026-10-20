@@ -289,7 +289,7 @@ def run(EV, out_dir: str, data: Dict, uni: Dict):
 
 def _dip_returns(EV, data, cal):
     """Rentabilidad diaria de la cartera del plan Equilibrado (3 mejores/día, ATR ≥ 2,5 %, 10 posiciones × 10 %) a partir de la tabla de eventos."""
-    from research import (FEATURES, GROUPS, union_events, topn_mask, rank_in_day, portfolio_sim, year_of, day_of, wf_predict_linear, PLANS, MIN_ATR_PCT)
+    from research import (FEATURES, GROUPS, union_events, topn_mask, rank_in_day, portfolio_sim, year_of, day_of, wf_predict_linear, PLANS, MIN_ATR_PCT, MAX_ATR_PCT)
     reg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model', 'validated.json')))
     plan = PLANS[0]
     groups = next(s['groups'] for s in reg['strategies'] if s['id'] == plan['id'])
@@ -301,7 +301,7 @@ def _dip_returns(EV, data, cal):
     y = (pnl > 0).astype(np.float32)
     p, base = wf_predict_linear(EV, rows, FL, y, ok, int(day.max()))
     atrp = EV['X'][rows][:, FEATURES.index('atrp')]
-    cand = ok & np.isfinite(p) & (p >= base) & np.isin(gid, [GROUPS.index(g) for g in groups]) & (atrp >= MIN_ATR_PCT)
+    cand = ok & np.isfinite(p) & (p >= base) & np.isin(gid, [GROUPS.index(g) for g in groups]) & (atrp >= MIN_ATR_PCT) & (atrp < MAX_ATR_PCT)
     sel = topn_mask(p, day, cand, int(plan.get('n', 3)))
     rk = rank_in_day(p, day, sel)
     ti = np.searchsorted(cal, day, side='left')

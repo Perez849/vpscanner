@@ -65,6 +65,7 @@ def main():
             assert a['plans'] and all(0 < p['p'] < 1 for p in a['plans'])
             assert all(p['rank'] <= next(x['nPerDay'] for x in reg['strategies'] if x['id'] == p['strategy']) for p in a['plans']), 'más alertas por plan que su N por día'
             assert all(a['atrPct'] >= next(x['minAtrPct'] for x in reg['strategies'] if x['id'] == p['strategy']) for p in a['plans']), 'alerta bajo el suelo de volatilidad'
+            assert all(a['atrPct'] < next(x['maxAtrPct'] for x in reg['strategies'] if x['id'] == p['strategy']) for p in a['plans']), 'alerta sobre el techo de volatilidad'
             assert a['levels']['stop'] < a['sigClose']
         t1 = open(os.path.join(out, 'tracking.json')).read()
         run('scan.py', '--synthetic', '400', '--registry', os.path.join(reg_dir, 'validated.json'), '--out', out, '--no-notify')
