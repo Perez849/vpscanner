@@ -52,7 +52,7 @@ def metrics(x: np.ndarray, kind: np.ndarray | None = None) -> Dict:
     return out
 
 
-def portfolio_var(cal: np.ndarray, ti: np.ndarray, bars: np.ndarray, res: np.ndarray, rank: np.ndarray, M: int, frac: np.ndarray) -> Dict:
+def portfolio_var(cal: np.ndarray, ti: np.ndarray, bars: np.ndarray, res: np.ndarray, rank: np.ndarray, M: int, frac: np.ndarray, max_expo: float = 99.0) -> Dict:
     """Como RS.portfolio_sim pero con una fracción de capital distinta por operación (tamaño por riesgo)."""
     ok = np.isfinite(res) & np.isfinite(frac)
     idx = np.flatnonzero(ok)
@@ -77,6 +77,8 @@ def portfolio_var(cal: np.ndarray, ti: np.ndarray, bars: np.ndarray, res: np.nda
         for k in by_t.get(t - 1, []):
             if len(open_) >= M:
                 break
+            if sum(a for _, a, _ in open_) + eq * float(frac[k]) > eq * max_expo:       # no se apalanca: la exposición total no pasa del límite
+                continue
             open_.append((t - 1 + int(max(bars[k], 1)), eq * float(frac[k]), float(res[k])))
         hist[t] = eq
         expo.append(sum(a for _, a, _ in open_) / eq)
@@ -203,4 +205,78 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
     for j in worst:
         d = np.datetime64('1970-01-01') + np.timedelta64(int(day[j]), 'D')
         print(f"    {EV['sym_names'][sym[j]]:9s} {d} {gi[int(gid[j])]:9s} ATR {atrp[j]:4.1f}% · {int(bars4[j])} sesiones · {'STOP' if EV['kind'][rows[j], vi4] == -1 else 'tiempo/RSI'} · {pnl4[j]:+6.1f}%")
+    sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Stops FIJOS en % («como máximo un 5 %») y stop al cierre
+# ═════════════════════════════════════════════════════════════════════════
+CAPS = (2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0, 12.0)
+
+
+def run2(uni: Dict, data: Dict, args, out_dir: str):
+    uni2, data2, row_ok, info = pit.prepare(uni, data, args)
+    extra = [SM.Variant('rsi', 0.0, 99.0, H, c, cs) for c in CAPS for cs in (False, True)]
+    variants = SM.default_variants() + extra
+    EV = RS.build_events(data2, uni2, SU.SETUPS, variants)
+    rows, FL, names = RS.union_events(EV, +1)
+    k = row_ok(EV, rows)
+    rows, FL = rows[k], FL[k]
+    last_day = int(EV['day'].max())
+    day, sym = EV['day'][rows], EV['sym'][rows]
+    atrp = EV['X'][rows][:, FEATURES.index('atrp')]
+    print(f'\n######## STOPS FIJOS EN % · PERTENENCIA HISTÓRICA · {len(rows):,} candidatos · datos hasta {np.datetime64("1970-01-01") + np.timedelta64(last_day, "D")}', flush=True)
+    exp: Dict = {}
+    base = RS.build_plan(EV, rows, FL, names, plan_of(4.0), last_day, spy=data2['SPY'], export=exp)
+    sel = exp['sel']
+    rk5 = exp['rk5']
+    print(f'\n  (selección del plan desplegado con techo de ATR: {int(sel.sum()):,} operaciones; los candidatos tienen ATR ≥ 2,5 %, así que 4×ATR ≥ 10 % y un tope de 5 % siempre es un stop fijo del 5 %)', flush=True)
+
+    def vn(c, cs):
+        return SM.Variant('rsi', 0.0, 99.0, H, c, cs).name
+
+    def col(name, key):
+        return EV[key][rows, EV['variants'].index(name)]
+
+    cands = [('4×ATR (actual, ≈ 14 %)', vname(4.0), None, 4.0 * atrp / 100.0)]
+    for c in CAPS:
+        cands.append((f'fijo {c:g} %', vn(c, False), c, np.full(len(rows), c / 100.0)))
+    for c in (3.0, 5.0, 7.0):
+        cands.append((f'fijo {c:g} % AL CIERRE', vn(c, True), c, np.full(len(rows), c / 100.0)))
+
+    print('\n  A. LAS MISMAS ALERTAS CON UN STOP FIJO EN % (salida RSI(2)>70 o 10 sesiones). «R» = ganancia media medida en unidades de lo arriesgado (resultado / distancia al stop)')
+    print('    ' + 'stop'.ljust(24) + 'n'.rjust(6) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'mediana'.rjust(9) + 'PF'.rjust(6) + 'gan.'.rjust(7) + 'pérd.'.rjust(8) + '%stop'.rjust(7) + 'peor'.rjust(8) + 'R medio'.rjust(9) + 'R pérd.'.rjust(9))
+    for lab, name, c, sf in cands:
+        x, kd = col(name, 'pnl')[sel], col(name, 'kind')[sel]
+        ok = np.isfinite(x)
+        mm = metrics(x[ok], kd[ok])
+        r = x[ok] / (sf[sel][ok] * 100.0)
+        print('    ' + lab.ljust(24) + f"{mm['n']:6d}{mm['wr']:8.1f}%{mm['mean']:+7.2f}%{mm['median']:+8.2f}%{mm['pf']:6.2f}{mm['aw']:+6.2f}%{mm['al']:+7.2f}%{mm['stop']:6.1f}%{mm['worst']:+7.1f}%{np.mean(r):+8.3f}{np.mean(r[x[ok] <= 0]):+9.2f}")
+
+    # ── B. cartera con tamaño por riesgo ─────────────────────────────────
+    cal_d = (data2['SPY']['t'] // 86400).astype(np.int64)
+    ti = np.searchsorted(cal_d, day, side='left')
+    print('\n  B. CARTERA 2019–2026 CON TAMAÑO POR RIESGO (cada operación arriesga lo mismo hasta su stop; sin apalancar: exposición total ≤ 100 %)')
+    print('    ' + 'stop'.ljust(24) + 'tamaño'.ljust(20) + 'anual'.rjust(8) + 'caída'.rjust(8) + 'Sharpe'.rjust(8) + 'peor mes'.rjust(10) + 'expuesto'.rjust(10))
+    for lab, name, c, sf in cands:
+        if lab.startswith('fijo') and c not in (3.0, 5.0, 7.0, 10.0):
+            continue
+        pnl = col(name, 'pnl')
+        bars = col(name, 'bars')
+        res = np.where(sel & (day >= RS.day_of(RS.PORT_START)), pnl, np.nan)
+        sfc = np.clip(sf, 0.02, 0.60)
+        for risk, fmax, M in ((None, 0.10, 10), (0.01, 0.10, 10), (0.01, 0.20, 5)):
+            fr = np.full(len(rows), fmax) if risk is None else np.minimum(fmax, risk / sfc)
+            o = portfolio_var(cal_d, ti, bars, res, rk5, M, fr, max_expo=1.0)
+            tam = '10 % fijo' if risk is None else f'riesgo 1 %, máx {fmax * 100:.0f} %'
+            print('    ' + lab.ljust(24) + tam.ljust(20) + f"{o['cagr']:+7.1f}%{o['dd']:7.1f}%{o['sharpe']:8.2f}{o['worstMonth']:+9.1f}%{o['expo']:9.0f}%")
+
+    # ── C. sistema entero reentrenado ────────────────────────────────────
+    print('\n  C. EL SISTEMA ENTERO REENTRENADO CON ESE STOP (modelo, grupos, política y cartera 10×10 % walk-forward)')
+    print('    ' + 'stop'.ljust(24) + 'n'.rjust(6) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'PF'.rjust(6) + 'alfa vs S&P'.rjust(14) + '   cartera 10×10 %: anual · caída · Sharpe · peor mes')
+    for lab, name, c, sf in [cands[0], cands[4], cands[2], cands[6], cands[-2]]:
+        pl = base if name == vname(4.0) else RS.build_plan(EV, rows, FL, names, {'id': name, 'role': 'principal', 'label': lab, 'n': 3, 'blurb': ''}, last_day, spy=data2['SPY'])
+        o, vs, p10 = pl['stats']['oos'], pl['stats'].get('vsSpy', {}), pl['stats']['portfolio']['10x10']
+        print('    ' + lab.ljust(24) + f"{o['n']:6.0f}{o['wr']:8.1f}%{o['mean']:+7.2f}%{o['pf']:6.2f}{vs.get('alpha', float('nan')):+8.2f}% (t={vs.get('alphaT', float('nan')):.1f})   "
+              f"{p10['cagr']:+6.1f}% · {p10['dd']:4.1f}% · {p10['sharpe']:.2f} · {p10['worstMonth']:+5.1f}%   grupos {pl['groups']}")
     sys.stdout.flush()

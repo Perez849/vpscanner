@@ -367,7 +367,47 @@ def test_longidx_clean():
     print('ok · índices largos: limpieza de tramos (OHLC real, saltos)')
 
 
+def test_stop_variants():
+    """Stop con tope en % (cap) y stop «al cierre» (cs): el simulador vectorizado coincide con una referencia escalar barra a barra."""
+    bad = tot = 0
+    for seed in range(4):
+        F = feats.build(synth(seed=seed + 40, ar=-0.1, sig=0.02))
+        n = len(F['c'])
+        idx = np.flatnonzero(np.isfinite(F['rsi2']) & (F['rsi2'] < 20) & np.isfinite(F['atr']))[:400]
+        vs = [simulate.Variant('rsi', 0.0, S, 10, cap, cs) for S in (4.0, 99.0) for cap in (0.0, 3.0, 5.0, 8.0) for cs in (False, True)]
+        res = simulate.simulate(F, idx, 1, vs, 0.1)
+        for v in vs:
+            for q, i in enumerate(idx):
+                if i + v.H >= n:
+                    continue
+                E = F['o'][i + 1]; atr = F['atr'][i]
+                dist = v.S * atr if v.cap <= 0 else min(v.S * atr, v.cap / 100.0 * E)
+                stop = E - dist
+                exit_px = None; bars = None
+                for j in range(1, v.H + 1):
+                    b = i + j
+                    if v.cs:
+                        if F['c'][b] <= stop:
+                            exit_px, bars = (F['o'][b + 1], j + 1) if j < v.H else (F['c'][b], j); break
+                    else:
+                        if F['o'][b] <= stop:
+                            exit_px, bars = F['o'][b], j; break
+                        if F['l'][b] <= stop:
+                            exit_px, bars = stop, j; break
+                    if F['rsi2'][b] > 70:
+                        exit_px, bars = (F['o'][b + 1], j + 1) if j < v.H else (F['c'][b], j); break
+                    if j == v.H:
+                        exit_px, bars = F['c'][b], j
+                ref = (exit_px - E) / E * 100.0 - 0.1
+                p = res[v.name].pnl[q]
+                tot += 1
+                bad += (abs(ref - p) > 1e-9) or (int(res[v.name].bars[q]) != bars)
+    assert tot > 5000 and bad == 0, (tot, bad)
+    print(f'ok · stop con tope en % y stop al cierre == referencia escalar ({tot} operaciones)')
+
+
 if __name__ == '__main__':
+    test_stop_variants()
     test_longidx_clean()
     test_pit_membership()
     test_stockmid()

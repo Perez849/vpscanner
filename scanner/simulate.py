@@ -33,10 +33,13 @@ class Variant(NamedTuple):
     T: float             # objetivo en ATR (solo 'atr')
     S: float             # stop en ATR
     H: int               # barras máximas
+    cap: float = 0.0     # (estudios) tope de la distancia al stop en % del precio de entrada: stop = entrada − mín(S×ATR, cap %); 0 = sin tope
+    cs: bool = False     # (estudios, kinds distintos de 'atr') stop «al cierre»: si el CIERRE pierde el nivel se sale en la apertura siguiente (no por mecha intradía)
 
     @property
     def name(self) -> str:
-        return f'{self.kind}_T{self.T:g}_S{self.S:g}_H{self.H}' if self.kind in ('atr', 'trl') else f'{self.kind}_S{self.S:g}_H{self.H}'
+        base = f'{self.kind}_T{self.T:g}_S{self.S:g}_H{self.H}' if self.kind in ('atr', 'trl') else f'{self.kind}_S{self.S:g}_H{self.H}'
+        return base + (f'_C{self.cap:g}' if self.cap > 0 else '') + ('_cs' if self.cs else '')
 
 
 def default_variants() -> List[Variant]:
@@ -105,9 +108,13 @@ def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List
     for v in variants:
         H = v.H
         ok_all = valid[:, H - 1] & np.isfinite(atr) & np.isfinite(E)
-        stop = E - v.S * atr
-        stop_hit = Ll[:, :H] <= stop[:, None]
-        gap_stop = O[:, :H] <= stop[:, None]
+        stop = E - (v.S * atr if v.cap <= 0 else np.minimum(v.S * atr, v.cap / 100.0 * np.abs(E)))
+        if v.cs and v.kind != 'atr':
+            stop_hit = C[:, :H] <= stop[:, None]
+            gap_stop = np.zeros_like(stop_hit)
+        else:
+            stop_hit = Ll[:, :H] <= stop[:, None]
+            gap_stop = O[:, :H] <= stop[:, None]
         if v.kind == 'trl':
             # stop de seguimiento (chandelier): máx. alcanzado hasta la barra ANTERIOR − T×ATR, solo sube; arranca en S×ATR bajo la entrada
             hh = np.maximum.accumulate(Hh[:, :H], axis=1)
@@ -156,10 +163,15 @@ def simulate(F: Dict[str, np.ndarray], idx: np.ndarray, sgn: int, variants: List
             stop_first = has_s & (ks <= kc)
             Os = O[rows, np.minimum(ks, H - 1)]
             stop_px = np.where(gap_stop[rows, np.minimum(ks, H - 1)], Os, stop)
+            stop_bars = ks + 1
+            if v.cs:                                                  # el cierre perdió el stop: salida en la apertura siguiente (o al cierre de la última barra)
+                nxt_ok = ks < H - 1
+                stop_px = np.where(nxt_ok, O[rows, np.minimum(ks + 1, H - 1)], C[:, H - 1])
+                stop_bars = np.where(nxt_ok, ks + 2, H)
             sig_next = has_c & ~stop_first & (kc < H - 1)
             Onext = O[rows, np.minimum(kc + 1, H - 1)]
             exit_px = np.where(stop_first, stop_px, np.where(sig_next, Onext, C[:, H - 1]))
-            bars = np.where(stop_first, ks + 1, np.where(sig_next, kc + 2, H))
+            bars = np.where(stop_first, stop_bars, np.where(sig_next, kc + 2, H))
             kind = np.where(stop_first, -1, 0)
         pnl = (exit_px - E) / absE * 100.0 - cost
         pnl = np.where(ok_all, pnl, np.nan)
