@@ -280,3 +280,97 @@ def run2(uni: Dict, data: Dict, args, out_dir: str):
         print('    ' + lab.ljust(24) + f"{o['n']:6.0f}{o['wr']:8.1f}%{o['mean']:+7.2f}%{o['pf']:6.2f}{vs.get('alpha', float('nan')):+8.2f}% (t={vs.get('alphaT', float('nan')):.1f})   "
               f"{p10['cagr']:+6.1f}% · {p10['dd']:4.1f}% · {p10['sharpe']:.2f} · {p10['worstMonth']:+5.1f}%   grupos {pl['groups']}")
     sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Ventana de resultados trimestrales (hueco de apertura): ni el stop más corto lo evita
+# ═════════════════════════════════════════════════════════════════════════
+EARN_LO, EARN_HI = 48, 68          # una publicación de resultados «tipo» ocurrió entre 48 y 68 sesiones antes de la señal ⇒ la siguiente cae en las próximas 10 sesiones
+
+
+def earnings_flags(data: Dict, EV: Dict, rows: np.ndarray) -> np.ndarray:
+    """Proxy CAUSAL de «resultados en las próximas 10 sesiones»: una barra con hueco ≥ 1 ATR y volumen ≥ 2× el normal (la reacción a la publicación anterior)
+    ocurrió hace 48–68 sesiones (un trimestre ≈ 63). Sin calendario de resultados (Yahoo no lo da por el endpoint de precios) es una aproximación."""
+    import feats
+    sym, bi = EV['sym'][rows], EV['bi'][rows]
+    flag = np.zeros(len(rows), bool)
+    gap10 = np.zeros(len(rows), bool)
+    names = EV['sym_names']
+    order = np.argsort(sym, kind='stable')
+    sym_o = sym[order]
+    cuts = np.flatnonzero(np.diff(sym_o)) + 1
+    for grp in np.split(order, cuts):
+        if not len(grp):
+            continue
+        name = names[sym[grp[0]]]
+        F = feats.build(data[name])
+        n = len(F['c'])
+        gapatr = np.abs(F['gap']) / F['atrp']
+        like = np.isfinite(gapatr) & (gapatr >= 1.0) & np.isfinite(F['vol_ratio']) & (F['vol_ratio'] >= 2.0)
+        cs = np.concatenate([[0], np.cumsum(like.astype(np.int64))])
+        i = bi[grp].astype(np.int64)
+        lo, hi = np.maximum(i - EARN_HI, 0), np.maximum(i - EARN_LO + 1, 0)
+        flag[grp] = (cs[hi] - cs[lo]) > 0
+        big = np.isfinite(gapatr) & (gapatr >= 1.5)
+        cb = np.concatenate([[0], np.cumsum(big.astype(np.int64))])
+        a, b = np.minimum(i + 1, n), np.minimum(i + 11, n)
+        gap10[grp] = (cb[b] - cb[a]) > 0
+    return flag, gap10
+
+
+def run3(uni: Dict, data: Dict, args, out_dir: str):
+    uni2, data2, row_ok, info = pit.prepare(uni, data, args)
+    CAPS3 = (3.0, 5.0, 7.0)
+    extra = [SM.Variant('rsi', 0.0, 99.0, H, c, cs) for c in CAPS3 for cs in (False, True)]
+    EV = RS.build_events(data2, uni2, SU.SETUPS, SM.default_variants() + extra)
+    rows, FL, names = RS.union_events(EV, +1)
+    k = row_ok(EV, rows)
+    rows, FL = rows[k], FL[k]
+    last_day = int(EV['day'].max())
+    day = EV['day'][rows]
+    print(f'\n######## RESULTADOS TRIMESTRALES · {len(rows):,} candidatos · datos hasta {np.datetime64("1970-01-01") + np.timedelta64(last_day, "D")}', flush=True)
+    flag, gap10 = earnings_flags(data2, EV, rows)
+    grp = EV['grp'][rows]
+    stock = np.isin(grp, [RS.GROUPS.index(g) for g in ('us_large', 'us_mid', 'us_small', 'eu', 'thematic')])
+    print(f'  candidatos de acciones marcados como «resultados próximos»: {flag[stock].mean() * 100:.1f}% · con un hueco ≥1,5 ATR en las 10 sesiones siguientes: marcados {gap10[stock & flag].mean() * 100:.1f}% frente a no marcados {gap10[stock & ~flag].mean() * 100:.1f}%', flush=True)
+    exp: Dict = {}
+    base = RS.build_plan(EV, rows, FL, names, plan_of(4.0), last_day, spy=data2['SPY'], export=exp)
+    sel = exp['sel']
+    vi = EV['variants'].index(vname(4.0))
+    pnl, kind = EV['pnl'][rows, vi], EV['kind'][rows, vi]
+    print('\n  A. PLAN DESPLEGADO (stop 4×ATR) SEGÚN SI LA SEÑAL CAE JUSTO ANTES DE RESULTADOS')
+    print('    ' + 'grupo'.ljust(34) + 'n'.rjust(6) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'PF'.rjust(6) + 'pérd.'.rjust(8) + '≥10%'.rjust(7) + '≥15%'.rjust(7) + 'peor'.rjust(8) + '%stop'.rjust(7))
+    for lab, mk in (('todas', sel), ('con resultados próximos (marcadas)', sel & flag), ('sin resultados próximos', sel & ~flag),
+                    ('solo acciones, marcadas', sel & flag & stock), ('solo acciones, no marcadas', sel & ~flag & stock)):
+        x = pnl[mk]
+        x_ok = np.isfinite(x)
+        if x_ok.sum() < 5:
+            print('    ' + lab.ljust(34) + f'{int(x_ok.sum()):6d}  (muy pocas)')
+            continue
+        mm = metrics(x[x_ok], kind[mk][x_ok])
+        print('    ' + lab.ljust(34) + f"{mm['n']:6d}{mm['wr']:8.1f}%{mm['mean']:+7.2f}%{mm['pf']:6.2f}{mm['al']:+7.2f}%{mm['l10']:6.1f}%{mm['l15']:6.1f}%{mm['worst']:+7.1f}%{mm['stop']:6.1f}%")
+    by = RS.year_of(day)
+    print('    por año, media de las marcadas / no marcadas (acciones): ' + ' · '.join(
+        f"{Y}: {pnl[sel & flag & stock & (by == Y)].mean():+.2f}/{pnl[sel & ~flag & stock & (by == Y)].mean():+.2f}" for Y in sorted(set(by[sel])) if (sel & flag & stock & (by == Y)).sum() >= 20))
+
+    print('\n  B. EL SISTEMA ENTERO SIN OPERAR LAS SEÑALES CON RESULTADOS PRÓXIMOS (modelo y política reentrenados)')
+    print('    ' + 'versión'.ljust(34) + 'n'.rjust(6) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'PF'.rjust(6) + 'pérd.'.rjust(8) + 'alfa vs S&P'.rjust(14) + '   cartera 10×10 %: anual · caída · Sharpe · peor mes')
+    keep = ~(flag & stock)
+    pl2 = RS.build_plan(EV, rows[keep], FL[keep], names, plan_of(4.0), last_day, spy=data2['SPY'])
+    for lab, pl in (('actual (con techo de ATR 7 %)', base), ('sin resultados próximos', pl2)):
+        o, vs, p10 = pl['stats']['oos'], pl['stats'].get('vsSpy', {}), pl['stats']['portfolio']['10x10']
+        print('    ' + lab.ljust(34) + f"{o['n']:6.0f}{o['wr']:8.1f}%{o['mean']:+7.2f}%{o['pf']:6.2f}{o['avg_loss']:+7.2f}%{vs.get('alpha', float('nan')):+8.2f}% (t={vs.get('alphaT', float('nan')):.1f})   "
+              f"{p10['cagr']:+6.1f}% · {p10['dd']:4.1f}% · {p10['sharpe']:.2f} · {p10['worstMonth']:+5.1f}%")
+    # el mismo filtro con un stop fijo al 7 % al cierre (estudio de stops2)
+    print('\n  C. SIN RESULTADOS PRÓXIMOS, ¿CAMBIA LO QUE PASA CON UN STOP FIJO MÁS CORTO? (mismas alertas del sistema sin esas señales)')
+    sel2 = exp['sel'] & keep
+    print('    ' + 'stop'.ljust(22) + 'n'.rjust(6) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'PF'.rjust(6) + '%stop'.rjust(7) + 'peor'.rjust(8))
+    cands = [('4×ATR (actual)', vname(4.0))] + [(f'{c:g}% fijo' + (' al cierre' if cs else ''), SM.Variant('rsi', 0.0, 99.0, H, c, cs).name) for c in CAPS3 for cs in (False, True)]
+    for lab, nm in cands:
+        vv = EV['variants'].index(nm)
+        x = EV['pnl'][rows, vv][sel2]
+        kd = EV['kind'][rows, vv][sel2]
+        ok = np.isfinite(x)
+        mm = metrics(x[ok], kd[ok])
+        print('    ' + lab.ljust(22) + f"{mm['n']:6d}{mm['wr']:8.1f}%{mm['mean']:+7.2f}%{mm['pf']:6.2f}{mm['stop']:6.1f}%{mm['worst']:+7.1f}%")
+    sys.stdout.flush()
