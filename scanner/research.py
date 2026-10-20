@@ -120,6 +120,7 @@ def build_events(data: Dict, uni: Dict, setup_list: List[SU.Setup], variants: Li
     EV['sym_names'] = sym_list
     EV['setups'] = [s.id for s in setup_list]
     EV['variants'] = [v.name for v in variants]
+    EV['variant_objs'] = list(variants)
     return EV
 
 
@@ -319,7 +320,7 @@ def _block(pnl, day, sym):
     return {k: round(float(st[k]), 3) for k in ('n', 'wr', 'wr_lo', 'mean', 'pf', 't_day', 'avg_win', 'avg_loss') if k in st}
 
 
-def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None, curves=None):
+def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None, curves=None, export=None):
     import model as MD
     variants = EV['variants']
     vi = variants.index(plan['id'])
@@ -411,6 +412,8 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None,
     # resultado por PUESTO del día (con las 5 mejores) y cartera realista con capital limitado frente al S&P 500
     sel5 = select_policy(p, base, day, gid, okp, allowed, n=5)
     rk5 = rank_in_day(p, day, sel5)
+    if export is not None:
+        export.update({'sel': sel, 'sel5': sel5, 'rk5': rk5, 'p': p, 'vi': vi, 'allowed': allowed})
     by_rank = {}
     for r in range(1, 6):
         mr = sel5 & (rk5 == r)
@@ -451,7 +454,7 @@ def build_plan(EV, rows, FL, names, plan, upto_day: int, verbose=True, spy=None,
     fm.calib = cal.calib
     base_now = float(y[trm].mean())
     pc = np.interp(p, [c[0] for c in cal.calib], [c[1] for c in cal.calib]) if len(cal.calib) >= 2 else p
-    v = SM.default_variants()[vi]
+    v = (EV.get('variant_objs') or SM.default_variants())[vi]
     return {
         'id': plan['id'], 'role': plan['role'], 'label': plan['label'], 'blurb': plan['blurb'],
         'exit': {'kind': v.kind, 'T': v.T, 'S': v.S, 'H': v.H}, 'groups': [GROUPS[g] for g in allowed], 'gids': allowed,
@@ -600,7 +603,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'pit_deep', 'longidx', 'wikidiag', 'bonds', 'bonds2'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'pit_deep', 'longidx', 'wikidiag', 'bonds', 'bonds2', 'stops'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -614,6 +617,11 @@ def main():
     os.makedirs(args.out, exist_ok=True)
 
     t0 = time.time()
+    if args.cmd == 'stops':
+        import stops
+        stops.run(uni, data, args, args.out)
+        print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
+        return
     if args.cmd in ('bonds', 'bonds2'):
         import bonds
         {'bonds': bonds.run, 'bonds2': bonds.run2}[args.cmd](None, None, args.out)
@@ -629,14 +637,7 @@ def main():
     row_ok, pit_info = None, None
     if args.cmd == 'final' and not args.synthetic and not args.no_pit:
         import pit
-        mem = pit.fetch_membership()
-        if len(mem.get('sp500', {}).get('chg', [])) < 100:
-            raise SystemExit('Pertenencia histórica del S&P 500 no disponible: se aborta para no sustituir el registro por una validación con sesgo de supervivencia')
-        uni, data, cov = pit.load_extras(uni, data, mem, args)
-        iv = pit.merged_intervals(mem)
-        row_ok = lambda EV_, rows_: pit.event_mask(EV_['sym_names'], EV_['sym'][rows_], EV_['day'][rows_], iv)
-        pit_info = {'on': True, 'removedTickers': cov['extra'], 'removedWithData': cov['got'],
-                    'changes': {k: len(v['chg']) for k, v in mem.items()}, 'since': pit.FROM_YEAR}
+        uni, data, row_ok, pit_info = pit.prepare(uni, data, args)
     if args.cmd == 'longidx':
         import longidx
         longidx.run(uni, data, args.out)

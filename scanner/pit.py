@@ -247,6 +247,19 @@ def load_extras(uni: Dict, data: Dict, mem: Dict[str, Dict], args, since: str = 
     return uni2, data2, {'extra': len(extra), 'got': len(got)}
 
 
+def prepare(uni: Dict, data: Dict, args):
+    """Universo ampliado con las retiradas que aún cotizan y la máscara de pertenencia histórica. Devuelve (uni, data, row_ok, pit_info).
+    row_ok(EV, filas) → True si el valor era miembro del índice ese día. Aborta si no se puede reconstruir (no se valida con sesgo de supervivencia)."""
+    mem = fetch_membership()
+    if len(mem.get('sp500', {}).get('chg', [])) < 100:
+        raise SystemExit('Pertenencia histórica del S&P 500 no disponible: se aborta para no trabajar con sesgo de supervivencia')
+    uni2, data2, cov = load_extras(uni, data, mem, args)
+    iv = merged_intervals(mem)
+    row_ok = lambda EV_, rows_: event_mask(EV_['sym_names'], EV_['sym'][rows_], EV_['day'][rows_], iv)
+    info = {'on': True, 'removedTickers': cov['extra'], 'removedWithData': cov['got'], 'changes': {k: len(v['chg']) for k, v in mem.items()}, 'since': FROM_YEAR}
+    return uni2, data2, row_ok, info
+
+
 # ═════════════════════════════════════════════════════════════════════════
 #  A. Sistema de rebotes sobre pertenencia histórica
 # ═════════════════════════════════════════════════════════════════════════
