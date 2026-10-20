@@ -251,7 +251,52 @@ def test_ema_exit_kinds():
     print(f'ok · salidas por EMA == referencia escalar ({tot} operaciones)')
 
 
+def test_preclose_wait():
+    """Aviso previo: espera a la ventana 15:10–15:40 ET (horario de verano e invierno), no hace nada fuera de ella y coincide con scan.py."""
+    import json, subprocess, tempfile
+    from datetime import datetime, timedelta, timezone
+    import preclose_wait as PW
+    import scan
+    u = lambda s_: datetime.fromisoformat(s_).replace(tzinfo=timezone.utc)
+    # verano (EDT = UTC-4): ventana 19:10–19:40 UTC
+    assert PW.decide(u('2026-10-13T13:00'))[0] == 'hop'                    # 09:00 ET: faltan 6 h 10 min > 5,5 h
+    d, sec = PW.decide(u('2026-10-13T14:30')); assert d == 'wait' and abs(sec - (4 * 3600 + 40 * 60 + PW.MARGIN_S)) < 1
+    assert PW.decide(u('2026-10-13T19:09'))[0] == 'wait' and PW.decide(u('2026-10-13T19:10'))[0] == 'run'
+    assert PW.decide(u('2026-10-13T19:40'))[0] == 'run' and PW.decide(u('2026-10-13T19:41'))[0] == 'skip'
+    assert PW.decide(u('2026-10-13T23:43'))[0] == 'skip'                    # la hora a la que llegó el disparo de GitHub: ya pasó, no hace nada
+    # invierno (EST = UTC-5): ventana 20:10–20:40 UTC
+    assert PW.decide(u('2026-12-15T19:15'))[0] == 'wait' and PW.decide(u('2026-12-15T20:15'))[0] == 'run' and PW.decide(u('2026-12-15T21:00'))[0] == 'skip'
+    # fin de semana: nada
+    assert PW.decide(u('2026-10-17T19:20'))[0] == 'skip' and PW.decide(u('2026-10-18T15:00'))[0] == 'skip'
+    # coincide con la ventana que aplica scan.py durante un año entero
+    t = u('2026-01-01T00:00'); bad = 0
+    while t < u('2027-01-01T00:00'):
+        bad += (PW.decide(t)[0] == 'run') != scan.in_preclose_window(t)
+        t += timedelta(minutes=7)
+    assert bad == 0, bad
+    # ya escaneado hoy
+    with tempfile.TemporaryDirectory() as tmp:
+        f = os.path.join(tmp, 'alerts_pre.json')
+        json.dump({'generatedAt': '2026-10-13T19:21:05+00:00'}, open(f, 'w'))
+        assert PW.done_today(u('2026-10-13T19:35'), f) and not PW.done_today(u('2026-10-14T19:15'), f) and not PW.done_today(u('2026-10-13T19:35'), os.path.join(tmp, 'no.json'))
+        json.dump({'generatedAt': '2026-10-13T02:00:00+00:00'}, open(f, 'w'))              # un escaneo viejo de otra hora no cuenta
+        assert not PW.done_today(u('2026-10-13T19:35'), f)
+
+    def run(now, **env):
+        e = dict(os.environ, PRECLOSE_NOW=now, PRECLOSE_NO_SLEEP='1', **env)
+        e.pop('GITHUB_OUTPUT', None)
+        return subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scanner', 'preclose_wait.py')], env=e, capture_output=True, text=True).stdout
+    o = run('2026-10-13T15:00:00+00:00')
+    assert 'decisión: run' in o and 'simulado' in o                          # duerme hasta la ventana y escanea
+    assert 'decisión: hop' in run('2026-10-13T11:00:00+00:00')
+    o = run('2026-10-13T23:43:00+00:00')
+    assert 'decisión: skip' in o and 'simulado' not in o
+    assert 'decisión: run' in run('2026-10-13T23:43:00+00:00', FORCE='true')
+    print('ok · aviso previo: espera a la ventana, no hace nada fuera de ella, verano/invierno y coincide con scan.py')
+
+
 if __name__ == '__main__':
+    test_preclose_wait()
     test_ema_exit_kinds()
     test_midterm_signals()
     test_portfolio_sim()
