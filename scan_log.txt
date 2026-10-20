@@ -1,0 +1,25 @@
+  datos: 0 en caché, 1984 por descargar (2y)
+  ... 200/1984 (3s)
+  ... 400/1984 (6s)
+  ... 600/1984 (9s)
+  ... 800/1984 (12s)
+  ... 1000/1984 (15s)
+  ... 1200/1984 (18s)
+  ... 1400/1984 (21s)
+  ... 1600/1984 (24s)
+  ... 1800/1984 (27s)
+  datos: OK 1969 · fallidos 15
+  fallidos: FDXF HONA VYLR IBOC ADIG BLFS CWEN-A HLX LEG MBGL MFP QRVO ROG.SW CTRA SATS
+  descarga lista · 31s
+  indicadores listos · 1965 activos · 41s
+  seguimiento: 0 abiertas · 8 pendientes · 0 cerradas
+
+Activos: 1965 · fallidos 15 · candidatos 81 · alertas 5 · vigilancia 18 · 50s
+  🚀 FLEX       P(≥+12%)≈34%  stop inicial -37.5%  Capitulación: −25% en 10 sesiones, RSI(2)≤15, volátil
+  🚀 CLF        P(≥+12%)≈30%  stop inicial -27.7%  Hueco alcista ≥4% con volumen x2,5 que aguanta (catalizador)
+  🚀 HPQ        P(≥+12%)≈29%  stop inicial -20.9%  Líder de fuerza relativa que retrocede 4–12% desde máximos
+  LLY        Equilibrado: P=67% EV=+0.48% | Alta probabilidad: P=70% EV=+0.35%  Cierre en el 10% inferior de la vela, sobre SMA200 · Cierre 
+  GILD       Equilibrado: P=66% EV=+0.45% | Alta probabilidad: P=72% EV=+0.54%  Cierre en el 10% inferior de la vela, sobre SMA200
+  LYB        Alta probabilidad: P=72% EV=+0.47%  Cierre en el 20% inferior de la vela, sobre SMA200
+  MPC        Equilibrado: P=68% EV=+0.52% | Alta probabilidad: P=69% EV=+0.30%  Cierre en el 20% inferior de la vela, sobre SMA200 · Mínimo 
+  MDT        Alta probabilidad: P=68% EV=+0.01%  Cierre en el 10% inferior de la vela, sobre SMA200 · Cierre 
