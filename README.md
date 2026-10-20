@@ -202,6 +202,28 @@ Comprobación con rentabilidad total (cupones incluidos, datos de Yahoo hasta 20
 - **Techo de volatilidad (nuevo)**: ATR < 7 % del precio. Con ATR 5–10 % la media es la mayor (+1,3 a +1,4 %) pero con ATR ≥ 10 % (98 operaciones) la media cae a +0,37 %, PF 1,06, el 19 % pierde ≥10 % y la peor es −65 %. Con el techo en 7 %: −0,04 puntos de media, la peor pérdida pasa de −65 % a −30 % y el crypto de ATR alto desaparece. Validación final con el techo: Equilibrado 67,2 % de acierto, +0,48 % por operación, pérdida media −4,85 %; cartera 10×10 %: +16,7 % anual, caída −21,5 % (antes +19,3 % y −26,3 %), mismo Sharpe 1,30.
 - **En vivo (23 operaciones cerradas, 8–20 oct.)**: 17 ganadas (+51,1 % en total) y 6 perdidas (−67,0 %), de las que 4 son stops de −11 % a −22 % (VIAV −21,9 %, P −17,2 %, STMPA.PA −15,7 %, ASML −11,2 %). Cuatro pérdidas ≥10 % de 23 es el 17 %, frente al 6 % esperado (probabilidad ≈ 4,5 % de que salgan tantas por azar): mala suerte probable, pero muestra pequeña y por debajo de lo esperado.
 
+### ¿Y un stop máximo del 5 %? (`research.py stops2`; stops fijos en %, con pertenencia histórica y techo de ATR 7 %)
+
+Los candidatos tienen ATR ≥ 2,5 %, así que 4×ATR ya es ≥ 10 %: «máximo 5 %» equivale a un stop fijo del 5 %. Mismas 3.741 alertas del Equilibrado, 2019–2026:
+
+| stop | acierto | media/op. | PF | paradas | peor |
+|---|---|---|---|---|---|
+| **4×ATR (actual)** | **67,1 %** | **+0,48 %** | **1,30** | 3,3 % | −29,5 % |
+| 12 % fijo | | +0,46 % | | | |
+| 10 % fijo | | +0,41 % | | | |
+| 8 % fijo | | +0,36 % | | | |
+| 6 % fijo | | +0,28 % | | | |
+| **5 % fijo** | 61,1 % | +0,24 % | 1,14 | 29 % | −22,3 % |
+| 4 % fijo | | +0,23 % | | | |
+| 3 % fijo | | +0,14 % | | | |
+| 2 % fijo | | +0,08 % | | | |
+
+- **Cuanto más corto el stop, peor la media** (monótono). Un 5 % fijo se activa en el 29 % de las operaciones (frente al 3,3 %) y la peor pérdida sigue siendo −22 %, porque el hueco de apertura se salta el stop. El rebote necesita margen: el precio suele hundirse un 3–6 % antes de volver.
+- **Stop evaluado al cierre** (si el cierre pierde el nivel, se sale en la apertura siguiente) es menos malo que el intradía, pero no mejora el 4×ATR: 3 % +0,26 %, 5 % +0,35 % (acierto 64,5 %), 7 % +0,42 %.
+- **Sistema reentrenado con el stop fijo** (modelo y política incluidos): 4×ATR → alfa frente al S&P +0,10 % (t=1,1), +17,3 % anual, caída −21,5 %, Sharpe 1,40. 5 % intradía → n=3.186, +0,17 %/op., **alfa −0,12 % (t=−1,8)**, +5,6 % anual, caída −29,1 %, Sharpe 0,60; 3 % → +3,8 % anual; 7 % intradía → alfa 0,00, +10,4 %; 5 % al cierre → alfa +0,01 %, +11,7 % / −19,7 % / Sharpe 1,10.
+- **Cartera con tamaño por riesgo** (sin apalancar, exposición ≤ 100 %): 4×ATR a 10 % fijo +16,2 % / −22,3 % / Sharpe 1,32; 4×ATR arriesgando 1 % (tope 10 %) +11,2 % / −11,6 % / 1,43; 5 % intradía +8,3 % / −21,2 % / 0,70; 5 % al cierre +13,1 % / −18,0 % / 1,04; 7 % al cierre +17,1 % / −20,4 % / 1,36 (tope 20 %: +19,7 % / −13,7 % / 1,50; exploración dentro de la muestra, entre muchas variantes: no es una conclusión).
+- **Conclusión**: un stop de máximo el 5 % **empeora** el sistema (menos acierto, media a la mitad, alfa ≤ 0). El tamaño de la posición, no la distancia del stop, es lo que limita lo que duele una pérdida. No desplegado: el seguimiento (`track.resolve`) y el registro de salidas solo entienden stops en ATR; `Variant.cap`/`Variant.cs` existen únicamente en el simulador.
+
 ## 🚀 Pelotazos (experimental)
 
 Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
