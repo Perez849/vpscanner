@@ -551,7 +551,7 @@ class Panel:
 def run(uni: Dict, data: Dict, args, out_dir: str):
     import pit
     uni2, data2, row_ok, info = pit.prepare(uni, data, args)
-    syms = [s for s in uni2 if uni2[s].get('group') in STOCK_GROUPS and not uni2[s].get('aux') and s in data2 and len(data2[s]['c']) > 300]
+    syms = [s for s in uni2 if uni2[s].get('group') in STOCK_GROUPS and not uni2[s].get('aux') and s in data2 and len(data2[s]['c']) > 300 and '.' not in s]      # sin cotizaciones extranjeras (Londres cotiza en peniques: su «dinero negociado» sale inflado ×100)
     print(f'\n######## CHARTISMO · {len(syms)} acciones con datos · {len(PATTERNS)} patrones (velas {sum(1 for v in PATTERNS.values() if v[1] == "velas")}, '
           f'rupturas {sum(1 for v in PATTERNS.values() if v[1] == "rupturas")}, figuras {sum(1 for v in PATTERNS.values() if v[1] == "figuras")})', flush=True)
     days, mem = membership(data2, syms, KS)
