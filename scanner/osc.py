@@ -428,20 +428,23 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
     EV2['X'] = np.hstack([EV['X'], newX])
     # selección SOLO con datos hasta 2018 (dos o tres años): los mejores por |t| de entonces
     pre = yr_e <= 2018
+    print(f'     selección con datos hasta 2018: {int(pre.sum()):,} candidatos elegibles', flush=True)
     pre_sel = []
-    if pre.sum() > 3000:
+    if pre.sum() > 800:
         _, inv_p = np.unique(d_e[pre], return_inverse=True)
         ts = {}
         for j in live:
             mk = MK[j][pre]
-            if mk.sum() < 1500:
+            if mk.sum() < 500:
                 continue
             zp = Z[j][pre] * mk
             zp[mk > 0] -= zp[mk > 0].mean()
             ts[cols[j]] = abs(_slope(zp, y_e[pre], inv_p, mk)[1])
         pre_sel = [k_ for k_, _ in sorted(ts.items(), key=lambda kv: -kv[1])[:8]]
+    full_sel = [k_ for k_ in order if k_ != 'composite'][:4]
     arms = [('modelo actual (28 variables)', []), ('+ todos los osciladores', [c for c in cols if c != 'composite']),
             ('+ compuesto de agotamiento (1 variable)', ['composite']), (f'+ 8 mejores con datos ≤2018: {",".join(pre_sel[:3])}…', pre_sel),
+            (f'+ 4 mejores de la muestra completa (con ventaja): {",".join(full_sel[:2])}…', full_sel),
             ('+ los que superan el umbral del mejor de N', sig)]
     try:
         feats.FEATURES.extend(cols)
