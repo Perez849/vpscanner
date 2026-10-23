@@ -1,0 +1,88 @@
+
+######## SONDEO 2: PROFUNDIDAD HISTÓRICA
+
+  FINRA volumen corto diario: ¿hasta qué fecha hacia atrás?
+  [200] CNMSshvol20260102    379,764 B
+  [200] CNMSshvol20250102    349,905 B
+  [200] CNMSshvol20240801    334,683 B
+  [200] CNMSshvol20230103    334,893 B
+  [200] CNMSshvol20220103    347,246 B
+  [200] CNMSshvol20210104    316,221 B
+  [200] CNMSshvol20200102    274,443 B
+  [200] CNMSshvol20190102    256,933 B
+  [200] CNMSshvol20181231    262,442 B
+  [200] CNMSshvol20181102    251,334 B
+  [403] CNMSshvol20180102        111 B  b'<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>AccessDenied</Code><Message>Access Den'
+  [403] CNMSshvol20170103        111 B  b'<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>AccessDenied</Code><Message>Access Den'
+  [403] CNMSshvol20160104        111 B  b'<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>AccessDenied</Code><Message>Access Den'
+  [200] FNQCshvol20230103     97,359 B
+  [200] FNSQshvol20230103    305,738 B
+  [200] FNYXshvol20230103    237,554 B
+  [200] FORFshvol20230103     96,312 B
+
+  FINRA interés corto (quincenal): ¿fechas de liquidación?
+  [200] shrt20240112   1,869,155 B
+  [200] shrt20240131   1,877,452 B
+  [200] shrt20240215   1,881,607 B
+  [200] shrt20231229   1,874,384 B
+  [200] shrt20231215   1,877,694 B
+  [200] shrt20230731   1,896,857 B
+  [200] shrt20230714   1,882,884 B
+  [200] shrt20220531   2,033,142 B
+  [200] shrt20220513   2,020,742 B
+  [200] shrt20210430   1,946,070 B
+  [200] shrt20200131   1,601,631 B
+  [200] shrt20190131   1,548,528 B
+  [200] shrt20180629   1,523,132 B
+  [200] shrt20171229   1,507,693 B
+  [403] shrt20170131         111 B  b'<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>AccessDenied</Code><Message>'
+
+  Nasdaq calendario de resultados: ¿hasta cuándo hacia atrás?
+  [200] 2016-11-01    37,514 B · filas 179
+  [200] 2017-05-02    35,494 B · filas 169
+  [200] 2018-05-01    34,370 B · filas 163
+  [200] 2019-02-05    22,217 B · filas 105
+  [200] 2020-05-05    45,057 B · filas 215
+  [200] 2022-05-03    47,979 B · filas 228
+  [200] 2025-08-05    65,369 B · filas 313
+  [200] 2026-10-22    30,171 B · filas 143
+        ejemplo: [{"eps": "$0.43", "surprise": "2.38", "time": "time-not-supplied", "symbol": "AMD", "name": "Advanced Micro Devices, Inc.", "marketCap": "$829,183,030,000", "fiscalQuarterEnding": "Mar/2023", "epsForecast": "$0.42", "noOfEsts": "14"}, {"eps": "$1.23", "surprise": "23", "time": "time-not-supplied", "symbol": "PFE", "name": "Pfizer, Inc.", "marketCap": "$173,384,073,000", "fiscalQuarterEnding": "Mar/2023", "epsForecast": "$1", "noOfEsts": "8"}]
+
+  SEC: cobertura de 8-K 2.02 y archivos adicionales
+  [200] AAPL: recientes 1002 desde 2015-10-02 · 8-K 2.02: 45 desde 2015-10-27 · archivos extra ['CIK0000320193-submissions-001.json']
+  [200] MSFT: recientes 1002 desde 2020-09-02 · 8-K 2.02: 24 desde 2020-10-27 · archivos extra ['CIK0000789019-submissions-001.json', 'CIK0000789019-submissions-002.json']
+  [200] TSLA: recientes 1000 desde 2018-06-07 · 8-K 2.02: 70 desde 2018-07-02 · archivos extra ['CIK0001318605-submissions-001.json']
+  [200] UPS: recientes 1001 desde 2016-04-28 · 8-K 2.02: 42 desde 2016-04-28 · archivos extra ['CIK0001090727-submissions-001.json', 'CIK0001090727-submissions-002.json']
+  [200] F: recientes 1001 desde 2019-05-24 · 8-K 2.02: 30 desde 2019-07-24 · archivos extra ['CIK0000037996-submissions-001.json', 'CIK0000037996-submissions-002.json']
+
+  SEC: trimestres de operaciones de directivos disponibles
+  [200] 2016q4
+  [200] 2017q1
+  [200] 2019q3
+  [200] 2022q2
+  [200] 2025q4
+  [200] 2026q1
+  [404] 2026q2
+  [404] 2026q3
+
+  FRED: otras series
+  [200] BAA10Y             3079 filas · 2015-01-02,2.51 … 2026-10-21,1.44
+  [200] AAA10Y             3079 filas · 2015-01-02,1.55 … 2026-10-21,0.97
+  [200] DGS10              3079 filas · 2015-01-02,2.12 … 2026-10-21,5.13
+  [200] DGS2               3079 filas · 2015-01-02,0.66 … 2026-10-21,4.81
+  [200] T10YIE             3080 filas · 2015-01-02,1.71 … 2026-10-22,2.32
+  [200] DEXUSEU            3076 filas · 2015-01-02,1.2015 … 2026-10-16,1.1231
+  [200] WALCL              616 filas · 2015-01-07,4499524 … 2026-10-21,6753604
+  [200] RRPONTSYD          3080 filas · 2015-01-02,42.186 … 2026-10-22,0.351
+  [200] STLFSI4            616 filas · 2015-01-02,-0.0935 … 2026-10-16,-0.6328
+  [200] DCOILBRENTEU       3078 filas · 2015-01-02,55.38 … 2026-10-20,115.22
+  [404] GOLDAMGBD228NLBM
+  [200] UMCSENT            140 filas · 2015-01-01,98.1 … 2026-08-01,51.7
+  [200] USREC              141 filas · 2015-01-01,0 … 2026-09-01,0
+  [200] USEPUINDXD         4313 filas · 2015-01-01,137.22 … 2026-10-22,258.62
+  [200] EMVOVERALLEMV      141 filas · 2015-01-01,23.33530 … 2026-09-01,21.98965
+
+  AAII: formato de la hoja
+        hoja SENTIMENT: (2263, 14) · primeras filas [[nan, nan, nan, 'American Association of Individual Investors 625 N. Michigan Ave., Chicago, IL. 60611; (312) 280-0170; www.aaii.com', nan, nan, nan, nan, nan, nan, nan, nan, nan, nan], [nan, nan, nan, nan, nan, 'Bullish', nan, nan, 'Bullish', 'Bullish', 'S&P 500', 'S&P 500', 'S&P 500', nan], ['Reported', nan, nan, nan, nan, '8-week', 'Bull-Bear', 'Bullish', 'Average', 'Average', 'Weekly', 'Weekly', 'Weekly', nan], ['Date', 'Bullish', 'Neutral', 'Bearish', 'Total', 'Mov Avg', 'Spread', 'Average', '+St. Dev.', '- St. Dev.', 'High', 'Low', 'Close', nan], [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan], [datetime.datetime(1987, 6, 26, 0, 0), nan, nan, nan, nan, nan, nan, 0.3760087126099717, 0.4756561938483709, 0.27636123137157254, nan, nan, nan, nan]]
+        hoja CHART: (47, 11) · primeras filas [[nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan], [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, 'American Association of Individual Investors Sentiment Survey'], [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, 'Phone: 800/428-2244, Fax: 312/280-1625, www.aaii.com'], [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, 'S&P 500'], [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan], [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]]
+        hoja Terms of Service: (0, 0) · primeras filas []
