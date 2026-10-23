@@ -618,7 +618,7 @@ def earn_block(sym_names: List[str], sym: np.ndarray, day: np.ndarray, cal: Dict
             if not np.isfinite(sur) and np.isfinite(eps) and np.isfinite(fc) and abs(fc) > 1e-9:
                 sur = (eps - fc) / abs(fc) * 100.0
             per.setdefault(s, []).append((avail, e, sur, mcap, nest, eps, fc))
-    names = ['earn_since', 'earn_next', 'earn_react3', 'earn_sur', 'earn_sur_pos', 'earn_sur_neg', 'earn_nest', 'earn_logmcap', 'earn_eps_neg']
+    names = ['earn_since', 'earn_next', 'earn_react3', 'earn_sur', 'earn_sur_pos', 'earn_sur_neg', 'earn_nest', 'earn_eps_neg']
     M = np.full((len(day), len(names)), np.nan, dtype=np.float32)
     for grp in _by_symbol(sym):
         if not len(grp):
@@ -645,8 +645,7 @@ def earn_block(sym_names: List[str], sym: np.ndarray, day: np.ndarray, cal: Dict
         M[r, 4] = np.where(np.isfinite(sur), (sur > 0).astype(np.float32), np.nan)
         M[r, 5] = np.where(np.isfinite(sur), (sur < -5).astype(np.float32), np.nan)
         M[r, 6] = arr[jj, 4][valid]
-        M[r, 7] = np.log1p(np.clip(arr[jj, 3][valid], 0, None))
-        M[r, 8] = np.where(np.isfinite(arr[jj, 5][valid]), (arr[jj, 5][valid] < 0).astype(np.float32), np.nan)
+        M[r, 7] = np.where(np.isfinite(arr[jj, 5][valid]), (arr[jj, 5][valid] < 0).astype(np.float32), np.nan)      # (la capitalización del Nasdaq es la ACTUAL, no la de entonces: se descarta)
     return M, names
 
 
@@ -848,7 +847,7 @@ def size_table(M: np.ndarray, cols: List[str], elig: np.ndarray, day: np.ndarray
     import pandas as pd
     import research as RS
     print('\n  D. EFECTO TAMAÑO: rebote por quintil de capitalización (dentro de cada año y grupo)')
-    for nm, lab in (('earn_logmcap', 'capitalización bursátil (Nasdaq)'), ('logdvol20', 'dólares negociados al día (precio × volumen)')):
+    for nm, lab in (('logdvol20', 'dólares negociados al día (precio × volumen)'),):
         x = M[:, cols.index(nm)].astype(np.float64)
         for gname in ('todas', 'us_large', 'us_mid'):
             m = elig & np.isfinite(x)
@@ -932,13 +931,10 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
 
     # ── modelo ampliado
     famc = {f: [nm for nm, ff in zip(cols, fam) if ff == f] for f in dict.fromkeys(fam)}
-    famc['resultados'] = [c_ for c_ in famc['resultados'] if c_ != 'earn_logmcap']
-    famc['tamaño'] = ['earn_logmcap'] + famc['tamaño']
     pre_sel = osc.pre_selection(sc, cols)
     arms = [('modelo actual (28 variables)', [])]
     for f, lst in famc.items():
         arms.append((f'+ {f} ({len(lst)})', lst))
-    arms.append(('+ solo tamaño por precio×volumen (logdvol20)', ['logdvol20']))
     arms.append((f'+ todas las alternativas ({len(cols)})', list(cols)))
     arms.append((f'+ 8 mejores con datos ≤2018: {",".join(pre_sel[:2])}…', pre_sel))
     arms.append(('+ las que superan el umbral del mejor de N', sc['sig']))
