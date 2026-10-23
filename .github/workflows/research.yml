@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Dependencias
-        run: pip install numpy pandas lxml scikit-learn
+        run: pip install numpy pandas lxml scikit-learn xlrd
       - name: Caché de precios
         uses: actions/cache@v4
         with:

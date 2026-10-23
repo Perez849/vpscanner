@@ -117,5 +117,69 @@ def probe():
     sys.stdout.flush()
 
 
+def probe2():
+    print('\n######## SONDEO 2: PROFUNDIDAD HISTÓRICA', flush=True)
+    print('\n  FINRA volumen corto diario: ¿hasta qué fecha hacia atrás?')
+    for d in ('20260102', '20250102', '20240801', '20230103', '20220103', '20210104', '20200102', '20190102', '20181231', '20181102', '20180102', '20170103', '20160104'):
+        st, b = fetch(f'https://cdn.finra.org/equity/regsho/daily/CNMSshvol{d}.txt', timeout=30)
+        print(f'  [{st:3d}] CNMSshvol{d}  {len(b):>9,d} B' + ('' if st == 200 else f'  {b[:90]!r}'), flush=True)
+    st, b = fetch('https://cdn.finra.org/equity/regsho/daily/CNMSshvol20230103.txt', timeout=30)
+    for pre in ('FNQC', 'FNSQ', 'FNYX', 'FORF'):
+        st2, b2 = fetch(f'https://cdn.finra.org/equity/regsho/daily/{pre}shvol20230103.txt', timeout=30)
+        print(f'  [{st2:3d}] {pre}shvol20230103  {len(b2):>9,d} B', flush=True)
+    print('\n  FINRA interés corto (quincenal): ¿fechas de liquidación?')
+    for d in ('20240112', '20240131', '20240215', '20231229', '20231215', '20230731', '20230714', '20220531', '20220513', '20210430', '20200131', '20190131', '20180629', '20171229', '20170131'):
+        st, b = fetch(f'https://cdn.finra.org/equity/otcmarket/biweekly/shrt{d}.csv', timeout=30)
+        print(f'  [{st:3d}] shrt{d}  {len(b):>10,d} B' + ('' if st == 200 else f'  {b[:80]!r}'), flush=True)
+    print('\n  Nasdaq calendario de resultados: ¿hasta cuándo hacia atrás?')
+    for d in ('2016-11-01', '2017-05-02', '2018-05-01', '2019-02-05', '2020-05-05', '2022-05-03', '2025-08-05', '2026-10-22'):
+        st, b = fetch(f'https://api.nasdaq.com/api/calendar/earnings?date={d}', headers={'User-Agent': BROWSER, 'Accept': 'application/json'}, timeout=30)
+        n = -1
+        try:
+            n = len(json.loads(b)['data']['rows'] or [])
+        except Exception:
+            pass
+        print(f'  [{st:3d}] {d}  {len(b):>8,d} B · filas {n}', flush=True)
+    st, b = fetch('https://api.nasdaq.com/api/calendar/earnings?date=2023-05-02', headers={'User-Agent': BROWSER, 'Accept': 'application/json'}, timeout=30)
+    try:
+        print('        ejemplo: ' + json.dumps(json.loads(b)['data']['rows'][:2], ensure_ascii=False)[:600])
+    except Exception:
+        pass
+    print('\n  SEC: cobertura de 8-K 2.02 y archivos adicionales')
+    sec = {'User-Agent': UA}
+    for cik, nm in ((320193, 'AAPL'), (789019, 'MSFT'), (1318605, 'TSLA'), (1090727, 'UPS'), (37996, 'F')):
+        st, b = fetch(f'https://data.sec.gov/submissions/CIK{cik:010d}.json', headers=sec, timeout=30)
+        if st != 200:
+            print(f'  [{st}] {nm}')
+            continue
+        j = json.loads(b)
+        rec = j['filings']['recent']
+        d22 = sorted(d for f, d, it in zip(rec['form'], rec['filingDate'], rec['items']) if f == '8-K' and '2.02' in it)
+        print(f'  [{st}] {nm}: recientes {len(rec["form"])} desde {min(rec["filingDate"])} · 8-K 2.02: {len(d22)} desde {d22[0] if d22 else "-"} · archivos extra {[f["name"] for f in j["filings"].get("files", [])]}', flush=True)
+    print('\n  SEC: trimestres de operaciones de directivos disponibles')
+    for q in ('2016q4', '2017q1', '2019q3', '2022q2', '2025q4', '2026q1', '2026q2', '2026q3'):
+        st, b = fetch(f'https://www.sec.gov/files/structureddata/data/insider-transactions-data-sets/{q}_form345.zip', headers=sec, timeout=120, maxbytes=2000)
+        print(f'  [{st:3d}] {q}', flush=True)
+    print('\n  FRED: otras series')
+    for sid in ('BAA10Y', 'AAA10Y', 'DGS10', 'DGS2', 'T10YIE', 'DEXUSEU', 'WALCL', 'RRPONTSYD', 'STLFSI4', 'DCOILBRENTEU', 'GOLDAMGBD228NLBM', 'UMCSENT', 'USREC', 'USEPUINDXD', 'EMVOVERALLEMV'):
+        st, b = fetch(f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&cosd=2015-01-01', timeout=30)
+        if st == 200:
+            ls = b.decode().strip().split('\n')
+            print(f'  [{st}] {sid:18s} {len(ls) - 1} filas · {ls[1]} … {ls[-1]}', flush=True)
+        else:
+            print(f'  [{st}] {sid}', flush=True)
+    print('\n  AAII: formato de la hoja')
+    st, b = fetch('https://www.aaii.com/files/surveys/sentiment.xls', headers={'User-Agent': BROWSER}, timeout=60)
+    try:
+        import pandas as pd
+        x = pd.read_excel(io.BytesIO(b), sheet_name=None, header=None)
+        for k, v in x.items():
+            print(f'        hoja {k}: {v.shape} · primeras filas {v.head(6).values.tolist()[:6]}')
+    except Exception as e:
+        print(f'        no se pudo leer: {type(e).__name__}: {e}')
+    sys.stdout.flush()
+
+
 if __name__ == '__main__':
     probe()
+    probe2()

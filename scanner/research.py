@@ -624,7 +624,7 @@ def main():
         return
     if args.cmd == 'altprobe':
         import alt
-        alt.probe()
+        alt.probe(); alt.probe2()
         return
     if args.cmd == 'wikidiag':
         import pit
