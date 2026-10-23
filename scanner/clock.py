@@ -56,6 +56,14 @@ ETF_MAP = {'XLK': 'Tecnología', 'XLF': 'Financiero', 'XLE': 'Energía', 'XLV': 
 WIKI_PAGES = ('List_of_S%26P_500_companies', 'List_of_S%26P_400_companies', 'List_of_S%26P_600_companies', 'Nasdaq-100')
 
 
+
+def _quiet(fn, *a, **kw):
+    """Ejecuta fn silenciando lo que imprime (build_plan escribe un informe largo por cada versión)."""
+    import contextlib
+    import io
+    with contextlib.redirect_stdout(io.StringIO()):
+        return fn(*a, **kw)
+
 def fetch_gics() -> Dict[str, Dict[str, str]]:
     """{símbolo: {'sector': GICS, 'sub': subindustria}} de las tablas de Wikipedia (solo valores que cotizan hoy en esos índices)."""
     import universe as U
@@ -253,7 +261,7 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
             ('recomendado o sin sector', ~mapped | (have & picked)))
     for lab, keep in arms:
         try:
-            pl = RS.build_plan(EV, rows[keep], FL[keep], names, ST.plan_of(4.0), last_day, verbose=False, spy=data2['SPY'])
+            pl = _quiet(RS.build_plan, EV, rows[keep], FL[keep], names, ST.plan_of(4.0), last_day, spy=data2['SPY'])
             o, vs, p10 = pl['stats']['oos'], pl['stats'].get('vsSpy', {}), pl['stats']['portfolio']['10x10']
             print('    ' + lab.ljust(40) + f"{o['n']:6.0f}{o['wr']:8.1f}%{o['mean']:+7.2f}%{o['pf']:6.2f}{o['avg_loss']:+7.2f}%{vs.get('alpha', float('nan')):+8.2f}% (t={vs.get('alphaT', float('nan')):.1f})   "
                   f"{p10['cagr']:+6.1f}% · {p10['dd']:4.1f}% · {p10['sharpe']:.2f} · {p10['worstMonth']:+5.1f}%", flush=True)

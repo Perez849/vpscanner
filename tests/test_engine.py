@@ -442,7 +442,27 @@ def test_clock_sectors():
     print('ok · reloj de inversión: sectores, calendario y contraste de permutaciones')
 
 
+def test_osc_causal():
+    """Los ~55 osciladores complejos son causales: recortar el futuro no cambia ni un valor del pasado, y no hay infinitos."""
+    import osc
+    b = synth(seed=77, ar=-0.1, sig=0.02)
+    n0 = len(b['c'])
+    F = feats.build(b)
+    B = osc.battery(F)
+    assert len(B) >= 50 and all(len(v) == n0 for v in B.values())
+    assert not any(np.isinf(v).any() for v in B.values())
+    for cut in (n0 - 400, n0 - 37):
+        F2 = feats.build({k: (v[:cut] if isinstance(v, np.ndarray) and len(v) == n0 else v) for k, v in b.items()})
+        B2 = osc.battery(F2)
+        for k in B:
+            a, c2 = B[k][:cut - 3], B2[k][:cut - 3]
+            m = np.isfinite(a) & np.isfinite(c2)
+            assert np.array_equal(np.isfinite(a), np.isfinite(c2)) and np.allclose(a[m], c2[m], atol=1e-9, rtol=1e-9), (k, cut)
+    print(f'ok · {len(B)} osciladores complejos son causales')
+
+
 if __name__ == '__main__':
+    test_osc_causal()
     test_clock_sectors()
     test_stop_variants()
     test_longidx_clean()
