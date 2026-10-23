@@ -560,8 +560,18 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
         ever |= mem[K].sum(0) >= 40
     work = [j for j in range(len(syms)) if ever[j]]
     print(f'  universo móvil: las {KS[0]} y las {KS[1]} acciones más negociadas en cada fecha · {len(work)} valores han estado en alguno · {len(days)} sesiones', flush=True)
-    top_now = np.argsort(-mem[KS[0]][-1].astype(int))[:KS[0]]
-    print('  las más negociadas hoy: ' + ' '.join(syms[j] for j in np.flatnonzero(mem[KS[0]][-1])[:25]) + ' …', flush=True)
+    dvm = np.full((len(days), len(syms)), np.nan, dtype=np.float32)
+    for j, s_ in enumerate(syms):
+        b_ = data2[s_]
+        dvm[np.searchsorted(days, (b_['t'] // 86400).astype(np.int64)), j] = pd.Series(b_['c'].astype(np.float64) * b_['v'].astype(np.float64)).rolling(60, min_periods=60).mean().to_numpy()
+    for d_str in ('2018-06-29', '2021-06-30', '2024-06-28', '2026-09-30'):
+        r = int(np.searchsorted(days, (np.datetime64(d_str) - np.datetime64('1970-01-01')).astype(int)))
+        r = min(r, len(days) - 1)
+        o_ = np.argsort(-np.nan_to_num(dvm[r], nan=-1.0))[:12]
+        print(f'  las 12 más negociadas el {d_str} (dinero medio de 60 sesiones, M$): ' + ' '.join(f'{syms[j]}({dvm[r, j] / 1e6:,.0f})' for j in o_), flush=True)
+    valid = np.isfinite(dvm).sum(1)
+    ok_days = valid >= KS[0]
+    print(f'  miembros por día del universo de {KS[0]}: mediana {int(np.median(mem[KS[0]][ok_days].sum(1)))} · días con < {KS[0]} valores con dato: {int((~ok_days).sum())} de {len(days)}', flush=True)
     P = Panel()
     t0 = __import__('time').time()
     for q, j in enumerate(work):
@@ -613,4 +623,83 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
                 s2 = P.stat(P.ev[nm], K, (side, hz))
                 cells.append(f"{s2['ex']:+6.2f}% /{s2['t']:+5.1f}" if 'ex' in s2 else '       n/d')
             print('       ' + nm.ljust(20) + ''.join(c.rjust(16 if i < 3 else 18) for i, c in enumerate(cells)), flush=True)
+    sys.stdout.flush()
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  ¿Mejoran los patrones el sistema de rebotes? (los 65 patrones como señales en las barras de cada candidato)
+# ═════════════════════════════════════════════════════════════════════════
+def overlay(data: Dict, EV: Dict, rows: np.ndarray, look: int = 3) -> Tuple[np.ndarray, List[str], List[str]]:
+    """Matriz [candidatos × patrones] con 1 si el patrón se completó en alguna de las últimas `look` barras (incluida la del candidato)."""
+    sym, bi = EV['sym'][rows], EV['bi'][rows].astype(np.int64)
+    names = list(PATTERNS)
+    M = np.zeros((len(rows), len(names)), dtype=np.float32)
+    order = np.argsort(sym, kind='stable')
+    cuts = np.flatnonzero(np.diff(sym[order])) + 1
+    for q, grp in enumerate(np.split(order, cuts)):
+        if not len(grp):
+            continue
+        F = feats.build(data[EV['sym_names'][sym[grp[0]]]])
+        S = signals(F)
+        i = bi[grp]
+        for k, nm in enumerate(names):
+            sg = S[nm]
+            if not sg.any():
+                continue
+            hit = np.zeros(len(sg), bool)
+            for L in range(look):
+                hit[L:] |= sg[:len(sg) - L]
+            M[grp, k] = hit[i]
+        if (q + 1) % 300 == 0:
+            print(f'    {q + 1} valores', flush=True)
+    return M, names, [PATTERNS[n][1] for n in names]
+
+
+def run2(uni: Dict, data: Dict, args, out_dir: str):
+    import osc
+    import pit
+    import research as RS
+    import setups as SU
+    import simulate as SM
+    import stops as ST
+    uni2, data2, row_ok, info = pit.prepare(uni, data, args)
+    EV = RS.build_events(data2, uni2, SU.SETUPS, SM.default_variants())
+    rows, FL, names = RS.union_events(EV, +1)
+    k = row_ok(EV, rows)
+    rows, FL = rows[k], FL[k]
+    last_day = int(EV['day'].max())
+    day, gid = EV['day'][rows], EV['grp'][rows]
+    year = RS.year_of(day)
+    print(f'\n######## CHARTISMO COMO AYUDA AL SISTEMA DE REBOTES · {len(rows):,} candidatos', flush=True)
+    exp: Dict = {}
+    osc._quiet(RS.build_plan, EV, rows, FL, names, ST.plan_of(4.0), last_day, spy=data2['SPY'], export=exp)
+    allowed = exp['allowed']
+    M, cols, fam = overlay(data2, EV, rows)
+    print(f'  patrones completados en las últimas 3 barras de cada candidato: {np.mean(M.sum(1) > 0) * 100:.1f}% de los candidatos tienen alguno', flush=True)
+    vi = EV['variants'].index(ST.vname(4.0))
+    pnl = EV['pnl'][rows, vi]
+    atrp = EV['X'][rows][:, RS.FEATURES.index('atrp')]
+    elig = np.isfinite(pnl) & (day <= last_day) & np.isfinite(atrp) & (atrp >= RS.MIN_ATR_PCT) & (atrp < RS.MAX_ATR_PCT) & np.isin(gid, allowed)
+    print(f'  fondo: {int(elig.sum()):,} candidatos elegibles · media {pnl[elig].mean():+.2f}% · acierto {np.mean(pnl[elig] > 0) * 100:.1f}%', flush=True)
+    print('\n  A.', end='')
+    sc = osc.screen(M, cols, elig, day, pnl, year, noun='patrones', fam=fam, top=25)
+    # grupos con y sin patrón, frente al resto
+    sym = EV['sym'][rows]
+    print('\n  B. CANDIDATOS CON EL PATRÓN FRENTE AL RESTO (solo patrones con ≥ 150 candidatos elegibles)')
+    out = []
+    for j, nm in enumerate(cols):
+        m = elig & (M[:, j] > 0)
+        if m.sum() >= 150:
+            a = RS.stats(pnl[m], day[m], sym[m])
+            b = RS.stats(pnl[elig & ~(M[:, j] > 0)], day[elig & ~(M[:, j] > 0)], sym[elig & ~(M[:, j] > 0)])
+            dif = a['mean'] - b['mean']
+            out.append((nm, a['n'], a['wr'], b['wr'], a['mean'], b['mean'], dif, dif / ((a['se'] ** 2 + b['se'] ** 2) ** 0.5 + 1e-12)))
+    out.sort(key=lambda r: -abs(r[7]))
+    for nm, n_, w1, w2, m1, m2, dif, t in out[:15]:
+        print(f'     {nm:18s} n={n_:5d} · acierto {w1:5.1f}% vs {w2:5.1f}% · media {m1:+6.2f}% vs {m2:+6.2f}% · dif {dif:+5.2f} (t={t:+4.1f})', flush=True)
+    famc = {f: [nm for nm, ff in zip(cols, fam) if ff == f] for f in dict.fromkeys(fam)}
+    bull = [nm for nm in cols if PATTERNS[nm][0] > 0]
+    arms = [('modelo actual (28 variables)', [])] + [(f'+ {f} ({len(l)})', l) for f, l in famc.items()] + [(f'+ alcistas ({len(bull)})', bull), (f'+ los {len(cols)} patrones', list(cols)),
+                                                                                                         ('+ los que superan el umbral del mejor de N', sc['sig'])]
+    osc.model_arms(EV, rows, FL, names, M, cols, arms, last_day, data2['SPY'], 'C. SISTEMA ENTERO REENTRENADO CON LOS PATRONES COMO VARIABLES (AUC fuera de muestra)')
     sys.stdout.flush()

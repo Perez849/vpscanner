@@ -604,7 +604,7 @@ def load_data(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'pit_deep', 'longidx', 'wikidiag', 'bonds', 'bonds2', 'stops', 'stops2', 'stops3', 'clock', 'osc', 'alt', 'altprobe', 'charts'])
+    ap.add_argument('cmd', choices=['final', 'explore', 'meta', 'meta2', 'meta3', 'meta4', 'meta5', 'regime', 'gap', 'pelotazo', 'pelotazo2', 'moc', 'improve', 'improve2', 'index', 'reasons', 'reasons2', 'midterm', 'ema', 'ema2', 'ema3', 'stockmid', 'stockmid_long', 'pit', 'pit_mid', 'pit_deep', 'longidx', 'wikidiag', 'bonds', 'bonds2', 'stops', 'stops2', 'stops3', 'clock', 'osc', 'alt', 'altprobe', 'charts', 'charts2'])
     ap.add_argument('--range', default='10y')
     ap.add_argument('--cache', default=os.path.join(HERE, 'cache', 'prices_10y.pkl.gz'))
     ap.add_argument('--max-age-h', type=float, default=24 * 14)
@@ -638,9 +638,10 @@ def main():
     if args.cmd == 'final' and not args.synthetic and not args.no_pit:
         import pit
         uni, data, row_ok, pit_info = pit.prepare(uni, data, args)
-    if args.cmd in ('clock', 'osc', 'alt', 'charts'):
+    if args.cmd in ('clock', 'osc', 'alt', 'charts', 'charts2'):
         import importlib
-        importlib.import_module(args.cmd).run(uni, data, args, args.out)
+        mod = importlib.import_module(args.cmd.rstrip('2') if args.cmd == 'charts2' else args.cmd)
+        getattr(mod, 'run2' if args.cmd == 'charts2' else 'run')(uni, data, args, args.out)
         print(f'\nfin · {time.time() - t0:.0f}s', flush=True)
         return
     if args.cmd in ('stops', 'stops2', 'stops3'):

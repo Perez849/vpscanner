@@ -347,6 +347,10 @@ def screen(M: np.ndarray, cols: List[str], elig: np.ndarray, day: np.ndarray, pn
         if mk.sum() < 2000 or np.nanstd(x[mk]) == 0:
             Z.append(None); MK.append(None)
             continue
+        vals_ = np.unique(x[mk])
+        if len(vals_) <= 2 and min((x[mk] == vals_[0]).sum(), (x[mk] == vals_[-1]).sum()) < 150:      # indicadora casi vacía: la pendiente y su error estándar no son fiables
+            Z.append(None); MK.append(None)
+            continue
         zc = _rank_within_year(x, yr_e, mk)
         Z.append(zc); MK.append(mk.astype(np.float64))
         beta, t = _slope(zc, y_e, inv, MK[-1])
