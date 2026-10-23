@@ -333,41 +333,13 @@ def _rank_within_year(x: np.ndarray, year: np.ndarray, mask: np.ndarray) -> np.n
     return zc
 
 
-def run(uni: Dict, data: Dict, args, out_dir: str):
-    import model as MD
-    import pit
-    import research as RS
-    import setups as SU
-    import simulate as SM
-    import stops as ST
-    uni2, data2, row_ok, info = pit.prepare(uni, data, args)
-    EV = RS.build_events(data2, uni2, SU.SETUPS, SM.default_variants())
-    rows, FL, names = RS.union_events(EV, +1)
-    k = row_ok(EV, rows)
-    rows, FL = rows[k], FL[k]
-    last_day = int(EV['day'].max())
-    day, sym, gid = EV['day'][rows], EV['sym'][rows], EV['grp'][rows]
-    year = RS.year_of(day)
-    print(f'\n######## OSCILADORES COMPLEJOS · {len(rows):,} candidatos · datos hasta {np.datetime64("1970-01-01") + np.timedelta64(last_day, "D")}', flush=True)
-
-    exp: Dict = {}
-    base = RS.build_plan(EV, rows, FL, names, ST.plan_of(4.0), last_day, spy=data2['SPY'], export=exp, verbose=False)
-    allowed = exp['allowed']
-    M, cols = event_matrix(data2, EV, rows)
-    comp = composite(M, cols)
-    cols = cols + ['composite']
-    M = np.concatenate([M, comp[:, None].astype(np.float32)], 1)
-    print(f'  {len(cols)} osciladores calculados (causales) · cobertura media {np.isfinite(M).mean() * 100:.0f}%', flush=True)
-
-    vi = EV['variants'].index(ST.vname(4.0))
-    pnl = EV['pnl'][rows, vi]
-    atrp = EV['X'][rows][:, RS.FEATURES.index('atrp')]
-    elig = np.isfinite(pnl) & (day <= last_day) & np.isfinite(atrp) & (atrp >= RS.MIN_ATR_PCT) & (atrp < RS.MAX_ATR_PCT) & np.isin(gid, allowed)
-    print(f'  fondo del cribado: {int(elig.sum()):,} candidatos elegibles (ATR {RS.MIN_ATR_PCT}–{RS.MAX_ATR_PCT} %, grupos {[RS.GROUPS[g] for g in allowed]}) · media {pnl[elig].mean():+.2f}% · acierto {np.mean(pnl[elig] > 0) * 100:.1f}%', flush=True)
+def screen(M: np.ndarray, cols: List[str], elig: np.ndarray, day: np.ndarray, pnl: np.ndarray, year: np.ndarray, noun: str = 'osciladores', reps: int = 100, top: int = 25,
+           fam: List[str] | None = None) -> Dict:
+    """Cribado univariante: pendiente de la rentabilidad sobre el rango (dentro de cada año) con error estándar por clústeres de día, consistencia por años y
+    umbral del MEJOR |t| de N variables obtenido permutando los resultados dentro de cada día."""
     d_e, y_e, yr_e = day[elig], pnl[elig], year[elig]
     _, inv = np.unique(d_e, return_inverse=True)
     win = (y_e > 0).astype(np.float64)
-
     Z, MK, res = [], [], {}
     for j, nm in enumerate(cols):
         x = M[elig, j].astype(np.float64)
@@ -388,79 +360,121 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
                 by = float((zy * (y_e - y_e[my].mean())).sum() / (zy * zy).sum())
                 tot += 1
                 pos += by > 0
-        # extremo: quintil superior frente al inferior
         q = np.quantile(zc[mk], [0.2, 0.8])
         lo, hi = mk & (zc <= q[0]), mk & (zc >= q[1])
         res[nm] = {'beta': beta, 't': t, 'tw': tw, 'pos': int(pos), 'tot': int(tot), 'q_hi': float(y_e[hi].mean()), 'q_lo': float(y_e[lo].mean()),
-                   'w_hi': float(win[hi].mean() * 100), 'w_lo': float(win[lo].mean() * 100)}
-
-    # umbral del «mejor de N»: permutar los resultados dentro de cada día
-    reps = 100
+                   'w_hi': float(win[hi].mean() * 100), 'w_lo': float(win[lo].mean() * 100), 'cov': float(mk.mean() * 100)}
     rng = np.random.default_rng(11)
     o_day = np.argsort(d_e, kind='stable')
-    mx = np.empty(reps)
     live = [j for j, zc in enumerate(Z) if zc is not None]
+    mx = np.empty(reps)
     for r in range(reps):
         o = np.lexsort((rng.random(len(d_e)), d_e))
         yp = np.empty(len(y_e)); yp[o_day] = y_e[o]
         mx[r] = max(abs(_slope(Z[j], yp, inv, MK[j])[1]) for j in live)
     thr95, thr99 = float(np.quantile(mx, 0.95)), float(np.quantile(mx, 0.99))
-    print(f'\n  A. CRIBADO UNIVARIANTE (pendiente de la rentabilidad sobre el rango dentro de cada año; error estándar por clústeres de día)')
-    print(f'     bajo el azar, el MEJOR |t| de {len(live)} osciladores es ≥ {thr95:.1f} el 5 % de las veces y ≥ {thr99:.1f} el 1 % ({reps} permutaciones dentro de cada día)')
-    print('     ' + 'oscilador'.ljust(18) + 'pend.(pp)'.rjust(10) + 't'.rjust(7) + 't(acierto)'.rjust(11) + 'años +'.rjust(9) + 'Q5−Q1 media'.rjust(13) + 'Q5−Q1 acierto'.rjust(15))
+    print(f'\n  CRIBADO UNIVARIANTE (pendiente de la rentabilidad sobre el rango dentro de cada año; error estándar por clústeres de día)')
+    print(f'     bajo el azar, el MEJOR |t| de {len(live)} {noun} es ≥ {thr95:.1f} el 5 % de las veces y ≥ {thr99:.1f} el 1 % ({reps} permutaciones dentro de cada día)')
+    print('     ' + 'variable'.ljust(18) + ('familia'.ljust(12) if fam else '') + 'cobert.'.rjust(8) + 'pend.(pp)'.rjust(10) + 't'.rjust(7) + 't(acierto)'.rjust(11) + 'años +'.rjust(9) + 'Q5−Q1 media'.rjust(13) + 'Q5−Q1 acierto'.rjust(15))
     order = sorted(res, key=lambda k_: -abs(res[k_]['t']))
-    for nm in order[:25]:
+    fam_of = dict(zip(cols, fam)) if fam else {}
+    for nm in order[:top]:
         r_ = res[nm]
         star = '★' if abs(r_['t']) >= thr95 else ' '
-        print('     ' + (nm + star).ljust(18) + f"{r_['beta']:+9.2f}{r_['t']:+7.1f}{r_['tw']:+10.1f}{r_['pos']:6d}/{r_['tot']:<2d}{r_['q_hi'] - r_['q_lo']:+11.2f} pp{r_['w_hi'] - r_['w_lo']:+11.1f} pp", flush=True)
+        print('     ' + (nm + star).ljust(18) + (fam_of.get(nm, '').ljust(12) if fam else '') + f"{r_['cov']:7.0f}%{r_['beta']:+9.2f}{r_['t']:+7.1f}{r_['tw']:+10.1f}{r_['pos']:6d}/{r_['tot']:<2d}{r_['q_hi'] - r_['q_lo']:+11.2f} pp{r_['w_hi'] - r_['w_lo']:+11.1f} pp", flush=True)
     sig = [nm for nm in order if abs(res[nm]['t']) >= thr95]
-    print(f'     superan el umbral del mejor de {len(live)}: {len(sig)} ({", ".join(sig) if sig else "ninguno"}) · esperados por azar ≈ {0.05 * len(live):.1f} si se miran sueltos')
+    print(f'     superan el umbral del mejor de {len(live)}: {len(sig)} ({", ".join(sig) if sig else "ninguno"}) · esperados por azar ≈ {0.05 * len(live):.1f} si se miran sueltos', flush=True)
+    return {'res': res, 'order': order, 'sig': sig, 'thr95': thr95, 'thr99': thr99, 'Z': Z, 'MK': MK, 'live': live, 'd_e': d_e, 'y_e': y_e, 'yr_e': yr_e}
 
-    # ── B. modelo ampliado
-    print('\n  B. SISTEMA ENTERO REENTRENADO CON OSCILADORES (modelo, política y cartera recalculados; AUC fuera de muestra)')
-    print('     ' + 'versión'.ljust(46) + 'AUC'.rjust(7) + 'n'.rjust(6) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'PF'.rjust(6) + 'alfa vs S&P'.rjust(14) + '   cartera 10×10 %: anual · caída · Sharpe')
-    import feats
+
+def pre_selection(sc: Dict, cols: List[str], upto: int = 2018, k: int = 8) -> List[str]:
+    """Las k mejores variables por |t| usando SOLO candidatos con año ≤ upto (sin mirar el periodo de evaluación)."""
+    pre = sc['yr_e'] <= upto
+    print(f'     selección con datos hasta {upto}: {int(pre.sum()):,} candidatos elegibles', flush=True)
+    if pre.sum() <= 800:
+        return []
+    _, inv_p = np.unique(sc['d_e'][pre], return_inverse=True)
+    ts = {}
+    for j in sc['live']:
+        mk = sc['MK'][j][pre]
+        if mk.sum() < 500:
+            continue
+        zp = sc['Z'][j][pre] * mk
+        zp[mk > 0] -= zp[mk > 0].mean()
+        ts[cols[j]] = abs(_slope(zp, sc['y_e'][pre], inv_p, mk)[1])
+    return [k_ for k_, _ in sorted(ts.items(), key=lambda kv: -kv[1])[:k]]
+
+
+def model_arms(EV: Dict, rows: np.ndarray, FL, names, M: np.ndarray, cols: List[str], arms: List[Tuple[str, List[str]]], last_day: int, spy, title: str, width: int = 46):
+    """Reentrena el sistema entero con cada conjunto de variables extra y compara AUC fuera de muestra, política y cartera."""
+    import model as MD
+    import research as RS
+    import stops as ST
+    print(f'\n  {title}')
+    print('     ' + 'versión'.ljust(width) + 'AUC'.rjust(7) + 'n'.rjust(6) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'PF'.rjust(6) + 'alfa vs S&P'.rjust(14) + '   cartera 10×10 %: anual · caída · Sharpe')
     base_mf = list(MD.MODEL_FEATURES)
     base_fe = list(feats.FEATURES)
     newX = np.full((EV['X'].shape[0], M.shape[1]), np.nan, dtype=np.float32)
     newX[rows] = M
     EV2 = dict(EV)
     EV2['X'] = np.hstack([EV['X'], newX])
-    # selección SOLO con datos hasta 2018 (dos o tres años): los mejores por |t| de entonces
-    pre = yr_e <= 2018
-    print(f'     selección con datos hasta 2018: {int(pre.sum()):,} candidatos elegibles', flush=True)
-    pre_sel = []
-    if pre.sum() > 800:
-        _, inv_p = np.unique(d_e[pre], return_inverse=True)
-        ts = {}
-        for j in live:
-            mk = MK[j][pre]
-            if mk.sum() < 500:
-                continue
-            zp = Z[j][pre] * mk
-            zp[mk > 0] -= zp[mk > 0].mean()
-            ts[cols[j]] = abs(_slope(zp, y_e[pre], inv_p, mk)[1])
-        pre_sel = [k_ for k_, _ in sorted(ts.items(), key=lambda kv: -kv[1])[:8]]
-    full_sel = [k_ for k_ in order if k_ != 'composite'][:4]
-    arms = [('modelo actual (28 variables)', []), ('+ todos los osciladores', [c for c in cols if c != 'composite']),
-            ('+ compuesto de agotamiento (1 variable)', ['composite']), (f'+ 8 mejores con datos ≤2018: {",".join(pre_sel[:3])}…', pre_sel),
-            (f'+ 4 mejores de la muestra completa (con ventaja): {",".join(full_sel[:2])}…', full_sel),
-            ('+ los que superan el umbral del mejor de N', sig)]
+    out = {}
     try:
         feats.FEATURES.extend(cols)
         for lab, extra in arms:
-            if lab.startswith('+ los que superan') and not extra:
-                print('     ' + lab.ljust(46) + '  (ninguno supera el umbral)')
+            if lab.startswith('+') and not extra and 'umbral' in lab:
+                print('     ' + lab.ljust(width) + '  (ninguna supera el umbral)')
                 continue
             MD.MODEL_FEATURES = base_mf + list(extra)
             try:
-                pl = _quiet(RS.build_plan, EV2, rows, FL, names, ST.plan_of(4.0), last_day, spy=data2['SPY'])
+                pl = _quiet(RS.build_plan, EV2, rows, FL, names, ST.plan_of(4.0), last_day, spy=spy)
                 o, vs, p10, ca = pl['stats']['oos'], pl['stats'].get('vsSpy', {}), pl['stats']['portfolio']['10x10'], pl['stats']['calibration']
-                print('     ' + lab.ljust(46) + f"{ca['aucAll']:7.3f}{o['n']:6.0f}{o['wr']:8.1f}%{o['mean']:+7.2f}%{o['pf']:6.2f}{vs.get('alpha', float('nan')):+8.2f}% (t={vs.get('alphaT', float('nan')):.1f})   "
+                out[lab] = {'auc': ca['aucAll'], 'mean': o['mean'], 'cagr': p10['cagr']}
+                print('     ' + lab.ljust(width) + f"{ca['aucAll']:7.3f}{o['n']:6.0f}{o['wr']:8.1f}%{o['mean']:+7.2f}%{o['pf']:6.2f}{vs.get('alpha', float('nan')):+8.2f}% (t={vs.get('alphaT', float('nan')):.1f})   "
                       f"{p10['cagr']:+6.1f}% · {p10['dd']:4.1f}% · {p10['sharpe']:.2f}", flush=True)
             except Exception as exc:
-                print('     ' + lab.ljust(46) + f'  sin plan ({type(exc).__name__}: {exc})', flush=True)
+                print('     ' + lab.ljust(width) + f'  sin plan ({type(exc).__name__}: {exc})', flush=True)
     finally:
         MD.MODEL_FEATURES = base_mf
         feats.FEATURES[:] = base_fe
+    return out
+
+
+def run(uni: Dict, data: Dict, args, out_dir: str):
+    import pit
+    import research as RS
+    import setups as SU
+    import simulate as SM
+    import stops as ST
+    uni2, data2, row_ok, info = pit.prepare(uni, data, args)
+    EV = RS.build_events(data2, uni2, SU.SETUPS, SM.default_variants())
+    rows, FL, names = RS.union_events(EV, +1)
+    k = row_ok(EV, rows)
+    rows, FL = rows[k], FL[k]
+    last_day = int(EV['day'].max())
+    day, sym, gid = EV['day'][rows], EV['sym'][rows], EV['grp'][rows]
+    year = RS.year_of(day)
+    print(f'\n######## OSCILADORES COMPLEJOS · {len(rows):,} candidatos · datos hasta {np.datetime64("1970-01-01") + np.timedelta64(last_day, "D")}', flush=True)
+    exp: Dict = {}
+    _quiet(RS.build_plan, EV, rows, FL, names, ST.plan_of(4.0), last_day, spy=data2['SPY'], export=exp)
+    allowed = exp['allowed']
+    M, cols = event_matrix(data2, EV, rows)
+    comp = composite(M, cols)
+    cols = cols + ['composite']
+    M = np.concatenate([M, comp[:, None].astype(np.float32)], 1)
+    print(f'  {len(cols)} osciladores calculados (causales) · cobertura media {np.isfinite(M).mean() * 100:.0f}%', flush=True)
+    vi = EV['variants'].index(ST.vname(4.0))
+    pnl = EV['pnl'][rows, vi]
+    atrp = EV['X'][rows][:, RS.FEATURES.index('atrp')]
+    elig = np.isfinite(pnl) & (day <= last_day) & np.isfinite(atrp) & (atrp >= RS.MIN_ATR_PCT) & (atrp < RS.MAX_ATR_PCT) & np.isin(gid, allowed)
+    print(f'  fondo del cribado: {int(elig.sum()):,} candidatos elegibles (ATR {RS.MIN_ATR_PCT}–{RS.MAX_ATR_PCT} %, grupos {[RS.GROUPS[g] for g in allowed]}) · media {pnl[elig].mean():+.2f}% · acierto {np.mean(pnl[elig] > 0) * 100:.1f}%', flush=True)
+    print('\n  A.', end='')
+    sc = screen(M, cols, elig, day, pnl, year)
+    pre_sel = pre_selection(sc, cols)
+    full_sel = [k_ for k_ in sc['order'] if k_ != 'composite'][:4]
+    arms = [('modelo actual (28 variables)', []), ('+ todos los osciladores', [c for c in cols if c != 'composite']),
+            ('+ compuesto de agotamiento (1 variable)', ['composite']), (f'+ 8 mejores con datos ≤2018: {",".join(pre_sel[:3])}…', pre_sel),
+            (f'+ 4 mejores de la muestra completa (con ventaja): {",".join(full_sel[:2])}…', full_sel),
+            ('+ los que superan el umbral del mejor de N', sc['sig'])]
+    model_arms(EV, rows, FL, names, M, cols, arms, last_day, data2['SPY'], 'B. SISTEMA ENTERO REENTRENADO CON OSCILADORES (modelo, política y cartera recalculados; AUC fuera de muestra)')
     sys.stdout.flush()

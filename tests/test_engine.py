@@ -461,7 +461,86 @@ def test_osc_causal():
     print(f'ok · {len(B)} osciladores complejos son causales')
 
 
+def _fake_alt_sources(days_all, syms):
+    """Fuentes alternativas sintéticas con la misma forma que las reales."""
+    import datetime as dt
+    import alt
+    rng = np.random.default_rng(5)
+    d = np.arange(days_all[0] - 400, days_all[-1] + 10, dtype=np.int64)
+    d = d[(d + 4) % 7 < 5]
+    mk = lambda lo, hi: (d, rng.uniform(lo, hi, len(d)).cumsum() / 50 + 10)
+    src = {}
+    for k in ('BAA10Y', 'AAA10Y', 'T10Y2Y', 'T10Y3M', 'DFII10', 'T5YIE', 'DTWEXBGS', 'DCOILWTICO', 'DGS10', 'USEPUINDXD', 'NFCI', 'STLFSI4', 'ICSA', 'WALCL', 'RRPONTSYD'):
+        src[('fred', k)] = mk(0.5, 1.5)
+    for k in ('VIX', 'VIX9D', 'VIX3M', 'VIX6M', 'VVIX', 'SKEW', 'OVX', 'GVZ', 'VXN', 'RVX'):
+        src[('cboe', k)] = mk(0.5, 1.5)
+    src[('aaii', 'all')] = (d[::5], rng.uniform(0.2, 0.5, len(d[::5])), rng.uniform(0.2, 0.5, len(d[::5])))
+    cal = {}
+    for q in range(len(d) // 3):
+        day = dt.date(1970, 1, 1) + dt.timedelta(days=int(d[q * 3]))
+        cal[day] = [(syms[int(rng.integers(0, len(syms)))], ['time-pre-market', 'time-after-hours', 'time-not-supplied'][q % 3], 0.5, 0.4, float(rng.normal(0, 10)), 1e9, 8.0) for _ in range(4)]
+    src['nasdaq'] = cal
+    ins = {s_: np.array([[d[i], 1e5 * (i % 3 == 0), 5e4, 1e5 * (i % 6 == 0), 0, 1.0 * (i % 3 == 0)] for i in range(0, len(d), 40)], dtype=float) for s_ in syms[: len(syms) // 2]}
+    src['insiders'] = ins
+    sd = d[d > d[0] + 300]
+    SH = rng.uniform(1e5, 5e5, (len(sd), len(syms))).astype(np.float32)
+    src['short_volume'] = (sd, list(syms), SH, SH * 2.0)
+    src['short_interest'] = {s_: np.array([[d[i] + 11, 1e6, 1e5, 10.0, 9e5] for i in range(0, len(d), 15)], dtype=float) for s_ in syms}
+    return src
+
+
+def test_alt_joins():
+    """Dimensiones alternativas: retrasos de publicación, ventanas estrictas y construcción completa de las variables con fuentes sintéticas."""
+    import alt
+    # asof con retraso: el valor del día t solo se ve desde t+lag
+    d = np.array([10, 11, 12, 15], dtype=np.int64); v = np.array([1.0, 2.0, 3.0, 4.0])
+    q = np.array([10, 11, 12, 13, 16, 40])
+    got = alt.asof_vals(d, v, q, lag=1)
+    assert np.isnan(got[0]) and got[1] == 1.0 and got[2] == 2.0 and got[3] == 3.0 and got[4] == 4.0 and got[5] == 4.0
+    got = alt.asof_vals(d, v, q, lag=1, max_age=10)
+    assert np.isnan(got[5]) and got[4] == 4.0
+    # ventana estricta (q-width, q-1]: nada del propio día ni del futuro
+    days = np.array([100, 110, 120, 130], dtype=np.int64); vals = np.array([1.0, 10.0, 100.0, 1000.0])
+    w = alt.window_sum(days, vals, np.array([100, 101, 121, 130, 131, 250]), 30)
+    assert list(w) == [0.0, 1.0, 111.0, 110.0, 1110.0, 0.0], w
+    # resultados: antes de la apertura se conocen el mismo día, tras el cierre o sin hora desde el siguiente
+    import datetime as dt
+    e0 = (dt.date(2024, 5, 1) - dt.date(1970, 1, 1)).days
+    cal = {dt.date(2024, 5, 1): [('AAA', 'time-pre-market', 1.0, 0.8, 25.0, 1e9, 9.0), ('BBB', 'time-after-hours', 1.0, 1.1, -9.0, 1e9, 5.0), ('CCC', 'time-not-supplied', 0.5, 0.5, 0.0, 1e9, 3.0)]}
+    names = ['AAA', 'BBB', 'CCC']
+    sym = np.array([0, 1, 2, 0, 1, 2]); day = np.array([e0, e0, e0, e0 + 1, e0 + 1, e0 + 1], dtype=np.int64)
+    M, cn = alt.earn_block(names, sym, day, cal)
+    ix = {n: i for i, n in enumerate(cn)}
+    assert M[0, ix['earn_since']] == 0 and np.isnan(M[1, ix['earn_since']]) and np.isnan(M[2, ix['earn_since']])          # el mismo día solo AAA (pre-apertura)
+    assert M[3, ix['earn_since']] == 1 and M[4, ix['earn_since']] == 1 and M[4, ix['earn_sur_neg']] == 1 and M[3, ix['earn_react3']] == 1
+    # directivos: la presentación del propio día no cuenta; después del último trimestre publicado todo es NaN
+    ins = {'AAA': np.array([[e0 - 5, 5e5, 1e5, 5e5, 0, 1], [e0, 7e5, 0, 0, 0, 1]], dtype=float)}
+    Mi, ni = alt.insider_block(names, np.array([0, 0, 1]), np.array([e0, e0 + 1, e0], dtype=np.int64), ins, last_day=e0 + 10)
+    jx = {n: i for i, n in enumerate(ni)}
+    assert abs(Mi[0, jx['ins_buy90']] - np.log1p(5e5)) < 1e-4 and abs(Mi[1, jx['ins_buy90']] - np.log1p(1.2e6)) < 1e-4 and Mi[2, jx['ins_buy90']] == 0
+    Mi2, _ = alt.insider_block(names, np.array([0]), np.array([e0 + 11], dtype=np.int64), ins, last_day=e0 + 10)
+    assert np.isnan(Mi2).all()
+    # volumen corto: el archivo del día t no se usa el día t
+    sd = np.arange(e0 - 70, e0 + 3, dtype=np.int64)
+    SH = np.full((len(sd), 1), 100.0, np.float32); TV = np.full((len(sd), 1), 200.0, np.float32)
+    SH[-1, 0] = 190.0                                                   # el último archivo (día e0+2) es distinto
+    Ms, ns = alt.short_block(['AAA'], np.array([0, 0]), np.array([e0 + 2, e0 + 3], dtype=np.int64), (sd, ['AAA'], SH, TV), {})
+    assert abs(Ms[0, 0] - 0.5) < 1e-6 and abs(Ms[1, 0] - 0.95) < 1e-6, Ms[:, 0]
+    # construcción completa con fuentes sintéticas
+    n = 600
+    rng = np.random.default_rng(1)
+    syms = [f'S{i}' for i in range(12)]
+    EV = {'sym': rng.integers(0, 12, 3 * n), 'day': np.sort(rng.integers(e0 - 200, e0 + 300, 3 * n)).astype(np.int64), 'sym_names': syms}
+    rows = np.arange(0, 3 * n, 3)
+    src = _fake_alt_sources(np.arange(e0 - 400, e0 + 400), syms)
+    M, cols, fam = alt.build_features(None, EV, rows, src)
+    assert M.shape == (n, len(cols)) and len(cols) == len(fam) and len(set(cols)) == len(cols) and len(cols) >= 40, (M.shape, len(cols))
+    assert np.isfinite(M).mean() > 0.4 and not np.isinf(M).any()
+    print(f'ok · dimensiones alternativas: retrasos, ventanas estrictas y {len(cols)} variables ({", ".join(sorted(set(fam)))})')
+
+
 if __name__ == '__main__':
+    test_alt_joins()
     test_osc_causal()
     test_clock_sectors()
     test_stop_variants()
