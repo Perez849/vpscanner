@@ -406,7 +406,44 @@ def test_stop_variants():
     print(f'ok · stop con tope en % y stop al cierre == referencia escalar ({tot} operaciones)')
 
 
+def test_clock_sectors():
+    """Reloj de inversión: máscaras de sector, calendario mensual (los meses sin dato heredan el último) y contraste de permutaciones."""
+    import clock
+    gics = {'XOM': {'sector': 'Energy', 'sub': 'Oil & Gas'}, 'NVDA': {'sector': 'Information Technology', 'sub': 'Semiconductors'},
+            'MSFT': {'sector': 'Information Technology', 'sub': 'Systems Software'}, 'PLD': {'sector': 'Real Estate', 'sub': 'REITs'}}
+    assert clock.tags_of('XOM', {}, gics) == clock.BIT['Energía']
+    assert clock.tags_of('NVDA', {}, gics) == clock.BIT['Tecnología'] | clock.BIT['Semiconductores']       # un valor de chips cuenta para tecnología y para semiconductores
+    assert clock.tags_of('MSFT', {}, gics) == clock.BIT['Tecnología']
+    assert clock.tags_of('PLD', {}, gics) == clock.BIT['Inmobiliario'] and not (clock.BIT['Inmobiliario'] & clock.EQ_MASK)
+    assert clock.tags_of('XLE', {}, {}) == clock.BIT['Energía'] and clock.tags_of('GLD', {}, {}) == clock.BIT['Oro (lingote)']
+    assert clock.tags_of('ZZZZ', {}, gics) == 0 and clock.tags_of('ZZZZ', {'group': 'crypto'}, gics) == 0
+    picks = {'months': {'2020-01': {'equity': {'Energía': 0.5, 'Salud': 0.5}, 'gold': {}}, '2020-03': {'equity': {'Tecnología': 1.0}, 'gold': {'Oro (lingote)': 0.0}}}}
+    pm = clock.pick_masks(picks)
+    day = lambda s: np.array([(np.datetime64(s) - np.datetime64('1970-01-01')).astype(int)])
+    em = np.array([clock.BIT['Energía']], dtype=np.int64)
+    for s, want in (('2020-01-15', True), ('2020-02-10', True), ('2020-03-02', False), ('2019-12-31', False)):
+        got, have = clock.event_picked(clock.month_index(day(s)), em, pm)
+        assert bool(got[0]) == want and bool(have[0]) == (s >= '2020-01'), (s, got, have)
+    assert clock.month_index(day('2020-03-31'))[0] == 2020 * 12 + 2
+    # contraste de permutaciones: sin ventaja del sector, la media real no se distingue del azar; con ventaja, la supera
+    rng = np.random.default_rng(3)
+    n = 6000
+    mi = rng.integers(2020 * 12, 2020 * 12 + 36, n)
+    bits = np.array([clock.BIT[x] for x in clock.EQ], dtype=np.int64)
+    em = bits[rng.integers(0, len(bits), n)]
+    pm2 = {m: int(bits[(m * 7) % len(bits)] | bits[(m * 3 + 1) % len(bits)]) for m in range(2020 * 12, 2020 * 12 + 36)}
+    for edge in (0.0, 1.0):
+        picked, _ = clock.event_picked(mi, em, pm2)
+        x = rng.normal(0, 3, n) + edge * picked
+        null = clock.permutation_null(mi, em, x, pm2, 60, np.random.default_rng(5))
+        act = x[picked].mean()
+        pct = (null < act).mean()
+        assert (pct < 0.98) if edge == 0 else (pct == 1.0), (edge, act, null.mean(), pct)
+    print('ok · reloj de inversión: sectores, calendario y contraste de permutaciones')
+
+
 if __name__ == '__main__':
+    test_clock_sectors()
     test_stop_variants()
     test_longidx_clean()
     test_pit_membership()
