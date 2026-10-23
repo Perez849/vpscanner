@@ -552,7 +552,134 @@ def test_alt_joins():
     print(f'ok · dimensiones alternativas: retrasos, ventanas estrictas y {len(cols)} variables ({", ".join(sorted(set(fam)))})')
 
 
+def _plant_bars(oc, wick=0.25):
+    o = np.array([x[0] for x in oc], float); c = np.array([x[1] for x in oc], float)
+    h = np.maximum(o, c) + wick; l = np.minimum(o, c) - wick
+    for k, x in enumerate(oc):
+        if len(x) == 4:
+            h[k], l[k] = x[2], x[3]
+    n = len(o)
+    return {'t': 1577836800 + 86400 * np.arange(n), 'o': o, 'h': h, 'l': l, 'c': c, 'v': np.full(n, 1e6)}
+
+
+def _plant_closes(cl, wick=0.25):
+    pc, oc = cl[0], []
+    for x in cl:
+        oc.append((pc, x)); pc = x
+    return _plant_bars(oc, wick)
+
+
+def test_charts_planted():
+    """Chartismo: cada patrón plantado a mano se detecta justo en su barra de ruptura, y las señales son causales (recortar el futuro no cambia el pasado)."""
+    import charts
+    rng = np.random.default_rng(3)
+    quiet = lambda n, p, sd=0.12, seed=5: list(p + np.random.default_rng(seed).normal(0, sd, n))
+    # velas: 200 barras laterales, 25 de tendencia (1,2 por barra) y las velas del patrón (o, c, h, l)
+    def candle(trend, tail):
+        pre, p = [], 100.0
+        for k in range(200):
+            c = 100.0 + rng.normal(0, 0.3); pre.append((p, c, max(p, c) + 0.25, min(p, c) - 0.25)); p = c
+        p = 100.0
+        for k in range(25):
+            c = p - 1.2 if trend == 'dn' else p + 1.2
+            pre.append((p, c, max(p, c) + 0.3, min(p, c) - 0.3)); p = c
+        return _plant_bars(pre + tail)
+    cases = {
+        'hammer': ('dn', [(70, 70.4, 70.5, 67.5)]), 'inv_hammer': ('dn', [(70, 70.4, 73.0, 69.9)]), 'shooting_star': ('up', [(130, 129.6, 133.0, 129.5)]),
+        'hanging_man': ('up', [(130, 130.4, 130.5, 127.5)]), 'bull_engulf': ('dn', [(70, 68.8, 70.2, 68.6), (68.6, 71, 71.2, 68.4)]),
+        'bear_engulf': ('up', [(130, 131.2, 131.4, 129.8), (131.4, 129, 131.6, 128.8)]), 'piercing': ('dn', [(70, 67.8, 70.2, 67.5), (67.2, 69.2, 69.4, 67.0)]),
+        'dark_cloud': ('up', [(130, 132.2, 132.5, 129.8), (132.8, 130.8, 133.0, 130.6)]),
+        'morning_star': ('dn', [(70, 67.8, 70.2, 67.6), (67.2, 67.0, 67.4, 66.8), (67.3, 69.5, 69.7, 67.1)]),
+        'evening_star': ('up', [(130, 132.2, 132.4, 129.8), (132.8, 133.0, 133.2, 132.6), (132.7, 130.5, 132.9, 130.3)]),
+        'soldiers': ('dn', [(68, 69.4, 69.5, 67.9), (68.6, 70.4, 70.5, 68.5), (69.6, 71.5, 71.6, 69.5)]),
+        'crows': ('up', [(132, 130.6, 132.1, 130.5), (131.4, 129.6, 131.5, 129.5), (130.4, 128.5, 130.5, 128.4)]),
+        'harami_bull': ('dn', [(70, 67.8, 70.2, 67.6), (68.2, 69.0, 69.2, 68.0)]), 'harami_bear': ('up', [(130, 132.2, 132.4, 129.8), (131.8, 131.0, 132.0, 130.8)]),
+        'tweezer_bottom': ('dn', [(70, 68.8, 70.2, 68.0), (68.6, 70.0, 70.2, 68.0)]), 'tweezer_top': ('up', [(130, 131.4, 132.0, 129.8), (131.2, 129.8, 132.0, 129.6)]),
+        'dragonfly': ('dn', [(68.0, 68.1, 68.1, 65.5)]), 'gravestone': ('up', [(130.0, 129.9, 132.5, 129.9)]),
+        'marubozu_bull': ('dn', [(70, 73.6, 73.6, 70.0)]), 'marubozu_bear': ('up', [(130, 126.4, 130, 126.4)]),
+        'keyrev_bull': ('dn', [(70, 68.6, 70.1, 68.4), (68.2, 70.4, 70.5, 68.0)]), 'keyrev_bear': ('up', [(130, 131.4, 131.6, 129.9), (131.8, 129.5, 132.0, 129.3)]),
+    }
+    for nm, (tr, tail) in cases.items():
+        b = candle(tr, tail)
+        sg = charts.signals(feats.build(b))[nm]
+        assert sg[-1], f'{nm}: no se detecta en la barra final'
+    # figuras con precios de cierre unidos por tramos (la ruptura es el último ancla)
+    figs = {
+        'double_bottom': [(0, 100), (20, 80), (32, 92), (44, 80.5), (52, 93.5)], 'double_top': [(0, 100), (20, 120), (32, 108), (44, 119.5), (52, 106.5)],
+        'hs_top': [(0, 80), (15, 100), (24, 92), (36, 108), (48, 92), (58, 100.5), (70, 85)], 'hs_inverse': [(0, 120), (15, 100), (24, 108), (36, 92), (48, 108), (58, 99.5), (70, 115)],
+        'asc_triangle': [(0, 90), (10, 100), (18, 93), (26, 100.1), (34, 96), (42, 100), (50, 98.5), (56, 102)],
+        'desc_triangle': [(0, 110), (10, 100), (18, 107), (26, 99.9), (34, 104), (42, 100), (50, 101.5), (56, 98)],
+        'sym_tri_up': [(0, 90), (10, 110), (20, 92), (30, 106), (40, 96), (48, 102), (54, 98), (60, 104)], 'sym_tri_dn': [(0, 110), (10, 90), (20, 108), (30, 94), (40, 104), (48, 98), (54, 102), (60, 95)],
+        'rising_wedge': [(0, 90), (10, 100), (20, 94), (30, 103), (40, 100), (50, 105.5), (58, 103), (64, 99)], 'falling_wedge': [(0, 110), (10, 100), (20, 106), (30, 97), (40, 100), (50, 94.5), (58, 97), (64, 101)],
+        'trendline_up': [(0, 100), (10, 110), (18, 100), (30, 104), (40, 98), (48, 108)], 'trendline_dn': [(0, 100), (10, 90), (18, 100), (30, 96), (40, 102), (48, 92)],
+        'bull_flag': [(0, 100), (6, 112), (14, 110.5), (16, 114.5)], 'bear_flag': [(0, 100), (6, 88), (14, 89.5), (16, 85.5)],
+    }
+    for nm, an in figs.items():
+        xs, ys = np.array([a[0] for a in an]), np.array([a[1] for a in an])
+        cl = np.interp(np.arange(xs[0], xs[-1] + 1), xs, ys)
+        pre = quiet(260, an[0][1])
+        b = _plant_closes(np.array(pre + list(cl)))
+        idx = np.flatnonzero(charts.signals(feats.build(b))[nm])
+        n_end = len(pre) + int(xs[-1])
+        assert any(n_end - 12 <= i <= n_end for i in idx), (nm, list(idx[-3:]), n_end)
+    # tramos con velas explícitas
+    def custom(prefix, tail):
+        base = _plant_closes(np.array(prefix))
+        oc = [(base['o'][k], base['c'][k], base['h'][k], base['l'][k]) for k in range(len(prefix))] + list(tail)
+        return _plant_bars(oc)
+    chk = lambda b, nm: bool(charts.signals(feats.build(b))[nm][-1])
+    zig = lambda lo, hi, k: sum(([*np.linspace(hi, lo, 8), *np.linspace(lo, hi, 8)] for _ in range(k)), [])
+    assert chk(custom(quiet(250, 100) + zig(90.2, 100, 3) + list(np.linspace(100, 92, 10)), [(91.0, 91.8, 91.9, 90.3)]), 'support_bounce')
+    assert chk(custom(quiet(250, 100) + sum(([*np.linspace(100, 109.8, 8), *np.linspace(109.8, 100, 8)] for _ in range(3)), []) + list(np.linspace(100, 108, 10)), [(109.0, 108.2, 109.7, 108.1)]), 'resistance_reject')
+    v = list(np.linspace(40, 100, 300)) + list(np.linspace(100, 88, 8)) + list(np.linspace(88, 100.5, 8)) + list(np.linspace(100.5, 93.5, 8)) + list(np.linspace(93.5, 101, 8)) + list(np.linspace(101, 97.5, 8)) + list(np.linspace(97.5, 101.2, 6)) + [102.6]
+    assert charts.signals(feats.build(_plant_closes(np.array(v))))['vcp'][-1]
+    x = np.linspace(-1, 1, 72); cup = list(100 - 20 * (1 - x ** 2)); cup[-1] = 99.0
+    allc = quiet(250, 80) + list(np.linspace(80, 100, 30)) + cup + list(np.linspace(99, 95.5, 8)) + list(np.linspace(95.5, 98.5, 3)) + [101.0]
+    assert charts.signals(feats.build(_plant_closes(np.array(allc))))['cup_handle'][-1]
+    widths = [2, 4, 7, 10, 8, 5, 3, 2]
+    dia = []
+    for w in widths:
+        for k in range(5):
+            hi, lo = 100 + w / 2, 100 - w / 2
+            dia.append((lo + 0.3, hi - 0.3, hi, lo) if k % 2 == 0 else (hi - 0.3, lo + 0.3, hi, lo))
+    assert chk(custom(quiet(250, 130) + list(np.linspace(130, 100, 20)), dia + [(100.5, 103.5, 103.7, 100.4)]), 'diamond_bull')
+    assert chk(custom(quiet(250, 70) + list(np.linspace(70, 100, 20)), dia + [(99.5, 96.5, 99.6, 96.3)]), 'diamond_bear')
+    pen = lambda c0, s: [((c0 + s * (1.8 * (1 - k / 9))) - 0.2 if k % 2 else (c0 - s * (1.8 * (1 - k / 9))) + 0.2, (c0 - s * (1.8 * (1 - k / 9))) + 0.2 if k % 2 else (c0 + s * (1.8 * (1 - k / 9))) - 0.2,
+                          c0 + 1.8 * (1 - k / 9), c0 - 1.8 * (1 - k / 9)) for k in range(8)]
+    assert chk(custom(quiet(250, 100) + list(np.linspace(100, 112, 7)), pen(111, 1) + [(111.2, 114.5, 114.6, 111.1)]), 'bull_pennant')
+    assert chk(custom(quiet(250, 100) + list(np.linspace(100, 88, 7)), pen(89, 1) + [(88.8, 85.5, 88.9, 85.4)]), 'bear_pennant')
+    assert chk(custom(quiet(250, 130) + list(np.linspace(130, 100, 20)), [(99.0, 98.6, 99.2, 98.4), (98.5, 98.9, 99.0, 98.3), (101.5, 102.4, 102.6, 101.3)]), 'island_bull')
+    assert chk(custom(quiet(250, 70) + list(np.linspace(70, 100, 20)), [(101.0, 101.4, 101.6, 100.8), (101.5, 101.1, 101.7, 101.0), (98.5, 97.6, 98.7, 97.4)]), 'island_bear')
+    for nm, tail in (('donch20_up', (100.0, 103.0, 103.1, 99.9)), ('donch20_dn', (100.0, 97.0, 100.1, 96.9)), ('donch55_up', (100.0, 103.0, 103.1, 99.9)), ('donch252_up', (100.0, 103.0, 103.1, 99.9)), ('donch100_dn', (100.0, 97.0, 100.1, 96.9))):
+        assert chk(custom(quiet(300, 100, 0.2), [tail]), nm), nm
+    assert chk(custom(quiet(250, 100, 0.4), [(100.0, 100.15, 100.25, 99.95), (100.2, 101.0, 101.1, 100.15)]), 'nr7_up')
+    assert chk(custom(quiet(250, 100, 0.4), [(100.0, 100.05, 100.15, 99.9), (99.9, 99.0, 99.95, 98.9)]), 'nr7_dn')
+    assert chk(custom(quiet(250, 100, 0.4), [(99.0, 101.0, 101.5, 98.5), (100.0, 100.4, 100.8, 99.2), (100.5, 102.0, 102.1, 100.4)]), 'inside_up')
+    assert chk(custom(quiet(250, 100, 0.4), [(101.0, 99.0, 101.5, 98.5), (100.0, 99.6, 100.8, 99.2), (99.5, 97.9, 99.6, 97.8)]), 'inside_dn')
+    hv = list(100 + np.cumsum(np.random.default_rng(9).normal(0, 1.0, 150)) * 0.3)
+    base = _plant_closes(np.array(hv), 0.25)
+    oc = [(base['o'][k], base['c'][k], base['h'][k], base['l'][k]) for k in range(len(hv))]
+    p = hv[-1]
+    for xx in np.random.default_rng(10).normal(0, 0.03, 25):
+        c = hv[-1] + xx; oc.append((p, c, max(p, c) + 0.02, min(p, c) - 0.02)); p = c
+    for nm, last in (('bb_squeeze_up', (p, p + 2.0, p + 2.1, p - 0.03)), ('atr_squeeze_up', (p, p + 2.0, p + 2.1, p - 0.03)), ('bb_squeeze_dn', (p, p - 2.0, p + 0.03, p - 2.1))):
+        assert chk(_plant_bars(oc + [last]), nm), nm
+    flat = quiet(250, 100, 0.5) + list(100 + np.random.default_rng(1).normal(0, 0.12, 20))
+    assert chk(custom(flat, [(100.0, 102.0, 102.1, 99.95)]), 'box_up') and chk(custom(flat, [(100.0, 98.0, 100.05, 97.9)]), 'box_dn')
+    assert chk(custom(list(np.linspace(70, 100, 260)) + list(99 + np.random.default_rng(2).normal(0, 0.5, 25)), [(99.0, 101.5, 101.6, 98.9)]), 'base_near_high')
+    # causalidad: recortar el futuro no cambia ninguna señal anterior
+    b = synth(seed=61, ar=0.0, sig=0.016)
+    n0 = len(b['c'])
+    full = charts.signals(feats.build(b))
+    for cut in (n0 - 300, n0 - 41):
+        cp = charts.signals(feats.build({k: (v[:cut] if isinstance(v, np.ndarray) and len(v) == n0 else v) for k, v in b.items()}))
+        for k in full:
+            assert np.array_equal(full[k][:cut - 1], cp[k][:cut - 1]), (k, cut)
+    print(f'ok · chartismo: {len(cases) + len(figs) + 24} patrones plantados se detectan en su barra y las {len(full)} señales son causales')
+
+
 if __name__ == '__main__':
+    test_charts_planted()
     test_alt_joins()
     test_osc_causal()
     test_clock_sectors()
