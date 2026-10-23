@@ -400,7 +400,7 @@ def finra_short_interest(start: dt.date, end: dt.date, symset: set, workers: int
                 continue
             st, b = _retry(f'https://cdn.finra.org/equity/otcmarket/biweekly/shrt{d.strftime("%Y%m%d")}.csv', timeout=60, limiter=lim, tries=2)
             if st == 200:
-                rd = csv.reader(io.StringIO(b.decode('utf-8', errors='ignore')), delimiter='|')
+                rd = csv.reader(io.StringIO(b.decode('utf-8', errors='ignore')), delimiter='|', quoting=csv.QUOTE_NONE)
                 hdr = next(rd)
                 ix = {h: i for i, h in enumerate(hdr)}
                 out = {}
