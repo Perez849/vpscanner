@@ -486,6 +486,10 @@ def _fake_alt_sources(days_all, syms):
     SH = rng.uniform(1e5, 5e5, (len(sd), len(syms))).astype(np.float32)
     src['short_volume'] = (sd, list(syms), SH, SH * 2.0)
     src['short_interest'] = {s_: np.array([[d[i] + 11, 1e6, 1e5, 10.0, 9e5] for i in range(0, len(d), 15)], dtype=float) for s_ in syms}
+    src['cik'] = {s_: 1000 + i for i, s_ in enumerate(syms)}
+    per = lambda f, step: {1000 + i: np.array([[d[k], f(i, k)] for k in range(0, len(d), step)], dtype=float) for i in range(len(syms))}
+    src['fundamentals'] = {'assets': per(lambda i, k: 1e9 + 1e6 * k, 60), 'liab': per(lambda i, k: 6e8, 60), 'equity': per(lambda i, k: 4e8, 60), 'shares': per(lambda i, k: 1e8, 60),
+                           'ni': per(lambda i, k: 5e7, 250), 'rev1': per(lambda i, k: 4e8 + 1e6 * k, 250), 'rev2': {}, 'rev3': {}}
     return src
 
 
@@ -536,6 +540,15 @@ def test_alt_joins():
     M, cols, fam = alt.build_features(None, EV, rows, src)
     assert M.shape == (n, len(cols)) and len(cols) == len(fam) and len(set(cols)) == len(cols) and len(cols) >= 40, (M.shape, len(cols))
     assert np.isfinite(M).mean() > 0.4 and not np.isinf(M).any()
+    # fundamentales: un hecho solo se ve 75 días después del cierre del periodo (balance) y 100 (ejercicio anual)
+    fa = {'assets': {1: np.array([[1000.0, 10.0], [1090.0, 20.0]])}, 'liab': {1: np.array([[1000.0, 5.0], [1090.0, 10.0]])}, 'equity': {1: np.array([[1000.0, 5.0], [1090.0, 10.0]])},
+          'shares': {1: np.array([[1000.0, 2.0]])}, 'ni': {1: np.array([[1000.0, 1.0], [1365.0, 3.0]])}, 'rev1': {1: np.array([[1000.0, 10.0], [1365.0, 20.0]])}, 'rev2': {}, 'rev3': {}}
+    Mf, nf = alt.fund_block(['X'], np.array([0, 0, 0, 0, 0]), np.array([1074, 1075, 1164, 1465, 1466], dtype=np.int64), np.full(5, 5.0), fa, {'X': 1})
+    jf = {n: i for i, n in enumerate(nf)}
+    assert np.isnan(Mf[0, jf['fd_lev']]) and Mf[1, jf['fd_lev']] == 0.5 and Mf[1, jf['fd_age']] == 75                      # el balance del día 1000 se ve desde el 1075
+    assert Mf[2, jf['fd_roa']] == 0.1 and np.isnan(Mf[2, jf['fd_revg']])                                               # el ejercicio anual de 1000 se ve desde el 1100; aún no hay año anterior
+    assert Mf[3, jf['fd_lev']] == 0.5 and abs(Mf[3, jf['fd_logmcap']] - np.log10(10.0)) < 1e-6                          # el de 1090 se ve desde el 1165 (aquí aún no)
+    assert abs(Mf[4, jf['fd_roa']] - 3.0 / 20.0) < 1e-6 and abs(Mf[4, jf['fd_revg']] - 1.0) < 1e-6                      # el de 1365 se ve desde el 1465: ingresos 10 → 20 = +100 %
     print(f'ok · dimensiones alternativas: retrasos, ventanas estrictas y {len(cols)} variables ({", ".join(sorted(set(fam)))})')
 
 

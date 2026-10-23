@@ -751,6 +751,130 @@ def size_block(data: Dict, EV: Dict, rows: np.ndarray) -> Tuple[np.ndarray, List
     return M, names
 
 
+
+# ═════════════════════════════════════════════════════════════════════════
+#  Fundamentales (XBRL «frames» de la SEC). Los frames no traen fecha de presentación: se aplica un retraso conservador desde el cierre del periodo.
+# ═════════════════════════════════════════════════════════════════════════
+LAG_INSTANT, LAG_ANNUAL = 75, 100
+FRAME_TAGS = {'assets': ('us-gaap', 'Assets', 'USD', 'q'), 'liab': ('us-gaap', 'Liabilities', 'USD', 'q'), 'equity': ('us-gaap', 'StockholdersEquity', 'USD', 'q'),
+              'shares': ('dei', 'EntityCommonStockSharesOutstanding', 'shares', 'q'),
+              'ni': ('us-gaap', 'NetIncomeLoss', 'USD', 'a'), 'rev1': ('us-gaap', 'Revenues', 'USD', 'a'),
+              'rev2': ('us-gaap', 'RevenueFromContractWithCustomerExcludingAssessedTax', 'USD', 'a'), 'rev3': ('us-gaap', 'SalesRevenueNet', 'USD', 'a')}
+
+
+def cik_map() -> Dict[str, int]:
+    c = _cget('sec_tickers')
+    if c is not None and time.time() - c['t'] < 7 * 24 * 3600:
+        return c['m']
+    st, b = _retry('https://www.sec.gov/files/company_tickers.json', headers=SEC_H, timeout=60)
+    if st != 200:
+        return c['m'] if c is not None else {}
+    m = {}
+    for v in json.loads(b).values():
+        m.setdefault(str(v['ticker']).upper().replace('.', '-'), int(v['cik_str']))
+    _cput('sec_tickers', {'t': time.time(), 'm': m})
+    return m
+
+
+def _frame(key: str, tax: str, tag: str, unit: str, period: str):
+    c = _cget('frame_' + key)
+    if c is not None:
+        return c
+    st, b = _retry(f'https://data.sec.gov/api/xbrl/frames/{tax}/{tag}/{unit}/{period}.json', headers=SEC_H, timeout=90, tries=3, limiter=_FRAME_LIM)
+    if st == 404:
+        out = np.zeros((0, 3))                        # el periodo aún no tiene datos
+    elif st != 200:
+        return None
+    else:
+        d = json.loads(b)['data']
+        out = np.array([(r['cik'], _epoch(dt.date.fromisoformat(r['end'])), r['val']) for r in d if r.get('val') is not None], dtype=np.float64).reshape(-1, 3)
+    _cput('frame_' + key, out)
+    return out
+
+
+_FRAME_LIM = _Limiter(6.0)
+
+
+def fundamentals(y0: int, y1: int, workers: int = 4) -> Dict[str, Dict[int, np.ndarray]]:
+    """{concepto: {CIK: matriz [cierre del periodo, valor] ordenada}} desde el año y0 hasta y1."""
+    jobs = []
+    for name, (tax, tag, unit, kind) in FRAME_TAGS.items():
+        if kind == 'q':
+            jobs += [(name, tax, tag, unit, f'CY{y}Q{q}I') for y in range(y0, y1 + 1) for q in (1, 2, 3, 4)]
+        else:
+            jobs += [(name, tax, tag, unit, f'CY{y}') for y in range(y0, y1 + 1)]
+    print(f'  XBRL: {len(jobs)} marcos', flush=True)
+    with ThreadPoolExecutor(workers) as ex:
+        res = list(ex.map(lambda j: (j[0], _frame(f'{j[1]}_{j[2]}_{j[4]}', j[1], j[2], j[3], j[4])), jobs))
+    per: Dict[str, Dict[int, list]] = {n: {} for n in FRAME_TAGS}
+    bad = 0
+    for name, arr in res:
+        if arr is None:
+            bad += 1
+            continue
+        for cik, end, val in arr:
+            per[name].setdefault(int(cik), []).append((end, val))
+    if bad:
+        print(f'  XBRL: {bad} marcos sin respuesta', flush=True)
+    out = {}
+    for name, d in per.items():
+        out[name] = {}
+        for cik, v in d.items():
+            a = np.array(sorted(set(v)), dtype=np.float64)
+            out[name][cik] = a
+    return out
+
+
+def _last_fact(fd: Dict[int, np.ndarray], cik: int, q: np.ndarray, lag: int, nth: int = 0):
+    """Último valor cuyo periodo cerró antes de q - lag (nth=1: el anterior). Devuelve (valor, fin del periodo) con NaN si no hay."""
+    a = fd.get(cik)
+    v, e = np.full(len(q), np.nan), np.full(len(q), np.nan)
+    if a is None or not len(a):
+        return v, e
+    j = np.searchsorted(a[:, 0], q - lag, side='right') - 1 - nth
+    ok = j >= 0
+    v[ok], e[ok] = a[j[ok], 1], a[j[ok], 0]
+    return v, e
+
+
+def fund_block(sym_names: List[str], sym: np.ndarray, day: np.ndarray, price: np.ndarray, fd: Dict, cmap: Dict[str, int]) -> Tuple[np.ndarray, List[str]]:
+    names = ['fd_lev', 'fd_eqa', 'fd_negeq', 'fd_roa', 'fd_margin', 'fd_revg', 'fd_logmcap', 'fd_ep', 'fd_bp', 'fd_age']
+    M = np.full((len(day), len(names)), np.nan, dtype=np.float32)
+    for grp in _by_symbol(sym):
+        if not len(grp):
+            continue
+        cik = cmap.get(sym_names[sym[grp[0]]])
+        if cik is None:
+            continue
+        q, px = day[grp], price[grp]
+        A, endA = _last_fact(fd['assets'], cik, q, LAG_INSTANT)
+        L, _ = _last_fact(fd['liab'], cik, q, LAG_INSTANT)
+        E, _ = _last_fact(fd['equity'], cik, q, LAG_INSTANT)
+        S, _ = _last_fact(fd['shares'], cik, q, LAG_INSTANT)
+        NI, _ = _last_fact(fd['ni'], cik, q, LAG_ANNUAL)
+        R = np.full(len(q), np.nan); R1 = np.full(len(q), np.nan)
+        for k in ('rev1', 'rev2', 'rev3'):                                    # la primera etiqueta de ingresos con dato
+            r0, _ = _last_fact(fd[k], cik, q, LAG_ANNUAL)
+            r1, e1 = _last_fact(fd[k], cik, q, LAG_ANNUAL, nth=1)
+            _, e0 = _last_fact(fd[k], cik, q, LAG_ANNUAL)
+            use = ~np.isfinite(R) & np.isfinite(r0)
+            R[use], R1[use] = r0[use], np.where((e0[use] - e1[use] > 300) & (e0[use] - e1[use] < 430), r1[use], np.nan)
+        L = np.where(np.isfinite(L), L, A - E)
+        with np.errstate(invalid='ignore', divide='ignore'):
+            mcap = S * px
+            M[grp, 0] = np.clip(L / A, 0, 5)
+            M[grp, 1] = np.clip(E / A, -5, 1.5)
+            M[grp, 2] = np.where(np.isfinite(E), (E < 0).astype(np.float32), np.nan)
+            M[grp, 3] = np.clip(NI / A, -2, 2)
+            M[grp, 4] = np.clip(NI / R, -5, 2)
+            M[grp, 5] = np.clip(R / R1 - 1.0, -1, 5)
+            M[grp, 6] = np.log10(np.where(mcap > 0, mcap, np.nan))
+            M[grp, 7] = np.clip(NI / mcap, -1, 1)
+            M[grp, 8] = np.clip(E / mcap, -5, 20)
+            M[grp, 9] = q - endA
+    return M, names
+
+
 FAMILY = {}
 
 
@@ -778,10 +902,15 @@ def build_features(data: Dict, EV: Dict, rows: np.ndarray, src: Optional[Dict] =
     si = src['short_interest'] if 'short_interest' in src else finra_short_interest(max(d0, dt.date(2017, 12, 1)), d1, symset)
     sk, snames = short_block(sn, sym, day, sv, si)
     print(f'  [alt] corto: volumen {len(sv[0])} días, interés {len(si)} símbolos · cobertura vol {np.isfinite(sk[:, 0]).mean() * 100:.0f}% / interés {np.isfinite(sk[:, 4]).mean() * 100:.0f}% · {time.time() - t0:.0f}s', flush=True)
-    zk, znames = size_block(data, EV, rows) if data is not None else (np.full((len(day), 3), np.nan, np.float32), ['logdvol20', 'logprice', 'dvol_rel250'])
-    M = np.concatenate([mk, ek, ik, sk, zk], 1)
-    names = mnames + enames + inames + snames + znames
-    fam = ['macro'] * len(mnames) + ['resultados'] * len(enames) + ['directivos'] * len(inames) + ['corto'] * len(snames) + ['tamaño'] * len(znames)
+    zk, znames = size_block(data, EV, rows) if data is not None else (np.column_stack([np.full(len(day), 6.0), np.full(len(day), 1.5), np.ones(len(day))]).astype(np.float32), ['logdvol20', 'logprice', 'dvol_rel250'])
+    price = 10.0 ** zk[:, 1].astype(np.float64)
+    fdat = src['fundamentals'] if 'fundamentals' in src else fundamentals(max(d0.year, 2015), d1.year)
+    cmap = src['cik'] if 'cik' in src else cik_map()
+    fk, fnames = fund_block(sn, sym, day, price, fdat, cmap)
+    print(f'  [alt] fundamentales: {len(cmap)} CIK · cobertura {np.isfinite(fk[:, 0]).mean() * 100:.0f}% · {time.time() - t0:.0f}s', flush=True)
+    M = np.concatenate([mk, ek, ik, sk, zk, fk], 1)
+    names = mnames + enames + inames + snames + znames + fnames
+    fam = ['macro'] * len(mnames) + ['resultados'] * len(enames) + ['directivos'] * len(inames) + ['corto'] * len(snames) + ['tamaño'] * len(znames) + ['fundamentales'] * len(fnames)
     return M, names, fam
 
 
@@ -847,7 +976,7 @@ def size_table(M: np.ndarray, cols: List[str], elig: np.ndarray, day: np.ndarray
     import pandas as pd
     import research as RS
     print('\n  D. EFECTO TAMAÑO: rebote por quintil de capitalización (dentro de cada año y grupo)')
-    for nm, lab in (('logdvol20', 'dólares negociados al día (precio × volumen)'),):
+    for nm, lab in (('logdvol20', 'dólares negociados al día (precio × volumen)'), ('fd_logmcap', 'capitalización DE ENTONCES (acciones SEC × precio)')):
         x = M[:, cols.index(nm)].astype(np.float64)
         for gname in ('todas', 'us_large', 'us_mid'):
             m = elig & np.isfinite(x)
@@ -921,6 +1050,16 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
     k = fin(c['si_dtc'])
     g('días para cubrir el interés corto ≥ 5', z(c['si_dtc']) >= 5, k)
     g('interés corto subiendo ≥ 10 % en la quincena', z(c['si_chg']) >= 0.10, fin(c['si_chg']))
+    k = fin(c['fd_lev'])
+    g('fondos propios negativos (patrimonio < 0)', c['fd_negeq'] == 1, k)
+    g('apalancamiento alto (pasivo/activo > 0,8)', z(c['fd_lev']) > 0.8, k)
+    g('pérdidas en el último ejercicio (beneficio/activo < 0)', c['fd_roa'] < 0, fin(c['fd_roa']))
+    g('rentable y poco endeudada (beneficio/activo > 5 % y pasivo/activo < 0,6)', (z(c['fd_roa']) > 0.05) & (c['fd_lev'] < 0.6), fin(c['fd_roa']))
+    g('ingresos cayendo respecto al ejercicio anterior', c['fd_revg'] < 0, fin(c['fd_revg']))
+    g('rentabilidad por beneficios positiva y alta (E/P > 5 %)', z(c['fd_ep']) > 0.05, fin(c['fd_ep']))
+    g('valor contable alto frente a capitalización (B/P > 1)', z(c['fd_bp']) > 1.0, fin(c['fd_bp']))
+    g('capitalización de entonces < 2.000 M$', c['fd_logmcap'] < np.log10(2e9), fin(c['fd_logmcap']))
+    g('capitalización de entonces > 50.000 M$', z(c['fd_logmcap']) > np.log10(5e10), fin(c['fd_logmcap']))
     k = fin(c['vix_vix3m'])
     g('VIX/VIX3M > 1 (curva de volatilidad invertida, estrés agudo)', z(c['vix_vix3m']) > 1.0, k)
     g('VVIX en el 20 % más alto del año', c['vvix_z60'] > 1.0, fin(c['vvix_z60']))
