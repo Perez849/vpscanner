@@ -731,6 +731,27 @@ def short_block(sym_names: List[str], sym: np.ndarray, day: np.ndarray, sv, si: 
     return M, names
 
 
+def size_block(data: Dict, EV: Dict, rows: np.ndarray) -> Tuple[np.ndarray, List[str]]:
+    """Tamaño y liquidez con los propios precios (valen también para ETF y cripto): dólares negociados, precio y volumen relativo a su mediana anual."""
+    import feats
+    import pandas as pd
+    sym, bi = EV['sym'][rows], EV['bi'][rows]
+    names = ['logdvol20', 'logprice', 'dvol_rel250']
+    M = np.full((len(rows), len(names)), np.nan, dtype=np.float32)
+    for grp in _by_symbol(sym):
+        if not len(grp):
+            continue
+        F = feats.build(data[EV['sym_names'][sym[grp[0]]]])
+        i = bi[grp].astype(np.int64)
+        dv = F['dvol20']
+        med = pd.Series(dv).rolling(250, min_periods=120).median().to_numpy()
+        with np.errstate(invalid='ignore', divide='ignore'):
+            M[grp, 0] = np.log10(np.where(dv[i] > 0, dv[i], np.nan))
+            M[grp, 1] = np.log10(np.where(F['c'][i] > 0, F['c'][i], np.nan))
+            M[grp, 2] = dv[i] / med[i]
+    return M, names
+
+
 FAMILY = {}
 
 
@@ -758,9 +779,10 @@ def build_features(data: Dict, EV: Dict, rows: np.ndarray, src: Optional[Dict] =
     si = src['short_interest'] if 'short_interest' in src else finra_short_interest(max(d0, dt.date(2017, 12, 1)), d1, symset)
     sk, snames = short_block(sn, sym, day, sv, si)
     print(f'  [alt] corto: volumen {len(sv[0])} días, interés {len(si)} símbolos · cobertura vol {np.isfinite(sk[:, 0]).mean() * 100:.0f}% / interés {np.isfinite(sk[:, 4]).mean() * 100:.0f}% · {time.time() - t0:.0f}s', flush=True)
-    M = np.concatenate([mk, ek, ik, sk], 1)
-    names = mnames + enames + inames + snames
-    fam = ['macro'] * len(mnames) + ['resultados'] * len(enames) + ['directivos'] * len(inames) + ['corto'] * len(snames)
+    zk, znames = size_block(data, EV, rows) if data is not None else (np.full((len(day), 3), np.nan, np.float32), ['logdvol20', 'logprice', 'dvol_rel250'])
+    M = np.concatenate([mk, ek, ik, sk, zk], 1)
+    names = mnames + enames + inames + snames + znames
+    fam = ['macro'] * len(mnames) + ['resultados'] * len(enames) + ['directivos'] * len(inames) + ['corto'] * len(snames) + ['tamaño'] * len(znames)
     return M, names, fam
 
 
@@ -780,6 +802,68 @@ def _grp(label: str, inn: np.ndarray, out: np.ndarray, pnl: np.ndarray, day: np.
             tot += 1
             pos += pnl[mi].mean() > pnl[mo].mean()
     print(f'     {label:62s} n={a["n"]:6d}  acierto {a["wr"]:5.1f}% vs {b["wr"]:5.1f}% · media {a["mean"]:+6.2f}% vs {b["mean"]:+6.2f}% · dif {dif:+5.2f} (t={dif / (se + 1e-12):+4.1f}) · años mejor {pos}/{tot}', flush=True)
+
+
+def market_shift_test(M: np.ndarray, cols: List[str], fam: List[str], elig: np.ndarray, day: np.ndarray, pnl: np.ndarray, year: np.ndarray, reps: int = 60, top: int = 12):
+    """Las variables de mercado son lentas (meses): permutar los resultados día a día no rompe su autocorrelación y deja el umbral demasiado bajo. Aquí el nulo se obtiene
+    desplazando la serie diaria de la variable respecto a los resultados (desfase aleatorio de varios meses), que conserva la autocorrelación de ambas."""
+    import osc
+    idx = [j for j, f in enumerate(fam) if f == 'macro']
+    d_e, y_e, yr_e = day[elig], pnl[elig], year[elig]
+    u, inv = np.unique(d_e, return_inverse=True)
+    cnt = np.bincount(inv, minlength=len(u))
+    fd = {}
+    for j in idx:
+        x = M[elig, j].astype(np.float64)
+        ok = np.isfinite(x)
+        n_ok = np.bincount(inv, weights=ok, minlength=len(u))
+        v = np.bincount(inv, weights=np.where(ok, x, 0.0), minlength=len(u)) / np.maximum(n_ok, 1)
+        v[n_ok == 0] = np.nan
+        fd[j] = v
+
+    def tstat(v):
+        xe = v[inv]
+        mk = np.isfinite(xe)
+        if mk.sum() < 2000 or np.nanstd(xe[mk]) == 0:
+            return np.nan
+        return osc._slope(osc._rank_within_year(xe, yr_e, mk), y_e, inv, mk.astype(np.float64))[1]
+
+    real = {cols[j]: tstat(fd[j]) for j in idx}
+    rng = np.random.default_rng(23)
+    mx = []
+    for r in range(reps):
+        sh = int(rng.integers(40, max(len(u) - 40, 41)))
+        mx.append(np.nanmax([abs(tstat(np.roll(fd[j], sh))) for j in idx]))
+    thr95, thr99 = float(np.quantile(mx, 0.95)), float(np.quantile(mx, 0.99))
+    print('\n  A2. VARIABLES DE MERCADO CON EL NULO DE DESPLAZAMIENTO TEMPORAL (conserva la autocorrelación de la variable y de los resultados)')
+    print(f'     el mejor |t| de {len(idx)} variables de mercado supera {thr95:.1f} el 5 % de las veces y {thr99:.1f} el 1 % ({reps} desfases aleatorios de ≥ 40 días con eventos)')
+    top_ = sorted(real, key=lambda k: -abs(real[k]) if np.isfinite(real[k]) else 0)[:top]
+    print('     ' + ' · '.join(f"{k}{'★' if abs(real[k]) >= thr95 else ''} t={real[k]:+.1f}" for k in top_))
+    surv = [k for k in real if np.isfinite(real[k]) and abs(real[k]) >= thr95]
+    print(f'     superan el umbral con el nulo temporal: {len(surv)} ({", ".join(surv) if surv else "ninguna"})', flush=True)
+    return surv
+
+
+def size_table(M: np.ndarray, cols: List[str], elig: np.ndarray, day: np.ndarray, sym: np.ndarray, gid: np.ndarray, pnl: np.ndarray, year: np.ndarray) -> None:
+    import pandas as pd
+    import research as RS
+    print('\n  D. EFECTO TAMAÑO: rebote por quintil de capitalización (dentro de cada año y grupo)')
+    for nm, lab in (('earn_logmcap', 'capitalización bursátil (Nasdaq)'), ('logdvol20', 'dólares negociados al día (precio × volumen)')):
+        x = M[:, cols.index(nm)].astype(np.float64)
+        for gname in ('todas', 'us_large', 'us_mid'):
+            m = elig & np.isfinite(x)
+            if gname != 'todas':
+                m &= gid == RS.GROUPS.index(gname)
+            if m.sum() < 1000:
+                continue
+            df = pd.DataFrame({'x': x[m], 'g': gid[m], 'y': year[m]})
+            q = (df.groupby(['g', 'y'])['x'].rank(pct=True, method='first').to_numpy() * 5).clip(0, 4.999).astype(int)
+            rowsq = []
+            for k in range(5):
+                mk = q == k
+                st = RS.stats(pnl[m][mk], day[m][mk], sym[m][mk])
+                rowsq.append(f"Q{k + 1}: {st['wr']:.1f}% / {st['mean']:+.2f}%")
+            print(f'     {lab[:42]:42s} · {gname:8s} n={int(m.sum()):6d} · ' + ' · '.join(rowsq), flush=True)
 
 
 def run(uni: Dict, data: Dict, args, out_dir: str):
@@ -811,6 +895,8 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
     print(f'  fondo del cribado: {int(elig.sum()):,} candidatos elegibles · media {pnl[elig].mean():+.2f}% · acierto {np.mean(pnl[elig] > 0) * 100:.1f}%', flush=True)
     print('\n  A.', end='')
     sc = osc.screen(M, cols, elig, day, pnl, year, noun='variables alternativas', fam=fam, top=30)
+    market_shift_test(M, cols, fam, elig, day, pnl, year)
+    size_table(M, cols, elig, day, sym, gid, pnl, year)
 
     # ── subgrupos con significado económico (frente al resto del fondo)
     c = {nm: M[:, j] for j, nm in enumerate(cols)}
@@ -846,10 +932,13 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
 
     # ── modelo ampliado
     famc = {f: [nm for nm, ff in zip(cols, fam) if ff == f] for f in dict.fromkeys(fam)}
+    famc['resultados'] = [c_ for c_ in famc['resultados'] if c_ != 'earn_logmcap']
+    famc['tamaño'] = ['earn_logmcap'] + famc['tamaño']
     pre_sel = osc.pre_selection(sc, cols)
     arms = [('modelo actual (28 variables)', [])]
     for f, lst in famc.items():
         arms.append((f'+ {f} ({len(lst)})', lst))
+    arms.append(('+ solo tamaño por precio×volumen (logdvol20)', ['logdvol20']))
     arms.append((f'+ todas las alternativas ({len(cols)})', list(cols)))
     arms.append((f'+ 8 mejores con datos ≤2018: {",".join(pre_sel[:2])}…', pre_sel))
     arms.append(('+ las que superan el umbral del mejor de N', sc['sig']))
