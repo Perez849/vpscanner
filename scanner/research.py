@@ -625,7 +625,7 @@ def main():
     if args.cmd == 'chartlab':
         import chartlab
         syms = [x.strip().upper() for x in os.environ.get('SYMBOLS', '').replace(',', ' ').split() if x.strip()] or chartlab.DEFAULT
-        chartlab.run_cli(syms, os.path.join(args.out, 'charts'), stats_path=os.path.join(HERE, 'data', 'pattern_stats.json'))
+        chartlab.run_cli(syms, os.path.join(args.out, 'charts'), stats_path=os.path.join(HERE, 'data', 'pattern_stats.json'), raw_dir=os.path.join(args.out, 'raw'))
         return
     if args.cmd == 'altprobe':
         import alt

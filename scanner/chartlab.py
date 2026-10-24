@@ -493,11 +493,15 @@ DEFAULT = ('AAPL MSFT NVDA AMZN GOOGL META TSLA AVGO AMD NFLX ORCL CRM ADBE QCOM
            'SPY QQQ IWM GLD TLT XLE XLF SMH').split()
 
 
-def run_cli(symbols: List[str], out_dir: str, rng: str = '3y', stats_path: Optional[str] = None) -> None:
+def run_cli(symbols: List[str], out_dir: str, rng: str = '3y', stats_path: Optional[str] = None, raw_dir: Optional[str] = None) -> None:
     import data as D
     stats, meta = load_stats(stats_path) if stats_path else ({}, {})
     bars, failed = D.fetch_many(symbols, rng=rng, workers=6, cache_path=None, verbose=True)
     os.makedirs(out_dir, exist_ok=True)
+    if raw_dir:                                  # series completas (para afinar los detectores sin red): solo en el volcado de investigación
+        os.makedirs(raw_dir, exist_ok=True)
+        for s_, b_ in bars.items():
+            json.dump({k: [float(x) for x in b_[k]] for k in ('t', 'o', 'h', 'l', 'c', 'v')}, open(os.path.join(raw_dir, f'{s_}.json'), 'w'), separators=(',', ':'))
     index = []
     for s in symbols:
         if s not in bars or len(bars[s]['c']) < 320:
