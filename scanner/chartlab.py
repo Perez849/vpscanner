@@ -409,6 +409,14 @@ FORM_DN = {'sym_tri': 'sym_tri_dn', 'desc_triangle': 'desc_triangle', 'rising_we
 FORM_BIAS = {'asc_triangle': 1, 'falling_wedge': 1, 'desc_triangle': -1, 'rising_wedge': -1}
 
 
+def obstacles(sr: List[Dict], entry: float, tgt: float, dd: int) -> List[Dict]:
+    """Soportes/resistencias fuertes (≥ 2 toques) entre la entrada y el objetivo: el precio tiene que atravesarlos para llegar."""
+    lo, hi = sorted((entry, tgt))
+    out = [{'p': z['p'], 'n': z['touches'], 'k': z['kind']} for z in sr if lo < z['p'] < hi]
+    out.sort(key=lambda z: abs(z['p'] - entry))
+    return out[:4]
+
+
 def rr_box(F: Dict[str, np.ndarray], i: int, dd: int, entry: float, stop: float, tgt: float) -> Dict:
     """Entrada, stop, objetivo (y objetivo parcial T1 al 50 %) con un stop mínimo de 1 ATR y, si el estructural es muy lejano, un stop táctico."""
     a = float(F['atr'][i])
@@ -493,6 +501,8 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
             for o_ in (out, out_t):
                 if o_ and 'xi' in o_:
                     o_['xi'] = sh(o_['xi'])
+            if active:
+                bx['obs'] = obstacles(sr, entry, tgt, dd)
             items.append({'id': f'{pname}@{i - s0}', 'name': pname, 'label': LABEL.get(pname, pname), 'desc': desc, 'dir': dd, 'fam': fam, 'i': i - s0, 'state': 'done', 'q': g.get('q') if isinstance(g, dict) else None, **geo,
                           'rr': bx, 'note': note, 'out': out, 'out_t': out_t, 'active': bool(active), 'ev': (stats or {}).get(pname), 'ev_hq': (stats or {}).get(pname + '_hq')})
     keep = {}
@@ -503,6 +513,8 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
             if k not in keep or per > keep[k][0]:
                 keep[k] = (per, it)
     items = [it for it in items if not it['name'].startswith('donch') or keep[(it['i'], it['dir'])][1] is it]
+    for it in items:                                                   # confluencia: otros patrones del mismo sentido que saltan en las 3 barras vecinas
+        it['conf'] = [o['label'] for o in items if o is not it and o['dir'] == it['dir'] and it['dir'] != 0 and abs(o['i'] - it['i']) <= 3 and o['name'] != it['name']][:4]
     # compresiones en formación (aún sin ruptura): se dibujan con los dos escenarios
     fm = rec.get('_forming', {})
     if fm:
@@ -519,6 +531,7 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
                 bx = rr_box(F, i, dd, trig, stop, tgt)
                 for k_ in ('_stop', '_tgt', '_stop_t'):
                     bx.pop(k_, None)
+                bx['obs'] = obstacles(sr, trig, tgt, dd)
                 bx['name'] = nm
                 against = FORM_BIAS.get(st['kind'], 0) * dd < 0
                 bx['label'] = ('rompe contra el sesgo habitual de la figura' if against else LABEL.get(nm, nm))

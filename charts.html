@@ -490,6 +490,7 @@ function card(p) {
   return `<div class="pc ${sel ? 'sel' : ''}" data-id="${p.id}"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span>${p.label}${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${qtag(p)}<span class="tag">${p.fam}</span></div>
     <div class="pc-s"><span>${dstr(S.D.bars.t[p.i])}</span><span>${rrt}</span><span class="res ${rc}">${rt}</span></div></div>`;
 }
+const obsTxt = o => o && o.length ? `<div class="small" style="margin-top:4px"><b>En el camino al objetivo:</b> ${o.map(z => `${z.k === 'S' ? 'soporte' : 'resistencia'} ${fx(z.p)} (×${z.n})`).join(' · ')}. ${o.length >= 2 ? 'Varias barreras: el objetivo completo es poco probable sin pausas.' : 'El precio tiene que atravesarla.'}</div>` : '';
 function scTable(s, d, lab) {
   const dd = d, pcs = x => pc((x / s.entry - 1) * 100 * dd);
   const bo = {entry: s.entry, stop: S.f.stop === 't' && s.stop_t != null ? s.stop_t : s.stop, rr: S.f.stop === 't' && s.rr_t != null ? s.rr_t : s.rr};
@@ -498,7 +499,7 @@ function scTable(s, d, lab) {
     <table class="lv"><tr><td>Entrada (cierre ${d > 0 ? '>' : '<'})</td><td>${fx(s.entry)}</td></tr><tr><td style="color:var(--emerald)">Objetivo</td><td>${fx(s.target)} (${pcs(s.target)})</td></tr>
     <tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(s.t1)} (${pcs(s.t1)})</td></tr>
     <tr><td style="color:var(--ember)">Stop${S.f.stop === 't' && s.stop_t != null ? ' táctico' : ' estructural'}</td><td>${fx(bo.stop)} (${pcs(bo.stop)})</td></tr><tr><td>Recompensa / riesgo</td><td>${bo.rr != null ? bo.rr.toFixed(2) : '—'}</td></tr></table>
-    <div class="small">${s.note}</div><div class="verdict ${vc}">${vt}</div>`;
+    <div class="small">${s.note}</div>${obsTxt(s.obs)}<div class="verdict ${vc}">${vt}</div>`;
 }
 function cardFull(p) {
   const hd = `<div class="pc sel" style="cursor:default"><div class="pc-h"><span class="dot" style="background:${p.state === 'forming' ? 'var(--amber)' : col(p.dir)}"></span><span style="font-size:15px">${p.label}</span>${p.state === 'forming' ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${qtag(p)}<span style="margin-left:auto;cursor:pointer" id="clr" class="tag">cerrar ✕</span></div>`;
@@ -514,7 +515,7 @@ function cardFull(p) {
     <table class="lv"><tr><td>Entrada</td><td>${fx(r.entry)}</td></tr><tr><td style="color:var(--emerald)">Objetivo</td><td>${fx(r.target)} (${pc((r.target / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(r.t1)} (${pc((r.t1 / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--ember)">Stop${r.tact ? ' táctico' : ' estructural'}</td><td>${fx(r.stop)} (${pc((r.stop / r.entry - 1) * 100 * p.dir)})</td></tr><tr><td>Recompensa / riesgo</td><td>${r.rr != null ? r.rr.toFixed(2) : '—'}</td></tr></table>
-    <div class="small">${p.note}</div>${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
+    <div class="small">${p.note}</div>${p.conf && p.conf.length ? `<div class="small" style="margin-top:4px"><b>También saltan en esas sesiones</b> (mismo sentido, ±3): ${p.conf.join(' · ')}. Suelen medir casi lo mismo: no son confirmaciones independientes.</div>` : ''}${obsTxt(p.rr.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>Qué pasó aquí:</b> ${rt}</div>
     ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${p.label}»: ${w} ${w === 1 ? 'llegó' : 'llegaron'} al objetivo y ${same.length - w} al stop.</div>` : ''}
     <div class="verdict ${vc}">${vt}</div>${evLines(p.ev)}${evHq(p)}</div>`;
