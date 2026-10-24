@@ -1,345 +1,73 @@
-# VP Scanner v2
+# VP Scanner · laboratorio de chartismo
 
-Escáner diario de ~2.000 activos (S&P 500/400/600, Nasdaq-100, ETF, Europa, cripto…) que avisa de **compras tras una caída dentro de una tendencia alcista** cuando un modelo estadístico, validado año a año, le da probabilidad de salir bien. Todo corre gratis en GitHub Actions; la web (`index.html`) solo lee los JSON.
+Detecta **figuras, velas y rupturas** en acciones grandes de EE.UU., las **dibuja** sobre el gráfico con su plan (entrada, stop, objetivo) y **mide si funcionan**.
 
-> **Expectativas realistas.** La ventaja medida es modesta: **≈67 % de acierto y ≈ +0,7 % por operación neto de costes** (plan *Equilibrado*, las 3 mejores del día, positivo en los 8 años 2019–2026), o ≈70 % de acierto y ≈ +0,4 % (plan *Alta probabilidad*, sin ventaja apreciable sobre el S&P 500). **Ojo: el acierto de una operación concreta no se puede predecir** (ver «¿Están bien estimadas las probabilidades?»): lo estable es el acierto histórico de cada plan y puesto, no una probabilidad individual. No existe, en estos datos, una estrategia de ≥75 % de acierto *y* rentable: cuando el acierto sube, cada fallo (−4/−6 %) pesa más que cada acierto (+1/+1,5 %) y la ganancia media se evapora. La prueba definitiva es la pestaña **Seguimiento real**.
+- **Radar**: qué figuras se están formando o se han completado, por calidad.
+- **Gráfico**: velas con las figuras dibujadas (rectas con sus toques, ápice, medida), plan por patrón, resultado simulado y evidencia del estudio.
+- **Evidencia**: ¿baten los patrones a entrar al azar? Estudio con corrección por probar muchos patrones.
+- **Guía**: qué es cada patrón y cómo se calcula su plan.
 
-## Qué estaba mal en la versión anterior
+> No es una recomendación de inversión. Dibujar bien una figura no demuestra que funcione: el estudio de la pestaña Evidencia dice qué ha aportado de verdad cada patrón.
 
-| | Backtest antiguo | En vivo |
-|---|---|---|
-| Acierto | 63 % (+5,7 %/op) | **30 %** (−0,77 %/op) en 995 operaciones; los LONG, 8 % |
+## Cómo se reconocen las figuras (`vp/shapes.py`, causal)
 
-Causas (todas corregidas):
+Una figura no es «dos pivotes unidos por una recta». El motor:
 
-1. **Fuga de información del futuro.** El perfil de volumen de cada tramo pivote→pivote se calculaba con barras *posteriores* a la entrada (y un pivote necesita 20 barras futuras para existir). En vivo solo existe el tramo en formación → otra distribución.
-2. **Sobreajuste.** Las «clases élite» se escogieron mirando el mismo histórico (los `lab_*`), con stops calculados solo con las operaciones ganadoras.
-3. **Entradas no operables** (al cierre de la barra que dispara la señal) y empates stop/objetivo resueltos a favor.
-4. **Comprar caídas en pánico** (VIX alto): con VIX en estrés el acierto cae a ~50 % y se pierde ≈1,2 %/op.
+- **Oscilaciones por zigzag de ATR**: un pivote solo cuenta si la oscilación mide ≥ 1 ATR, alternando máximo/mínimo; se confirma 3 barras después.
+- **Rectas por toques**: entre todos los pares de pivotes se elige la recta con más **toques** (pivotes a ≤ 0,35 ATR) que el precio respeta (los cierres no la cruzan, las mechas no la superan en más de 0,6 ATR), que pasa por uno de los dos últimos pivotes y no queda lejos del precio actual.
+- **Clasificación por pendientes y convergencia**: triángulos (simétrico, ascendente, descendente), cuñas (≥ 5 toques) y rectángulo; duración ≤ 80 barras, base ≤ 16 % del precio y ≤ 9 ATR, anchura al romper ≤ 70 % de la inicial, con ápice.
+- **H-C-H** con cabeza ≥ 1,2 ATR más alta que los hombros, simetría en altura y tiempo y tendencia previa; **dobles y triples** techos/suelos; **banderas y banderines** con asta impulsiva (≥ 5 ATR) y retroceso ≤ 50 %; **taza con asa** con la parábola ajustada a los mínimos y prueba de redondez; **VCP**, **diamante**, **isla**, **directrices** con ≥ 3 toques y **rebotes en soportes y resistencias** de 3 toques.
+- **Calidad 0–100** por figura (toques, ajuste, simetría, duración, forma, ruptura, volumen); por debajo de 35 no es figura.
+- **Figuras en formación**: una compresión que aún no ha roto se dibuja con sus dos rectas y los dos escenarios (rompe arriba / rompe abajo).
 
-## Cómo funciona ahora
+Además, 30 patrones de velas y 13 rupturas (máximos y mínimos de 55/100/252 sesiones, Bollinger y ATR comprimidos, caja de Darvas, base junto al máximo anual). El catálogo completo (`vp/catalog.py`) alimenta el motor, el estudio y la Guía.
 
-1. **Candidatos** (`setups.py`): 17 patrones de sobreventa dentro de tendencia (precio > SMA200 con RSI(2) bajo, rachas bajistas, mínimos de 5/10/20 sesiones, Bollinger, precio bajo el VAL del perfil de volumen móvil…). Solo largos: los cortos no tuvieron ventaja en ninguna variante.
-2. **Probabilidad** (`model.py`): regresión logística lineal (poca capacidad) con 28 variables de contexto — VIX y SPY, **amplitud de mercado** (qué parte del universo está sobre su SMA200 y cuánta está en sobreventa), tamaño de la caída, posición respecto a máximos… Se reentrena cada semana con los últimos 3 años.
-3. **Política**: cada día solo se alertan las **mejores** (3 en *Equilibrado*, 5 en *Alta probabilidad*) cuya probabilidad supera la tasa base de acierto; las mejor clasificadas rinden más. Los grupos de activos sin evidencia (p. ej. valores temáticos) se excluyen solos.
-4. **Dos planes de salida** por alerta: *Equilibrado* (sale cuando RSI(2) > 70) y *Alta probabilidad* (objetivo +1 ATR). Stop a 4×ATR y máximo 10 sesiones en ambos.
-5. **Operativa honesta** (`simulate.py`): señal con el cierre, **entrada en la apertura siguiente**, huecos de apertura, un día que toca stop y objetivo cuenta como **stop**, costes por tipo de activo (0,10–0,40 % ida y vuelta).
-6. **Seguimiento en vivo** (`track.py`): cada alerta se registra y se simula con *exactamente* el mismo código que el backtest; la web compara acierto real vs esperado.
-7. **Chequeo de salud**: si el rendimiento de los últimos 12 meses (fuera de muestra) no es rentable, ese plan se **pausa solo** y deja de alertar.
+## El plan de cada patrón (`vp/plan.py`)
 
-### Validación (walk-forward 2019–2026, cada año predicho solo con los 3 anteriores)
+- **Objetivo** por la medida clásica de la figura (doble suelo: cuello + altura; triángulos: anchura de la base; banderas: el asta; taza: su profundidad…) y **T1** al 50 % del camino.
+- **Stop** estructural más allá de la figura (0,25 ATR de margen), **nunca a menos de 1 ATR** de la entrada y, si queda a más de 3 ATR, un stop táctico de 1,5 ATR.
+- **Obstáculos**: soportes y resistencias fuertes entre la entrada y el objetivo.
+- **Resultado simulado**: entrada en la apertura siguiente, el stop gana si se tocan ambos el mismo día, cierre a las 40 sesiones.
 
-| Plan | Acierto | Media/op. | Factor beneficio | Desde 2024 | Costes ×2 |
-|---|---|---|---|---|---|
-| Equilibrado (3 mejores/día, ATR ≥ 2,5 %) | 66,6 % | +0,70 % | 1,38 | 64,9 % / +0,61 % | +0,49 % |
-| Alta probabilidad (5 mejores/día, ATR ≥ 2,5 %) | 69,5 % | +0,38 % | 1,20 | 69,2 % / +0,31 % | +0,17 % |
+## Estudio de evidencia (`vp/study.py`)
 
-Lo que mostró la investigación (`scanner/lab.py`, informes en `scanner/model/last_report.txt`):
+- Universo: miembros actuales del S&P 500 y el Nasdaq-100; se usan las **50 y las 300 más negociadas en cada fecha** (dinero medio de 60 sesiones).
+- Cada señal se opera en la apertura siguiente y se cierra a 5, **10** (principal) y 20 sesiones, con un coste del 0,15 % de ida y vuelta; los patrones bajistas se miden en corto.
+- «Exceso» = rendimiento − media de entrar al azar en el mismo universo el mismo año; **t con errores estándar agrupados por día**.
+- **Umbral del mejor de N**: se desplazan al azar las señales de cada valor y se anota el mayor |t| entre todos los patrones; solo «supera el azar» quien pasa el percentil 95 de ese máximo. Se estudian también las señales de **calidad ≥ 75** de cada figura.
+- **Limitación**: los miembros son los actuales (sesgo de supervivencia que favorece a los largos).
 
-- Comprar caídas sin filtrar: ~62 % de acierto y **≈0 % de media**; negativo en años de estrés (2018, 2022).
-- Un modelo complejo con umbral fijo parecía dar 74 %/+1 % en validación, pero **fracasó en la prueba ciega 2024+** (60,8 %, +0,05 %): se había ajustado a los episodios 2020–2022. Lo estable fue: modelo simple + ventana móvil + «las N mejores del día».
-- **El perfil de volumen no aporta capacidad predictiva** (resultado idéntico sin él). Quitar VIX/SPY o la amplitud de mercado sí destruye la ventaja.
-- Las probabilidades mostradas están **calibradas** también en 2024+ (p. ej. 63,9 % predicho → 63,8 % real).
-- Ya no queda periodo ciego: lo que valida el sistema a partir de ahora es el seguimiento en vivo.
-
-## Ir tarde: el hueco de apertura y el aviso previo al cierre
-
-Las alertas salen con el cierre y se compra en la apertura siguiente; si la acción abre con un hueco alcista grande, parte de la ganancia esperada ya se la ha llevado el mercado. Medido en 2019–2026:
-
-- **El hueco no destruye la ventaja**, pero sí castiga al plan *Equilibrado* cuando abre muy por encima: con aperturas > referencia + 0,5 ATR perdió de media ≈ −0,8 % por operación (306 casos). El plan *Alta probabilidad* no se resintió. Por eso la web muestra un **precio máximo orientativo de entrada** (referencia + 0,5 ATR) y los niveles de stop/objetivo se miden **desde tu precio de entrada real**, no desde el cierre de ayer (el fallo original era de presentación: mostraba niveles del cierre).
-- **Escaneo previo al cierre (MOC)**: `scan.yml` corre tras el cierre, pero `scan_preclose.yml` corre a las **15:20 ET** (19:20/20:20 UTC según el horario de verano; el script comprueba la hora de Nueva York y solo actúa entre 15:10 y 15:40 ET) y repite la misma lógica sobre la vela *provisional* de hoy, solo en EE.UU. (grandes, medianas, pequeñas y ETF). Avisa con tiempo para colocar una **orden MOC antes de las 15:50 ET (21:50 en España)** y entrar al precio de cierre, sin hueco. Los avisos van a `alerts_pre.json`, a la sección «Preliminares» de la web y a Telegram.
-  - Validación (`research.py moc`, barras de 60 min reconstruyendo la vela de las 15:30 ET, ≈ 2 años): comprar al cierre con la señal provisional dio ≈ +0,68 % por operación frente a ≈ +0,56 % comprando a la apertura con la señal definitiva (plan *Equilibrado*): **≈ +0,1 % de mejora, dentro del margen de error (±0,1)**. Para *Alta probabilidad* no hay diferencia apreciable. Solo ≈ 30 % de las señales provisionales coinciden luego con la lista definitiva (el top-N se reordena mucho cerca del cierre), pero las que desaparecen rinden igual que las que se confirman. Ojo: el modelo ya vio esos años al entrenar y es una reconstrucción, no operativa real.
-  - **Limitación conocida (octubre de 2026): el disparo programado de GitHub llega tarde.** El escaneo diario, programado a las 22:30 UTC, ha arrancado de media entre las 01:15 y las 02:20 UTC del día siguiente (2 h 45 min a 3 h 50 min de retraso; 8 de 8 ejecuciones revisadas), y el aviso previo (19:20/20:20 UTC) no se había ejecutado ni una sola vez 1 h 25 min después de su hora. Con un retraso así el aviso previo llegaría después del cierre y el propio script lo descartaría por la ventana horaria. Para que funcione hace falta un disparador puntual externo (p. ej. un cron externo que llame a `workflow_dispatch`); el aviso diario normal no se ve afectado (llega antes de la apertura europea). La ganancia del aviso previo era solo ≈ +0,1 % por operación, así que no es imprescindible.
-  - **Temáticos (p. ej. Equinor): no validado**, así que no entran en el aviso previo. Con ≈ 370 señales provisionales la diferencia cierre − apertura fue +0,07 % ± 0,34 (inconcluyente) y solo el 44 % se confirmaba al cierre. Además, el plan *Alta probabilidad* es el menos sensible al hueco, así que no hay ganancia que justifique el riesgo.
-  - El seguimiento registra estas operaciones aparte (`mode: moc`, entrada = cierre final) y el escaneo posterior al cierre **no las duplica**; si una señal provisional no se confirma con el cierre final, sigue en el seguimiento (para medir el coste real de actuar antes).
-  - Si no puedes poner la orden a tiempo: no pasa nada, esperas a las alertas definitivas y entras a la apertura.
-
-## Qué se probó para mejorar la fiabilidad y la rentabilidad (y qué funcionó)
-
-Todo con la misma tubería walk-forward (`research.py improve`, `improve2`, `index`; informes en la rama `claude/research-results-<cmd>`), comparando año a año con el plan desplegado. Con tantas pruebas, una mejora aislada puede ser azar: solo se adopta lo que mejora en casi todos los años, se replica con salidas vecinas y tiene una razón a priori.
-
-| Prueba | Resultado | Decisión |
-|---|---|---|
-| **Puesto del día** (media por puesto, Equilibrado) | #1 +0,80 % · #2 +0,52 % · #3 +0,41 % · #4 +0,34 % · #5 +0,39 %; tendencia monótona, #1 positivo 7 de 8 años | **Adoptado: Equilibrado pasa a las 3 mejores del día** (cartera de 10 posiciones: Sharpe 1,42 frente a 1,31, menos caída, mismo CAGR). *Alta probabilidad* se queda en 5 (solo el #1 destaca: +0,48 % frente a +0,1–0,2 %). |
-| Puertas de régimen a mano (VIX alto, SPY bajo su SMA200, amplitud baja, sobreventa amplia, ATR alto) | **Todas empeoran**: las señales descartadas rendían más (p. ej. VIX z > 1,5: +1,04 %; amplitud < 30 %: +1,29 %) | Descartado: el modelo ya elige bien en pánico |
-| Ventana de entrenamiento 2/4/5 años o creciente; regularización | 3 años es igual o mejor en *Equilibrado* | Sin cambio |
-| Variables nuevas (choques de noticias, momentum, corto plazo, mercado) | No mejoran *Equilibrado*; «mercado» mejoró *Alta probabilidad* (+0,13 %) pero no se replicó en todas las salidas vecinas (3 de 5) | Descartado (sospecha de azar) |
-| Tope por sector y día | Casi nunca limita, sin efecto | Sin cambio |
-| Modelo frente a elegir 5 al azar entre los candidatos | *Equilibrado*: +0,50 % frente a +0,08 %, mejor en **8 de 8 años**. *Alta probabilidad*: +0,24 % frente a +0,18 % (6 de 8 años) | El modelo aporta en *Equilibrado*; en *Alta probabilidad* aporta poco |
-| Entrada al cierre (MOC) | ≈ +0,1 % por operación (ver arriba) | Aviso previo mantenido |
-
-**Qué esperar con una cartera real** (simulación con capital limitado desde 2019, máx. 10 posiciones al 10 % cada una, netas de costes; la web la regenera cada semana):
-
-| | Anual | Caída máx. | Sharpe | Meses + | Peor mes |
-|---|---|---|---|---|---|
-| Equilibrado (3 mejores/día) | +31,4 % | 27,6 % | 1,70 | 68 % | −21 % |
-| Alta probabilidad (5 mejores/día) | +18,7 % | 22,0 % | 1,50 | 68 % | −13 % |
-| Comprar y mantener el S&P 500 (2019–2026) | +17,5 % | 33,7 % | 0,94 | | |
-
-- **Hallazgo incómodo**: en las mismas ventanas de cada operación, comprar el propio S&P 500 acertó casi igual (≈ 65 % frente a ≈ 67 %) y rindió +0,40 % frente a +0,70 % (*Equilibrado*). El «alfa» sobre el índice es ≈ +0,30 % (t ≈ 2,6) en *Equilibrado* y ≈ −0,04 % (t ≈ −0,4) en *Alta probabilidad*: **gran parte de la ventaja viene de *cuándo* se compra (tras caídas en un mercado alcista), no de *qué* acción se elige**, y la parte de selección queda además inflada por el sesgo de supervivencia.
-- La misma idea aplicada **solo a índices** (SPY/QQQ/IWM/DIA, sin modelo y sin sesgo de supervivencia): 513 señales en 10 años, **71 % de acierto, +0,30 % por operación** (t = 2,5; 8 de 10 años positivos), y con VIX tranquilo (z < 0,5) 72 % y +0,36 %. Una cartera «solo SPY» (≈ 15 operaciones al año) dio ≈ +6 % anual con caída máxima ≈ 7 % y 79 % de meses positivos: fiable pero de poca rentabilidad si no se apalanca. No está en producción; es una opción de bajo riesgo.
-- Un 65 % de operaciones ganadoras **no** implica una curva suave: en la simulación solo ≈ 6 de cada 10 meses son positivos y los peores meses superan el −10 %. Usa posiciones pequeñas.
-
-## ¿Están bien estimadas las probabilidades? Estudio ampliado (`research.py reasons | reasons2`)
-
-**No, las individuales no.** Se midió fuera de muestra (walk-forward, 2019–2026) si la probabilidad del modelo separa las operaciones que ganan de las que pierden:
-
-| | *Equilibrado* | *Alta probabilidad* |
-|---|---|---|
-| AUC (0,5 = azar) | 0,52 (0,57–0,58 en 2019–22; **0,51–0,53 desde 2023**) | 0,51 (**≤ 0,51 en 2023–25**) |
-| Brier frente a repetir la tasa base | **peor** (−4 % la cruda, −2 % calibrada solo con años previos) | **peor** (−7 % / −3 %) |
-| Acierto real por décima de «probabilidad» | 61 % → 68 %, casi plano (**plano desde 2023**) | 70 % → 71 %, plano |
-| Probabilidad mostrada − acierto real, por año | error medio 3,6 puntos, hasta −12,5 y +6,2 | 3,8 puntos, hasta −11 y +7,6 |
-
-Es decir: casi todo el «65–72 %» que se mostraba era la **tasa base** con falsa precisión. **Decisión:** la web y los avisos muestran ahora el **acierto histórico del puesto del día** (con su rango por año) y la media histórica, y dicen claramente que no es la probabilidad de esa operación.
-
-**¿Y los motivos de compra?** De los 17 patrones, solo unos pocos mejoran de forma estable la media de los candidatos (≥ 4–5 cierres bajistas seguidos, RSI(2) < 5, caída > 12 % desde máximos, capitulación); otros, como «mínimo de cierre de 5 o 10 sesiones», no aportan nada, y combinar varios patrones a la vez tampoco ayuda (acierto 63,4 % con uno, 63,1 % con cuatro o más). Lo que sí separa de forma estable (mismo signo 8 de 8 años) es la **volatilidad del valor** y la **profundidad de la caída** (ret. 1–3 sesiones, distancia a máximos de 20 días y 52 semanas): cuanto más violenta la caída dentro de una tendencia alcista, mayor el rebote *medio*, pero el porcentaje de aciertos apenas cambia (62–66 %). La web muestra ahora, para cada alerta, esos motivos medibles con lo que pasó históricamente en su quintil.
-
-**Se probó para encontrar más fiabilidad (y no mejoró de forma robusta):** tendencia a revertir de cada valor, régimen de reversión de todo el mercado, caída frente a su sector (GICS), crédito (HYG, diferencial HYG/LQD), tipos (TLT) y dólar (UUP), gradient boosting, mezcla lineal+boosting, reglas de confluencia entre modelos, reglas simples (volatilidad + caída), ordenar por retorno esperado (ridge) y quedarse solo con los patrones que ya habían funcionado hasta cada año. La mayoría empeoró la media o el Sharpe; las pocas que mejoraban una prueba no se repetían con salidas vecinas. El modelo actual sí aporta frente a elegir al azar entre los candidatos (*Equilibrado*: +0,58 % frente a +0,01 %; Sharpe de cartera 1,4 frente a −0,1), pero **ordenando por el tamaño del rebote, no por la probabilidad de ganar**.
-
-**Adoptado: suelo de volatilidad (ATR ≥ 2,5 % del precio).** Los costes son fijos en % y en valores poco volátiles se comen el rebote típico: las operaciones elegidas con ATR < 2 % rindieron −0,09 % de media y las de ATR > 6 % +1,93 % (8 de 8 años positivas). Con el suelo, *Equilibrado* pasa de +0,58 % a +0,70 % (mejor en 6 de 8 años; Sharpe de cartera 1,37 → 1,68) y *Alta probabilidad* de +0,25 % a +0,36 % (7 de 8 años). Se probaron 6 suelos entre 2 % y 5 % y se eligió el más bajo que mejora los dos planes; más alto sube la media pero también la caída máxima.
-
-## Medio plazo: ¿más tiempo, menos ruido, más fiabilidad? (`research.py midterm`, pestaña «Medio plazo»)
-
-Se probaron, con parámetros fijados de antemano y netas de costes (señal con el cierre, ejecución al cierre del día siguiente), tres ideas de semanas–meses. **Historia larga 2005–2026 (21 años, incluye 2008), ETF:**
-
-| | Anual | Volatilidad | Sharpe | Caída máx. | Peor mes |
-|---|---|---|---|---|---|
-| S&P 500 comprar y mantener | +10,9 % | 18,9 % | 0,64 | −55,2 % | −16,5 % |
-| Tendencia SPY (sobre su media de 200) | +8,5 % | 11,6 % | 0,76 | −25,1 % | −8,2 % |
-| Tendencia QQQ | +12,2 % | 15,6 % | 0,82 | −26,5 % | −12,2 % |
-| Rotación de ETF por momentum (3 mejores, mensual) | +10,3 % | 16,9 % | 0,66 | −25,2 % | −10,1 % |
-
-- **Más tiempo ≠ más rentabilidad, pero sí menos caídas**: la tendencia y la rotación recortan la caída máxima a la mitad (−55 % → −25 %) y el peor mes, con Sharpe parecido o algo mejor. En 2008: S&P 500 −36,8 %, tendencia +4,0 %, rotación +7,2 %. **No son infalibles**: en 2022 la tendencia llegó tarde (−20,1 %; la rotación, +10,2 %) y en 2019–2026 por separado comprar y mantener ganó más (+17,5 % frente a +12,6 %).
-- **Robustez**: la rotación con ventanas de 3, 6 o 12 meses y 2, 3 o 5 ETF dio entre +10 % y +12 % anual y Sharpe 0,6–0,8 en los 21 años (sin depender de una elección afortunada); en la muestra corta de 10 años la dispersión fue mucho mayor (+6 % a +17,7 %), por eso hacen falta muchos años para juzgarlas.
-- **Momentum de acciones (12-1, 30 valores del S&P 500)**: +30,5 % anual frente a +17,9 % del igual-ponderado del mismo universo, **pero** con volatilidad 28,8 %, caída máxima −39,6 % y Sharpe 1,07 frente a 0,94, y el universo (componentes actuales) tiene sesgo de supervivencia: no hay ventaja clara ajustada al riesgo. No está en producción.
-- **Combinación con el sistema de rebotes** (correlación diaria ≈ +0,1, 2019–2026, curva a precio realizado): 50 % rebotes + 50 % tendencia SPY → +23,0 % anual, caída máx. −18,7 %, Sharpe 1,93, peor mes −14 % (rebotes solos: +32,9 %, −27,6 %, 1,74, −21 %). A partes iguales con las tres ideas de medio plazo: +17,5 %, −16,8 %, Sharpe 1,53. Menos rentabilidad, bastante menos riesgo.
-- **Producción:** la pestaña «Medio plazo» muestra a diario la tendencia de SPY/QQQ/IWM/EFA y la cartera vigente de la rotación (se revisa a fin de mes). Es **informativa**: no genera alertas ni entra en el seguimiento. Conclusión honesta: sirve para reducir el riesgo de una cartera, no para ganar más.
-
-## Ideas con EMA 34 / 89 / 200 y RSI (`research.py ema | ema2 | ema3`; no desplegado)
-
-3,47 millones de señales (2016–2026, todo el universo), 31 setups × 6 salidas de seguimiento de tendencia. Cada setup se compara con **entradas al azar en el mismo régimen y con la misma salida**; solo cuenta lo que supera a ese azar.
-
-- **Idea 1: el precio cruza de abajo arriba la EMA 34 con el RSI(14) en torno a 50 y subiendo → sin ventaja.** 134.735 señales, 41 % de aciertos, +0,91 % por operación con stop móvil 3×ATR, pero entrar al azar con la misma salida da +1,02 % (Δ −0,11 %, mejor solo en 4–5 de 10 años). El RSI no aporta nada (frente al cruce solo: −0,01 a −0,09) y su zona es irrelevante (+1,50 % a +1,75 % tanto con RSI 45–50 como con 60–70). Cartera 20 × 5 % (2017–2026): +6,6 % a +7,5 % anual con caída −28 %, frente a +15,3 % del S&P 500. Los espejos cortos pierden (−1,7 % a −2,6 % por operación). Con filtro de tendencia (sobre EMA 200, pila alcista) mejora un poco frente al azar de su régimen (+0,13 % a +0,22 %, 8–9 años de 10) pero rinde menos en términos absolutos: las mejores entradas llegan **después de un susto del mercado** (con el S&P bajo su media de 200: +2,34 % por operación; sobre ella: +0,60 %).
-- **Idea 2: cruces entre EMAs.** 34↗89, 89↗200 y 34↗200 son entradas **tardías**: con salidas por precio rinden menos que el azar (Δ −0,4 % a −0,5 %). Lo único que resiste es la **triple alineación** (se completa 34 > 89 > 200) con **RSI ≥ 60 (momentum, no ≈ 50)** y salida al **cerrar bajo la EMA 89**: 11.903 señales, 35 % de aciertos, +2,45 % por operación, **+0,69 % frente al azar con el mismo RSI** (mejor en 10 de 10 años). Pero (a) el margen **se encoge fuera de muestra** (2016–20: +1,44 % → 2021–26: +0,22 %); (b) es un perfil de cola gruesa: ganancia media +19 %, pérdida media −6,7 %, mediana −3,3 %, el 5 % mejor aporta el 45 % de las ganancias; (c) pierde en 2018 y 2022, y 2020 (+11,8 % por operación) tira de la media; (d) con acciones de EE.UU. la cartera sale bien (+18,6 % anual, caída −17 %, Sharpe 1,47 frente a 0,63 del azar con el mismo filtro), pero ese universo tiene sesgo de supervivencia, y con **solo ETF** (menos sesgo) rinde +7,6 % con caída −11 %, es decir, menos que el S&P 500 aunque con menos riesgo.
-- **Conclusión:** el RSI útil es el **alto** (confirma momentum), no el de 50; las EMAs sirven para **seguir la tendencia** (pocos aciertos, ganancias grandes), no para acertar más a menudo; y nada de esto supera de forma clara y robusta al S&P 500 una vez descontado el sesgo de supervivencia. No se despliega; la rotación/tendencia de la pestaña «Medio plazo» cumple un papel parecido con menos complejidad.
-
-## Medio plazo con acciones: búsqueda masiva de «miles de formas» (`research.py stockmid | stockmid_long`; no desplegado)
-
-2.730 variantes por universo (91 señales × 5 tamaños de cartera × 1 o 3 meses × 3 filtros), señal con el cierre de fin de mes, ejecución al cierre del día siguiente, costes 0,15 % ida y vuelta, rentabilidades con dividendos. Como con miles de pruebas siempre hay una ganadora por azar, se mide la **habilidad como exceso sobre comprar todo el universo a partes iguales** y se aplican cuatro controles: contraste del «mejor de N» (remuestreo por bloques sin habilidad), **selección honesta año a año** (se elige con los años anteriores), **persistencia** entre mitades y correlación de rangos (IC). El motor se validó con datos sintéticos: sin habilidad el contraste da p≈0,9; con habilidad inyectada, p≈0,003 (`tests/test_engine.py`).
-
-| | 10 años (1.285 acciones, 2018–2026) | Historia larga (378 del S&P 500 actual, 2005–2026, incluye 2008) |
-|---|---|---|
-| Universo a partes iguales / S&P 500 | +16,0 % / +15,4 % anual | +14,7 % / +11,1 % anual (caídas −48 % / −53 %) |
-| Variantes que superan al universo en exceso | 44 % (mediana −1,3 pts/año) | 27 % (mediana −2,6 pts/año) |
-| «Mejor de 2.730»: p-valor (S&P 500 actual / 300 más negociadas) | **0,043** / 0,278 | **0,150** |
-| Idea clásica momentum 12-1 (50 acciones, mensual) | +23,6 % anual, Sharpe 1,08 (+23,0 %, 0,95 en las 300 más negociadas) | **+15,3 %, Sharpe 0,86, caída −52 %** (exceso +0,7 pts) |
-| Selección honesta (mejor Sharpe previo) | +39,4 % anual, Sharpe 1,21 (S&P 500: +14,9 %) / en las 300 más negociadas **+20,5 %, Sharpe 0,73** | +16,5 % anual, Sharpe 0,89, caída −29 % (S&P 500: +11,6 %, caída −49 %) |
-
-- **Resultado: no hay una forma de elegir acciones a medio plazo que resista los controles.** En 21 años, la mejor de miles no se distingue del azar (p=0,15), el momentum clásico rinde como el universo (+0,7 pts) y las familias que sí dan algo (momentum +2,3 pts/año, distancia a la media +1,3, reversión +2,5) son pequeñas frente a la dispersión. La selección honesta mejora algo la rentabilidad y recorta la caída, y el recorte de caída (2008: +1 % frente a −35 %) apunta al filtro de mercado más que a elegir mejores acciones (no se comprobó variante a variante).
-- **En la ventana de 10 años sale un efecto grande, pero no se confirma**: momentum, distancia a la media y reversión añaden +4,8 a +8,3 pts/año sobre el universo de componentes actuales del S&P 500, y las carteras concentradas (10 acciones) dan +35 % a +45 % anual con caída −21 % a −24 %. Pero (a) el contraste del «mejor de N» está en el límite (p=0,043) y **no se repite** con las 300 acciones más negociadas en cada fecha (p=0,278; la selección honesta rinde +20,5 % con Sharpe 0,73, peor que comprar el S&P 500, Sharpe 1,05); (b) la correlación de rangos de las señales con el mes siguiente es ≈ 0 (momentum 12-1: IC +0,001, t=0,1), es decir, **no ordena bien el universo entero; el efecto vive en la cola**; (c) el universo «S&P 500 actual» ya contiene a los que subieron lo suficiente como para entrar o permanecer (sesgo de supervivencia), y la selección honesta gana sobre todo en 2024–2026 (+44 %, +58 %, +59 %), años en los que probablemente mandaron pocas acciones muy grandes (hipótesis, no comprobada); (d) las variantes de baja volatilidad y de cercanía a máximos rinden **menos** que el universo (−6 y −4 pts/año).
-- **ETF**: la correlación de rangos del momentum con la rentabilidad del mes siguiente es ≈ 0 (IC −0,025 a +0,055, |t| ≤ 1,5, 22 ETF, 104 meses): los «mejores ETF» del pasado no son los mejores del futuro, y por eso la rotación no bate al índice (solo reduce la caída máxima).
-- **Conclusión:** no se despliega nada. Un resultado así solo sería creíble con constituyentes históricos del índice en cada fecha (incluidos los que salieron), que no hay en estos datos.
-
-## ¿Es real el mecanismo de los rebotes? Prueba en 19 índices y hasta 65 años (`research.py longidx`)
-
-El sistema se afinó con acciones de 2016–2026, con sesgo de supervivencia y en una sola época. Un índice no tiene sesgo de supervivencia y hay décadas distintas. Se aplicaron los **mismos 17 patrones de sobreventa en tendencia alcista** (sin modelo ni ranking) a 19 índices (S&P 500 desde 1961, Nasdaq, Russell 2000, Dow, FTSE, DAX, CAC, Nikkei, Hang Seng, Bovespa…) y se compararon con **entrar al azar en tendencia alcista con la misma salida** (coste 0,10 %, entrada a la apertura siguiente).
-
-| Salida | Operaciones | Acierto | Media neta | Al azar | Ventaja | Índices donde supera al azar |
-|---|---|---|---|---|---|---|
-| RSI(2) > 70 («Equilibrado») | 8.641 | 68,0 % (al azar 61–67 %) | +0,11 % (t=3,6) | +0,04 % | **+0,07 pts** | **17 de 19** |
-| Objetivo +1×ATR («Alta probabilidad») | 8.641 | 72,5 % | +0,04 % (t=1,2) | +0,01 % | +0,03 pts (no significativa) | 13 de 19 |
-
-- **El mecanismo es real y generaliza**: con la salida por RSI supera al azar en 17 de 19 índices y en todas las décadas desde 1980 (+0,06 a +0,13 pts por operación, error típico 0,04–0,07). En los años 60 y 70 (solo S&P 500, 84 y 99 operaciones) sale negativo pero dentro del ruido. Y confirma lo visto con acciones: **el plan con salida por RSI tiene ventaja de pago; el de objetivo +1×ATR solo acierta más a menudo, sin ganar más que entrar al azar** (en acciones: alfa frente al S&P 500 −0,04 %).
-- **Es pequeño en un índice**: +0,07 pts por operación sobre un ATR de ~1 %. Una cartera «solo S&P 500» con este sistema estuvo el 26 % del tiempo en mercado y rindió +1,0 % anual frente a +7,5 % de comprar y mantener (sin dividendos, 65 años): **solo con un índice no se gana dinero**. La ventaja necesita activos volátiles (ATR ≥ 2,5 %) donde el mismo rebote paga más en % — de ahí el suelo de volatilidad y que las acciones den +0,7 % por operación.
-- **No protege en mercados bajistas fuertes**: 2000–02 −0,34 % por operación (al azar −0,33 %), 2008 −0,94 % (al azar −0,75 %). El filtro de tendencia (sobre la SMA200) llega tarde en las caídas rápidas.
-
-## Sesgo de supervivencia: cuánto de la ventaja era real (`research.py pit | pit_mid | pit_deep`)
-
-El universo de las pruebas es la lista **actual** del S&P 500/400/600. Eso cuela dos sesgos: acciones que entraron al índice *después* de subir mucho (se las contaba como si siempre hubieran estado) y las que salieron (caídas, quiebras, compras). Se reconstruyó la pertenencia en cada fecha con las tablas de cambios de Wikipedia (S&P 500: 412 cambios desde 1976, «Historical components of the S&P 500»; S&P 400: 623 desde 2012; S&P 600: 491 desde 2019) y se descargaron las retiradas que aún cotizan (**198 de 717 con datos, el 28 %**: las quebradas y compradas ya no existen en Yahoo; sesgo residual que no se puede cerrar con estos datos). El 15,8 % de las señales de acciones de EE.UU. eran de valores que aún no estaban en el índice.
-
-**Sistema de rebotes, plan Equilibrado (walk-forward 2019–2026):**
-
-| | Operaciones | Acierto | Media | PF | Alfa vs S&P 500 | Cartera 10×10 % |
-|---|---|---|---|---|---|---|
-| A · lista actual (lo que se mostraba) | 4.083 | 66,5 % | +0,74 % | 1,41 | +0,35 % (t=3,0) | +32,1 % anual · caída −29 % · Sharpe 1,7 |
-| B · solo cuando ya era miembro | 4.006 | 66,2 % | +0,57 % | 1,34 | +0,18 % (t=1,7) | +22,5 % · −25 % · 1,4 |
-| C · B + retiradas que aún cotizan | 3.852 | 66,8 % | +0,53 % | 1,30 | **+0,13 % (t=1,1)** | **+19,2 % · −26 % · 1,3** |
-
-El S&P 500 comprar y mantener: +17,5 % anual, caída −33,7 %. Con la pertenencia histórica **la ventaja por operación baja un 28 %, el alfa deja de ser significativo y la rentabilidad de la cartera se queda en la del índice con algo menos de caída**. Las pequeñas capitalizaciones (S&P 600) pasan de +0,73 % a −0,48 % por operación y el sistema las excluye solo. El plan «Alta probabilidad» no tiene alfa en ninguna versión (−0,06 %, +0,01 %, −0,01 %).
-
-**Prueba dura 2005–2026 (incluye 2008, 2011, 2015, 2018, 2020, 2022):** Equilibrado con pertenencia histórica (y sin operaciones de S&P 400/600 anteriores a su tabla): 8.117 operaciones, 66,0 % de acierto, **+0,38 % por operación**, alfa +0,12 % (t=1,9); cartera 10×10 %: **+11,1 % anual con caída −36 %** frente a +11,4 % y −52 % del S&P 500 (con la lista actual: +14,0 % y −34 %). Gana en 17 de 19 años (2008: +0,32 %; pierde en 2015: −0,16 % y 2018: −0,61 %).
-
-**Medio plazo con acciones, con pertenencia histórica:** el «efecto grande» de 2018–2026 era casi todo hindsight. Con el S&P 500 de cada fecha: contraste del «mejor de 2.730» p=0,24 (con las 300 más negociadas, p=0,48); el 85 % de las variantes no bate al S&P 500; persistencia entre mitades +0,15; la selección honesta rinde +15,7 % (Sharpe 0,91) frente a +14,9 % (1,05) del índice; el momentum clásico 12-1 pasa de +29,5 % (Sharpe 1,20) a +15,7 % (0,82). **No hay habilidad demostrable en elegir acciones a medio plazo.**
-
-**Cómo repartir el dinero (2008–2026, rebotes con pertenencia histórica, curva a precio realizado, resto en liquidez BIL):**
-
-| | Anual | Volatilidad | Sharpe | Caída máx. | 2008 | 2018 | 2022 |
-|---|---|---|---|---|---|---|---|
-| S&P 500 comprar y mantener | +11,4 % | 19,7 % | 0,65 | −51,9 % | −36 % | −5 % | −18 % |
-| Tendencia (S&P 500 sobre su SMA200, si no liquidez) | +10,0 % | 11,7 % | 0,87 | −20,6 % | −2 % | 0 % | −14 % |
-| Rebotes (Equilibrado, 10 × 10 %) | +11,4 % | 12,7 % | 0,91 | −37,6 % | +10 % | −24 % | +10 % |
-| 50 % tendencia + 50 % rebotes | +11,1 % | 8,9 % | **1,22** | **−20,3 %** | +4 % | −12 % | −2 % |
-| 70 % tendencia + 30 % rebotes | +10,7 % | 9,3 % | 1,14 | −17,3 % | +1 % | −8 % | −7 % |
-| 70/30 apalancado ×1,5 (sin coste de financiación) | +16,1 % | 13,9 % | 1,14 | −25,0 % | +2 % | −12 % | −11 % |
-
-Lectura honesta: **ninguna combinación bate al S&P 500 en rentabilidad sin apalancamiento**; lo que mejora es el riesgo (misma rentabilidad con caídas de −17 % a −20 % en vez de −52 %). Apalancando ×1,5 se llega a ≈+16 % anual con −25 % de caída, pero el coste de financiación (≈2 puntos al año) no está descontado y la caída de los rebotes está subestimada (la curva se actualiza al cerrar cada operación). El sesgo residual de las retiradas sin datos empuja todo ello a la baja.
-
-**Qué se hizo en producción:** la validación semanal (`research.py final`) usa ahora esta pertenencia histórica y aborta si no puede reconstruirla (no sustituye el registro por uno con sesgo). La web lo indica en «Cómo se validó».
-
-## Renta fija: ¿puede 60 % TLT + 30 % MBB batir al índice en 5 años? (`research.py bonds`)
-
-Comprobación con rentabilidad total (cupones incluidos, datos de Yahoo hasta 2026-10-08, pesos fijos con rebalanceo mensual, sin costes). **No: en los últimos 5 años la cartera 60 TLT / 30 MBB / 10 liquidez rinde −21,4 % frente a −2,2 % de AGG** (TLT −34,3 %, MBB −1,3 %). Tampoco gana en 1 año (−5,5 % frente a −1,6 %), 3 años (+8,9 % frente a +14,5 %) ni 10 años (−9,2 % frente a +13,0 %); además tiene casi el doble de volatilidad (11,3 % frente a 6,1 %) y una caída máxima de −33 % frente a −17 %. Solo supera a AGG en ventanas de 5 años que **terminan entre 2012 y 2021** (el 62 % de todas las ventanas desde 2012, diferencia media de +2 a +18 puntos), cuando los tipos bajaban; las que terminan en 2022–2026 la pierden por entre 1 y 21 puntos. Años naturales: 2019 (+10,8 % frente a +8,5 %) y 2020 (+12,4 % frente a +7,5 %) a favor; 2022 (−23,2 % frente a −13,0 %), 2024 (−4,1 % frente a +1,3 %) y 2026 (−5,2 % frente a −2,3 %) en contra. Lo único en lo que TLT/MBB están por delante es el **rendimiento por distribuciones** (TLT 5,0 %, MBB 4,5 %, AGG 4,2 %), que no es rentabilidad total.
-
-**«Reloj» de renta fija con interrupciones (`research.py bonds2`)**: 2/3 TLT + 1/3 MBB con pesos fijos desde enero de 2021 da −29,0 % frente a −4,1 % de AGG (últimos 5 años: −24,3 % frente a −2,2 %). Con conocimiento del futuro bastaría con sacar a liquidez los **6 peores meses de 61** para batir a AGG; sin mirar al futuro, solo 7 de 20 reglas de «sobrecalentamiento» (tendencia de TLT, subida del 10 años, expectativas de inflación, momentum) baten a AGG en los últimos 5 años, y **todas pasan a oro o materias primas y están fuera de TLT el 62–72 % de los días** (no son interrupciones cortas); con liquidez o TIPS como alternativa, ninguna lo consigue (−10 % a −24 %), y la regla de «sobrecalentamiento corto» (28 % de los días) llega a −8 % / −10 %. En ventanas de 5 años desde 2008 las reglas baten a AGG entre el 38 % y el 85 % de las veces: no hay una regla robusta. Un reloj que bata a AGG con esta base lo hace por el oro/materias primas y por el momento de las salidas, no por el 66,7/33,3.
-
-## Stops grandes: qué dicen los datos (`research.py stops`; con pertenencia histórica)
-
-«Acierta mucho pero un stop de −10 % o más se come muchas ganancias.» Plan Equilibrado (3.869 operaciones, 2019–2026): acierto 66,6 %, ganancia media +3,47 %, pérdida media −5,40 %, mediana +1,31 %. **El 6,0 % de las operaciones pierde ≥10 % y el 2,4 % ≥15 %; el 5 % peor aporta el 46 % de toda la pérdida bruta** (el 10 % peor, el 70 %). Solo el 3,2 % de las operaciones acaban en stop (media −16,2 %, igual que el −4×ATR teórico: el hueco apenas empeora); el resto sale por RSI/tiempo (media +1,07 %). Las peores salen de valores con ATR ≥ 10 % (GameStop −65 %, Carvana −59 %, siete de las 15 peores son cripto) donde 4×ATR es un stop a ≥ 40 % del precio, es decir, no existe.
-
-- **Mismas alertas, otro stop** (salida RSI(2)>70 o 10 sesiones): 1×ATR +0,21 % · 1,5× +0,28 % · 2× +0,31 % · 2,5× +0,41 % · 3× +0,49 % · **4× +0,51 %** · 5× +0,52 % · 6× +0,54 % · sin stop +0,56 %. Acercar el stop **baja** la media y no reduce el número de pérdidas grandes de forma útil (≥10 %: 4,3 % con 2×ATR, 5,9 % con 3×, 6,0 % con 4×, 5,4 % sin stop): un stop corto convierte rebotes que habrían salido bien en pérdidas. Reentrenando todo el sistema con cada stop, las diferencias (+19,6 % a +22,1 % anual con 3×–5×, 16,6 % con 2,5×) están dentro del ruido: el nivel del stop no es la palanca.
-- **La palanca es el tamaño.** Con la misma selección y 10 posiciones: 10 % fijo por operación → +19,6 % anual, caída −26,3 %, Sharpe 1,26, y la peor operación cuesta un 6,5 % de la cartera. Tamaño = riesgo fijo / distancia al stop (tope 10 %): riesgo 1 % por stop → +11,6 % anual, caída −13,1 %, Sharpe 1,46, peor operación −1,8 % de la cartera; riesgo 1,5 % → +15,6 %, −19,0 %, Sharpe 1,43; con 20 posiciones y 1 % → +15,3 %, −17,8 %, Sharpe 1,60. La alerta ya muestra «si arriesgas el 1 % de tu capital hasta el stop, la posición sería ≈ X %» (ahora con tope del 10 %).
-- **Techo de volatilidad (nuevo)**: ATR < 7 % del precio. Con ATR 5–10 % la media es la mayor (+1,3 a +1,4 %) pero con ATR ≥ 10 % (98 operaciones) la media cae a +0,37 %, PF 1,06, el 19 % pierde ≥10 % y la peor es −65 %. Con el techo en 7 %: −0,04 puntos de media, la peor pérdida pasa de −65 % a −30 % y el crypto de ATR alto desaparece. Validación final con el techo: Equilibrado 67,2 % de acierto, +0,48 % por operación, pérdida media −4,85 %; cartera 10×10 %: +16,7 % anual, caída −21,5 % (antes +19,3 % y −26,3 %), mismo Sharpe 1,30.
-- **En vivo (23 operaciones cerradas, 8–20 oct.)**: 17 ganadas (+51,1 % en total) y 6 perdidas (−67,0 %), de las que 4 son stops de −11 % a −22 % (VIAV −21,9 %, P −17,2 %, STMPA.PA −15,7 %, ASML −11,2 %). Cuatro pérdidas ≥10 % de 23 es el 17 %, frente al 6 % esperado (probabilidad ≈ 4,5 % de que salgan tantas por azar): mala suerte probable, pero muestra pequeña y por debajo de lo esperado.
-
-### ¿Y un stop máximo del 5 %? (`research.py stops2`; stops fijos en %, con pertenencia histórica y techo de ATR 7 %)
-
-Los candidatos tienen ATR ≥ 2,5 %, así que 4×ATR ya es ≥ 10 %: «máximo 5 %» equivale a un stop fijo del 5 %. Mismas 3.741 alertas del Equilibrado, 2019–2026:
-
-| stop | acierto | media/op. | PF | paradas | peor |
-|---|---|---|---|---|---|
-| **4×ATR (actual)** | **67,1 %** | **+0,48 %** | **1,30** | 3,3 % | −29,5 % |
-| 12 % fijo | | +0,46 % | | | |
-| 10 % fijo | | +0,41 % | | | |
-| 8 % fijo | | +0,36 % | | | |
-| 6 % fijo | | +0,28 % | | | |
-| **5 % fijo** | 61,1 % | +0,24 % | 1,14 | 29 % | −22,3 % |
-| 4 % fijo | | +0,23 % | | | |
-| 3 % fijo | | +0,14 % | | | |
-| 2 % fijo | | +0,08 % | | | |
-
-- **Cuanto más corto el stop, peor la media** (monótono). Un 5 % fijo se activa en el 29 % de las operaciones (frente al 3,3 %) y la peor pérdida sigue siendo −22 %, porque el hueco de apertura se salta el stop. El rebote necesita margen: el precio suele hundirse un 3–6 % antes de volver.
-- **Stop evaluado al cierre** (si el cierre pierde el nivel, se sale en la apertura siguiente) es menos malo que el intradía, pero no mejora el 4×ATR: 3 % +0,26 %, 5 % +0,35 % (acierto 64,5 %), 7 % +0,42 %.
-- **Sistema reentrenado con el stop fijo** (modelo y política incluidos): 4×ATR → alfa frente al S&P +0,10 % (t=1,1), +17,3 % anual, caída −21,5 %, Sharpe 1,40. 5 % intradía → n=3.186, +0,17 %/op., **alfa −0,12 % (t=−1,8)**, +5,6 % anual, caída −29,1 %, Sharpe 0,60; 3 % → +3,8 % anual; 7 % intradía → alfa 0,00, +10,4 %; 5 % al cierre → alfa +0,01 %, +11,7 % / −19,7 % / Sharpe 1,10.
-- **Cartera con tamaño por riesgo** (sin apalancar, exposición ≤ 100 %): 4×ATR a 10 % fijo +16,2 % / −22,3 % / Sharpe 1,32; 4×ATR arriesgando 1 % (tope 10 %) +11,2 % / −11,6 % / 1,43; 5 % intradía +8,3 % / −21,2 % / 0,70; 5 % al cierre +13,1 % / −18,0 % / 1,04; 7 % al cierre +17,1 % / −20,4 % / 1,36 (tope 20 %: +19,7 % / −13,7 % / 1,50; exploración dentro de la muestra, entre muchas variantes: no es una conclusión).
-- **Conclusión**: un stop de máximo el 5 % **empeora** el sistema (menos acierto, media a la mitad, alfa ≤ 0). El tamaño de la posición, no la distancia del stop, es lo que limita lo que duele una pérdida. No desplegado: el seguimiento (`track.resolve`) y el registro de salidas solo entienden stops en ATR; `Variant.cap`/`Variant.cs` existen únicamente en el simulador.
-
-### ¿Y evitar las señales justo antes de resultados? (`research.py stops3`)
-
-Sin calendario de resultados, se usa un proxy causal: una barra con hueco ≥ 1 ATR y volumen ≥ 2× el normal hace 48–68 sesiones (≈ un trimestre atrás) marca «resultados en las próximas 10 sesiones». Marca el 15,6 % de los candidatos y sí predice huecos grandes (≥ 1,5 ATR en las 10 sesiones siguientes: 13,6 % de las marcadas frente a 5,2 % de las no marcadas). Pero **no sirve como filtro**: las marcadas del plan desplegado dan +0,55 %/op. (acierto 67,6 %, ≥ 10 % de pérdida en el 6,3 %) frente a +0,45 % (67,0 %, 5,0 %) de las no marcadas; la diferencia está dentro del ruido. Reentrenando el sistema sin operarlas empeora: +0,42 %/op., alfa frente al S&P +0,03 % (t = 0,4), cartera 10×10 % +12,2 % anual (antes +16,8 %), Sharpe 1,00 (antes 1,30). Y con ese filtro, los stops fijos siguen perdiendo frente a 4×ATR (5 % fijo +0,19 %, 5 % al cierre +0,33 %, 7 % al cierre +0,38 %, 4×ATR +0,45 %). Es un proxy, no un calendario real: no se despliega.
-
-## ¿Mejora el resultado si solo se cogen las alertas de los sectores que recomienda el reloj de inversión? (`research.py clock`)
-
-El reloj (repositorio `Perez849/reloj-inversion`) clasifica el ciclo de EE.UU. en cuatro fases y recomienda 2–5 sectores de renta variable (a veces oro). Su historial de sectores no se publica, así que `scanner/clock_picks.py` reproduce **mes a mes y solo con datos previos** lo que habría recomendado (mismo código de selección y mezcla por probabilidad de fase; correlación 0,9993 con su curva publicada; las probabilidades de fase se leen del mes anterior, no del propio mes). Resultado en `scanner/model/clock_picks.json` (fuente: reloj-inversion `1fed2ec`). Sectores: GICS de Wikipedia para los valores de S&P 500/400/600 (97 % de las acciones grandes y medianas; el 77 % de los candidatos tiene sector; cripto, futuros y valores europeos quedan fuera), ETF de sector por tabla; ramas siempre comparadas con el mismo conjunto de valores con sector.
-
-- **Candidatos (137.815 señales con sector conocido, 2017–2026)**: en sector recomendado −0,01 %/op. (acierto 62,9 %) frente a +0,03 % (63,1 %) en sector no recomendado. Con calendarios de sectores elegidos al azar (mismo número de sectores por mes), el calendario real queda por encima del 24 % de los azarosos: indistinguible del azar. Por año el signo cambia (mejor en 2017, 2019, 2020, 2024; peor en 2018, 2022, 2023, 2025, 2026).
-- **Alertas del plan (top-3 por día) filtradas después**: las 907 de sector recomendado dan +0,75 %/op. (PF 1,52) frente a +0,41 % (PF 1,27) de las 2.315 no recomendadas, pero es una de varias formas de cortar la muestra, la diferencia es de ≈ 2 errores estándar sin corrección y desaparece con las 137.815 señales completas: no se toma como evidencia.
-- **Sistema entero reentrenado con el fondo restringido**: todo el fondo +0,49 %/op., alfa +0,11 %, +17,3 % anual, Sharpe 1,40 · solo sector conocido +0,53 %, +18,7 %, Sharpe 1,50 · sector conocido **y recomendado** +0,40 %, alfa +0,06 %, **+8,8 % anual**, Sharpe 0,90 · sector conocido y no recomendado +0,33 %, +9,9 %, Sharpe 0,90. Restringir a los sectores del reloj deja menos señales por día (la cartera pasa más tiempo sin invertir) y no mejora la media por operación.
-- **Conclusión**: el reloj de inversión no añade nada al sistema de rebotes; su señal es de ciclo (meses o años) y el rebote es de días. No se despliega.
-
-## Osciladores e indicadores complejos: ¿hay información nueva para los rebotes? (`research.py osc`; no desplegado)
-
-`scanner/osc.py` calcula 54 osciladores causales por barra (la prueba `test_osc_causal` comprueba que recortar el futuro no cambia ni un valor del pasado): estocástico (5, 14), StochRSI, Donchian, CCI, MFI, Chaikin (CMF, oscilador, pendiente de A/D), OBV, Ultimate Oscillator, Elder-ray, TSI, KST, Vortex, Aroon, Fisher, RSI de Laguerre, Connors RSI, eficiencia de Kaufman, razón de varianzas, dimensión fractal, razones de volatilidad (ATR, Parkinson, semivolatilidad), Bollinger/Keltner/squeeze, ADX/DMI, VWAP, rangos percentiles, divergencia alcista RSI/precio, RSI «semanal», asimetría/curtosis, PPO/MACD, TRIX, Coppock, Schaff, Ichimoku, Supertrend, calendario, más un compuesto de agotamiento vendedor. Fondo: 40.208 candidatos elegibles (ATR 2,5–7 %, grupos permitidos), 2016–2026, con pertenencia histórica a los índices.
-
-- **Cribado univariante** (pendiente de la rentabilidad sobre el rango dentro de cada año, error estándar por clústeres de día): bajo el azar, el **mejor** |t| de 55 osciladores es ≥ 4,4 el 5 % de las veces. El mejor real es 3,9 (Chaikin) → **ninguno supera el umbral**. Los que mejor salen son de flujo de dinero (Chaikin −3,9, pendiente de A/D −3,4, CMF −3,2, Ultimate Oscillator −2,8, estocástico(5) −2,4): más presión vendedora → mejor rebote, con el signo en 8–9 de 10 años, pero el efecto es pequeño (≈ −0,4 a −0,5 puntos entre quintiles) y es información que RSI(2), IBS y las distancias ya contienen.
-- **Sistema entero reentrenado** (AUC fuera de muestra / media por operación / alfa frente al S&P / cartera 10×10 %): modelo actual 0,514 · +0,48 % · +0,11 % · +17,2 % anual, Sharpe 1,40. Con todos los osciladores: 0,514 · +0,40 % · +0,04 % · **+11,1 %**, Sharpe 0,90. Con el compuesto: 0,514 · +0,47 % · +0,09 % · +17,3 %. Con los 8 elegidos solo con datos ≤ 2018 (2.969 candidatos, muestra corta): 0,517 · +0,39 % · +0,05 % · +10,6 %. Con los 4 mejores de la muestra completa (elegidos mirando el futuro, es decir con ventaja): 0,513 · +0,43 % · +0,08 % · +14,0 %. **Ninguna versión mejora al modelo actual**; añadir variables sin información solo mete ruido.
-- **Conclusión**: con las variables de precio y volumen diarios, el rebote no tiene información extra que sacar de osciladores más complejos. El límite del AUC (≈ 0,51–0,52) parece de los datos, no de la elección de indicador. Las líneas que quedan por explorar necesitan datos distintos (calendario real de resultados, noticias, flujo de opciones), no más osciladores.
-
-## Dimensiones más allá del precio y el volumen (`research.py altprobe | alt`; no desplegado)
-
-`scanner/alt.py` incorpora **69 variables de siete familias de datos gratuitos, todas con fecha de publicación** (lo que no se conocía el día de la señal no se usa). Desde el entorno de desarrollo ninguna de estas fuentes es accesible: se descargan y se prueban en CI (`altprobe` comprueba qué responde y desde qué fecha).
-
-- **Macro, crédito y volatilidad (32)**: diferencial Baa−10 años y Aaa−10 años, curvas 10a−2a y 10a−3m, tipo real 10a, inflación implícita 5a, dólar, petróleo, tipos a 10 años, incertidumbre política (EPU), condiciones financieras (NFCI, retraso 6 días: se revisa a posteriori), estrés financiero de St. Louis, solicitudes de paro, balance de la Fed, reverse-repo (FRED, retraso 1 día salvo los semanales); estructura temporal de la volatilidad VIX9D/VIX/VIX3M/VIX6M, VVIX, SKEW, OVX, GVZ, VXN/VIX, RVX/VIX (CBOE); encuesta semanal AAII.
-- **Resultados (8)**: calendario del Nasdaq 2016–2026 (2.607 días) con sorpresa de beneficios y número de analistas. Un informe se conoce el mismo día si es antes de la apertura y desde el siguiente si es tras el cierre o no consta la hora. *La capitalización que devuelve el Nasdaq es la ACTUAL, no la de la fecha del informe (AMD en 2023 salía con 829.000 M$): una primera pasada con ella dio un «efecto tamaño» de 10 de 10 años que era puro sesgo de retrospectiva. Se descartó.*
-- **Directivos (8)**: Form 4 de la SEC (conjuntos de datos trimestrales 2016q4–2026q1): compras y ventas en mercado abierto en 90 y 30 días, compras de ejecutivos y de consejeros, racimos. Con retraso de un día sobre la presentación; sin datos posteriores a marzo de 2026.
-- **Venta en corto (8)**: volumen corto diario de FINRA (Reg SHO, desde nov. 2018; el del día t se usa desde t+1) e interés corto quincenal (desde dic. 2017; publicación = liquidación + 11 días).
-- **Tamaño y liquidez (3)**: dólares negociados, precio, volumen relativo.
-- **Fundamentales (10)**: marcos XBRL de la SEC (activo, pasivo, patrimonio, acciones en circulación, beneficio y ingresos anuales). Los marcos no traen fecha de presentación: se aplica un retraso de 75 días al balance y de 100 al ejercicio anual. Capitalización de entonces = acciones × precio.
-
-**Resultados** (fondo de 40.208 candidatos elegibles, 2016–2026, con pertenencia histórica):
-
-- **Cribado univariante con el umbral del «mejor de N»**: bajo el azar, el mejor |t| de 69 variables es ≥ 5,7. Solo **OVX** (volatilidad del petróleo, t = +5,7, 8 de 10 años) lo supera; **Baa−10a** (+5,6, 7/10) queda al borde. Con un nulo más exigente para las variables de mercado, que son lentas y se autocorrelacionan (desplazar la serie respecto a los resultados en lugar de permutar día a día; umbral 4,8–5,3), **sobreviven dos: OVX y el diferencial de crédito Baa−10a**. Dicen lo mismo: con más estrés, el rebote paga más (quintil alto frente al bajo: +1,05 a +1,25 puntos por operación y +9 puntos de acierto). Es un efecto de régimen que el VIX y el resto del modelo ya recogían en buena parte.
-- **Subgrupos**: ningún subgrupo económico aguanta con claridad. Los más llamativos: valor contable alto frente a capitalización (B/P > 1) +0,64 % frente a +0,23 % (t = 2,4, 7/10 años, 1 prueba entre ≈ 30); racimo de compras de directivos +0,46 % frente a +0,26 % (t = 1,2, 7/10); informe previsto en los próximos 14 días +0,48 % frente a +0,24 % (t = 1,4, 7/9); ≥ 5 días para cubrir el interés corto −0,13 (t = −1,1, 2/9 años mejor). «NFCI > 0» (t = 6,3) es **un solo episodio (2020)**, no un resultado. Las caídas justo después de resultados rinden algo peor (−0,12 %, t = −0,6). Capitalización de entonces: **sin efecto positivo** (los más grandes rinden peor: 63,2 % / +0,08 % frente a 65,8 % / +0,37 %), lo que confirma que el efecto de la capitalización actual era retrospectivo.
-- **Sistema entero reentrenado con cada familia** (AUC fuera de muestra / media por operación / alfa frente al S&P / cartera 10×10 %): modelo actual 0,514 · +0,48 % · +0,11 % · +17,4 % anual, caída −21,5 %, Sharpe 1,40. + macro 0,525 · +0,48 % · +0,04 % · +12,0 %, caída −31,3 %, Sharpe 0,90. + resultados 0,511 · +0,40 % · +0,02 % · +13,4 %. + directivos 0,516 · +0,45 % · +0,09 % · +16,2 %. + corto 0,511 · +0,40 % · +0,04 % · +10,8 %. + tamaño 0,516 · +0,52 % · +0,15 % · +15,8 %. + fundamentales 0,518 · +0,40 % · +0,05 % · +13,6 %. + las 69 juntas 0,526 · +0,41 % · −0,04 % · +10,1 %, caída −34,2 %.
-- **Conclusión**: ninguna familia mejora el sistema. Las variables macro suben el AUC (0,514 → 0,525) porque dicen *cuándo* los rebotes pagan más (más estrés), no *cuál* comprar entre los de un mismo día; la cartera, con más operaciones concentradas en las crisis, empeora (caída −31 % frente a −21 %). Directivos, resultados e interés corto apuntan en direcciones plausibles pero sin significación. Los fundamentales no explican las pérdidas grandes (fondos propios negativos: −0,14 %, t = −0,9; pérdidas en el ejercicio: +0,01 %).
-
-## Chartismo: velas, rupturas y figuras (`research.py charts | charts2`; no desplegado)
-
-`scanner/charts.py` detecta **65 patrones** de forma causal (la señal existe en el cierre de la barra de ruptura; los pivotes se confirman 4 barras después de formarse): 22 velas (martillo, estrella fugaz, envolventes, estrella de la mañana/tarde, tres soldados/cuervos, harami, pinzas, doji, marubozu, reversión clave…), 19 rupturas y compresiones (máximos/mínimos de 20/55/100/252 sesiones, Bollinger comprimido, NR7, vela interior, ATR comprimido, caja de Darvas, base junto al máximo anual) y 24 figuras (doble suelo/techo, hombro-cabeza-hombro y su inverso, triángulos ascendente/descendente/simétrico, cuñas, directrices, soportes y resistencias de 3 toques, VCP, taza con asa, diamante, banderas y banderines, islas). Cada detector se prueba con la figura plantada a mano (salta en su barra de ruptura) y con una prueba de causalidad (recortar el futuro no cambia ninguna señal anterior).
-
-**Universo** (el usuario pidió valores grandes y populares, unos 50): las **50 acciones de EE.UU. más negociadas en cada fecha** (dinero medio de 60 sesiones con datos hasta ese día: AMZN, AAPL, NVDA, TSLA, MSFT, META, AMD… sin elegirlas mirando cuáles han subido después; 122.680 barras 2017–2026) y, para tener más potencia, las **300** más negociadas (735.224 barras). *Un primer intento incluía cotizaciones de Londres en peniques (GLEN.L, BA.L), que salían «las más negociadas» por la unidad: se excluyeron.* Entrada en la apertura siguiente a la señal, salida a 10 sesiones (también 5, 20 y objetivo/stop de 2×ATR), 0,15 % de coste de ida y vuelta, los patrones bajistas se miden en corto (sin coste de préstamo). Cada patrón se compara con entrar al azar en las mismas acciones el mismo año («exceso»), con error estándar por clústeres de día y con el umbral del **mejor de 65** obtenido desplazando en el tiempo las señales de cada valor.
-
-- **Ninguna figura clásica funciona.** Con las 50 mayores, ningún patrón alcista bate al azar de forma significativa; con las 300 solo sobreviven al umbral del mejor de 65 cinco patrones, y los cinco son **negativos**: comprar rupturas a máximos pierde frente a entrar al azar: base junto al máximo anual −0,57 %, VCP −0,54 %, ruptura del máximo de 100 sesiones −0,40 %, de 55 −0,36 %, de 252 −0,43 % por operación a 10 sesiones (t = −3,6 a −5,5; a favor solo 1–2 de 10 años). Las rupturas alcistas en conjunto: exceso medio −0,38 % y 0 de 10 por encima del azar.
-- **Las rupturas a la baja son señales de rebote, no de caída**: tras romper el mínimo de 20/55/100 sesiones, las 50 mayores suben a 10 sesiones (cortos pierden −1,7 % a −2,1 % netos, solo 38–41 % de aciertos). Es el mismo mecanismo que usa el sistema de rebotes, visto con otra definición.
-- **Velas alcistas**: exceso medio −0,77 % (300 valores; 18 % de los patrones por encima del azar). Taza con asa (n = 1.337): +0,30 % pero exceso −0,21 %. Banderas y banderines alcistas, doble suelo (exceso −0,35 %, t = −2,3): sin ventaja. Hombro-cabeza-hombro, doble techo y diamantes bajistas: las bajadas no se materializan (los cortos pierden en un mercado alcista).
-- **Lo único que parece algo**: la **cuña descendente** (es una caída que se estrecha y rompe al alza): +0,87 % por operación a 10 sesiones, 55,6 % de aciertos, exceso +0,50 % (300 valores, **10 de 10 años** a favor, t = 2,7) y +1,12 % con las 50 mayores (8/10, t = 3,1); no supera el umbral del mejor de 65 (3,3). Estrella fugaz y hombre colgado: tras ellas las acciones suben algo menos que la media (exceso corto +0,35 % a +0,88 %, 8–9 de 10 años), pero los cortos siguen perdiendo en términos absolutos.
-- **Como ayuda al sistema de rebotes (`charts2`)**: con los 65 patrones como señales en las 3 últimas barras de cada candidato, ninguno supera el umbral del mejor de 38 con muestra suficiente; el más claro es negativo: un rebote candidato que coincide con un marubozu alcista largo acierta el 55,4 % frente al 65,2 % (t = −2,5). Reentrenar el sistema con los patrones empeora: modelo actual +0,48 %/op., alfa +0,11 %, +17,7 % anual; + velas +0,44 %, +10,2 %; + rupturas +0,43 %, +15,2 %; + figuras +0,40 %, +14,8 %; + los 65 +0,39 %, alfa −0,01 %, +12,9 %.
-- **Conclusión**: en valores grandes, el chartismo clásico no tiene capacidad predictiva por encima del efecto conocido de reversión a corto plazo. Cuidado con la lectura de los datos: son definiciones algorítmicas de figuras que un analista dibuja a ojo con criterio (puede que el detector no vea lo que ve la persona), solo hay datos diarios, sobreviven los valores actuales y los cortos no incluyen coste de préstamo.
-
-## Laboratorio de gráficos: ver los patrones dibujados (`charts.html`; `scanner/shapes.py` + `scanner/chartlab.py`)
-
-Una página aparte (`charts.html`, enlazada desde la web) que **dibuja sobre el gráfico de velas** lo que detecta el motor de chartismo, para poder juzgarlo con los ojos y no solo con tablas.
-
-**Cómo reconoce las figuras (`shapes.py`, causal).** La primera versión unía dos pivotes con una recta y dibujaba lo que saliera: cuñas de cinco meses con una base del 21 %, «hombro-cabeza-hombro» con la cabeza un 1 % por encima de los hombros, banderas de semanas, una taza que no tocaba los mínimos. Ahora:
-- **Oscilaciones por zigzag de ATR**: un pivote solo cuenta si la oscilación mide ≥ 1 ATR, siempre alternando máximo/mínimo; se confirma 3 barras después.
-- **Rectas ajustadas por toques**: entre todos los pares de pivotes se elige la recta con más **toques** (pivotes a ≤ 0,35 ATR) que el precio respeta (los cierres no la cruzan y las mechas no la superan en más de 0,6 ATR), que pasa por uno de los dos últimos pivotes y no queda lejos del precio actual. Cada recta dibuja cuántos toques tiene.
-- **Clasificación por pendientes y convergencia**: triángulo simétrico/ascendente/descendente, cuña ascendente/descendente (≥ 5 toques) y rectángulo; duración ≤ 80 barras, base ≤ 16 % del precio y ≤ 9 ATR, el ancho al romper ≤ 70 % del inicial, con **ápice** y comprobación de que la ruptura llega antes de él.
-- **H-C-H** con cabeza ≥ 1,2 ATR más alta que ambos hombros, hombros simétricos en altura y en tiempo y tendencia previa; **dobles y triples** techos/suelos con extremos iguales (≤ 1,2 ATR), profundidad ≥ 2,5 ATR y caída previa; **banderas y banderines** con asta impulsiva (≥ 5 ATR, eficiencia ≥ 0,45), retroceso ≤ 50 % y duración ≤ 20 barras; **taza con asa** con la parábola ajustada a los mínimos y una prueba de redondez (una V pasa la mitad del tiempo bajo la mitad de su profundidad; una U, ~70 %); **directrices** con ≥ 3 toques.
-- **Calidad 0–100** por figura (toques, ajuste, simetría, duración, forma, ruptura, volumen). Por debajo de 35 no se considera figura; la web filtra por calidad (≥ 60 por defecto).
-
-**Qué se ve:**
-- **Entrada, stop y objetivo por patrón**, con las reglas clásicas: objetivo = medida de la figura proyectada (doble suelo: cuello + altura; triángulos: anchura de la base; banderas: el asta; taza: su profundidad…), **objetivo parcial T1 al 50 %**, stop estructural más allá de la figura (0,25 ATR de margen), **nunca a menos de 1 ATR** de la entrada (un stop pegado da relaciones de 48 a 1 y salta con el ruido) y, si el estructural queda a más de 3 ATR, un stop táctico de 1,5 ATR. Riesgo %, beneficio % y R:R; si el R:R es menor que 1 la tarjeta lo avisa.
-- **Figuras en formación**: una compresión (triángulo, cuña, rectángulo) que aún no ha roto se dibuja con sus dos rectas, los toques y el ápice, y con **los dos escenarios**: si rompe al alza (entrada = recta + 0,15 ATR, stop, T1 y objetivo) y si rompe a la baja. El Radar lista qué valores tienen figuras en formación.
-- Puntos numerados (los toques), **soporte de medida** (la altura de la figura que se proyecta), marco alrededor de las velas del patrón, soportes y resistencias con ≥ 2 toques, medias de 50/200 y volumen.
-- **Resultado simulado** de cada patrón pasado (entrada en la apertura siguiente, el stop gana los empates, 40 sesiones): objetivo, stop, tiempo agotado o aún abierto.
-- **Evidencia del estudio** junto a cada patrón: acierto, rendimiento medio y *exceso frente a entrar al azar* con su t, y la misma medida solo con las señales de calidad ≥ 75, para ver si dibujar mejor la figura la hace más fiable. Si el patrón rinde **menos** que el azar, el veredicto sale en rojo.
-- Filtros por familia, sentido, calidad y activos; pestañas *Activos*, *Histórico*, *Lectura* y *Radar*; zoom con rueda, arrastre, ◀ ▶ para recorrer los patrones, Mayús+◀▶ para cambiar de valor y descarga en PNG. Sin selección solo se dibujan completas las figuras activas, en formación o de calidad alta (el resto, como marcadores). Claro/oscuro automático.
-
-Los datos (`scanner/data/charts/<VALOR>.json`, 52 valores grandes por defecto) los regenera cada día `chartlab.yml` (o a mano con la lista que se quiera: `python scanner/chartlab.py --symbols AAPL,NVDA`). Las pruebas plantan cada figura (60+) y comprueban que salta en su barra y que las señales son causales, que las rectas tienen ≥ 2 toques por lado y contienen al precio, que las variantes `_hq` son un subconjunto, el stop mínimo de 1 ATR, T1, el objetivo clásico del doble suelo y la figura en formación con sus dos escenarios.
-
-## 🚀 Pelotazos (experimental)
-
-Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
-
-- En el histórico: **≈48 % de operaciones ganadoras, la mediana pierde** y la media positiva depende de que ≈1 de cada 4 operaciones supere +20 %.
-- **Las cifras están infladas**: sesgo de supervivencia (el universo son las empresas que existen hoy; las que quebraron no están), mercado alcista 2019–2026, y un benchmark aleatorio sobre la SMA200 con la misma salida ya da una media positiva. La web muestra la media con un descuento por quiebras (2/5/8 % de operaciones perdiendo −60 %), con costes dobles y el benchmark.
-- Arriesga muy poco por operación (≈0,25–0,5 % del capital hasta el stop). El seguimiento de los pelotazos se mide aparte y no contamina las estadísticas globales. Se pausa solo si los últimos 12 meses no son rentables. No se opera al cierre (solo se validó entrando a la apertura).
+RESULTADOS_PENDIENTES
 
 ## Estructura
 
 ```
-index.html                 web (lee scanner/data/*.json)
-scanner/
-  universe.py / .json      universo (S&P 500/400/600, Nasdaq-100, ETF, Europa, cripto, …)
-  data.py                  descarga Yahoo con reintentos, ajuste por dividendos, descarta la barra incompleta
-  feats.py                 indicadores causales, amplitud de mercado, perfil de volumen móvil
-  setups.py                patrones candidatos y filtros de operabilidad (liquidez, precio, ATR)
-  simulate.py              simulador vectorizado de operaciones (reglas honestas)
-  model.py                 modelo de probabilidad (NumPy, serializable a JSON)
-  research.py              construye la tabla de eventos y VALIDA → model/validated.json
-  lab.py                   laboratorio exploratorio (cómo se llegó al diseño)
-  emastudy.py              estudio de ideas con EMA 34/89/200 + RSI (research.py ema | ema2 | ema3)
-  midsig.py                señales de medio plazo (tendencia, rotación de ETF) → data/midterm.json
-  study.py / midterm.py    estudios ampliados (calibración, motivos, medio plazo); se lanzan con research.py reasons | reasons2 | midterm
-  charts.py / shapes.py    patrones chartistas: estudio (research.py charts) y motor geométrico de figuras (rectas por toques, calidad, formación)
-  chartlab.py              laboratorio visual: anotaciones, entrada/stop/objetivo → data/charts/*.json (charts.html)
-  scan.py                  robot diario → data/alerts.json, tracking.json, candles.json, …
-                           (--mode preclose: aviso previo al cierre → alerts_pre.json)
-  track.py / notify.py     seguimiento en vivo / avisos (Telegram, resumen en Actions)
-  model/validated.json     modelo y estadísticas validadas (se regenera cada domingo)
-tests/                     test_engine.py (causalidad, simulador, sin ventaja en datos aleatorios) · test_pipeline.py
-.github/workflows/         scan.yml (L–V 22:30 UTC) · scan_preclose.yml (L–V 15:20 ET) · revalidate.yml (domingos) · chartlab.yml (L–V 22:45 UTC) · research.yml (manual)
+index.html            la web (lee data/*.json)
+vp/
+  catalog.py          catálogo de patrones: nombre, descripción, regla del plan
+  ta.py               indicadores (ATR, medias, RSI…) con NumPy
+  candles.py          30 patrones de velas
+  breakouts.py        13 rupturas y compresiones
+  shapes.py           motor geométrico de figuras (swings, rectas por toques, calidad, formación)
+  engine.py           junta todo en eventos causales
+  plan.py             entrada, stop, objetivo, T1, obstáculos, resultado simulado
+  lab.py              analiza un valor → JSON para la web
+  study.py            estudio de evidencia
+  data.py, universe.py   descarga de Yahoo y universos
+data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json
+tests/test_vp.py      pruebas (sin red)
+.github/workflows/    scan.yml (L–V 22:45 UTC) · evidence.yml (domingos) · research.yml (manual)
 ```
 
-## Puesta en marcha
+## Uso
 
-1. Fusiona la rama en `main` (los *cron* de Actions solo corren desde la rama por defecto).
-2. En *Settings → Pages* publica `main` (carpeta raíz) para ver `index.html`; lee los datos de `raw.githubusercontent.com/.../main/scanner/data/`.
-3. **Alertas al móvil (opcional)**: crea un bot con @BotFather y añade los *secrets* `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en *Settings → Secrets and variables → Actions*. Sin ellos, el resumen de cada día aparece igualmente en la pestaña *Actions → Scan diario*.
-4. Lanzar a mano: *Actions → Scan diario → Run workflow*; el aviso previo al cierre: *Actions → Scan previo al cierre → Run workflow* (marca «force» para probarlo fuera de horario); revalidar: *Actions → Revalidación del modelo*.
+```bash
+pip install numpy pandas lxml
+python tests/test_vp.py                       # pruebas
+python -m vp lab                              # analiza la lista de seguimiento → data/
+python -m vp lab --symbols AAPL,NVDA          # solo esos valores
+python -m vp study                            # estudio de evidencia (tarda; mejor en Actions)
+python -m http.server                         # abrir http://localhost:8000
+```
 
-En local: `pip install numpy pandas` · `python tests/test_engine.py` · `python tests/test_pipeline.py` · `cd scanner && python scan.py` (o `python scan.py --mode preclose --force`).
-
-## Avisos
-
-Las probabilidades son estimaciones estadísticas, no garantías. Sesgo de supervivencia: el universo son los componentes actuales de los índices, lo que flatea los resultados históricos (la prueba real es el seguimiento en vivo). La ventaja puede desaparecer; el chequeo de salud y la revalidación semanal existen para detectarlo. No es asesoramiento financiero.
+Los precios vienen de Yahoo Finance (split aplicado, sin ajustar por dividendos para que los niveles coincidan con los del bróker); se descarta la barra de la sesión aún abierta.

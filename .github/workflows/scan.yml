@@ -1,9 +1,9 @@
-name: Scan diario
+name: Escaneo diario
 
-# Corre tras el cierre de Wall Street (16:00 ET = 20:00/21:00 UTC). GitHub usa UTC.
+# Tras el cierre de Wall Street (16:00 ET = 20:00/21:00 UTC) regenera los gráficos del laboratorio: data/charts, data/index.json y data/catalog.json.
 on:
   schedule:
-    - cron: '30 22 * * 1-5'
+    - cron: '45 22 * * 1-5'
   workflow_dispatch:
 
 permissions:
@@ -16,32 +16,27 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Dependencias
-        run: pip install numpy pandas
-      - name: Tests del motor
-        run: python tests/test_engine.py
+        run: pip install numpy
+      - name: Pruebas
+        run: python tests/test_vp.py
       - name: Escanear
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          cd scanner
-          python -u scan.py
+        run: python -u -m vp lab --out data
       - name: Guardar datos
         run: |
           git config user.name  "vp-scanner-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add scanner/data/*.json
+          git add data/charts data/index.json data/catalog.json
           if git diff --staged --quiet; then
             echo "Sin cambios."
           else
-            git commit -m "datos: scan $(date -u +%Y-%m-%d)"
+            git commit -m "datos: escaneo $(date -u +%Y-%m-%d)"
             git pull --rebase -q origin "${GITHUB_REF_NAME}" || true
             git push
           fi

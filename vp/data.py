@@ -1,0 +1,117 @@
+"""Descarga de precios diarios de Yahoo Finance (API de gráficos). Precios con split aplicado pero SIN ajustar por dividendos, para que los niveles coincidan con los del bróker."""
+from __future__ import annotations
+import json
+import os
+import random
+import time
+import urllib.error
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+
+URL = 'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range={rng}&interval=1d&includeAdjustedClose=false&events=div%2Csplit'
+UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+Bars = Dict[str, np.ndarray]
+
+
+def parse(payload: Dict) -> Optional[Bars]:
+    """Respuesta JSON de Yahoo → barras {t, o, h, l, c, v, name}. Descarta las filas incompletas. None si no hay datos."""
+    try:
+        res = payload['chart']['result'][0]
+        ts = res['timestamp']
+        q = res['indicators']['quote'][0]
+        cols = [q['open'], q['high'], q['low'], q['close'], q['volume']]
+    except (KeyError, IndexError, TypeError):
+        return None
+    arr = np.array([[np.nan if x is None else x for x in col] for col in cols], dtype=np.float64)
+    t = np.array(ts, dtype=np.int64)
+    ok = np.isfinite(arr).all(axis=0) & (arr[3] > 0) & (arr[1] >= arr[2])
+    if ok.sum() < 5:
+        return None
+    t, arr = t[ok], arr[:, ok]
+    order = np.argsort(t)
+    t, arr = t[order], arr[:, order]
+    keep = np.concatenate([[True], np.diff(t) > 0])                    # sin marcas repetidas
+    meta = res.get('meta', {})
+    b: Bars = {'t': t[keep], 'o': arr[0][keep], 'h': arr[1][keep], 'l': arr[2][keep], 'c': arr[3][keep], 'v': arr[4][keep]}
+    b['name'] = meta.get('longName') or meta.get('shortName') or ''        # type: ignore[assignment]
+    return b
+
+
+def drop_open_bar(b: Bars, now: Optional[datetime] = None) -> Bars:
+    """Quita la última barra si es la de hoy y la bolsa de Nueva York aún no ha cerrado (una barra incompleta falsearía las señales)."""
+    from zoneinfo import ZoneInfo
+    ny = ZoneInfo('America/New_York')
+    now = (now or datetime.now(timezone.utc)).astimezone(ny)
+    last = datetime.fromtimestamp(int(b['t'][-1]), timezone.utc).astimezone(ny)
+    if last.date() == now.date() and (now.hour, now.minute) < (16, 20) and len(b['c']) > 1:
+        return {k: (v[:-1] if isinstance(v, np.ndarray) else v) for k, v in b.items()}
+    return b
+
+
+def fetch_one(sym: str, rng: str = '3y', tries: int = 4, timeout: int = 25) -> Optional[Bars]:
+    url = URL.format(sym=sym.replace('.', '-'), rng=rng)
+    for k in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                b = parse(json.loads(r.read().decode('utf-8')))
+            return drop_open_bar(b) if b is not None else None
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            time.sleep(1.5 * 2 ** k + random.random())                 # 429 y 5xx: esperar y reintentar
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ConnectionError):
+            time.sleep(1.0 * 2 ** k + random.random())
+    return None
+
+
+def _cache_path(cache_dir: str, sym: str, rng: str) -> str:
+    return os.path.join(cache_dir, f'{sym}_{rng}.npz')
+
+
+def _load_cache(path: str, max_age_h: float) -> Optional[Bars]:
+    try:
+        if time.time() - os.path.getmtime(path) > max_age_h * 3600:
+            return None
+        z = np.load(path, allow_pickle=False)
+        b: Bars = {k: z[k] for k in ('t', 'o', 'h', 'l', 'c', 'v')}
+        b['name'] = str(z['name']) if 'name' in z else ''              # type: ignore[assignment]
+        return b
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+def fetch_many(symbols: List[str], rng: str = '3y', workers: int = 6, cache_dir: Optional[str] = None, max_age_h: float = 6.0, verbose: bool = False) -> Tuple[Dict[str, Bars], List[str]]:
+    """Descarga en paralelo (con caché en disco opcional). Devuelve (barras por valor, valores fallidos)."""
+    out: Dict[str, Bars] = {}
+    todo: List[str] = []
+    for s in symbols:
+        b = _load_cache(_cache_path(cache_dir, s, rng), max_age_h) if cache_dir else None
+        if b is not None:
+            out[s] = b
+        else:
+            todo.append(s)
+    if verbose:
+        print(f'  datos: {len(out)} en caché, {len(todo)} por descargar ({rng})', flush=True)
+
+    def one(s: str) -> Tuple[str, Optional[Bars]]:
+        time.sleep(random.random() * 0.3)
+        return s, fetch_one(s, rng)
+
+    failed: List[str] = []
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for s, b in ex.map(one, todo):
+            if b is None:
+                failed.append(s)
+                continue
+            out[s] = b
+            if cache_dir:
+                os.makedirs(cache_dir, exist_ok=True)
+                np.savez_compressed(_cache_path(cache_dir, s, rng), **{k: v for k, v in b.items() if k != 'name'}, name=np.array(b.get('name', '')))
+    if verbose:
+        print(f'  datos: OK {len(out)} · fallidos {len(failed)}' + (f' ({" ".join(failed[:20])})' if failed else ''), flush=True)
+    return out, failed
