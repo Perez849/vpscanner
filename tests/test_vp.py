@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, data, engine, lab, plan, shapes, study, ta
+from vp import breakouts, candles, data, engine, lab, shapes, study, ta
 from vp.catalog import CATALOG
 
 
@@ -279,6 +279,7 @@ def test_data_parse():
     b = data.parse({'chart': {'result': [{'meta': {'longName': 'Prueba SA'}, 'timestamp': ts, 'indicators': {'quote': [q]}}], 'error': None}})
     assert len(b['c']) == 11 and b['name'] == 'Prueba SA' and np.all(np.diff(b['t']) > 0)
     assert data.parse({'chart': {'result': None, 'error': {'code': 'Not Found'}}}) is None
+    assert data.span('3y', 1.7e9).startswith('period1=') and data.span('6mo') == 'range=6mo'
     last = int(datetime(2023, 11, 15, 14, 30, tzinfo=timezone.utc).timestamp())
     b2 = {'t': np.array([last - 86400, last]), 'o': np.ones(2), 'h': np.ones(2), 'l': np.ones(2), 'c': np.ones(2), 'v': np.ones(2), 'name': 'x'}
     assert len(data.drop_open_bar(b2, datetime(2023, 11, 15, 17, 0, tzinfo=timezone.utc))['c']) == 1      # 12:00 en Nueva York: la sesión sigue abierta

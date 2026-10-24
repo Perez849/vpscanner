@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-URL = 'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range={rng}&interval=1d&includeAdjustedClose=false&events=div%2Csplit'
+URL = 'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?{span}&interval=1d&includeAdjustedClose=false&events=div%2Csplit'
 UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 Bars = Dict[str, np.ndarray]
 
@@ -52,8 +52,16 @@ def drop_open_bar(b: Bars, now: Optional[datetime] = None) -> Bars:
     return b
 
 
+def span(rng: str, now: Optional[float] = None) -> str:
+    """'3y' → fechas explícitas (con `range=10y` Yahoo puede devolver barras que no son diarias); otro valor ('6mo', '2y'…) se pasa tal cual."""
+    if rng.endswith('y') and rng[:-1].isdigit():
+        now = time.time() if now is None else now
+        return f'period1={int(now - (int(rng[:-1]) * 365.25 + 6) * 86400)}&period2={int(now) + 86400}'
+    return f'range={rng}'
+
+
 def fetch_one(sym: str, rng: str = '3y', tries: int = 4, timeout: int = 25) -> Optional[Bars]:
-    url = URL.format(sym=sym.replace('.', '-'), rng=rng)
+    url = URL.format(sym=sym.replace('.', '-'), span=span(rng))
     for k in range(tries):
         try:
             req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
