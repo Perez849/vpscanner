@@ -12,9 +12,10 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-URL = 'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?{span}&interval=1d&includeAdjustedClose=false&events=div%2Csplit'
+URL = 'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?{span}&interval=1d&includeAdjustedClose=true&events=div%7Csplit'
 UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 Bars = Dict[str, np.ndarray]
+ERRORS: Dict[str, str] = {}          # último motivo de fallo por valor (para el diagnóstico)
 
 
 def parse(payload: Dict) -> Optional[Bars]:
@@ -69,10 +70,12 @@ def fetch_one(sym: str, rng: str = '3y', tries: int = 4, timeout: int = 25) -> O
                 b = parse(json.loads(r.read().decode('utf-8')))
             return drop_open_bar(b) if b is not None else None
         except urllib.error.HTTPError as e:
-            if e.code == 404:
+            ERRORS[sym] = f'HTTP {e.code}'
+            if e.code != 429 and e.code < 500:                          # 404, 400…: reintentar no sirve de nada
                 return None
             time.sleep(1.5 * 2 ** k + random.random())                 # 429 y 5xx: esperar y reintentar
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ConnectionError):
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ConnectionError) as e:
+            ERRORS[sym] = type(e).__name__
             time.sleep(1.0 * 2 ** k + random.random())
     return None
 
@@ -122,4 +125,6 @@ def fetch_many(symbols: List[str], rng: str = '3y', workers: int = 6, cache_dir:
                 np.savez_compressed(_cache_path(cache_dir, s, rng), **{k: v for k, v in b.items() if k != 'name'}, name=np.array(b.get('name', '')))
     if verbose:
         print(f'  datos: OK {len(out)} · fallidos {len(failed)}' + (f' ({" ".join(failed[:20])})' if failed else ''), flush=True)
+        if failed:
+            print('  motivos: ' + ' · '.join(f'{s}: {ERRORS.get(s, "sin datos")}' for s in failed[:5]), flush=True)
     return out, failed
