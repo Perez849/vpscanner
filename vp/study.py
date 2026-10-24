@@ -34,6 +34,12 @@ def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
     """Por valor: retornos futuros por horizonte, dinero negociado y los índices de barra de cada patrón (y de su variante de calidad alta)."""
     sym, b = args
     F = ta.prepare(b)
+    events, _ = engine.scan(F)
+    return sym, work_from(F, events)
+
+
+def work_from(F: Dict[str, np.ndarray], events: List[Dict]) -> Dict:
+    """Lo mismo que _work pero con los indicadores y los eventos ya calculados (el estudio del plan reutiliza el escaneo)."""
     n = len(F['c'])
     o, c = F['o'], F['c']
     entry = np.full(n, np.nan)
@@ -48,7 +54,6 @@ def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
     if n >= MEM_WINDOW:
         cs = np.cumsum(np.insert(c * F['v'], 0, 0.0))
         dv[MEM_WINDOW - 1:] = (cs[MEM_WINDOW:] - cs[:-MEM_WINDOW]) / MEM_WINDOW
-    events, _ = engine.scan(F)
     idx: Dict[str, List[int]] = {}
     for e in events:
         if e['i'] < 60:
@@ -56,7 +61,7 @@ def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
         idx.setdefault(e['name'], []).append(e['i'])
         if e['q'] is not None and e['q'] >= HQ:
             idx.setdefault(e['name'] + ':hq', []).append(e['i'])
-    return sym, {'t': (F['t'] // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
+    return {'t': (F['t'] // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
 
 
 class Panel:

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, data, engine, lab, shapes, study, ta, universe
+from vp import breakouts, candles, data, engine, lab, planstudy, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -469,8 +469,39 @@ def test_study_no_edge_on_random_walk():
     print(f'ok · estudio: en 24 paseos aleatorios {len(ev["meta"]["tested"]["K24"]["above"])} de {ev["meta"]["tested"]["K24"]["n"]} patrones superan el umbral del mejor de N')
 
 
+def test_plan_study():
+    """El simulador del estudio del plan coincide con plan.outcome y, sobre paseos aleatorios, el plan no «bate» al azar con las mismas distancias."""
+    from vp import plan as P_
+    rng = np.random.default_rng(1)
+    tot = 0
+    for seed in range(3):
+        b = walk(900, seed=seed)
+        F = ta.prepare(b)
+        o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
+        for _ in range(120):
+            i, d = int(rng.integers(60, 800)), int(rng.choice([-1, 1]))
+            a = float(atr[i])
+            stop, tgt = c[i] - d * rng.uniform(0.6, 6) * a, c[i] + d * rng.uniform(0.6, 8) * a
+            s1, r = planstudy.sim(o, h, l, c, i, d, stop, tgt), P_.outcome(F, i, d, stop, tgt)
+            if s1 is None:
+                assert r['res'] in ('na', 'open'), r
+                continue
+            tot += 1
+            assert {'target': 0, 'stop': 1, 'timeout': 2}[r['res']] == s1[0] and abs(s1[1] - r['ret']) < 1e-2, (s1, r)
+    bars = {f'S{j}': walk(1500, seed=700 + j, t0=1500000000) for j in range(24)}
+    ev = planstudy.analyze_plan(bars, ks=(24,), workers=1)
+    assert set(ev['pooled']) == set(planstudy.VARIANTS) and ev['meta']['universe'] == 24
+    for v in planstudy.VARIANTS:
+        s = ev['pooled'][v]['K24']['todos']
+        assert s['n'] > 1500 and abs(s['ex']) < 0.6 and abs(s['t']) < 6, (v, s)           # sin ventaja posible: el exceso queda cerca de 0
+        assert 0 < s['tgt'] < 100 and abs(s['tgt'] + s['stp'] + s['tmo'] - 100) < 1e-6
+    txt = planstudy.report(ev)
+    assert 'PLAN:' in txt and 'FIJO' in txt
+    print(f'ok · estudio del plan: simulador idéntico a plan.outcome ({tot} casos) y sin ventaja sobre paseos aleatorios')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study]
 
 if __name__ == '__main__':
     for fn in ALL:
