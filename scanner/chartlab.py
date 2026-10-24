@@ -21,8 +21,9 @@ import pandas as pd
 
 import charts as CH
 import feats
+from shapes import at
 
-NB = 320            # barras exportadas
+NB = 340            # barras exportadas
 WARM = 260          # barras previas que solo sirven para las medias
 HOLD = 40           # sesiones máximas para el resultado simulado
 ACTIVE = 12         # un patrón es «activo» si se completó en las últimas 12 sesiones y aún no resolvió
@@ -39,7 +40,7 @@ EXTRA: Dict[str, Tuple[int, str, str]] = {
     'three_inside_dn': (-1, 'velas', 'tres velas interiores bajistas'),
 }
 # Los que se calculan pero no se dibujan por ser ruido (muchísimas señales sin forma): se dejan fuera de la salida
-SKIP = {'nr7_up', 'nr7_dn', 'inside_up', 'inside_dn', 'donch20_up', 'donch20_dn'}
+SKIP = {'nr7_up', 'nr7_dn', 'inside_up', 'inside_dn', 'donch20_up', 'donch20_dn'}      # las variantes «_hq» (calidad alta) solo existen para el estudio: se saltan abajo
 
 LABEL = {
     'hammer': 'Martillo', 'inv_hammer': 'Martillo invertido', 'shooting_star': 'Estrella fugaz', 'hanging_man': 'Hombre colgado', 'bull_engulf': 'Envolvente alcista',
@@ -53,7 +54,8 @@ LABEL = {
     'box_up': 'Caja (Darvas) ↑', 'box_dn': 'Caja (Darvas) ↓', 'base_near_high': 'Base junto a máximos',
     'double_bottom': 'Doble suelo', 'double_top': 'Doble techo', 'hs_top': 'Hombro-cabeza-hombro', 'hs_inverse': 'H-C-H invertido', 'asc_triangle': 'Triángulo ascendente',
     'desc_triangle': 'Triángulo descendente', 'sym_tri_up': 'Triángulo simétrico ↑', 'sym_tri_dn': 'Triángulo simétrico ↓', 'rising_wedge': 'Cuña ascendente', 'falling_wedge': 'Cuña descendente',
-    'trendline_up': 'Ruptura directriz bajista', 'trendline_dn': 'Ruptura directriz alcista', 'support_bounce': 'Rebote en soporte', 'resistance_reject': 'Rechazo en resistencia',
+    'trendline_up': 'Ruptura de directriz bajista', 'trendline_dn': 'Ruptura de directriz alcista', 'support_bounce': 'Rebote en soporte', 'resistance_reject': 'Rechazo en resistencia',
+    'triple_bottom': 'Triple suelo', 'triple_top': 'Triple techo', 'rect_up': 'Rectángulo ↑', 'rect_dn': 'Rectángulo ↓',
     'vcp': 'VCP (contracción)', 'cup_handle': 'Taza con asa', 'diamond_bull': 'Diamante de suelo', 'diamond_bear': 'Diamante de techo', 'bull_flag': 'Bandera alcista',
     'bear_flag': 'Bandera bajista', 'bull_pennant': 'Banderín alcista', 'bear_pennant': 'Banderín bajista', 'island_bull': 'Isla de suelo', 'island_bear': 'Isla de techo',
 }
@@ -169,51 +171,42 @@ def _generic(entry: float, a: float, d: int, risk: float, rmult: float = 2.0) ->
     return entry - d * risk, entry + d * rmult * risk
 
 
-def levels(name: str, g: Dict, F: Dict[str, np.ndarray], i: int, d: int) -> Tuple[float, float, str]:
-    """(stop, objetivo, nota) con la regla clásica de cada patrón."""
+def levels(name: str, g: Dict, F: Dict[str, np.ndarray], i: int, d: int, entry: Optional[float] = None) -> Tuple[float, float, str]:
+    """(stop, objetivo, nota) con la regla clásica de cada patrón. `entry` permite calcularlo para una ruptura futura (figuras en formación)."""
     o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
     a = float(atr[i])
-    entry = float(c[i])
-    if name == 'double_bottom':
-        low = min(g['p1'][1], g['p2'][1])
-        return low - 0.25 * a, g['neck'] + (g['neck'] - low), 'Objetivo = altura del patrón (cuello − mínimos) proyectada sobre el cuello. Stop 0,25 ATR bajo el mínimo más bajo.'
-    if name == 'double_top':
-        hi = max(g['p1'][1], g['p2'][1])
-        return hi + 0.25 * a, g['neck'] - (hi - g['neck']), 'Objetivo = altura del patrón (máximos − cuello) proyectada bajo el cuello. Stop 0,25 ATR sobre el máximo más alto.'
+    entry = float(c[i]) if entry is None else float(entry)
+    if name in ('double_bottom', 'triple_bottom'):
+        low = min(p[1] for p in g['pts'])
+        return low - 0.25 * a, g['neck'] + g['hgt'], 'Objetivo = altura de la figura (cuello − mínimos) proyectada sobre el cuello. Stop 0,25 ATR bajo el mínimo más bajo.'
+    if name in ('double_top', 'triple_top'):
+        hi = max(p[1] for p in g['pts'])
+        return hi + 0.25 * a, g['neck'] - g['hgt'], 'Objetivo = altura de la figura (máximos − cuello) proyectada bajo el cuello. Stop 0,25 ATR sobre el máximo más alto.'
     if name == 'hs_top':
-        return g['rs'][1] + 0.25 * a, g['neck'] - (g['hd'][1] - g['neck']), 'Objetivo = distancia cabeza–cuello proyectada bajo el cuello. Stop sobre el hombro derecho.'
+        return g['rs'][1] + 0.25 * a, g['neck'] - g['hgt'], 'Objetivo = distancia cabeza–línea de cuello proyectada bajo la ruptura. Stop sobre el hombro derecho.'
     if name == 'hs_inverse':
-        return g['rs'][1] - 0.25 * a, g['neck'] + (g['neck'] - g['hd'][1]), 'Objetivo = distancia cabeza–cuello proyectada sobre el cuello. Stop bajo el hombro derecho.'
-    if name == 'asc_triangle':
-        q1, q2 = g['q1'], g['q2']
-        sl = (q2[1] - q1[1]) / (q2[0] - q1[0])
-        x0 = g['highs'][0][0]
-        height = g['top'] - (q2[1] + sl * (x0 - q2[0]))
-        return q2[1] - 0.25 * a, g['top'] + max(height, 0.5 * a), 'Objetivo = altura de la base del triángulo (en su inicio) proyectada sobre la resistencia. Stop bajo el último mínimo ascendente.'
-    if name == 'desc_triangle':
-        p1, p2 = g['p1'], g['p2']
-        sl = (p2[1] - p1[1]) / (p2[0] - p1[0])
-        x0 = g['lows'][0][0]
-        height = (p2[1] + sl * (x0 - p2[0])) - g['bot']
-        return p2[1] + 0.25 * a, g['bot'] - max(height, 0.5 * a), 'Objetivo = altura de la base del triángulo proyectada bajo el soporte. Stop sobre el último máximo descendente.'
-    if name in ('sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge'):
-        p1, p2, q1, q2 = g['p1'], g['p2'], g['q1'], g['q2']
-        up = lambda x: p2[1] + (p2[1] - p1[1]) / (p2[0] - p1[0]) * (x - p2[0])
-        lo = lambda x: q2[1] + (q2[1] - q1[1]) / (q2[0] - q1[0]) * (x - q2[0])
-        x0 = min(p1[0], q1[0])
-        height = max(up(x0) - lo(x0), 0.5 * a)
-        if name == 'sym_tri_up':
-            return q2[1] - 0.25 * a, entry + height, 'Objetivo = anchura del triángulo en su inicio proyectada desde la ruptura. Stop bajo el último mínimo.'
-        if name == 'sym_tri_dn':
-            return p2[1] + 0.25 * a, entry - height, 'Objetivo = anchura del triángulo en su inicio proyectada desde la ruptura. Stop sobre el último máximo.'
+        return g['rs'][1] - 0.25 * a, g['neck'] + g['hgt'], 'Objetivo = distancia cabeza–línea de cuello proyectada sobre la ruptura. Stop bajo el hombro derecho.'
+    if name in ('asc_triangle', 'desc_triangle', 'sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge', 'rect_up', 'rect_dn'):
+        U, D, x0 = g['U'], g['D'], g['x0']
+        w0 = max(at(U, x0) - at(D, x0), 0.5 * a)                      # anchura de la figura en su inicio: la medida clásica
+        lastlo = min(at(D, i), g['tl'][-1][1]) if g.get('tl') else at(D, i)
+        lasthi = max(at(U, i), g['tu'][-1][1]) if g.get('tu') else at(U, i)
+        if name in ('asc_triangle', 'sym_tri_up', 'rect_up'):
+            txt = {'asc_triangle': 'Objetivo = altura de la base (en el inicio) proyectada sobre la resistencia.', 'sym_tri_up': 'Objetivo = anchura del triángulo en su inicio proyectada desde la ruptura.',
+                   'rect_up': 'Objetivo = altura del rectángulo proyectada desde la ruptura.'}[name]
+            return lastlo - 0.25 * a, entry + w0, txt + ' Stop bajo el último mínimo / la base.'
+        if name in ('desc_triangle', 'sym_tri_dn', 'rect_dn'):
+            txt = {'desc_triangle': 'Objetivo = altura de la base (en el inicio) proyectada bajo el soporte.', 'sym_tri_dn': 'Objetivo = anchura del triángulo en su inicio proyectada desde la ruptura.',
+                   'rect_dn': 'Objetivo = altura del rectángulo proyectada desde la ruptura.'}[name]
+            return lasthi + 0.25 * a, entry - w0, txt + ' Stop sobre el último máximo / el techo.'
         if name == 'falling_wedge':
-            tgt = p1[1] if p1[1] > entry + 0.5 * a else entry + height
-            return q2[1] - 0.25 * a, tgt, 'Objetivo = inicio de la cuña (máximo de partida). Stop bajo el último mínimo de la cuña.'
-        tgt = q1[1] if q1[1] < entry - 0.5 * a else entry - height
-        return p2[1] + 0.25 * a, tgt, 'Objetivo = inicio de la cuña (mínimo de partida). Stop sobre el último máximo de la cuña.'
+            start = at(U, x0)
+            return lastlo - 0.25 * a, (start if start > entry + 0.5 * a else entry + w0), 'Objetivo = inicio de la cuña (la recta superior en su arranque). Stop bajo el último mínimo de la cuña.'
+        start = at(D, x0)
+        return lasthi + 0.25 * a, (start if start < entry - 0.5 * a else entry - w0), 'Objetivo = inicio de la cuña (la recta inferior en su arranque). Stop sobre el último máximo de la cuña.'
     if name == 'cup_handle':
-        depth = g['left'][1] - g['bottom'][1]
-        return g['handle'][1] - 0.25 * a, g['right'][1] + depth, 'Objetivo = profundidad de la taza proyectada sobre el borde derecho. Stop bajo el mínimo del asa.'
+        rim = max(g['left'][1], g['right'][1])
+        return g['handle'][1] - 0.25 * a, rim + (rim - g['bottom'][1]), 'Objetivo = profundidad de la taza proyectada sobre el borde. Stop bajo el mínimo del asa.'
     if name == 'vcp':
         stop = g['lows'][-1][1] - 0.25 * a
         return stop, entry + 2.0 * max(entry - stop, 0.6 * a), 'Objetivo genérico de 2R. Stop bajo el mínimo de la última contracción.'
@@ -270,9 +263,13 @@ def geometry(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
     pts: List[List] = []
     polys: List[Dict] = []
     zones: List[Dict] = []
+    ann: List[Dict] = []
 
-    def ln(a, b, k='trend', dash=False):
-        lines.append({'a': [int(a[0]), _r(a[1])], 'b': [int(b[0]), _r(b[1])], 'k': k, 'dash': dash})
+    def ln(a, b, k='trend', dash=False, n=None):
+        d_ = {'a': [int(a[0]), _r(a[1])], 'b': [int(b[0]), _r(b[1])], 'k': k, 'dash': dash}
+        if n:
+            d_['n'] = int(n)
+        lines.append(d_)
 
     def pt(p, tag=''):
         pts.append([int(p[0]), _r(p[1]), tag])
@@ -280,47 +277,48 @@ def geometry(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
     def ext(p1, p2, x):
         return p2[1] + (p2[1] - p1[1]) / (p2[0] - p1[0]) * (x - p2[0])
 
-    if name in ('double_bottom', 'double_top'):
-        p1, p2, m = g['p1'], g['p2'], g['mid']
-        polys.append({'pts': [[p1[0], _r(p1[1])], [m[0], _r(m[1])], [p2[0], _r(p2[1])]], 'k': 'zig'})
-        pt(p1, '1'); pt(p2, '2'); pt(m, '')
-        ln((p1[0], g['neck']), (i, g['neck']), 'neck', True)
+    if name in ('double_bottom', 'double_top', 'triple_bottom', 'triple_top'):
+        P, M = g['pts'], g['mids']
+        seq = []
+        for k, p in enumerate(P):
+            seq.append(p)
+            if k < len(M):
+                seq.append(M[k])
+        polys.append({'pts': [[int(x), _r(y)] for x, y in seq], 'k': 'zig'})
+        for k, p in enumerate(P):
+            pt(p, str(k + 1))
+        for m in M:
+            pt(m, '')
+        ln((P[0][0], g['neck']), (i, g['neck']), 'neck', True)
+        ext_ = min(P, key=lambda q: q[1]) if name.endswith('bottom') else max(P, key=lambda q: q[1])
+        ann.append({'k': 'height', 'x': int(P[-1][0]), 'y0': _r(g['neck']), 'y1': _r(ext_[1]), 't': 'altura'})
     elif name in ('hs_top', 'hs_inverse'):
         pts_ = [g['ls'], g['t1'], g['hd'], g['t2'], g['rs']]
-        polys.append({'pts': [[p[0], _r(p[1])] for p in pts_], 'k': 'zig'})
-        for p, t in zip(pts_, ['HI', '', 'C', '', 'HD']):
+        polys.append({'pts': [[int(p[0]), _r(p[1])] for p in pts_], 'k': 'zig'})
+        for p, t in zip(pts_, ['Hombro', '', 'Cabeza', '', 'Hombro']):
             pt(p, t)
         ln(g['t1'], (i, ext(g['t1'], g['t2'], i)), 'neck', True)
-    elif name == 'asc_triangle':
-        hs = g['highs']
-        q1, q2 = g['q1'], g['q2']
-        ln((hs[0][0], g['top']), (i, g['top']), 'upper')
-        ln((q1[0], q1[1]), (i, ext(q1, q2, i)), 'lower')
-        polys.append({'pts': [[hs[0][0], _r(g['top'])], [i, _r(g['top'])], [i, _r(ext(q1, q2, i))], [q1[0], _r(q1[1])]], 'k': 'fill'})
-        for p in hs:
+        ann.append({'k': 'height', 'x': int(g['hd'][0]), 'y0': _r(ext(g['t1'], g['t2'], g['hd'][0])), 'y1': _r(g['hd'][1]), 't': 'altura'})
+    elif name in ('asc_triangle', 'desc_triangle', 'sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge', 'rect_up', 'rect_dn') or name.startswith('forming_'):
+        U, D, x0 = g['U'], g['D'], g['x0']
+        ln((x0, at(U, x0)), (i, at(U, i)), 'upper', False, len(g['tu']))
+        ln((x0, at(D, x0)), (i, at(D, i)), 'lower', False, len(g['tl']))
+        polys.append({'pts': [[int(x0), _r(at(U, x0))], [int(i), _r(at(U, i))], [int(i), _r(at(D, i))], [int(x0), _r(at(D, x0))]], 'k': 'fill'})
+        for p in g['tu']:
             pt(p, '')
-        pt(q1, ''); pt(q2, '')
-    elif name == 'desc_triangle':
-        ls = g['lows']
-        p1, p2 = g['p1'], g['p2']
-        ln((ls[0][0], g['bot']), (i, g['bot']), 'lower')
-        ln((p1[0], p1[1]), (i, ext(p1, p2, i)), 'upper')
-        polys.append({'pts': [[ls[0][0], _r(g['bot'])], [i, _r(g['bot'])], [i, _r(ext(p1, p2, i))], [p1[0], _r(p1[1])]], 'k': 'fill'})
-        for p in ls:
+        for p in g['tl']:
             pt(p, '')
-        pt(p1, ''); pt(p2, '')
-    elif name in ('sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge'):
-        p1, p2, q1, q2 = g['p1'], g['p2'], g['q1'], g['q2']
-        x0 = min(p1[0], q1[0])
-        ln((x0, ext(p1, p2, x0)), (i, ext(p1, p2, i)), 'upper')
-        ln((x0, ext(q1, q2, x0)), (i, ext(q1, q2, i)), 'lower')
-        polys.append({'pts': [[x0, _r(ext(p1, p2, x0))], [i, _r(ext(p1, p2, i))], [i, _r(ext(q1, q2, i))], [x0, _r(ext(q1, q2, x0))]], 'k': 'fill'})
-        for p in (p1, p2, q1, q2):
-            pt(p, '')
+        ap = g.get('apex')
+        if ap is not None and i < ap <= i + 45:
+            ln((i, at(U, i)), (ap, at(U, ap)), 'ext', True)
+            ln((i, at(D, i)), (ap, at(D, ap)), 'ext', True)
+            pt((ap, at(U, ap)), 'ápice')
+        ann.append({'k': 'height', 'x': int(x0), 'y0': _r(at(U, x0)), 'y1': _r(at(D, x0)), 't': 'base'})
     elif name in ('trendline_up', 'trendline_dn'):
-        p1, p2 = g['p1'], g['p2']
-        ln((p1[0], p1[1]), (i, ext(p1, p2, i)), 'trend')
-        pt(p1, ''); pt(p2, '')
+        L, tch = g['L'], g['tch']
+        ln((tch[0][0], at(L, tch[0][0])), (i, at(L, i)), 'trend', False, len(tch))
+        for k, p in enumerate(tch):
+            pt(p, str(k + 1))
     elif name in ('support_bounce', 'resistance_reject'):
         t0 = g['touches'][0][0]
         ln((t0, g['level']), (i, g['level']), 'level')
@@ -339,10 +337,12 @@ def geometry(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
         xs = np.arange(g['W'])
         ys = np.polyval(cf, xs)
         step = max(g['W'] // 28, 1)
-        polys.append({'pts': [[int(g['w0'] + x), _r(y)] for x, y in zip(xs[::step], ys[::step])], 'k': 'curve'})
-        ln((g['left'][0], g['right'][1]), (i, g['right'][1]), 'neck', True)
-        zones.append({'i0': g['handle'][0] - 6, 'i1': i, 'lo': _r(g['handle'][1]), 'hi': _r(g['right'][1]), 'k': 'box'})
-        pt(g['left'], 'BI'); pt(g['bottom'], ''); pt(g['right'], 'BD'); pt(g['handle'], 'asa')
+        polys.append({'pts': [[int(g['w0'] + x), _r(y)] for x, y in zip(xs[::step], ys[::step])] + [[int(g['w0'] + xs[-1]), _r(ys[-1])]], 'k': 'curve'})
+        rim = max(g['left'][1], g['right'][1])
+        ln((g['left'][0], rim), (i, rim), 'neck', True)
+        zones.append({'i0': g['right'][0], 'i1': i, 'lo': _r(g['handle'][1]), 'hi': _r(g['right'][1]), 'k': 'box'})
+        pt(g['left'], 'Borde'); pt(g['bottom'], 'Fondo'); pt(g['right'], 'Borde'); pt(g['handle'], 'Asa')
+        ann.append({'k': 'height', 'x': int(g['bottom'][0]), 'y0': _r(rim), 'y1': _r(g['bottom'][1]), 't': 'profundidad'})
     elif name in ('diamond_bull', 'diamond_bear'):
         hi_, lo_ = g['hi'], g['lo']
         poly = [[p[0], _r(p[1])] for p in hi_] + [[p[0], _r(p[1])] for p in lo_[::-1]]
@@ -358,10 +358,16 @@ def geometry(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
         if len(xs) >= 3:
             uh = np.polyfit(xs, seg_h, 1)
             ul = np.polyfit(xs, seg_l, 1)
+            if not g.get('pen'):                                       # bandera: canal paralelo que contiene toda la consolidación
+                sl_ = float(np.polyfit(xs, c[z0:i], 1)[0])
+                up_b = float((seg_h - sl_ * xs).max())
+                lo_b = float((seg_l - sl_ * xs).min())
+                uh, ul = np.array([sl_, up_b]), np.array([sl_, lo_b])
             ln((z0, np.polyval(uh, z0)), (i - 1, np.polyval(uh, i - 1)), 'upper')
             ln((z0, np.polyval(ul, z0)), (i - 1, np.polyval(ul, i - 1)), 'lower')
             polys.append({'pts': [[z0, _r(np.polyval(uh, z0))], [i - 1, _r(np.polyval(uh, i - 1))], [i - 1, _r(np.polyval(ul, i - 1))], [z0, _r(np.polyval(ul, z0))]], 'k': 'fill'})
-        pt(ps, ''); pt(pe, '')
+        pt(ps, 'Asta'); pt(pe, '')
+        ann.append({'k': 'label', 'x': int((ps[0] + pe[0]) / 2), 'y': _r((ps[1] + pe[1]) / 2), 't': f'asta {abs(pe[1] - ps[1]):.2f} · {abs(pe[1] / ps[1] - 1) * 100:.1f} %'})
     elif name in ('island_bull', 'island_bear'):
         zones.append({'i0': g['a'] - 1, 'i1': i, 'lo': _r(g['lo']), 'hi': _r(g['hi']), 'k': 'box'})
         ln((g['a'] - 1, g['gap_from']), (i, g['gap_from']), 'level', True)
@@ -373,7 +379,7 @@ def geometry(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
             ln((max(i - 60, 0), g['hi52']), (i, g['hi52']), 'level', True)
     elif name.startswith(('bb_squeeze', 'atr_squeeze')):
         zones.append({'i0': i - 20, 'i1': i - 1, 'lo': _r(g['lo']), 'hi': _r(g['hi']), 'k': 'box'})
-    return {'pts': pts, 'lines': lines, 'polys': polys, 'zones': zones}
+    return {'pts': pts, 'lines': lines, 'polys': polys, 'zones': zones, 'ann': ann}
 
 
 def vector_geom(name: str, F: Dict[str, np.ndarray], i: int) -> Dict:
@@ -393,6 +399,34 @@ def vector_geom(name: str, F: Dict[str, np.ndarray], i: int) -> Dict:
 
 
 # ── análisis de un valor ──────────────────────────────────────────────────
+MIN_STOP = 1.0       # el stop nunca queda a menos de 1 ATR de la entrada (un stop pegado da R:R absurdos y salta con el ruido)
+FAR_STOP = 3.0       # por encima de 3 ATR el estructural se considera lejano: se ofrece además un stop táctico de 1,5 ATR
+
+FORM_LABEL = {'sym_tri': 'Triángulo simétrico', 'asc_triangle': 'Triángulo ascendente', 'desc_triangle': 'Triángulo descendente', 'rising_wedge': 'Cuña ascendente',
+              'falling_wedge': 'Cuña descendente', 'rect': 'Rectángulo'}
+FORM_UP = {'sym_tri': 'sym_tri_up', 'asc_triangle': 'asc_triangle', 'falling_wedge': 'falling_wedge', 'rect': 'rect_up', 'desc_triangle': 'sym_tri_up', 'rising_wedge': 'sym_tri_up'}
+FORM_DN = {'sym_tri': 'sym_tri_dn', 'desc_triangle': 'desc_triangle', 'rising_wedge': 'rising_wedge', 'rect': 'rect_dn', 'asc_triangle': 'sym_tri_dn', 'falling_wedge': 'sym_tri_dn'}
+FORM_BIAS = {'asc_triangle': 1, 'falling_wedge': 1, 'desc_triangle': -1, 'rising_wedge': -1}
+
+
+def rr_box(F: Dict[str, np.ndarray], i: int, dd: int, entry: float, stop: float, tgt: float) -> Dict:
+    """Entrada, stop, objetivo (y objetivo parcial T1 al 50 %) con un stop mínimo de 1 ATR y, si el estructural es muy lejano, un stop táctico."""
+    a = float(F['atr'][i])
+    if dd > 0 and not (stop < entry < tgt):
+        stop, tgt = _generic(entry, a, 1, max(abs(entry - stop), 0.6 * a))
+    if dd < 0 and not (tgt < entry < stop):
+        stop, tgt = _generic(entry, a, -1, max(abs(entry - stop), 0.6 * a))
+    stop_min = abs(entry - stop) < MIN_STOP * a
+    if stop_min:
+        stop = entry - dd * MIN_STOP * a
+    risk, reward = abs(entry - stop), abs(tgt - entry)
+    far = risk > FAR_STOP * a
+    stop_t = entry - dd * 1.5 * a if far else None
+    return {'entry': _r(entry), 'stop': _r(stop), 'target': _r(tgt), 't1': _r(entry + dd * 0.5 * reward), 'rr': float(round(reward / max(risk, 1e-9), 2)),
+            'risk_pct': float(round(risk / entry * 100, 2)), 'reward_pct': float(round(reward / entry * 100, 2)), 'stop_min': bool(stop_min), 'far': bool(far),
+            'stop_t': None if stop_t is None else _r(stop_t), 'rr_t': None if stop_t is None else float(round(reward / max(abs(entry - stop_t), 1e-9), 2)), '_stop': stop, '_stop_t': stop_t, '_tgt': tgt}
+
+
 def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB, stats: Optional[Dict] = None) -> Dict:
     F = feats.build(bars)
     n = len(F['c'])
@@ -403,8 +437,27 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
     sigs.update(CH.candles(F)); sigs.update(CH.breakouts(F)); sigs.update(figs); sigs.update(extra_candles(F))
     sr = support_resistance(F, s0)
     items: List[Dict] = []
+    sh = lambda x: x - s0
+
+    def xmin(geo: Dict) -> int:
+        xs = [p[0] for p in geo['pts']] + [x for L_ in geo['lines'] for x in (L_['a'][0], L_['b'][0])] + [p[0] for P in geo['polys'] for p in P['pts']] + [Z['i0'] for Z in geo['zones']]
+        return min(xs) if xs else s0
+
+    def shift(geo: Dict) -> None:
+        for p in geo['pts']:
+            p[0] = sh(p[0])
+        for L_ in geo['lines']:
+            L_['a'][0] = sh(L_['a'][0]); L_['b'][0] = sh(L_['b'][0])
+        for P in geo['polys']:
+            for p in P['pts']:
+                p[0] = sh(p[0])
+        for Z in geo['zones']:
+            Z['i0'] = sh(Z['i0']); Z['i1'] = sh(Z['i1'])
+        for A in geo['ann']:
+            A['x'] = sh(A['x'])
+
     for pname, sig in sigs.items():
-        if pname in SKIP:
+        if pname in SKIP or pname.endswith('_hq'):
             continue
         d, fam, desc = pat_info(pname)
         if pname in ('support_bounce', 'resistance_reject'):
@@ -427,36 +480,21 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
                 continue
             dd = d if d != 0 else (1 if tgt > F['c'][i] else -1)
             entry = float(F['c'][i])
-            risk = abs(entry - stop)
-            if dd > 0 and not (stop < entry < tgt):
-                stop, tgt = _generic(entry, float(F['atr'][i]), 1, max(risk, 0.6 * float(F['atr'][i])))
-            if dd < 0 and not (tgt < entry < stop):
-                stop, tgt = _generic(entry, float(F['atr'][i]), -1, max(risk, 0.6 * float(F['atr'][i])))
-            risk, reward = abs(entry - stop), abs(tgt - entry)
-            a_i = float(F['atr'][i])
-            stop_t = entry - dd * max(1.5 * a_i, 0.6 * a_i) if risk > 2.5 * a_i else stop                          # stop táctico: 1,5 ATR (solo cuando el estructural es muy lejano)
-            risk_t = abs(entry - stop_t)
+            bx = rr_box(F, i, dd, entry, stop, tgt)
+            stop, tgt, stop_t = bx.pop('_stop'), bx.pop('_tgt'), bx.pop('_stop_t')
+            if bx['stop_min']:
+                note += ' El stop estructural quedaba a menos de 1 ATR: se ha ampliado a 1 ATR.'
+            if xmin(geo) < s0:                              # la figura empieza antes de la ventana exportada: no se dibuja cortada
+                continue
             out = outcome(F, i, dd, stop, tgt)
-            out_t = outcome(F, i, dd, stop_t, tgt) if stop_t != stop else None
+            out_t = outcome(F, i, dd, stop_t, tgt) if stop_t is not None else None
             active = (n - 1 - i) <= ACTIVE and out['res'] in ('open',)
-            sh = lambda x: x - s0
-            for k in ('pts',):
-                for p in geo[k]:
-                    p[0] = sh(p[0])
-            for L_ in geo['lines']:
-                L_['a'][0] = sh(L_['a'][0]); L_['b'][0] = sh(L_['b'][0])
-            for P in geo['polys']:
-                for p in P['pts']:
-                    p[0] = sh(p[0])
-            for Z in geo['zones']:
-                Z['i0'] = sh(Z['i0']); Z['i1'] = sh(Z['i1'])
+            shift(geo)
             for o_ in (out, out_t):
                 if o_ and 'xi' in o_:
                     o_['xi'] = sh(o_['xi'])
-            items.append({'id': f'{pname}@{i - s0}', 'name': pname, 'label': LABEL.get(pname, pname), 'desc': desc, 'dir': dd, 'fam': fam, 'i': i - s0, **geo,
-                          'rr': {'entry': _r(entry), 'stop': _r(stop), 'target': _r(tgt), 'rr': float(round(reward / max(risk, 1e-9), 2)), 'risk_pct': float(round(risk / entry * 100, 2)),
-                                 'reward_pct': float(round(reward / entry * 100, 2)), 'stop_t': _r(stop_t) if out_t else None, 'rr_t': float(round(reward / max(risk_t, 1e-9), 2)) if out_t else None},
-                          'note': note, 'out': out, 'out_t': out_t, 'active': bool(active), 'ev': (stats or {}).get(pname)})
+            items.append({'id': f'{pname}@{i - s0}', 'name': pname, 'label': LABEL.get(pname, pname), 'desc': desc, 'dir': dd, 'fam': fam, 'i': i - s0, 'state': 'done', 'q': g.get('q') if isinstance(g, dict) else None, **geo,
+                          'rr': bx, 'note': note, 'out': out, 'out_t': out_t, 'active': bool(active), 'ev': (stats or {}).get(pname), 'ev_hq': (stats or {}).get(pname + '_hq')})
     keep = {}
     for it in items:                                                   # varias rupturas de Donchian el mismo día y en el mismo sentido: se queda la de mayor periodo
         if it['name'].startswith('donch'):
@@ -465,6 +503,35 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
             if k not in keep or per > keep[k][0]:
                 keep[k] = (per, it)
     items = [it for it in items if not it['name'].startswith('donch') or keep[(it['i'], it['dir'])][1] is it]
+    # compresiones en formación (aún sin ruptura): se dibujan con los dos escenarios
+    fm = rec.get('_forming', {})
+    if fm:
+        import shapes
+        i, st = next(iter(fm.items()))
+        if i >= s0 and st['kind'] in FORM_LABEL and xmin(geometry('forming_' + st['kind'], dict(U=st['U'], D=st['D'], tu=st['tu'], tl=st['tl'], x0=st['x0'], apex=st['apex']), F, i)) >= s0:
+            a = float(F['atr'][i])
+            g = dict(U=st['U'], D=st['D'], tu=st['tu'], tl=st['tl'], x0=st['x0'], apex=st['apex'], kind=st['kind'])
+            nm_f = 'forming_' + st['kind']
+            geo = geometry(nm_f, g, F, i)
+            sc = {}
+            for key, dd, nm, trig in (('up', 1, FORM_UP[st['kind']], at(st['U'], i + 1) + 0.15 * a), ('dn', -1, FORM_DN[st['kind']], at(st['D'], i + 1) - 0.15 * a)):
+                stop, tgt, note = levels(nm, g, F, i, dd, entry=trig)
+                bx = rr_box(F, i, dd, trig, stop, tgt)
+                for k_ in ('_stop', '_tgt', '_stop_t'):
+                    bx.pop(k_, None)
+                bx['name'] = nm
+                against = FORM_BIAS.get(st['kind'], 0) * dd < 0
+                bx['label'] = ('rompe contra el sesgo habitual de la figura' if against else LABEL.get(nm, nm))
+                bx['note'] = note
+                bx['ev'] = (stats or {}).get(nm)
+                sc[key] = bx
+            shift(geo)
+            q = shapes.compression_quality(st, 0.25, 1.15)
+            bias = FORM_BIAS.get(st['kind'], 0)
+            items.append({'id': f'{nm_f}@{i - s0}', 'name': nm_f, 'label': FORM_LABEL[st['kind']], 'desc': 'compresión sin romper: se opera la ruptura, no la figura', 'dir': 0, 'fam': 'figuras',
+                          'i': i - s0, 'state': 'forming', 'q': q, 'bias': bias, **geo, 'rr': None, 'sc': sc,
+                          'note': 'Aún no ha roto: el cierre sigue dentro de las dos rectas. Se opera la ruptura (cierre fuera de la recta) y el sentido no está decidido.' + (' Sesgo habitual: ' + ('alcista' if bias > 0 else 'bajista') + '.' if bias else ''),
+                          'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_t': None, 'active': True, 'ev': None})
     items.sort(key=lambda x: x['i'])
     sl = slice(s0, n)
     close = F['c']
@@ -511,7 +578,7 @@ def run_cli(symbols: List[str], out_dir: str, rng: str = '3y', stats_path: Optio
         json.dump(res, open(os.path.join(out_dir, f'{s}.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
         act = [p for p in res['patterns'] if p['active']]
         index.append({'sym': s, 'close': res['summary']['close'], 'asof': res['asof'], 'n': len(res['patterns']), 'atrp': res['summary']['atrp'], 'rsi2': res['summary']['rsi2'],
-                      'active': [{'id': p['id'], 'label': p['label'], 'dir': p['dir'], 'fam': p['fam'], 'rr': p['rr']['rr']} for p in act][:10]})
+                      'active': [{'id': p['id'], 'label': p['label'], 'dir': p['dir'], 'fam': p['fam'], 'rr': (p['rr'] or {}).get('rr'), 'q': p.get('q'), 'st': p.get('state')} for p in act][:10]})
     json.dump({'generated': int(__import__('time').time()), 'symbols': index, 'stats_meta': meta}, open(os.path.join(out_dir, 'index.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     print(f'  chartlab: {len(index)} valores → {out_dir} (fallidos {failed})', flush=True)
 

@@ -611,14 +611,19 @@ def test_charts_planted():
         'desc_triangle': [(0, 110), (10, 100), (18, 107), (26, 99.9), (34, 104), (42, 100), (50, 101.5), (56, 98)],
         'sym_tri_up': [(0, 90), (10, 110), (20, 92), (30, 106), (40, 96), (48, 102), (54, 98), (60, 104)], 'sym_tri_dn': [(0, 110), (10, 90), (20, 108), (30, 94), (40, 104), (48, 98), (54, 102), (60, 95)],
         'rising_wedge': [(0, 90), (10, 100), (20, 94), (30, 103), (40, 100), (50, 105.5), (58, 103), (64, 99)], 'falling_wedge': [(0, 110), (10, 100), (20, 106), (30, 97), (40, 100), (50, 94.5), (58, 97), (64, 101)],
-        'trendline_up': [(0, 100), (10, 110), (18, 100), (30, 104), (40, 98), (48, 108)], 'trendline_dn': [(0, 100), (10, 90), (18, 100), (30, 96), (40, 102), (48, 92)],
+        'trendline_up': [(0, 100), (10, 110), (18, 100), (28, 107.5), (36, 100), (46, 105), (54, 100), (60, 108)], 'trendline_dn': [(0, 100), (10, 90), (18, 100), (28, 92.5), (36, 100), (46, 95), (54, 100), (60, 92)],
         'bull_flag': [(0, 100), (6, 112), (14, 110.5), (16, 114.5)], 'bear_flag': [(0, 100), (6, 88), (14, 89.5), (16, 85.5)],
+        'triple_bottom': [(0, 100), (15, 80), (25, 92), (40, 80.4), (50, 92), (65, 80.2), (75, 93.5)], 'triple_top': [(0, 100), (15, 120), (25, 108), (40, 119.6), (50, 108), (65, 119.8), (75, 106.5)],
+        'rect_up': [(0, 100), (8, 116), (16, 101), (24, 115.6), (32, 100.6), (40, 115.8), (48, 100.8), (54, 119)], 'rect_dn': [(0, 116), (8, 100), (16, 115), (24, 100.6), (32, 115.4), (40, 100.4), (48, 115.2), (54, 97)],
     }
+    compress = ('asc_triangle', 'desc_triangle', 'sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge', 'rect_up', 'rect_dn')
     for nm, an in figs.items():
+        if nm in compress:                                          # bases realistas (≤ 16 % del precio y ≤ 9 ATR): mitad de amplitud y mechas de 0,5
+            y0 = an[0][1]; an = [(x, y0 + (y - y0) * 0.5) for x, y in an]
         xs, ys = np.array([a[0] for a in an]), np.array([a[1] for a in an])
         cl = np.interp(np.arange(xs[0], xs[-1] + 1), xs, ys)
         pre = quiet(260, an[0][1])
-        b = _plant_closes(np.array(pre + list(cl)))
+        b = _plant_closes(np.array(pre + list(cl)), 0.5 if nm in compress else 0.25)
         idx = np.flatnonzero(charts.signals(feats.build(b))[nm])
         n_end = len(pre) + int(xs[-1])
         assert any(n_end - 12 <= i <= n_end for i in idx), (nm, list(idx[-3:]), n_end)
@@ -714,7 +719,52 @@ def test_chartlab():
     print(f'ok · chartlab: {len(res["patterns"])} patrones, niveles con la medida clásica, resultados simulados y JSON de {len(s) // 1024} KB')
 
 
+def test_shapes():
+    """Motor geométrico: las rectas tienen ≥ 2 toques por lado y contienen al precio, la calidad es 0–100 y las «_hq» son un subconjunto, el stop nunca baja de 1 ATR,
+    el objetivo parcial T1 queda a medio camino y una compresión sin romper se dibuja «en formación» con sus dos escenarios."""
+    import chartlab, shapes
+    quiet = lambda n, p, sd=0.12, seed=5: list(p + np.random.default_rng(seed).normal(0, sd, n))
+    def plant(an, wick=0.5, half=True):
+        y0 = an[0][1]
+        if half:
+            an = [(x, y0 + (y - y0) * 0.5) for x, y in an]
+        xs, ys = np.array([a[0] for a in an]), np.array([a[1] for a in an])
+        cl = np.interp(np.arange(xs[0], xs[-1] + 1), xs, ys)
+        return _plant_closes(np.array(quiet(260, y0) + list(cl)), wick)
+    # cuña ascendente con ruptura: rectas con ≥ 2 toques por lado, la superior sobre la inferior, calidad en 0–100
+    b = plant([(0, 90), (10, 100), (20, 94), (30, 103), (40, 100), (50, 105.5), (58, 103), (64, 99)])
+    F = feats.build(b); rec = {}
+    sg = shapes.figures(F, rec)
+    i = int(np.flatnonzero(sg['rising_wedge'])[-1])
+    g = rec['rising_wedge'][i]
+    assert len(g['tu']) >= 2 and len(g['tl']) >= 2 and g['U'][2] > 0 and g['D'][2] > g['U'][2]
+    xs = np.arange(g['x0'], i)
+    assert (shapes.at(g['U'], xs) - shapes.at(g['D'], xs)).min() > 0 and 0 <= g['q'] <= 100
+    for nm in shapes.NAMES_BASE:                                    # las señales de calidad alta son un subconjunto de las normales
+        assert not (sg[nm + '_hq'] & ~sg[nm]).any(), nm
+    # el análisis impone el stop mínimo de 1 ATR y T1 entre la entrada y el objetivo
+    res = chartlab.analyze('T', b, nb=300)
+    a_ = res['summary']['atr']
+    for p in res['patterns']:
+        r = p['rr']
+        if r is None:
+            continue
+        assert abs(r['entry'] - r['stop']) >= 0.99 * feats.build(b)['atr'][p['i'] + len(b['c']) - 300] - 1e-6, (p['name'], r)
+        assert (r['entry'] < r['t1'] < r['target']) if p['dir'] > 0 else (r['target'] < r['t1'] < r['entry']), (p['name'], r)
+    # triángulo simétrico sin romper: figura en formación con escenario alcista y bajista
+    b = plant([(0, 100), (10, 110), (20, 102), (30, 108), (40, 104), (48, 106.5), (54, 105)])
+    res = chartlab.analyze('T', b, nb=300)
+    fm = [p for p in res['patterns'] if p.get('state') == 'forming']
+    assert len(fm) == 1 and fm[0]['name'] == 'forming_sym_tri' and fm[0]['dir'] == 0 and set(fm[0]['sc']) == {'up', 'dn'}, [p['name'] for p in res['patterns']][-5:]
+    up, dn = fm[0]['sc']['up'], fm[0]['sc']['dn']
+    last = res['summary']['close']
+    assert dn['stop'] > dn['entry'] > dn['t1'] > dn['target'] and up['stop'] < up['entry'] < up['t1'] < up['target'] and dn['entry'] < last < up['entry']
+    assert all(any(ln.get('n', 0) >= 2 for ln in fm[0]['lines']) for _ in (0,)) and fm[0]['ann'] and 0 <= fm[0]['q'] <= 100
+    print(f'ok · shapes: rectas con toques, calidad 0-100, _hq ⊂ base, stop ≥ 1 ATR, T1 intermedio y compresión en formación ({len(res["patterns"])} patrones)')
+
+
 if __name__ == '__main__':
+    test_shapes()
     test_chartlab()
     test_charts_planted()
     test_alt_joins()

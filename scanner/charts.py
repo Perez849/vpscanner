@@ -57,8 +57,12 @@ for _n, _d, _s in (('double_bottom', 1, 'doble suelo (ruptura del cuello)'), ('d
                    ('support_bounce', 1, 'rebote en soporte de 3 toques'), ('resistance_reject', -1, 'rechazo en resistencia de 3 toques'), ('vcp', 1, 'contracción de volatilidad (VCP)'),
                    ('cup_handle', 1, 'taza con asa'), ('diamond_bull', 1, 'diamante de suelo'), ('diamond_bear', -1, 'diamante de techo'), ('bull_flag', 1, 'bandera alcista'),
                    ('bear_flag', -1, 'bandera bajista'), ('bull_pennant', 1, 'banderín alcista'), ('bear_pennant', -1, 'banderín bajista'), ('island_bull', 1, 'isla de suelo'),
-                   ('island_bear', -1, 'isla de techo')):
+                   ('island_bear', -1, 'isla de techo'), ('triple_bottom', 1, 'triple suelo'), ('triple_top', -1, 'triple techo'), ('rect_up', 1, 'rectángulo, ruptura al alza'),
+                   ('rect_dn', -1, 'rectángulo, ruptura a la baja')):
     _reg(_n, _d, 'figuras', _s)
+for _n in ('double_bottom', 'double_top', 'triple_bottom', 'triple_top', 'hs_top', 'hs_inverse', 'asc_triangle', 'desc_triangle', 'sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge',
+           'rect_up', 'rect_dn', 'bull_flag', 'bear_flag', 'bull_pennant', 'bear_pennant', 'cup_handle', 'trendline_up', 'trendline_dn'):
+    _reg(_n + '_hq', PATTERNS[_n][0], 'calidad', PATTERNS[_n][2] + ' (solo calidad ≥ 75)')
 
 
 def _sh(x: np.ndarray, k: int) -> np.ndarray:
@@ -184,7 +188,7 @@ def figures(F: Dict[str, np.ndarray], rec: Dict[str, Dict[int, dict]] | None = N
     o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
     sma50, sma200 = F['sma50'], F['sma200']
     n = len(c)
-    names = [k for k, v in PATTERNS.items() if v[1] == 'figuras']
+    names = [k for k, v in PATTERNS.items() if v[1] in ('figuras', 'calidad')]
     out = {k: np.zeros(n, bool) for k in names}
     ph, pl = pivots(h, l)
     H: List[Tuple[int, float]] = []
@@ -394,6 +398,16 @@ def figures(F: Dict[str, np.ndarray], rec: Dict[str, Dict[int, dict]] | None = N
             if l[aidx] > h[aidx - 1] and up_state[aidx - 1] and h[i] < l[aidx:i].min():
                 fire('island_bear', (aidx,), i, a=aidx, gap_from=float(h[aidx - 1]), lo=float(l[aidx:i].min()), hi=float(h[aidx:i + 1].max()))
                 break
+    # el motor geométrico (shapes.py) sustituye a los detectores de dos pivotes de las figuras de pivotes/rectas
+    import shapes
+    r2: Dict = {} if rec is not None else None
+    new = shapes.figures(F, r2)
+    for k, v in new.items():
+        out[k] = v
+        if rec is not None:
+            rec[k] = r2.get(k, {})
+    if rec is not None and '_forming' in r2:
+        rec['_forming'] = r2['_forming']
     return out
 
 
