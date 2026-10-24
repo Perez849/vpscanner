@@ -64,6 +64,25 @@ Con las **300 más negociadas** de cada fecha y el umbral del mejor de 101 varia
 **Qué es entonces esta herramienta**: una forma rigurosa de *leer* el gráfico (qué figura hay, dónde está el stop, cuánto hay hasta el objetivo, qué barreras hay en medio) y de ver, con datos, que las figuras clásicas por sí solas no baten al mercado. No es un generador de señales.
 
 
+## ¿Los stops y objetivos grandes explican el mal resultado? (`vp/planstudy.py`)
+
+Una objeción razonable: «quizá no funcionan porque el stop y el objetivo son enormes». El estudio de evidencia no usa stops ni objetivos (salida a tiempo fijo), así que no puede ser la causa de su resultado; pero para comprobar el plan completo, `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop y objetivo del plan, el stop gana si se tocan el mismo día, cierre a las 40 sesiones, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor con el mismo sentido y las mismas distancias de stop y objetivo en ATR** (y volatilidad relativa parecida). Tres geometrías: el plan de la web, stop táctico de 1,5 ATR con el mismo objetivo, y una **fija igual para todos** (stop 1,5 ATR, objetivo 3 ATR). Informe en `data/plan_report.txt`.
+
+Con las 300 más negociadas (203.000 señales, 2016–2026) el exceso medio sobre el azar con las mismas distancias es **−0,20 % con el plan de la web, −0,13 % con stop táctico y −0,11 % con la geometría fija**. Calibrado sobre paseos aleatorios, donde no puede haber ventaja, el método sesga el resultado en −0,05 a −0,07 %, así que lo que queda es una pérdida pequeña, no una ventaja escondida por el tamaño de los stops:
+
+| grupo (300 más negociadas) | plan web | stop táctico | fijo 1,5/3 ATR |
+|---|---|---|---|
+| todos | −0,20 % (t −2,9) | −0,13 % (t −2,4) | −0,11 % (t −2,1) |
+| figuras alcistas | −0,40 % (t −3,4) | −0,15 % | −0,13 % |
+| figuras bajistas | −0,09 % | +0,05 % | +0,05 % |
+| rupturas alcistas | −0,48 % (t −6,1) | −0,40 % (t −6,3) | −0,35 % (t −5,8) |
+| velas | ≈ 0 | ≈ 0 | ≈ 0 |
+| directrices alcistas | +0,42 % (t +2,6) | +0,42 % | +0,42 % |
+
+- **Comprar rupturas a máximos** (55, 100 y 252 sesiones, base junto a máximos) rinde menos que entrar al azar con cualquier geometría (t entre −4,4 y −6,9): coincide con el estudio de evidencia.
+- La única señal positiva que se repite en las tres geometrías es la **ruptura de una directriz bajista** (+0,42 %, t +2,6), pero con 75 patrones probados no supera el umbral del mejor de N (3,35).
+- El tamaño del plan sí cambia la **tasa de acierto** (29 % de objetivos en las figuras con el plan de la web), pero la del azar con las mismas distancias es casi igual (26–36 %): la tasa de acierto la fija la geometría, no el patrón.
+
 ## Lista de seguimiento
 
 `watchlist.txt` (raíz del repositorio) manda: un símbolo de Yahoo por línea o varios separados por espacios o comas, `#` comenta. El escaneo diario la lee entera; para añadir o quitar valores basta editarla desde GitHub (lápiz) y el siguiente escaneo, o lanzarlo a mano desde Actions, los incluye. Un valor que Yahoo no devuelve o con menos de 400 sesiones se avisa en el Radar. Cada valor añade ~75 KB de `data/charts` al repositorio en cada escaneo, así que conviene no pasar de unos 150.
@@ -85,8 +104,9 @@ vp/
   plan.py             entrada, stop, objetivo, T1, obstáculos, resultado simulado
   lab.py              analiza un valor → JSON para la web
   study.py            estudio de evidencia
+  planstudy.py        estudio del plan completo (stop y objetivo) frente a entradas al azar
   data.py, universe.py   descarga de Yahoo y universos (watchlist.txt)
-data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json
+data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json, plan_report.txt
 tests/test_vp.py      pruebas (sin red)
 .github/workflows/    scan.yml (L–V 22:45 UTC) · evidence.yml (domingos) · research.yml (manual)
 ```
@@ -99,6 +119,7 @@ python tests/test_vp.py                       # pruebas
 python -m vp lab                              # analiza watchlist.txt → data/
 python -m vp lab --symbols AAPL,NVDA          # solo esos valores
 python -m vp study                            # estudio de evidencia (tarda; mejor en Actions)
+python -m vp plan                             # estudio del plan completo con stop y objetivo
 python -m http.server                         # abrir http://localhost:8000
 ```
 
