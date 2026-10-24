@@ -179,7 +179,8 @@ def pivots(h: np.ndarray, l: np.ndarray, k: int = K_PIV) -> Tuple[np.ndarray, np
     return ph, pl
 
 
-def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+def figures(F: Dict[str, np.ndarray], rec: Dict[str, Dict[int, dict]] | None = None) -> Dict[str, np.ndarray]:
+    """Figuras (causales). Si se pasa `rec`, guarda en rec[nombre][barra] la geometría de cada señal (pivotes, cuello, líneas…) para dibujarla."""
     o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
     sma50, sma200 = F['sma50'], F['sma200']
     n = len(c)
@@ -189,16 +190,17 @@ def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
     H: List[Tuple[int, float]] = []
     L: List[Tuple[int, float]] = []
     used: Dict[str, tuple] = {}
-    dn_state = np.zeros(n, bool)
     atrp = F['atrp']
     with np.errstate(invalid='ignore', divide='ignore'):
         dn_state = (c / _sh(c, 5) - 1.0 < -1.5 * atrp / 100.0) & (c < F['sma20'])
         up_state = (c / _sh(c, 5) - 1.0 > 1.5 * atrp / 100.0) & (c > F['sma20'])
 
-    def fire(name: str, key, i: int) -> None:
+    def fire(name: str, key, i: int, **g) -> None:
         if used.get(name) != key:
             used[name] = key
             out[name][i] = True
+            if rec is not None:
+                rec.setdefault(name, {})[i] = g
 
     def line(p1, p2, x):
         return p2[1] + (p2[1] - p1[1]) / (p2[0] - p1[0]) * (x - p2[0])
@@ -219,41 +221,43 @@ def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
             if 8 <= j2 - j1 <= 80 and abs(v1 - v2) <= max(0.03 * min(v1, v2), 1.5 * a):
                 neck = h[j1:j2 + 1].max()
                 if neck - max(v1, v2) >= 2.5 * a and ci > neck >= cp and i - j2 <= 40:
-                    fire('double_bottom', (j1, j2), i)
+                    fire('double_bottom', (j1, j2), i, p1=(j1, v1), p2=(j2, v2), neck=float(neck), mid=(j1 + int(np.argmax(h[j1:j2 + 1])), float(neck)))
         if len(H) >= 2:
             (j1, v1), (j2, v2) = H[-2], H[-1]
             if 8 <= j2 - j1 <= 80 and abs(v1 - v2) <= max(0.03 * min(v1, v2), 1.5 * a):
                 neck = l[j1:j2 + 1].min()
                 if min(v1, v2) - neck >= 2.5 * a and ci < neck <= cp and i - j2 <= 40:
-                    fire('double_top', (j1, j2), i)
+                    fire('double_top', (j1, j2), i, p1=(j1, v1), p2=(j2, v2), neck=float(neck), mid=(j1 + int(np.argmin(l[j1:j2 + 1])), float(neck)))
         # ── hombro-cabeza-hombro
         if len(H) >= 3 and len(L) >= 2:
             (ja, va), (jb, vb), (jc, vc) = H[-3:]
             if vb - max(va, vc) >= 1.0 * a and abs(va - vc) <= 0.25 * (vb - min(va, vc)) and 10 <= jc - ja <= 120 and i - jc <= 30:
-                t1, t2 = l[ja:jb + 1].min(), l[jb:jc + 1].min()
+                k1, k2 = ja + int(np.argmin(l[ja:jb + 1])), jb + int(np.argmin(l[jb:jc + 1]))
+                t1, t2 = l[k1], l[k2]
                 neck = (t1 + t2) / 2.0
                 if ci < neck <= cp:
-                    fire('hs_top', (ja, jb, jc), i)
+                    fire('hs_top', (ja, jb, jc), i, ls=(ja, va), hd=(jb, vb), rs=(jc, vc), t1=(k1, float(t1)), t2=(k2, float(t2)), neck=float(neck))
         if len(L) >= 3 and len(H) >= 2:
             (ja, va), (jb, vb), (jc, vc) = L[-3:]
             if min(va, vc) - vb >= 1.0 * a and abs(va - vc) <= 0.25 * (max(va, vc) - vb) and 10 <= jc - ja <= 120 and i - jc <= 30:
-                t1, t2 = h[ja:jb + 1].max(), h[jb:jc + 1].max()
+                k1, k2 = ja + int(np.argmax(h[ja:jb + 1])), jb + int(np.argmax(h[jb:jc + 1]))
+                t1, t2 = h[k1], h[k2]
                 neck = (t1 + t2) / 2.0
                 if ci > neck >= cp:
-                    fire('hs_inverse', (ja, jb, jc), i)
+                    fire('hs_inverse', (ja, jb, jc), i, ls=(ja, va), hd=(jb, vb), rs=(jc, vc), t1=(k1, float(t1)), t2=(k2, float(t2)), neck=float(neck))
         # ── triángulos, cuñas, directrices
         if len(H) >= 3 and len(L) >= 2:
             H3 = H[-3:]
             top = max(v for _, v in H3)
             if top - min(v for _, v in H3) <= 0.8 * a and 12 <= H3[-1][0] - H3[0][0] <= 90 and L[-1][0] > H3[0][0] and L[-2][0] > H3[0][0] - 10 and L[-1][1] > L[-2][1] + 0.3 * a:
                 if ci > top >= cp and i - H3[-1][0] <= 40:
-                    fire('asc_triangle', tuple(x for x, _ in H3), i)
+                    fire('asc_triangle', tuple(x for x, _ in H3), i, highs=[tuple(x) for x in H3], q1=L[-2], q2=L[-1], top=float(top))
         if len(L) >= 3 and len(H) >= 2:
             L3 = L[-3:]
             bot = min(v for _, v in L3)
             if max(v for _, v in L3) - bot <= 0.8 * a and 12 <= L3[-1][0] - L3[0][0] <= 90 and H[-1][0] > L3[0][0] and H[-2][0] > L3[0][0] - 10 and H[-1][1] < H[-2][1] - 0.3 * a:
                 if ci < bot <= cp and i - L3[-1][0] <= 40:
-                    fire('desc_triangle', tuple(x for x, _ in L3), i)
+                    fire('desc_triangle', tuple(x for x, _ in L3), i, lows=[tuple(x) for x in L3], p1=H[-2], p2=H[-1], bot=float(bot))
         if len(H) >= 2 and len(L) >= 2:
             p1, p2, q1, q2 = H[-2], H[-1], L[-2], L[-1]
             if p2[0] - p1[0] >= 6 and q2[0] - q1[0] >= 6 and abs(p2[0] - q2[0]) <= 40 and i - max(p2[0], q2[0]) <= 40:
@@ -261,50 +265,52 @@ def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
                 up_i, lo_i = line(p1, p2, i), line(q1, q2, i)
                 up_p, lo_p = line(p1, p2, i - 1), line(q1, q2, i - 1)
                 if up_i > lo_i and (up_i - lo_i) < (line(p1, p2, max(p1[0], q1[0])) - line(q1, q2, max(p1[0], q1[0]))):   # estrechándose
+                    g = dict(p1=p1, p2=p2, q1=q1, q2=q2)
                     if su < -0.02 * a and sl > 0.02 * a:                                     # simétrico
                         if ci > up_i and cp <= up_p:
-                            fire('sym_tri_up', (p1[0], p2[0], q1[0], q2[0]), i)
+                            fire('sym_tri_up', (p1[0], p2[0], q1[0], q2[0]), i, **g)
                         elif ci < lo_i and cp >= lo_p:
-                            fire('sym_tri_dn', (p1[0], p2[0], q1[0], q2[0]), i)
+                            fire('sym_tri_dn', (p1[0], p2[0], q1[0], q2[0]), i, **g)
                     elif su > 0 and sl > 0 and su < sl:                                      # cuña ascendente
                         if ci < lo_i and cp >= lo_p:
-                            fire('rising_wedge', (p1[0], p2[0], q1[0], q2[0]), i)
+                            fire('rising_wedge', (p1[0], p2[0], q1[0], q2[0]), i, **g)
                     elif su < 0 and sl < 0 and su < sl:                                      # cuña descendente
                         if ci > up_i and cp <= up_p:
-                            fire('falling_wedge', (p1[0], p2[0], q1[0], q2[0]), i)
+                            fire('falling_wedge', (p1[0], p2[0], q1[0], q2[0]), i, **g)
         if len(H) >= 2:
             p1, p2 = H[-2], H[-1]
             if p2[1] < p1[1] - 0.5 * a and 8 <= p2[0] - p1[0] <= 90 and i - p2[0] <= 40:
                 if ci > line(p1, p2, i) and cp <= line(p1, p2, i - 1):
-                    fire('trendline_up', (p1[0], p2[0]), i)
+                    fire('trendline_up', (p1[0], p2[0]), i, p1=p1, p2=p2)
         if len(L) >= 2:
             q1, q2 = L[-2], L[-1]
             if q2[1] > q1[1] + 0.5 * a and 8 <= q2[0] - q1[0] <= 90 and i - q2[0] <= 40:
                 if ci < line(q1, q2, i) and cp >= line(q1, q2, i - 1):
-                    fire('trendline_dn', (q1[0], q2[0]), i)
+                    fire('trendline_dn', (q1[0], q2[0]), i, p1=q1, p2=q2)
         # ── soporte / resistencia de 3 toques
         if len(L) >= 3:
             L3 = L[-3:]
-            sup = np.mean([v for _, v in L3])
+            sup = float(np.mean([v for _, v in L3]))
             if max(v for _, v in L3) - min(v for _, v in L3) <= 0.8 * a and L3[-1][0] - L3[0][0] >= 15 and i - L3[-1][0] >= 3 and i - L3[-1][0] <= 60:
                 if sup - 0.8 * a <= l[i] <= sup + 0.3 * a and ci > sup and ci > o[i]:
-                    fire('support_bounce', (L3[-1][0], i // 3), i)
+                    fire('support_bounce', (L3[-1][0], i // 3), i, level=sup, touches=[tuple(x) for x in L3])
         if len(H) >= 3:
             H3 = H[-3:]
-            res = np.mean([v for _, v in H3])
+            res = float(np.mean([v for _, v in H3]))
             if max(v for _, v in H3) - min(v for _, v in H3) <= 0.8 * a and H3[-1][0] - H3[0][0] >= 15 and i - H3[-1][0] >= 3 and i - H3[-1][0] <= 60:
                 if res - 0.3 * a <= h[i] <= res + 0.8 * a and ci < res and ci < o[i]:
-                    fire('resistance_reject', (H3[-1][0], i // 3), i)
+                    fire('resistance_reject', (H3[-1][0], i // 3), i, level=res, touches=[tuple(x) for x in H3])
         # ── VCP
         if len(H) >= 3 and ci > sma50[i] > sma200[i] and H[-1][0] - H[-3][0] <= 120:
-            depths, okv = [], True
+            depths, lows = [], []
             for k in (-3, -2, -1):
                 jh = H[k][0]
                 jn = H[k + 1][0] if k < -1 else i
-                dpt = (H[k][1] - l[jh:jn + 1].min()) / H[k][1]
-                depths.append(dpt)
+                kk = jh + int(np.argmin(l[jh:jn + 1]))
+                depths.append((H[k][1] - l[kk]) / H[k][1])
+                lows.append((kk, float(l[kk])))
             if depths[0] > depths[1] > depths[2] and depths[2] <= 0.08 and depths[0] <= 0.40 and ci > H[-1][1] >= cp:
-                fire('vcp', (H[-3][0], H[-1][0]), i)
+                fire('vcp', (H[-3][0], H[-1][0]), i, highs=[tuple(x) for x in H[-3:]], lows=lows, depths=[float(d) for d in depths])
         # ── taza con asa
         if ci > sma200[i] * 0.9:
             for W in (60, 100):
@@ -313,15 +319,18 @@ def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
                 hh12 = h[i - 12:i].max()
                 if not ci > hh12:
                     continue
-                left = h[i - W:i - W + W // 4].max()
+                lj = i - W + int(np.argmax(h[i - W:i - W + W // 4]))
+                left = h[lj]
                 seg = l[i - W:i]
                 bot = seg.min()
                 bi = int(np.argmin(seg))
                 depth = (left - bot) / left
                 if 0.12 <= depth <= 0.35 and 0.3 * W <= bi <= 0.75 * W:
-                    right = h[i - W // 4:i].max()
+                    rj = i - W // 4 + int(np.argmax(h[i - W // 4:i]))
+                    right = h[rj]
                     if 0.92 * left <= right <= 1.06 * left and ci >= right * 0.995:
-                        handle_low = l[i - 12:i].min()
+                        hj = i - 12 + int(np.argmin(l[i - 12:i]))
+                        handle_low = l[hj]
                         if (right - handle_low) <= 0.4 * (right - bot) and ci > hh12:
                             xs = np.arange(W)
                             cs = c[i - W:i]
@@ -330,7 +339,8 @@ def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
                                 fit = np.polyval(cf, xs)
                                 r2 = 1.0 - ((cs - fit) ** 2).sum() / ((cs - cs.mean()) ** 2).sum()
                                 if r2 >= 0.5:
-                                    fire('cup_handle', (i - W, bi), i)
+                                    fire('cup_handle', (i - W, bi), i, left=(lj, float(left)), bottom=(i - W + bi, float(bot)), right=(rj, float(right)), handle=(hj, float(handle_low)),
+                                         fit=[float(x) for x in cf], w0=i - W, W=W)
                                     break
         # ── diamante
         if i >= 60:
@@ -340,10 +350,12 @@ def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
             pk = int(np.argmax(w))
             if 2 <= pk <= 5 and w[0] <= 0.6 * w[pk] and w[-1] <= 0.55 * w[pk] and w[:pk + 1].argmax() == pk and (np.diff(w[:pk + 1]) > -0.15 * w[pk]).all() and (np.diff(w[pk:]) < 0.15 * w[pk]).all():
                 top10, bot10 = h[i - 10:i].max(), l[i - 10:i].min()
+                env_hi = [(i - W + b * 5 + 2, float(hs_[b * 5:(b + 1) * 5].max())) for b in range(8)]
+                env_lo = [(i - W + b * 5 + 2, float(ls_[b * 5:(b + 1) * 5].min())) for b in range(8)]
                 if ci > top10 and dn_state[i - W - 1]:
-                    fire('diamond_bull', (i // 10,), i)
+                    fire('diamond_bull', (i // 10,), i, hi=env_hi, lo=env_lo, top=float(top10), bot=float(bot10), width=float(w.max()))
                 elif ci < bot10 and up_state[i - W - 1]:
-                    fire('diamond_bear', (i // 10,), i)
+                    fire('diamond_bear', (i // 10,), i, hi=env_hi, lo=env_lo, top=float(top10), bot=float(bot10), width=float(w.max()))
         # ── banderas y banderines
         for f in (5, 8, 12):
             pe = i - f
@@ -361,25 +373,26 @@ def figures(F: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
                 half = max(len(fh) // 2, 1)
                 contraction = (fh[:half].max() - fl[:half].min()) > 1.3 * (fh[half:].max() - fl[half:].min()) if len(fh) - half >= 2 else False
                 slope = np.polyfit(np.arange(len(fh)), c[pe + 1:i], 1)[0]
+                g = dict(ps=(ps, float(c[ps])), pe=(pe, float(c[pe])), fh=float(fh.max()), fl=float(fl.min()), z0=pe + 1, pole=float(pole))
                 if pole > 0 and zr <= 0.6 * pole and ci > fh.max() >= cp - 1e-12 and c[i - 1] <= fh.max():
                     if contraction:
-                        fire('bull_pennant', (pe, p), i)
+                        fire('bull_pennant', (pe, p), i, **g)
                     elif slope <= 0.1 * a:
-                        fire('bull_flag', (pe, p), i)
+                        fire('bull_flag', (pe, p), i, **g)
                 elif pole < 0 and zr <= 0.6 * (-pole) and ci < fl.min() and c[i - 1] >= fl.min():
                     if contraction:
-                        fire('bear_pennant', (pe, p), i)
+                        fire('bear_pennant', (pe, p), i, **g)
                     elif slope >= -0.1 * a:
-                        fire('bear_flag', (pe, p), i)
+                        fire('bear_flag', (pe, p), i, **g)
         # ── isla
         for aidx in range(i - 5, i):
             if aidx < 2:
                 continue
             if h[aidx] < l[aidx - 1] and dn_state[aidx - 1] and l[i] > h[aidx:i].max():
-                fire('island_bull', (aidx,), i)
+                fire('island_bull', (aidx,), i, a=aidx, gap_from=float(l[aidx - 1]), lo=float(l[aidx:i + 1].min()), hi=float(h[aidx:i].max()))
                 break
             if l[aidx] > h[aidx - 1] and up_state[aidx - 1] and h[i] < l[aidx:i].min():
-                fire('island_bear', (aidx,), i)
+                fire('island_bear', (aidx,), i, a=aidx, gap_from=float(h[aidx - 1]), lo=float(l[aidx:i].min()), hi=float(h[aidx:i + 1].max()))
                 break
     return out
 
@@ -584,6 +597,8 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
             print(f'    {q + 1}/{len(work)} valores · {__import__("time").time() - t0:.0f}s', flush=True)
     P.finish()
     key = ('long', PRIMARY)
+    stats_out: Dict[str, Dict] = {nm: {'dir': d, 'fam': fam, 'desc': desc} for nm, (d, fam, desc) in PATTERNS.items()}
+    thr_out: Dict[str, Dict] = {}
     for K in KS:
         n_mem = int(P.memv[K].sum())
         print(f'\n================ UNIVERSO: {K} ACCIONES MÁS NEGOCIADAS EN CADA FECHA · {n_mem:,} barras ================', flush=True)
@@ -592,6 +607,12 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
             print(f'  entrar al azar a {PRIMARY} sesiones ({dname}, neto de {COST} % de coste): ' + ' '.join(f'{P.y0 + i}:{v:+.2f}' for i, v in enumerate(b) if np.isfinite(v)), flush=True)
         null = P.null_max_t(K, key, 150)
         thr95, thr99 = float(np.quantile(null, 0.95)), float(np.quantile(null, 0.99))
+        thr_out[f'K{K}'] = {'p95': round(thr95, 2), 'p99': round(thr99, 2), 'bars': n_mem}
+        for nm_, (d_, fam_, desc_) in PATTERNS.items():
+            k_ = (('long' if d_ > 0 else 'short'), PRIMARY)
+            st_ = P.stat(P.ev[nm_], K, k_)
+            if st_.get('n', 0) >= 1:
+                stats_out[nm_][f'K{K}'] = {k: (round(v, 3) if isinstance(v, float) else v) for k, v in st_.items()}
         print(f'  bajo el azar, el MEJOR |t| de {len(P.ev)} patrones es ≥ {thr95:.1f} el 5 % de las veces y ≥ {thr99:.1f} el 1 % (150 desplazamientos temporales de las señales de cada valor)', flush=True)
         rows = []
         for nm, (d, fam, desc) in PATTERNS.items():
@@ -623,6 +644,10 @@ def run(uni: Dict, data: Dict, args, out_dir: str):
                 s2 = P.stat(P.ev[nm], K, (side, hz))
                 cells.append(f"{s2['ex']:+6.2f}% /{s2['t']:+5.1f}" if 'ex' in s2 else '       n/d')
             print('       ' + nm.ljust(20) + ''.join(c.rjust(16 if i < 3 else 18) for i, c in enumerate(cells)), flush=True)
+    import json as _json
+    import os as _os
+    _os.makedirs(out_dir, exist_ok=True)
+    _json.dump({'primary': PRIMARY, 'cost': COST, 'thr': thr_out, 'ks': list(KS), 'patterns': stats_out}, open(_os.path.join(out_dir, 'pattern_stats.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     sys.stdout.flush()
 
 

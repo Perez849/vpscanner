@@ -6,8 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'final | moc | improve | gap | pelotazo | explore | meta … meta5 | regime | midterm | ema … ema3 | stockmid | stockmid_long | pit | pit_mid | pit_deep | longidx | wikidiag | bonds | bonds2 | stops | stops2 | stops3 | clock | osc | altprobe | alt | charts | charts2'
+        description: 'final | moc | improve | gap | pelotazo | explore | meta … meta5 | regime | midterm | ema … ema3 | stockmid | stockmid_long | pit | pit_mid | pit_deep | longidx | wikidiag | bonds | bonds2 | stops | stops2 | stops3 | clock | osc | altprobe | alt | charts | charts2 | chartlab'
         default: 'final'
+      symbols:
+        description: 'solo chartlab: valores separados por comas (vacío = lista por defecto)'
+        default: ''
 
 permissions:
   contents: write
@@ -36,6 +39,7 @@ jobs:
       - name: Investigación
         env:
           INPUT_CMD: ${{ github.event.inputs.cmd }}
+          SYMBOLS: ${{ github.event.inputs.symbols }}
         run: |
           mkdir -p /tmp/out
           cd scanner
