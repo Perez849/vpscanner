@@ -275,7 +275,7 @@ def write_catalog(out_dir: str) -> None:
 def run(symbols: List[str], out_dir: str, rng: str = '3y', names: Optional[Dict[str, str]] = None, raw_dir: Optional[str] = None) -> Dict:
     """Descarga los valores, los analiza y escribe data/charts/*.json, index.json y catalog.json."""
     from . import data
-    bars, failed = data.fetch_many(symbols, rng=rng, workers=6, verbose=True)
+    bars, failed = data.fetch_many(symbols, rng=rng, workers=4, verbose=True)
     os.makedirs(os.path.join(out_dir, 'charts'), exist_ok=True)
     if raw_dir:                                           # series completas, para afinar detectores sin red
         os.makedirs(raw_dir, exist_ok=True)
@@ -294,4 +294,6 @@ def run(symbols: List[str], out_dir: str, rng: str = '3y', names: Optional[Dict[
     json.dump(meta, open(os.path.join(out_dir, 'index.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     write_catalog(out_dir)
     print(f'  laboratorio: {len(index)} valores → {out_dir} (fallidos {failed})', flush=True)
+    if len(index) < 0.5 * len(symbols):
+        raise SystemExit(f'solo {len(index)} de {len(symbols)} valores con datos: no se dan por buenos')
     return meta

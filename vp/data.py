@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -12,10 +13,28 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-URL = 'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?{span}&interval=1d&includeAdjustedClose=true&events=div%7Csplit'
+HOSTS = ('query1.finance.yahoo.com', 'query2.finance.yahoo.com')          # se alternan en los reintentos
+URL = 'https://{host}/v8/finance/chart/{sym}?{span}&interval=1d&includeAdjustedClose=true&events=div%7Csplit'
 UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 Bars = Dict[str, np.ndarray]
 ERRORS: Dict[str, str] = {}          # último motivo de fallo por valor (para el diagnóstico)
+WAIT = 1.0                           # factor de las esperas (las pruebas lo ponen a 0)
+_lock = threading.Lock()
+_pause_until = 0.0                   # cuando Yahoo responde 429, todos los hilos esperan a la vez
+
+
+def _throttle(seconds: float) -> None:
+    global _pause_until
+    with _lock:
+        _pause_until = max(_pause_until, time.time() + seconds * WAIT)
+
+
+def _wait_pause() -> None:
+    while True:
+        d = _pause_until - time.time()
+        if d <= 0:
+            return
+        time.sleep(min(d, 2.0))
 
 
 def parse(payload: Dict) -> Optional[Bars]:
@@ -61,9 +80,10 @@ def span(rng: str, now: Optional[float] = None) -> str:
     return f'range={rng}'
 
 
-def fetch_one(sym: str, rng: str = '3y', tries: int = 4, timeout: int = 25) -> Optional[Bars]:
-    url = URL.format(sym=sym.replace('.', '-'), span=span(rng))
+def fetch_one(sym: str, rng: str = '3y', tries: int = 5, timeout: int = 25) -> Optional[Bars]:
     for k in range(tries):
+        _wait_pause()
+        url = URL.format(host=HOSTS[k % len(HOSTS)], sym=sym.replace('.', '-'), span=span(rng))
         try:
             req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
             with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -71,12 +91,15 @@ def fetch_one(sym: str, rng: str = '3y', tries: int = 4, timeout: int = 25) -> O
             return drop_open_bar(b) if b is not None else None
         except urllib.error.HTTPError as e:
             ERRORS[sym] = f'HTTP {e.code}'
-            if e.code != 429 and e.code < 500:                          # 404, 400…: reintentar no sirve de nada
+            if e.code == 429:
+                _throttle(15 * (k + 1) + random.random() * 5)          # límite de Yahoo: pausa común y se alterna de servidor
+            elif e.code < 500:                                          # 404, 400…: reintentar no sirve de nada
                 return None
-            time.sleep(1.5 * 2 ** k + random.random())                 # 429 y 5xx: esperar y reintentar
+            else:
+                time.sleep(2.0 * (k + 1) * WAIT)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ConnectionError) as e:
             ERRORS[sym] = type(e).__name__
-            time.sleep(1.0 * 2 ** k + random.random())
+            time.sleep(1.5 * (k + 1) * WAIT)
     return None
 
 
@@ -110,7 +133,7 @@ def fetch_many(symbols: List[str], rng: str = '3y', workers: int = 6, cache_dir:
         print(f'  datos: {len(out)} en caché, {len(todo)} por descargar ({rng})', flush=True)
 
     def one(s: str) -> Tuple[str, Optional[Bars]]:
-        time.sleep(random.random() * 0.3)
+        time.sleep(random.random() * 0.3 * WAIT)
         return s, fetch_one(s, rng)
 
     failed: List[str] = []

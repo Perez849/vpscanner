@@ -231,7 +231,9 @@ def report(ev: Dict) -> str:
 
 def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, reps: int = 150, workers: int = 2) -> Dict:
     from . import data
-    bars, failed = data.fetch_many(symbols, rng=rng, workers=6, cache_dir=cache_dir, max_age_h=24, verbose=True)
+    bars, failed = data.fetch_many(symbols, rng=rng, workers=4, cache_dir=cache_dir, max_age_h=24 * 3, verbose=True)
+    if len(bars) < 0.9 * len(symbols):                    # lo descargado queda en la caché: se vuelve a lanzar y continúa donde lo dejó
+        raise SystemExit(f'solo {len(bars)} de {len(symbols)} valores descargados (Yahoo limita las peticiones): se detiene; lo ya descargado queda en la caché')
     ev = analyze_panel(bars, KS, reps, workers, verbose=True)
     os.makedirs(out_dir, exist_ok=True)
     json.dump(ev, open(os.path.join(out_dir, 'evidence.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))

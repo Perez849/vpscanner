@@ -287,6 +287,43 @@ def test_data_parse():
     print('ok · datos: se interpreta la respuesta de Yahoo y se descarta la barra de la sesión abierta')
 
 
+def test_data_retries():
+    """Ante un 429 de Yahoo se reintenta con pausa común y el otro servidor; un 404 no se reintenta."""
+    import io
+    import urllib.error
+    import urllib.request
+    ts = [1700000000 + 86400 * k for k in range(8)]
+    q = {'open': list(range(10, 18)), 'high': list(range(11, 19)), 'low': list(range(9, 17)), 'close': [10.5 + k for k in range(8)], 'volume': [1000] * 8}
+    payload = json.dumps({'chart': {'result': [{'meta': {}, 'timestamp': ts, 'indicators': {'quote': [q]}}], 'error': None}}).encode()
+    calls = []
+
+    class Resp(io.BytesIO):
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    def fake(req, timeout=0):
+        calls.append(req.full_url)
+        if len(calls) == 1:
+            raise urllib.error.HTTPError(req.full_url, 429, 'Too Many', {}, None)
+        return Resp(payload)
+
+    real, real_wait = urllib.request.urlopen, data.WAIT
+    urllib.request.urlopen, data.WAIT = fake, 0.0
+    try:
+        b = data.fetch_one('ZZZ', '1y')
+        assert b is not None and len(b['c']) == 8 and 'query1' in calls[0] and 'query2' in calls[1]
+        calls.clear()
+
+        def nf(req, timeout=0):
+            calls.append(1)
+            raise urllib.error.HTTPError(req.full_url, 404, 'Not Found', {}, None)
+        urllib.request.urlopen = nf
+        assert data.fetch_one('NOPE', '1y') is None and len(calls) == 1
+    finally:
+        urllib.request.urlopen, data.WAIT = real, real_wait
+    print('ok · datos: reintento ante 429 con el otro servidor y sin reintentos ante 404')
+
+
 def test_lab_json(tmp='/tmp/vp_lab_test'):
     b = walk(1200, seed=4)
     res = lab.analyze('RW', b, name='Paseo')
@@ -349,7 +386,7 @@ def test_study_no_edge_on_random_walk():
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk]
 
 if __name__ == '__main__':
     for fn in ALL:
