@@ -229,6 +229,10 @@ def test_forming_figures():
         ev, fm = engine.scan(F)
         f = [x_ for x_ in fm if x_['type'] == 'fig' and x_['name'] == nm]
         assert f and f[0]['d'] == 1 and f[0]['dist'] <= shapes.NEAR and not [e for e in ev if e['name'] == nm and e['i'] >= len(F['c']) - 3], (nm, fm)
+    # una figura ya rota y aún activa no se anuncia además como «en formación»
+    b, _ = plant_fig('double_bottom')
+    res = lab.analyze('T', b, nb=300)
+    assert any(p_['key'] == 'double_bottom' and p_['active'] for p_ in res['patterns']) and not any(p_['key'] == 'forming_double_bottom' for p_ in res['patterns'])
     print(f'ok · figuras en formación: {len(cases) + 2} figuras sin romper salen con su disparador, su distancia en ATR y un solo escenario')
 
 

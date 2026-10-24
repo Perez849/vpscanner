@@ -256,6 +256,8 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
                           'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_t': None, 'active': True, 'conf': []})
         else:
             fk, d, g = st['name'], st['d'], st['g']
+            if any(it['key'] == fk and it['dir'] == d and it['active'] for it in items if it['state'] == 'done'):      # la misma figura ya rota y aún viva: no se anuncia otra igual
+                continue
             i = n - 1
             geo = annotate(fk, g, F, n)                      # la barra virtual n lleva el cuello o la recta hasta el próximo cierre
             if _xmin(geo, s0) < s0:
