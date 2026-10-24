@@ -29,6 +29,7 @@
   .err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:var(--r);padding:16px 18px;font-size:13px;margin:20px 0;line-height:1.6}
   .tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
   .tabs button{font-family:var(--f-mono);font-size:12px;padding:8px 14px;border:1px solid var(--rule2);border-radius:8px;background:var(--card);color:var(--sub);cursor:pointer}
+  .tabs a{font-family:var(--f-mono);font-size:12px;padding:8px 14px;border:1px solid var(--rule2);border-radius:8px;background:var(--card);color:var(--sub);text-decoration:none}
   .tabs button.on{background:var(--ink);color:var(--bg);font-weight:700;border-color:var(--ink)}
   .pill{background:var(--sapphire);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;margin-left:4px}
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
@@ -365,7 +366,8 @@ function render(){
     <button class="${S.view==='seguimiento'?'on':''}" onclick="S.view='seguimiento';render()">📈 Seguimiento real${open?`<span class="pill">${open}</span>`:''}</button>
     <button class="${S.view==='pelotazos'?'on':''}" onclick="S.view='pelotazos';render()">🚀 Pelotazos${S.alerts?.pelotazos?.length?`<span class="pill">${S.alerts.pelotazos.length}</span>`:''}</button>
     <button class="${S.view==='medio'?'on':''}" onclick="S.view='medio';render()">📆 Medio plazo</button>
-    <button class="${S.view==='validacion'?'on':''}" onclick="S.view='validacion';render()">🧪 Cómo se validó</button></div>`;
+    <button class="${S.view==='validacion'?'on':''}" onclick="S.view='validacion';render()">🧪 Cómo se validó</button>
+    <a href="charts.html" title="Figuras, velas, soportes y resistencias dibujados con entrada, stop y objetivo">🕯️ Laboratorio de gráficos</a></div>`;
   document.getElementById('app').innerHTML=tabs+(S.view==='alertas'?alertasView():S.view==='seguimiento'?trackView():S.view==='pelotazos'?pelotazoView():S.view==='medio'?midView():validView());
   const q=document.getElementById('q');
   if(q){q.addEventListener('input',e=>{S.q=e.target.value;const p=e.target.selectionStart;render();const n=document.getElementById('q');n.focus();n.setSelectionRange(p,p);});}

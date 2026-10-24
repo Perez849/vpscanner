@@ -276,6 +276,18 @@ El reloj (repositorio `Perez849/reloj-inversion`) clasifica el ciclo de EE.UU. e
 - **Como ayuda al sistema de rebotes (`charts2`)**: con los 65 patrones como señales en las 3 últimas barras de cada candidato, ninguno supera el umbral del mejor de 38 con muestra suficiente; el más claro es negativo: un rebote candidato que coincide con un marubozu alcista largo acierta el 55,4 % frente al 65,2 % (t = −2,5). Reentrenar el sistema con los patrones empeora: modelo actual +0,48 %/op., alfa +0,11 %, +17,7 % anual; + velas +0,44 %, +10,2 %; + rupturas +0,43 %, +15,2 %; + figuras +0,40 %, +14,8 %; + los 65 +0,39 %, alfa −0,01 %, +12,9 %.
 - **Conclusión**: en valores grandes, el chartismo clásico no tiene capacidad predictiva por encima del efecto conocido de reversión a corto plazo. Cuidado con la lectura de los datos: son definiciones algorítmicas de figuras que un analista dibuja a ojo con criterio (puede que el detector no vea lo que ve la persona), solo hay datos diarios, sobreviven los valores actuales y los cortos no incluyen coste de préstamo.
 
+## Laboratorio de gráficos: ver los patrones dibujados (`charts.html`; `scanner/chartlab.py`)
+
+Una página aparte (`charts.html`, enlazada desde la web) que **dibuja sobre el gráfico de velas** lo que detecta el motor de chartismo, para poder juzgarlo con los ojos y no solo con tablas:
+
+- **Figuras** (doble suelo/techo, hombro-cabeza-hombro, triángulos, cuñas, banderas y banderines, taza con asa, diamante, VCP, rectángulos…) con sus pivotes numerados, cuello o directrices y zona sombreada; **rupturas y compresiones** (máximos/mínimos, Bollinger, NR7, ATR comprimido, Darvas); **velas** (doji, estrella de la mañana/tarde, envolventes, martillo, tres soldados…) con un marco alrededor de las velas que forman el patrón; **directrices** y **soportes/resistencias** de ≥ 2 toques.
+- **Entrada, stop y objetivo por patrón**, con las reglas clásicas: objetivo = medida de la figura proyectada desde el cuello/ruptura (doble suelo: cuello + altura; triángulos: altura de la base; banderas: el mástil; taza: su profundidad…), stop estructural (más allá del mínimo/máximo de la figura con un margen de 0,25 ATR) o táctico (1,5 ATR) si el estructural queda demasiado lejos; muestra el **riesgo %, el beneficio % y la relación R:R**.
+- **Resultado simulado** de cada patrón pasado (entrada en la apertura siguiente, el stop gana los empates, 40 sesiones): objetivo, stop, tiempo agotado o aún abierto.
+- **Evidencia del estudio** junto a cada patrón (de `charts`): acierto, rendimiento medio y *exceso frente a entrar al azar* con su t. Si el patrón rinde **menos** que el azar, el veredicto sale en rojo. Es el recordatorio de que dibujar una figura no es lo mismo que tener ventaja: ver arriba, ninguna figura clásica la tiene.
+- Filtros por familia, sentido, activos/históricos y R:R; pestañas *Activos*, *Historial*, *Lectura* (explicación en lenguaje llano del patrón seleccionado) y *Radar* (qué valores tienen patrones completados hoy); zoom con rueda, arrastre, ◀ ▶ para recorrer los patrones, Mayús+◀▶ para cambiar de valor y descarga del gráfico en PNG. Claro/oscuro automático.
+
+Los datos (`scanner/data/charts/<VALOR>.json`, 52 valores grandes por defecto) los regenera cada día `chartlab.yml` (o a mano con la lista de valores que se quiera: `python scanner/chartlab.py --symbols AAPL,NVDA`). Las pruebas (`test_chartlab`) plantan un doble suelo y comprueban el objetivo (cuello + altura), el stop y que el resultado simulado salga «objetivo» o «stop» según lo que haga el precio después.
+
 ## 🚀 Pelotazos (experimental)
 
 Pestaña aparte para operaciones de **cola gruesa**: acierta poco, pero a veces gana mucho. Patrones de fuerza (ruptura de máximos de 55 sesiones con volumen, líder de fuerza relativa que retrocede, contracción de volatilidad…) en EE.UU. grandes/medianas/pequeñas, las 3 mejores por día según la probabilidad de superar +12 %, y salida con **stop de seguimiento de 5×ATR** hasta 60 sesiones, sin objetivo.
@@ -300,12 +312,13 @@ scanner/
   emastudy.py              estudio de ideas con EMA 34/89/200 + RSI (research.py ema | ema2 | ema3)
   midsig.py                señales de medio plazo (tendencia, rotación de ETF) → data/midterm.json
   study.py / midterm.py    estudios ampliados (calibración, motivos, medio plazo); se lanzan con research.py reasons | reasons2 | midterm
+  chartlab.py / charts.py  patrones chartistas: estudio (research.py charts) y laboratorio visual → data/charts/*.json (charts.html)
   scan.py                  robot diario → data/alerts.json, tracking.json, candles.json, …
                            (--mode preclose: aviso previo al cierre → alerts_pre.json)
   track.py / notify.py     seguimiento en vivo / avisos (Telegram, resumen en Actions)
   model/validated.json     modelo y estadísticas validadas (se regenera cada domingo)
 tests/                     test_engine.py (causalidad, simulador, sin ventaja en datos aleatorios) · test_pipeline.py
-.github/workflows/         scan.yml (L–V 22:30 UTC) · scan_preclose.yml (L–V 15:20 ET) · revalidate.yml (domingos) · research.yml (manual)
+.github/workflows/         scan.yml (L–V 22:30 UTC) · scan_preclose.yml (L–V 15:20 ET) · revalidate.yml (domingos) · chartlab.yml (L–V 22:45 UTC) · research.yml (manual)
 ```
 
 ## Puesta en marcha
