@@ -1,0 +1,79 @@
+ESTUDIO DE EVIDENCIA · 500 acciones · 1,228,474 barras · 2016-10-17 → 2026-10-23 · coste 0.15 % · salida a 10 sesiones
+
+=== Las 50 acciones más negociadas en cada fecha (123,000 barras) · umbral del mejor de 86: |t| ≥ 3.56 (p95) / 3.88 (p99) ===
+  patrón                            n  acierto   media  exceso      t  años+
+  ▲ base_near_high★               871    52.0%  -0.00%  -0.66%   -3.8   2/10
+  ▲ cup_handle                     72    41.7%  -1.26%  -1.70%   -2.8   1/5 
+  ▲ donch55_up                   3387    52.0%  +0.22%  -0.44%   -2.7   1/10
+  ▼ diamond_bear                  118    38.1%  -2.65%  -1.80%   -2.5   2/8 
+  ▼ resistance_reject             260    51.5%  +0.13%  +0.94%   +2.3   8/10
+  ▼ donch100_dn                  1068    38.6%  -1.76%  -1.20%   -2.2   2/10
+  ▼ donch55_dn                   1667    38.3%  -1.66%  -1.00%   -2.1   1/10
+  ▼ hanging_man                   666    44.9%  -0.33%  +0.65%   +2.0   6/10
+  ▲ triple_bottom                 298    51.3%  -0.40%  -0.93%   -2.0   1/10
+  ▼ rising_wedge                  344    43.9%  -0.36%  +0.48%   +1.9   8/10
+  ▲ cup_handle:hq                  60    46.7%  -0.84%  -1.26%   -1.9   1/3 
+  ▼ bear_flag                     268    36.2%  -1.95%  -1.27%   -1.8   2/10
+  ▲ three_inside_up                44    63.6%  +2.98%  +2.51%   +1.8   0/0 
+  ▲ box_up                       1684    53.5%  +0.26%  -0.36%   -1.8   2/10
+  ▲ trendline_up                  960    54.3%  +0.94%  +0.47%   +1.7   6/10
+  ▲ donch100_up                  2689    52.0%  +0.37%  -0.31%   -1.7   2/10
+  ▲ vcp                           687    50.7%  +0.24%  -0.44%   -1.7   1/10
+  ▲ asc_triangle                  131    57.3%  +0.07%  -0.61%   -1.7   2/8 
+  ▲ vcp:hq                        675    50.4%  +0.24%  -0.43%   -1.7   1/10
+  ▲ spin_bull                     470    58.3%  +1.15%  +0.67%   +1.6   7/10
+  ▼ box_dn                       1374    42.1%  -1.30%  -0.47%   -1.6   1/10
+  ▲ sym_tri_up                     72    58.3%  -0.02%  -0.63%   -1.5   1/5 
+  ▲ bb_squeeze_up                1175    53.0%  +0.31%  -0.34%   -1.5   1/10
+  ▲ diamond_bull                  105    47.6%  -0.62%  -1.09%   -1.5   1/7 
+  ▲ donch252_up                  2014    51.9%  +0.36%  -0.33%   -1.5   3/10
+  superan el umbral del mejor de 86: 1 (base_near_high); por azar se esperarían ≈ 4.3 si se miraran sueltos
+  figuras      alcistas  15 patrones · exceso medio -0.312 % · positivos 33 %
+  figuras      bajistas  12 patrones · exceso medio -0.446 % · positivos 25 %
+  rupturas     alcistas   6 patrones · exceso medio -0.406 % · positivos 0 %
+  rupturas     bajistas   5 patrones · exceso medio -0.832 % · positivos 0 %
+  velas        alcistas  13 patrones · exceso medio +0.218 % · positivos 54 %
+  velas        bajistas  13 patrones · exceso medio -0.047 % · positivos 38 %
+  directrices  alcistas   1 patrones · exceso medio +0.468 % · positivos 100 %
+  directrices  bajistas   1 patrones · exceso medio -0.043 % · positivos 0 %
+  rebotes      alcistas   1 patrones · exceso medio -0.306 % · positivos 0 %
+  rebotes      bajistas   1 patrones · exceso medio +0.935 % · positivos 100 %
+
+=== Las 300 acciones más negociadas en cada fecha (738,000 barras) · umbral del mejor de 101: |t| ≥ 3.35 (p95) / 3.52 (p99) ===
+  patrón                            n  acierto   media  exceso      t  años+
+  ▲ base_near_high★              5299    51.8%  -0.07%  -0.53%   -5.4   1/10
+  ▲ donch100_up★                15355    51.0%  +0.03%  -0.44%   -4.9   1/10
+  ▼ rising_wedge★                2320    46.7%  -0.12%  +0.60%   +4.6   9/10
+  ▲ donch55_up★                 19642    51.8%  +0.07%  -0.38%   -4.5   1/10
+  ▲ donch252_up★                10874    51.0%  +0.00%  -0.45%   -4.3   2/10
+  ▲ vcp:hq★                      3957    51.8%  +0.06%  -0.40%   -3.5   0/10
+  ▲ vcp★                         4037    51.8%  +0.07%  -0.39%   -3.5   0/10
+  ▼ rising_wedge:hq★             1230    47.9%  -0.11%  +0.60%   +3.4   9/10
+  ▲ cup_handle                    488    49.4%  -0.43%  -0.82%   -2.9   1/10
+  ▼ sym_tri_dn                    358    50.6%  -0.11%  +0.66%   +2.8   7/10
+  ▲ bb_squeeze_up                7104    52.8%  +0.15%  -0.30%   -2.7   2/10
+  ▲ asc_triangle                 1023    52.5%  +0.06%  -0.40%   -2.7   3/10
+  ▲ trendline_up                 5770    55.8%  +0.79%  +0.42%   +2.7   7/10
+  ▲ cup_handle:hq                 378    50.5%  -0.44%  -0.83%   -2.7   2/10
+  ▲ asc_triangle:hq               428    52.1%  -0.05%  -0.53%   -2.3   4/10
+  ▼ sym_tri_dn:hq                 141    48.9%  +0.13%  +0.86%   +2.2   5/8 
+  ▼ doji_bear                    3492    46.6%  -0.44%  +0.30%   +2.1   7/10
+  ▼ shooting_star                3740    45.5%  -0.40%  +0.32%   +2.0   9/10
+  ▼ hanging_man                  3971    43.8%  -0.47%  +0.28%   +1.9   5/10
+  ▲ rect_up:hq                    106    56.6%  -0.52%  -0.95%   -1.9   2/7 
+  ▲ sym_tri_up                    439    54.0%  +0.08%  -0.38%   -1.8   3/9 
+  ▲ three_inside_up               228    59.2%  +1.54%  +1.29%   +1.8   7/10
+  ▲ doji_star_bull                 24    20.8%  -7.60%  -7.84%   -1.8   0/2 
+  ▲ box_up                      10758    52.8%  +0.22%  -0.21%   -1.8   2/10
+  ▲ channel_up_up                 319    49.2%  -0.02%  -0.50%   -1.7   3/10
+  superan el umbral del mejor de 101: 8 (base_near_high, donch100_up, donch252_up, donch55_up, rising_wedge, rising_wedge:hq, vcp, vcp:hq); por azar se esperarían ≈ 5.1 si se miraran sueltos
+  figuras      alcistas  15 patrones · exceso medio -0.219 % · positivos 20 %
+  figuras      bajistas  13 patrones · exceso medio +0.065 % · positivos 54 %
+  rupturas     alcistas   7 patrones · exceso medio -0.101 % · positivos 14 %
+  rupturas     bajistas   6 patrones · exceso medio -0.634 % · positivos 0 %
+  velas        alcistas  15 patrones · exceso medio -1.038 % · positivos 47 %
+  velas        bajistas  15 patrones · exceso medio +0.059 % · positivos 73 %
+  directrices  alcistas   1 patrones · exceso medio +0.417 % · positivos 100 %
+  directrices  bajistas   1 patrones · exceso medio -0.037 % · positivos 0 %
+  rebotes      alcistas   1 patrones · exceso medio +0.151 % · positivos 100 %
+  rebotes      bajistas   1 patrones · exceso medio +0.254 % · positivos 100 %
