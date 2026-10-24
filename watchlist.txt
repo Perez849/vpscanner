@@ -1,0 +1,23 @@
+# Lista de seguimiento de VP Scanner: un valor por línea o varios separados por espacios o comas. Las líneas con # son comentarios.
+# El escaneo diario (.github/workflows/scan.yml) la lee entera: edítala aquí mismo (lápiz en GitHub) y el próximo escaneo incluirá los cambios.
+# Símbolos de Yahoo Finance: BRK-B (no BRK.B), ^GSPC para índices, BTC-USD para cripto. Un valor que no existe se ignora y se avisa en el radar.
+# Cada valor añade ~75 KB de gráfico al repositorio y alarga unos segundos el escaneo: con más de ~150 conviene vigilar el tamaño de data/.
+
+# Tecnología y semiconductores
+AAPL MSFT NVDA AMZN GOOGL META TSLA AVGO AMD NFLX ORCL CRM ADBE QCOM INTC MU PLTR COIN SMCI ARM UBER
+CSCO IBM TXN AMAT LRCX KLAC NOW INTU PANW CRWD SNOW SHOP MRVL ANET TSM ASML ABNB BKNG PYPL
+
+# Finanzas
+JPM BAC GS V MA MS WFC C AXP BLK SCHW BRK-B
+
+# Salud
+LLY UNH PFE MRK ABBV JNJ TMO ABT AMGN GILD ISRG VRTX REGN
+
+# Consumo
+COST WMT HD KO PEP NKE SBUX DIS MCD PG TGT LOW CMG TJX
+
+# Industria y energía
+BA CAT GE XOM CVX HON UNP DE LMT RTX COP SLB OXY
+
+# ETF: índices, materias primas, bonos y sectores
+SPY QQQ IWM DIA GLD SLV TLT XLE XLF XLK XLV XLY XLI XLP XLU SMH XBI

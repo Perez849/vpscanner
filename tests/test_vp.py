@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, data, engine, lab, shapes, study, ta
+from vp import breakouts, candles, data, engine, lab, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -137,6 +137,10 @@ FIGS = {
     'trendline_up': [(0, 100), (10, 110), (18, 100), (28, 107.5), (36, 100), (46, 105), (54, 100), (60, 108)], 'trendline_dn': [(0, 100), (10, 90), (18, 100), (28, 92.5), (36, 100), (46, 95), (54, 100), (60, 92)],
     'bull_flag': [(0, 100), (6, 112), (14, 110.5), (16, 114.5)], 'bear_flag': [(0, 100), (6, 88), (14, 89.5), (16, 85.5)],
     'triple_bottom': [(0, 100), (15, 80), (25, 92), (40, 80.4), (50, 92), (65, 80.2), (75, 93.5)], 'triple_top': [(0, 100), (15, 120), (25, 108), (40, 119.6), (50, 108), (65, 119.8), (75, 106.5)],
+    'channel_up_up': [(0, 100), (7, 108.8), (14, 105.6), (21, 114.4), (28, 111.2), (35, 120), (42, 116.8), (49, 125.6), (56, 137)],
+    'channel_up_dn': [(0, 100), (7, 108.8), (14, 105.6), (21, 114.4), (28, 111.2), (35, 120), (42, 116.8), (49, 125.6), (56, 108)],
+    'channel_dn_dn': [(0, 100), (7, 91.2), (14, 94.4), (21, 85.6), (28, 88.8), (35, 80), (42, 83.2), (49, 74.4), (56, 63)],
+    'channel_dn_up': [(0, 100), (7, 91.2), (14, 94.4), (21, 85.6), (28, 88.8), (35, 80), (42, 83.2), (49, 74.4), (56, 92)],
     'rect_up': [(0, 100), (8, 116), (16, 101), (24, 115.6), (32, 100.6), (40, 115.8), (48, 100.8), (54, 119)], 'rect_dn': [(0, 116), (8, 100), (16, 115), (24, 100.6), (32, 115.4), (40, 100.4), (48, 115.2), (54, 97)],
 }
 COMPRESS = ('asc_triangle', 'desc_triangle', 'sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge', 'rect_up', 'rect_dn')
@@ -187,6 +191,71 @@ def test_figures_planted():
     assert has(custom(quiet(250, 130) + list(np.linspace(130, 100, 20)), [(99.0, 98.6, 99.2, 98.4), (98.5, 98.9, 99.0, 98.3), (101.5, 102.4, 102.6, 101.3)]), 'island_bull')
     assert has(custom(quiet(250, 70) + list(np.linspace(70, 100, 20)), [(101.0, 101.4, 101.6, 100.8), (101.5, 101.1, 101.7, 101.0), (98.5, 97.6, 98.7, 97.4)]), 'island_bear')
     print(f'ok · figuras: {len(FIGS) + 11} figuras plantadas saltan en su barra de ruptura')
+
+
+def test_forming_figures():
+    """Figuras dibujadas pero sin romper: salen como «en formación» con su disparador, la distancia en ATR y un solo escenario; al romper pasan a ser eventos."""
+    cases = {
+        'double_bottom': ([(0, 100), (20, 80), (32, 92), (44, 80.5), (50, 89.5)], 1, 92.0),
+        'double_top': ([(0, 100), (20, 120), (32, 108), (44, 119.5), (50, 110.5)], -1, 108.0),
+        'hs_top': ([(0, 80), (15, 100), (24, 92), (36, 108), (48, 92), (58, 100.5), (64, 94.5)], -1, 92.0),
+        'hs_inverse': ([(0, 120), (15, 100), (24, 108), (36, 92), (48, 108), (58, 99.5), (64, 105.5)], 1, 108.0),
+        'triple_bottom': ([(0, 100), (15, 80), (25, 92), (40, 80.4), (50, 92), (65, 80.2), (70, 90)], 1, 92.0),
+        'bull_flag': ([(0, 100), (6, 112), (14, 110.5), (15, 111.3)], 1, 112.0),
+    }
+    for nm, (an, d, trig) in cases.items():
+        b, _ = plant_fig(nm, an=an)
+        F = ta.prepare(b)
+        ev, fm = engine.scan(F)
+        f = [x for x in fm if x['type'] == 'fig' and x['name'] == nm or (nm == 'bull_flag' and x.get('name') == 'bull_pennant')]     # una bandera corta puede salir como banderín
+        assert f, (nm, [(x['type'], x.get('name') or x.get('kind')) for x in fm])
+        f = f[0]
+        assert f['d'] == d and 0 <= f['dist'] <= shapes.NEAR and f['q'] >= shapes.QFORM, (nm, f['d'], f['dist'], f['q'])
+        assert abs(f['trig'] - trig) <= 0.12 * abs(trig - float(F['c'][-1])) + 1.5, (nm, f['trig'], trig)
+        assert not [e for e in ev if e['name'] == nm and e['i'] >= len(F['c']) - 3], nm              # aún no ha roto: no es un evento
+        nm = f['name']
+        res = lab.analyze('T', b, nb=300)
+        it = [p for p in res['patterns'] if p['key'] == 'forming_' + nm]
+        assert it and it[0]['state'] == 'forming' and it[0]['dir'] == d and set(it[0]['sc']) == {'up' if d > 0 else 'dn'}, nm
+        sc = it[0]['sc']['up' if d > 0 else 'dn']
+        assert (sc['stop'] < sc['entry'] < sc['target']) if d > 0 else (sc['target'] < sc['entry'] < sc['stop']), (nm, sc)
+        assert it[0]['trig']['dist'] == round(f['dist'], 2) and any(L_['k'] == 'neck' for L_ in it[0]['lines']), nm
+    # taza con asa y VCP: la misma construcción que en test_figures_planted, sin la barra de ruptura
+    x = np.linspace(-1, 1, 72); cup = list(100 - 20 * (1 - x ** 2)); cup[-1] = 99.0
+    allc = quiet(250, 80) + list(np.linspace(80, 100, 30)) + cup + list(np.linspace(99, 95.5, 8)) + list(np.linspace(95.5, 98.5, 3))
+    v = list(np.linspace(40, 100, 300)) + list(np.linspace(100, 88, 8)) + list(np.linspace(88, 100.5, 8)) + list(np.linspace(100.5, 93.5, 8)) + list(np.linspace(93.5, 101, 8)) + list(np.linspace(101, 97.5, 8)) + list(np.linspace(97.5, 101.2, 6))
+    for nm, closes in (('cup_handle', allc), ('vcp', v)):
+        F = ta.prepare(plant_closes(np.array(closes)))
+        ev, fm = engine.scan(F)
+        f = [x_ for x_ in fm if x_['type'] == 'fig' and x_['name'] == nm]
+        assert f and f[0]['d'] == 1 and f[0]['dist'] <= shapes.NEAR and not [e for e in ev if e['name'] == nm and e['i'] >= len(F['c']) - 3], (nm, fm)
+    print(f'ok · figuras en formación: {len(cases) + 2} figuras sin romper salen con su disparador, su distancia en ATR y un solo escenario')
+
+
+def test_spent_target_and_first_break():
+    """Si la ruptura ya recorrió la medida clásica no hay recorrido que operar; y el cuello solo se rompe la primera vez que el cierre lo pasa."""
+    b, _ = plant_fig('double_bottom', an=[(0, 100), (20, 80), (32, 92), (44, 80.5), (51, 90), (52, 112)])
+    res = lab.analyze('T', b, nb=300)
+    db = [p for p in res['patterns'] if p['key'] == 'double_bottom']
+    assert db and db[-1]['plan']['spent'] and not db[-1]['active'] and 'recorrió casi toda la medida' in db[-1]['note']
+    ok, _ = plant_fig('double_bottom')
+    res = lab.analyze('T', ok, nb=300)
+    db = [p for p in res['patterns'] if p['key'] == 'double_bottom']
+    assert db and not db[-1]['plan']['spent']
+    # tras romper el cuello, caer por debajo y volver a cruzarlo no es una ruptura nueva de la misma figura
+    b, n_end = plant_fig('double_bottom', an=[(0, 100), (20, 80), (32, 92), (44, 80.5), (52, 93.5), (60, 91), (64, 91.5), (68, 95)])
+    ev = [e for e in events_of(b)[1] if e['name'] == 'double_bottom']
+    assert len(ev) == 1 and ev[0]['i'] <= n_end + 2, [(e['name'], e['i']) for e in ev]
+    print('ok · plan: objetivo consumido por la ruptura y cuello roto solo la primera vez')
+
+
+def test_watchlist():
+    got = universe.parse_watchlist('# comentario\naapl, msft;nvda  # y esto\n  BRK-B ^GSPC $$$ AAPL\n\n')
+    assert got == ['AAPL', 'MSFT', 'NVDA', 'BRK-B', '^GSPC'], got
+    w = universe.watchlist()
+    assert len(w) >= 50 and len(set(w)) == len(w) and 'AAPL' in w and all(universe.TICKER.match(x) for x in w)
+    assert universe.watchlist('/ruta/que/no/existe.txt') == list(universe.WATCHLIST)
+    print(f'ok · lista de seguimiento: watchlist.txt con {len(w)} valores sin repetidos y lector tolerante')
 
 
 def test_catalog():
@@ -248,7 +317,7 @@ def test_min_stop_and_forming():
     xs, ys = np.array([a[0] for a in an]), np.array([a[1] for a in an])
     b = plant_closes(np.array(quiet(260, 100) + list(np.interp(np.arange(xs[0], xs[-1] + 1), xs, ys))), 0.5)
     res = lab.analyze('T', b, nb=300)
-    fm = [p for p in res['patterns'] if p['state'] == 'forming']
+    fm = [p for p in res['patterns'] if p['state'] == 'forming' and p['key'].startswith('forming_sym_tri')]
     assert len(fm) == 1 and fm[0]['key'] == 'forming_sym_tri' and fm[0]['dir'] == 0 and set(fm[0]['sc']) == {'up', 'dn'}
     up, dn = fm[0]['sc']['up'], fm[0]['sc']['dn']
     last = res['summary']['close']
@@ -338,6 +407,7 @@ def test_lab_json(tmp='/tmp/vp_lab_test'):
     b = walk(1200, seed=4)
     res = lab.analyze('RW', b, name='Paseo')
     json.dumps(res)
+    assert res['name'] == 'Paseo' and res['sym'] == 'RW'                       # el nombre de la empresa no se pisa con el de una figura
     n = res['n']
     assert n == 340 and len(res['bars']['t']) == n
     for p in res['patterns']:
@@ -395,7 +465,7 @@ def test_study_no_edge_on_random_walk():
     print(f'ok · estudio: en 24 paseos aleatorios {len(ev["meta"]["tested"]["K24"]["above"])} de {ev["meta"]["tested"]["K24"]["n"]} patrones superan el umbral del mejor de N')
 
 
-ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
+ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
        test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk]
 
 if __name__ == '__main__':

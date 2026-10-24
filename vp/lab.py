@@ -17,17 +17,18 @@ import numpy as np
 
 from . import engine, plan as P, ta
 from .catalog import CATALOG, FAMILIES, HQ
+from . import shapes
 from .shapes import at
 
 NB = 340             # barras exportadas (el resto de la historia solo sirve de arranque a medias e indicadores)
 ACTIVE = 12          # un patrón está «activo» si se completó en las últimas 12 sesiones y aún no ha resuelto
 SPARK = 60
 
-FORM_LABEL = {'sym_tri': 'Triángulo simétrico', 'asc_triangle': 'Triángulo ascendente', 'desc_triangle': 'Triángulo descendente', 'rising_wedge': 'Cuña ascendente',
+FORM_LABEL = {'channel_up': 'Canal ascendente', 'channel_dn': 'Canal descendente', 'sym_tri': 'Triángulo simétrico', 'asc_triangle': 'Triángulo ascendente', 'desc_triangle': 'Triángulo descendente', 'rising_wedge': 'Cuña ascendente',
               'falling_wedge': 'Cuña descendente', 'rect': 'Rectángulo'}
-FORM_UP = {'sym_tri': 'sym_tri_up', 'asc_triangle': 'asc_triangle', 'falling_wedge': 'falling_wedge', 'rect': 'rect_up', 'desc_triangle': 'sym_tri_up', 'rising_wedge': 'sym_tri_up'}
-FORM_DN = {'sym_tri': 'sym_tri_dn', 'desc_triangle': 'desc_triangle', 'rising_wedge': 'rising_wedge', 'rect': 'rect_dn', 'asc_triangle': 'sym_tri_dn', 'falling_wedge': 'sym_tri_dn'}
-FORM_BIAS = {'asc_triangle': 1, 'falling_wedge': 1, 'desc_triangle': -1, 'rising_wedge': -1}
+FORM_UP = {'channel_up': 'channel_up_up', 'channel_dn': 'channel_dn_up', 'sym_tri': 'sym_tri_up', 'asc_triangle': 'asc_triangle', 'falling_wedge': 'falling_wedge', 'rect': 'rect_up', 'desc_triangle': 'sym_tri_up', 'rising_wedge': 'sym_tri_up'}
+FORM_DN = {'channel_up': 'channel_up_dn', 'channel_dn': 'channel_dn_dn', 'sym_tri': 'sym_tri_dn', 'desc_triangle': 'desc_triangle', 'rising_wedge': 'rising_wedge', 'rect': 'rect_dn', 'asc_triangle': 'sym_tri_dn', 'falling_wedge': 'sym_tri_dn'}
+FORM_BIAS = {'channel_up': 1, 'channel_dn': -1, 'asc_triangle': 1, 'falling_wedge': 1, 'desc_triangle': -1, 'rising_wedge': -1}
 
 
 # ── geometría que dibuja la web ───────────────────────────────────────────
@@ -74,7 +75,7 @@ def annotate(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
             pt(p, t)
         ln(g['t1'], (i, ext(g['t1'], g['t2'], i)), 'neck', True)
         ann.append({'k': 'height', 'x': int(g['hd'][0]), 'y0': P.r(ext(g['t1'], g['t2'], g['hd'][0])), 'y1': P.r(g['hd'][1]), 't': 'altura'})
-    elif name in ('asc_triangle', 'desc_triangle', 'sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge', 'rect_up', 'rect_dn') or name.startswith('forming_'):
+    elif name in ('asc_triangle', 'desc_triangle', 'sym_tri_up', 'sym_tri_dn', 'rising_wedge', 'falling_wedge', 'rect_up', 'rect_dn') or name.startswith(('forming_', 'channel_')):
         U, D, x0 = g['U'], g['D'], g['x0']
         ln((x0, at(U, x0)), (i, at(U, i)), 'upper', False, len(g['tu']))
         ln((x0, at(D, x0)), (i, at(D, i)), 'lower', False, len(g['tl']))
@@ -86,7 +87,7 @@ def annotate(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
             ln((i, at(U, i)), (ap, at(U, ap)), 'ext', True)
             ln((i, at(D, i)), (ap, at(D, ap)), 'ext', True)
             pt((ap, at(U, ap)), 'ápice')
-        ann.append({'k': 'height', 'x': int(x0), 'y0': P.r(at(U, x0)), 'y1': P.r(at(D, x0)), 't': 'base'})
+        ann.append({'k': 'height', 'x': int(x0), 'y0': P.r(at(U, x0)), 'y1': P.r(at(D, x0)), 't': 'anchura' if name.startswith('channel_') else 'base'})
     elif name in ('trendline_up', 'trendline_dn'):
         L, tch = g['L'], g['tch']
         ln((tch[0][0], at(L, tch[0][0])), (i, at(L, i)), 'trend', False, len(tch))
@@ -102,7 +103,7 @@ def annotate(name: str, g: Dict, F: Dict[str, np.ndarray], i: int) -> Dict:
             zz.append([hi_[0], P.r(hi_[1])])
             zz.append([g['lows'][k][0], P.r(g['lows'][k][1])])
             pt(hi_, f'{k + 1}')
-        polys.append({'pts': zz + [[i, P.r(c[i])]], 'k': 'zig'})
+        polys.append({'pts': zz + [[min(i, len(c) - 1), P.r(c[min(i, len(c) - 1)])]], 'k': 'zig'})
         ln((g['highs'][0][0], g['highs'][-1][1]), (i, g['highs'][-1][1]), 'neck', True)
     elif name == 'cup_handle':
         cf = g['fit']
@@ -200,14 +201,16 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
         note = pat.rule + (' El stop estructural quedaba a menos de 1 ATR: se ha ampliado a 1 ATR.' if bx['stop_min'] else '')
         out = P.outcome(F, i, d, stop, tgt)
         out_t = P.outcome(F, i, d, stop_t, tgt) if stop_t is not None else None
-        active = (n - 1 - i) <= ACTIVE and out['res'] == 'open'
+        active = (n - 1 - i) <= ACTIVE and out['res'] == 'open' and not bx['spent']
+        if bx['spent']:
+            note += ' La ruptura ya recorrió casi toda la medida clásica: el objetivo queda a menos de 1 ATR de la entrada, así que no hay recorrido que operar.'
         if active:
             bx['obs'] = P.obstacles(zs, entry, tgt)
         _shift(geo, s0)
         for o_ in (out, out_t):
             if o_ and 'xi' in o_:
                 o_['xi'] -= s0
-        items.append({'id': f'{key}@{i - s0}', 'key': key, 'label': pat.label, 'dir': d, 'fam': pat.fam, 'i': i - s0, 'state': 'done', 'q': e['q'], **geo,
+        items.append({'id': f'{key}@{i - s0}', 'key': key, 'label': pat.label, 'dir': d, 'fam': pat.fam, 'i': i - s0, 'state': 'done', 'q': e['q'], 'new': bool(i == n - 1), **geo,
                       'plan': bx, 'note': note, 'out': out, 'out_t': out_t, 'active': bool(active)})
     seen = {}
     for it in items:                                      # varias rupturas de Donchian el mismo día y en el mismo sentido: se queda la de mayor periodo
@@ -219,30 +222,61 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
     items = [it for it in items if not it['key'].startswith('donch') or seen[(it['i'], it['dir'])][1] is it]
     for it in items:                                      # otros patrones del mismo sentido que saltan en las 3 barras vecinas (no son confirmaciones independientes)
         it['conf'] = [o['label'] for o in items if o is not it and o['dir'] == it['dir'] and it['dir'] != 0 and abs(o['i'] - it['i']) <= 3 and o['key'] != it['key']][:4]
-    if forming is not None and forming['kind'] in FORM_LABEL:
-        from . import shapes
-        i, st = forming['i'], forming
-        a = float(F['atr'][i])
-        g = dict(U=st['U'], D=st['D'], tu=st['tu'], tl=st['tl'], x0=st['x0'], apex=st['apex'], kind=st['kind'])
-        geo = annotate('forming_' + st['kind'], g, F, i)
-        if _xmin(geo, s0) >= s0:
+    last = float(F['c'][-1])
+    for st in forming:
+        a_ = float(F['atr'][n - 1])
+        if st['type'] == 'cmp':
+            if st['kind'] not in FORM_LABEL:
+                continue
+            i = n - 1
+            g = dict(U=st['U'], D=st['D'], tu=st['tu'], tl=st['tl'], x0=st['x0'], apex=st['apex'], kind=st['kind'])
+            geo = annotate('forming_' + st['kind'], g, F, i)
+            if _xmin(geo, s0) < s0:
+                continue
             sc = {}
             bias = FORM_BIAS.get(st['kind'], 0)
-            for side, d, key, trig in (('up', 1, FORM_UP[st['kind']], at(st['U'], i + 1) + 0.15 * a), ('dn', -1, FORM_DN[st['kind']], at(st['D'], i + 1) - 0.15 * a)):
-                stop, tgt = P.rule(key, g, F, i, d, entry=trig)
-                bx = P.box(F, i, d, trig, stop, tgt)
+            lv = {'up': at(st['U'], i + 1) + 0.15 * a_, 'dn': at(st['D'], i + 1) - 0.15 * a_}
+            for side, d, key in (('up', 1, FORM_UP[st['kind']]), ('dn', -1, FORM_DN[st['kind']])):
+                stop, tgt = P.rule(key, g, F, i, d, entry=lv[side])
+                bx = P.box(F, i, d, lv[side], stop, tgt)
                 for k_ in ('_stop', '_target', '_stop_t'):
                     bx.pop(k_, None)
                 bx['key'] = key
                 bx['label'] = 'rompe contra el sesgo habitual de la figura' if bias * d < 0 else CATALOG[key].label
                 bx['note'] = CATALOG[key].rule
-                bx['obs'] = P.obstacles(zs, trig, tgt)
+                bx['obs'] = P.obstacles(zs, lv[side], tgt)
                 sc[side] = bx
+            dist = min(lv['up'] - last, last - lv['dn']) / a_
             _shift(geo, s0)
             items.append({'id': f'forming_{st["kind"]}@{i - s0}', 'key': 'forming_' + st['kind'], 'label': FORM_LABEL[st['kind']], 'dir': 0, 'fam': 'figuras', 'i': i - s0, 'state': 'forming',
                           'q': shapes.compression_quality(st, 0.25, 1.15), 'bias': bias, **geo, 'plan': None, 'sc': sc,
+                          'trig': {'up': P.r(lv['up']), 'dn': P.r(lv['dn']), 'dist': round(max(dist, 0.0), 2), 'pct': round(max(dist, 0.0) * a_ / last * 100, 2)},
                           'note': 'Aún no ha roto: el cierre sigue dentro de las dos rectas. Se opera la ruptura (cierre fuera de la recta) y el sentido no está decidido.'
                                   + (' Sesgo habitual: ' + ('alcista' if bias > 0 else 'bajista') + '.' if bias else ''),
+                          'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_t': None, 'active': True, 'conf': []})
+        else:
+            fk, d, g = st['name'], st['d'], st['g']
+            i = n - 1
+            geo = annotate(fk, g, F, n)                      # la barra virtual n lleva el cuello o la recta hasta el próximo cierre
+            if _xmin(geo, s0) < s0:
+                continue
+            trig, entry = st['trig'], st['trig'] + d * 0.15 * a_
+            if not any(L_['k'] == 'neck' for L_ in geo['lines']):
+                x_ = max(_xmin(geo, n - 1), n - 60)
+                geo['lines'].append({'a': [int(x_), P.r(trig)], 'b': [int(n), P.r(trig)], 'k': 'neck', 'dash': True})
+            stop, tgt = P.rule(fk, g, F, i, d, entry=entry)
+            bx = P.box(F, i, d, entry, stop, tgt)
+            for k_ in ('_stop', '_target', '_stop_t'):
+                bx.pop(k_, None)
+            bx['key'] = fk
+            bx['label'] = CATALOG[fk].label
+            bx['note'] = CATALOG[fk].rule
+            bx['obs'] = P.obstacles(zs, entry, tgt)
+            _shift(geo, s0)
+            items.append({'id': f'forming_{fk}@{i - s0}', 'key': 'forming_' + fk, 'label': CATALOG[fk].label, 'dir': d, 'fam': 'figuras', 'i': i - s0, 'state': 'forming', 'q': st['q'], **geo,
+                          'plan': None, 'sc': {'up' if d > 0 else 'dn': bx}, 'trig': {'level': P.r(trig), 'dist': round(st['dist'], 2), 'pct': round(abs(trig / last - 1) * 100, 2)},
+                          'note': f'Figura dibujada pero sin romper: se activa con un cierre {"por encima" if d > 0 else "por debajo"} de {P.r(trig)} (a {st["dist"]:.1f} ATR del cierre). '
+                                  'Si el precio se gira antes, la figura se invalida; el plan usa la entrada en ese nivel + 0,15 ATR.',
                           'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_t': None, 'active': True, 'conf': []})
     items.sort(key=lambda x: x['i'])
     sl = slice(s0, n)
@@ -261,10 +295,12 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
 def index_row(res: Dict) -> Dict:
     c = res['bars']['c']
     act = [p for p in res['patterns'] if p['active']]
-    act.sort(key=lambda p: (-(p['state'] == 'forming'), -(p['q'] or 0)))
+    act.sort(key=lambda p: (-(p['state'] == 'forming'), -(p['q'] or 0)))          # primero lo que se está formando, luego por calidad
     return {'sym': res['sym'], 'name': res['name'], 'close': res['summary']['close'], 'chg': round((c[-1] / c[-2] - 1) * 100, 2) if len(c) > 1 else 0.0, 'atrp': res['summary']['atrp'],
             'rsi2': res['summary']['rsi2'], 'n': len(res['patterns']), 'spark': c[-SPARK:],
-            'active': [{'id': p['id'], 'label': p['label'], 'dir': p['dir'], 'fam': p['fam'], 'q': p['q'], 'st': p['state'], 'rr': (p['plan'] or {}).get('rr')} for p in act[:12]]}
+            'new': sum(1 for p in act if p.get('new')),
+            'active': [{'id': p['id'], 'label': p['label'], 'dir': p['dir'], 'fam': p['fam'], 'q': p['q'], 'st': p['state'], 'rr': (p['plan'] or {}).get('rr'), 'new': bool(p.get('new')),
+                        'dist': (p.get('trig') or {}).get('dist')} for p in act[:12]]}
 
 
 def write_catalog(out_dir: str) -> None:
@@ -281,16 +317,21 @@ def run(symbols: List[str], out_dir: str, rng: str = '3y', names: Optional[Dict[
         os.makedirs(raw_dir, exist_ok=True)
         for s_, b_ in bars.items():
             json.dump({k: [float(x) for x in b_[k]] for k in ('t', 'o', 'h', 'l', 'c', 'v')}, open(os.path.join(raw_dir, f'{s_}.json'), 'w'), separators=(',', ':'))
-    index = []
+    index, missing = [], []
     for s in symbols:
         b = bars.get(s)
         if b is None or len(b['c']) < NB + 60:
             print(f'  {s}: sin datos suficientes', flush=True)
+            missing.append(s)
             continue
         res = analyze(s, b, name=(names or {}).get(s, b.get('name', '')))
         json.dump(res, open(os.path.join(out_dir, 'charts', f'{s}.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
         index.append(index_row(res))
-    meta = {'generated': int(time.time()), 'asof': int(max(bars[s]['t'][-1] // 86400 for s in bars)) if bars else 0, 'symbols': index}
+    keep = {f'{x["sym"]}.json' for x in index}
+    for f in os.listdir(os.path.join(out_dir, 'charts')):         # un valor quitado de la lista no deja su gráfico antiguo en el repositorio
+        if f.endswith('.json') and f not in keep:
+            os.remove(os.path.join(out_dir, 'charts', f))
+    meta = {'generated': int(time.time()), 'asof': int(max(bars[s]['t'][-1] // 86400 for s in bars)) if bars else 0, 'symbols': index, 'missing': missing}
     json.dump(meta, open(os.path.join(out_dir, 'index.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     write_catalog(out_dir)
     print(f'  laboratorio: {len(index)} valores → {out_dir} (fallidos {failed})', flush=True)

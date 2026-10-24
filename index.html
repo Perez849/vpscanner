@@ -83,7 +83,9 @@ input[type=search],.sym-in{font-family:var(--f-mono);font-size:13px;padding:7px 
 .sc svg{display:block;width:100%;height:42px}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{font-family:var(--f-mono);font-size:10px;padding:2px 7px;border-radius:5px;background:var(--ink2);color:var(--sub);white-space:nowrap}
-.chip.u{background:var(--gbg);color:var(--gfg)}.chip.d{background:var(--rbg);color:var(--rfg)}.chip.f{background:var(--abg);color:var(--afg)}
+.chip.u{background:var(--gbg);color:var(--gfg)}.chip.d{background:var(--rbg);color:var(--rfg)}.chip.f{background:var(--abg);color:var(--afg)}.chip.n{background:var(--sapphire);color:#fff}
+.fav{border:0;background:none;cursor:pointer;font-size:17px;line-height:1;padding:0 2px;color:var(--dim)}.fav:hover{color:var(--amber)}.fav.on{color:var(--amber)}
+.tag.new{background:var(--sapphire);color:#fff}.tag.spent{background:var(--rbg);color:var(--rfg)}
 
 /* gráfico */
 .chartwrap{display:grid;grid-template-columns:176px minmax(0,1fr) 350px;gap:12px;align-items:start}
@@ -94,6 +96,7 @@ input[type=search],.sym-in{font-family:var(--f-mono);font-size:13px;padding:7px 
 .rail .bd i{font-style:normal;font-size:9px;padding:1px 5px;border-radius:4px;background:var(--ink2);color:var(--sub)}
 .rail button.on .bd i{background:#ffffff26;color:inherit}
 .rail .bd i.f{background:var(--amber);color:#1a1d23}
+.rail .bd i.fv{background:none;color:var(--amber);padding:0 1px;font-size:11px}
 .chead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:8px}
 .price{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1}
 .price small{font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--sub);margin-left:8px}
@@ -172,11 +175,20 @@ const mon = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct
 
 const S = {
   view: 'radar', idx: null, cat: null, ev: null, sym: null, D: null, sel: null, hover: null, tab: 'act', cross: null, cache: {},
-  rv: {mode: 'all', dir: 0, q: 60, all: 0, text: ''},                                   // filtros del radar
+  rv: {mode: 'all', dir: 0, q: 60, all: 0, text: '', fav: 0},                                   // filtros del radar
   f: {figuras: 1, rupturas: 1, velas: 1, directrices: 0, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'e', q: 60},   // filtros del gráfico
   view_: {start: 0, ppb: 6}, hits: [], W: 0, H: 0, dpr: 1,
   evK: 'K300', evFam: 'all', evSort: 't', evDir: -1, evText: ''
 };
+
+/* favoritos: solo viven en este navegador (localStorage) */
+const favs = (() => { try { return new Set(JSON.parse(localStorage.getItem('vp.favs') || '[]')); } catch (e) { return new Set(); } })();
+function toggleFav(sym) {
+  favs.has(sym) ? favs.delete(sym) : favs.add(sym);
+  try { localStorage.setItem('vp.favs', JSON.stringify([...favs])); } catch (e) { /* sin almacenamiento: se mantiene mientras la página siga abierta */ }
+}
+const NEAR = 1.5;                                                            // «cerca del disparo»: a ≤ 1,5 ATR del nivel que activa la figura
+const distTxt = d => d == null ? '' : d < 0.1 ? 'en el disparo' : `a ${d.toFixed(1)} ATR`;
 
 /* ───────────────────────── datos ───────────────────────── */
 async function J(path) {
@@ -200,6 +212,7 @@ async function init() {
     (S.ev ? `Evidencia: ${S.ev.meta.universe} acciones, ${S.ev.meta.from} → ${S.ev.meta.to}. ${esc(S.ev.meta.note)}` : '');
   window.addEventListener('resize', () => { if (S.view === 'chart') resize(); else if (S.view === 'ev') drawStrip(); });
   window.addEventListener('keydown', onKey);
+  window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (h) go(h); });                 // atrás/adelante del navegador y enlaces con #VALOR
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', rerender);
   new MutationObserver(rerender).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
   const h = (location.hash || '').replace('#', '');
@@ -237,34 +250,41 @@ function radarRows() {
   const rows = [];
   for (const x of S.idx.symbols) {
     if (t && !(x.sym.includes(t) || (x.name || '').toUpperCase().includes(t))) continue;
-    const a = x.active.filter(q => (R.all || q.fam === 'figuras' || q.fam === 'directrices') && (q.q == null || q.q >= R.q) && (R.dir === 0 || q.dir === R.dir || q.st === 'forming') && (R.mode === 'all' || (R.mode === 'forming' ? q.st === 'forming' : q.st !== 'forming')));
-    if (a.length) rows.push({x, a, form: a.some(q => q.st === 'forming'), best: Math.max(...a.map(q => q.q || 0))});
+    if (R.fav && !favs.has(x.sym)) continue;
+    const md = {all: () => true, near: q => q.st === 'forming' && q.dist != null && q.dist <= NEAR, forming: q => q.st === 'forming', new: q => q.new, done: q => q.st !== 'forming'}[R.mode];
+    const a = x.active.filter(q => (R.all || q.fam === 'figuras' || q.fam === 'directrices') && (q.q == null || q.q >= R.q) && (R.dir === 0 || q.dir === R.dir || (q.st === 'forming' && q.dir === 0)) && md(q));
+    if (a.length) rows.push({x, a, form: a.some(q => q.st === 'forming'), near: Math.min(...a.filter(q => q.st === 'forming' && q.dist != null).map(q => q.dist), 99), isNew: a.some(q => q.new), best: Math.max(...a.map(q => q.q || 0))});
   }
-  rows.sort((u, v) => v.form - u.form || v.best - u.best || u.x.sym.localeCompare(v.x.sym));
+  rows.sort((u, v) => favs.has(v.x.sym) - favs.has(u.x.sym) || (v.near <= NEAR) - (u.near <= NEAR) || (u.near <= NEAR && v.near <= NEAR ? u.near - v.near : 0) || v.isNew - u.isNew || v.form - u.form || v.best - u.best || u.x.sym.localeCompare(v.x.sym));
   return rows;
 }
 function renderRadar() {
   const R = S.rv, all = S.idx.symbols;
-  const nf = all.filter(x => x.active.some(q => q.st === 'forming')).length;
+  const nf = all.filter(x => x.active.some(q => q.st === 'forming')).length, nnear = all.filter(x => x.active.some(q => q.st === 'forming' && q.dist != null && q.dist <= NEAR)).length;
+  const nnew = all.reduce((s, x) => s + x.active.filter(q => q.new && (q.fam === 'figuras' || q.fam === 'directrices') && (q.q == null || q.q >= R.q)).length, 0);
   const na = all.reduce((s, x) => s + x.active.filter(q => q.st !== 'forming' && (q.fam === 'figuras' || q.fam === 'directrices') && (q.q == null || q.q >= R.q)).length, 0);
   const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, t]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
-  $('#view').innerHTML = `<h2>Radar</h2><p class="lead">Qué figuras se están formando o se han completado en las últimas sesiones, ordenadas por calidad. Una figura en formación es una compresión (triángulo, cuña, rectángulo) que aún no ha roto: se muestra con los dos escenarios.</p>
-    <div class="sumry"><div class="stat"><b>${all.length}</b><span>valores vigilados</span></div><div class="stat"><b>${nf}</b><span>con figura formándose</span></div><div class="stat"><b>${na}</b><span>figuras activas (Q ≥ ${R.q})</span></div></div>
-    <div class="bar">${seg('r-mode', [['all', 'Todas'], ['forming', 'Formándose'], ['done', 'Completadas']], R.mode)}${seg('r-dir', [[0, 'Ambos'], [1, 'Alcistas'], [-1, 'Bajistas']], R.dir)}
-      ${seg('r-q', [[0, 'Q: todas'], [60, '≥ 60'], [75, '≥ 75']], R.q)}<span class="tg ${R.all ? 'on' : ''}" id="r-all"><i></i>Incluir velas y rupturas</span><input type="search" id="r-t" placeholder="Buscar valor" value="${esc(R.text)}" size="14"></div>
+  const miss = (S.idx.missing || []).length ? `<div class="warn">Sin datos de Yahoo en el último escaneo: <b>${S.idx.missing.map(esc).join(', ')}</b>. Revisa el símbolo en <code>watchlist.txt</code> (por ejemplo BRK-B, no BRK.B) o si tiene menos de 400 sesiones de historial.</div>` : '';
+  $('#view').innerHTML = `<h2>Radar</h2><p class="lead">Qué figuras se están formando o se han completado en las últimas sesiones. <b>Formándose</b>: la figura ya está dibujada pero no ha roto; se indica el nivel que la activa y a cuántos ATR está el precio. <b>Nuevas hoy</b>: se completaron en la última sesión.</p>${miss}
+    <div class="sumry"><div class="stat"><b>${all.length}</b><span>valores vigilados</span></div><div class="stat"><b>${nf}</b><span>con figura formándose</span></div><div class="stat"><b>${nnear}</b><span>a ≤ ${NEAR} ATR del disparo</span></div><div class="stat"><b>${nnew}</b><span>figuras nuevas hoy</span></div><div class="stat"><b>${na}</b><span>figuras activas (Q ≥ ${R.q})</span></div></div>
+    <div class="bar">${seg('r-mode', [['all', 'Todas'], ['near', 'Cerca del disparo'], ['forming', 'Formándose'], ['new', 'Nuevas hoy'], ['done', 'Completadas']], R.mode)}${seg('r-dir', [[0, 'Ambos'], [1, 'Alcistas'], [-1, 'Bajistas']], R.dir)}
+      ${seg('r-q', [[0, 'Q: todas'], [60, '≥ 60'], [75, '≥ 75']], R.q)}<span class="tg ${R.all ? 'on' : ''}" id="r-all"><i></i>Incluir velas y rupturas</span><span class="tg ${R.fav ? 'on' : ''}" id="r-fav"><i></i>★ Favoritos (${favs.size})</span><input type="search" id="r-t" placeholder="Buscar valor" value="${esc(R.text)}" size="14"></div>
     <div class="grid" id="r-grid"></div>`;
   const bind = (id, k, num) => $(id).querySelectorAll('button').forEach(b => b.onclick = () => { R[k] = num ? +b.dataset.v : b.dataset.v; renderRadar(); });
   bind('#r-mode', 'mode'); bind('#r-dir', 'dir', 1); bind('#r-q', 'q', 1);
   $('#r-all').onclick = () => { R.all = R.all ? 0 : 1; renderRadar(); };
+  $('#r-fav').onclick = () => { R.fav = R.fav ? 0 : 1; renderRadar(); };
   $('#r-t').oninput = e => { R.text = e.target.value; fillGrid(); };
   fillGrid();
 }
 function fillGrid() {
   const rows = radarRows(), g = $('#r-grid');
   if (!rows.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1">Ningún valor con figuras activas y estos filtros.</div>'; return; }
-  g.innerHTML = rows.map(({x, a}) => `<div class="sc" data-s="${x.sym}" data-id="${a[0].id}"><div class="sc-h"><b>${x.sym}</b><span class="nm">${esc(x.name)}</span><span class="sc-p">${fx(x.close)} <span style="color:${x.chg >= 0 ? 'var(--emerald)' : 'var(--ember)'}">${pc(x.chg)}</span></span></div>
-    ${spark(x.spark, x.spark[x.spark.length - 1] >= x.spark[0])}<div class="chips">${a.slice(0, 4).map(q => `<span class="chip ${q.st === 'forming' ? 'f' : q.dir > 0 ? 'u' : q.dir < 0 ? 'd' : ''}">${q.st === 'forming' ? '◐' : q.dir > 0 ? '▲' : q.dir < 0 ? '▼' : '◆'} ${esc(q.label)}${q.q != null ? ' · ' + q.q : ''}</span>`).join('')}${a.length > 4 ? `<span class="chip">+${a.length - 4}</span>` : ''}</div></div>`).join('');
-  g.querySelectorAll('.sc').forEach(e => e.onclick = () => go(e.dataset.s, e.dataset.id));
+  const chip = q => `<span class="chip ${q.st === 'forming' ? 'f' : q.new ? 'n' : q.dir > 0 ? 'u' : q.dir < 0 ? 'd' : ''}" title="${q.st === 'forming' ? 'Formándose: ' + (q.dist != null ? distTxt(q.dist) + ' del nivel que la activa' : 'sin romper') : q.new ? 'Completada en la última sesión' : ''}">${q.st === 'forming' ? (q.dir > 0 ? '◐▲' : q.dir < 0 ? '◐▼' : '◐') : q.dir > 0 ? '▲' : q.dir < 0 ? '▼' : '◆'} ${esc(q.label)}${q.q != null ? ' · ' + q.q : ''}${q.st === 'forming' && q.dist != null ? ' · ' + distTxt(q.dist) : q.new ? ' · hoy' : ''}</span>`;
+  g.innerHTML = rows.map(({x, a}) => `<div class="sc" data-s="${x.sym}" data-id="${a[0].id}"><div class="sc-h"><button class="fav ${favs.has(x.sym) ? 'on' : ''}" data-f="${x.sym}" title="Favorito">${favs.has(x.sym) ? '★' : '☆'}</button><b>${x.sym}</b><span class="nm">${esc(x.name)}</span><span class="sc-p">${fx(x.close)} <span style="color:${x.chg >= 0 ? 'var(--emerald)' : 'var(--ember)'}">${pc(x.chg)}</span></span></div>
+    ${spark(x.spark, x.spark[x.spark.length - 1] >= x.spark[0])}<div class="chips">${a.slice(0, 4).map(chip).join('')}${a.length > 4 ? `<span class="chip">+${a.length - 4}</span>` : ''}</div></div>`).join('');
+  g.querySelectorAll('.sc').forEach(e => e.onclick = ev => { if (ev.target.closest('.fav')) return; go(e.dataset.s, e.dataset.id); });
+  g.querySelectorAll('.fav').forEach(b => b.onclick = ev => { ev.stopPropagation(); toggleFav(b.dataset.f); if (S.rv.fav) renderRadar(); else { b.classList.toggle('on', favs.has(b.dataset.f)); b.textContent = favs.has(b.dataset.f) ? '★' : '☆'; const t = $('#r-fav'); if (t) t.innerHTML = `<i></i>★ Favoritos (${favs.size})`; } });
 }
 
 /* ───────────────────────── evidencia ───────────────────────── */
@@ -368,6 +388,10 @@ function renderGuide() {
   const seg = `<div class="seg" id="g-f">${[['all', 'Todas']].concat(Object.entries(FAMS)).map(([v, l]) => `<button data-v="${v}" class="${fam === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const items = Object.entries(S.cat.patterns).filter(([k, p]) => (fam === 'all' || p.fam === fam) && (!t || (p.label + ' ' + p.desc).toLowerCase().includes(t)));
   $('#view').innerHTML = `<h2>Guía de patrones</h2><p class="lead">Qué es cada patrón, cómo se calcula su plan (entrada, stop y objetivo) y qué ha demostrado en el estudio. Las reglas son las clásicas de manual: no están optimizadas contra los datos.</p>
+    <div class="panel"><h3>Cómo leer los estados</h3><div class="small"><b>◐ Formándose</b>: la figura ya está dibujada con los datos del último cierre pero no ha roto. Se indica el nivel que la activa (línea discontinua), a cuántos ATR está el precio y el plan si rompe. Una compresión (triángulo, cuña, canal, rectángulo) tiene dos escenarios; el resto (doble suelo, hombro-cabeza-hombro, bandera, taza, VCP…) uno.<br>
+      <b>NUEVO</b>: se completó en la última sesión. <b>ACTIVO</b>: se completó en las últimas 12 sesiones y no ha llegado ni al objetivo ni al stop. <b>CONSUMIDO</b>: la ruptura ya recorrió la medida clásica y no queda recorrido hasta el objetivo.<br>
+      <b>Q</b> (0–100) puntúa lo bien dibujada que está la figura: toques, ajuste, duración, forma, ruptura y volumen. La pestaña Evidencia comprueba si las figuras de Q ≥ 75 rinden más que las demás.<br>
+      <b>Vigilar más valores</b>: edita <code>watchlist.txt</code> en el repositorio (un símbolo de Yahoo por línea); el escaneo diario lo lee entero. Los favoritos (★) se guardan solo en tu navegador.</div></div>
     <div class="bar">${seg}<input type="search" id="g-t" placeholder="Buscar" value="${esc(S.gtext || '')}" size="16"></div>
     <div class="gcards">${items.map(([k, p]) => { const e = evOf(k), [vc, vt] = verdictOf(e.all), hqv = e.hq && e.hq.K300 && e.hq.K300.n >= 30 ? e.hq.K300 : null;
       return `<div class="gc"><h4><span class="dot" style="background:${col(p.dir)}"></span>${esc(p.label)}<span class="tag">${FAMS[p.fam]}</span>${p.bars ? `<span class="tag">${p.bars} vela${p.bars > 1 ? 's' : ''}</span>` : ''}</h4>
@@ -379,7 +403,7 @@ function renderGuide() {
 /* ───────────────────────── gráfico: vista ───────────────────────── */
 async function renderChartView(sym, selId) {
   $('#view').innerHTML = `<div class="warn" id="warn"></div><div class="bar" id="bar"></div>
-    <div class="chartwrap"><div class="rail" id="rail"></div><div><div class="chead"><input class="sym-in" id="sym" list="symlist" placeholder="Valor" autocomplete="off" spellcheck="false" size="7"><datalist id="symlist"></datalist><div class="price" id="price"></div><div class="meta" id="meta"></div><span class="tag" id="png" style="cursor:pointer;padding:5px 9px" title="Descarga el gráfico como imagen">PNG ⤓</span></div>
+    <div class="chartwrap"><div class="rail" id="rail"></div><div><div class="chead"><input class="sym-in" id="sym" list="symlist" placeholder="Valor" autocomplete="off" spellcheck="false" size="7"><datalist id="symlist"></datalist><div class="price" id="price"></div><div class="meta" id="meta"></div><button class="fav" id="fav" title="Favorito (se guarda en este navegador)">☆</button><span class="tag" id="png" style="cursor:pointer;padding:5px 9px" title="Descarga el gráfico como imagen">PNG ⤓</span></div>
     <div id="stage"><canvas id="cv"></canvas><div id="tip"></div></div><div class="legend" id="legend"></div></div>
     <div class="side"><div class="tabs" id="tabs"></div><div class="pane" id="pane"></div></div></div>`;
   S.cv = $('#cv'); S.cx = S.cv.getContext('2d');
@@ -387,20 +411,22 @@ async function renderChartView(sym, selId) {
   $('#symlist').innerHTML = S.idx.symbols.map(s => `<option value="${s.sym}">`).join('');
   $('#sym').addEventListener('change', e => { const v = e.target.value.trim().toUpperCase(); if (S.idx.symbols.find(s => s.sym === v)) go(v); });
   $('#sym').addEventListener('focus', e => e.target.select());
-  $('#legend').innerHTML = '<span style="color:var(--emerald)"><s></s>alcista</span><span style="color:var(--ember)"><s></s>bajista</span><span style="color:var(--amber)"><s></s>neutral / formándose</span><span style="color:var(--sapphire)"><s></s>media 50</span><span style="color:var(--violet)"><s></s>media 200</span><span style="color:var(--cyan)"><u style="background:var(--cyan)"></u>soporte</span><span style="color:var(--violet)"><u style="background:var(--violet)"></u>resistencia</span><span><u style="background:var(--emerald)"></u>recompensa</span><span><u style="background:var(--ember)"></u>riesgo</span><span>Q = calidad (0–100) · ◐ en formación</span><span>arrastra · rueda: zoom · clic en una etiqueta · ◀ ▶ recorre patrones · Mayús+◀▶ cambia de valor</span>';
+  $('#legend').innerHTML = '<span style="color:var(--emerald)"><s></s>alcista</span><span style="color:var(--ember)"><s></s>bajista</span><span style="color:var(--amber)"><s></s>neutral / formándose</span><span style="color:var(--sapphire)"><s></s>media 50</span><span style="color:var(--violet)"><s></s>media 200</span><span style="color:var(--cyan)"><u style="background:var(--cyan)"></u>soporte</span><span style="color:var(--violet)"><u style="background:var(--violet)"></u>resistencia</span><span><u style="background:var(--emerald)"></u>recompensa</span><span><u style="background:var(--ember)"></u>riesgo</span><span>Q = calidad (0–100) · ◐ en formación (a cuántos ATR del disparo) · ☆ favorito</span><span>arrastra · rueda: zoom · clic en una etiqueta · ◀ ▶ recorre patrones · Mayús+◀▶ cambia de valor</span>';
+  $('#fav').onclick = () => { toggleFav(S.sym); setFav(); buildRail(); };
   $('#png').onclick = () => { const a = document.createElement('a'); a.download = S.sym + '-patrones.png'; a.href = S.cv.toDataURL('image/png'); a.click(); };
   buildBar(); setupInput(); measure(); buildRail();
   await loadSym(sym, selId);
 }
+function setFav() { const b = $('#fav'); if (b) { b.classList.toggle('on', favs.has(S.sym)); b.textContent = favs.has(S.sym) ? '★' : '☆'; } }
 function buildRail() {
   $('#rail').innerHTML = S.idx.symbols.map(s => { const nf = s.active.filter(q => q.st === 'forming').length, na = s.active.filter(q => q.st !== 'forming' && (q.fam === 'figuras' || q.fam === 'directrices')).length;
-    return `<button data-s="${s.sym}" class="${s.sym === S.sym ? 'on' : ''}"><b>${s.sym}</b><span class="bd">${nf ? '<i class="f">◐</i>' : ''}${na ? `<i>${na}</i>` : ''}</span></button>`; }).join('');
+    return `<button data-s="${s.sym}" class="${s.sym === S.sym ? 'on' : ''}"><b>${s.sym}</b><span class="bd">${favs.has(s.sym) ? '<i class="fv">★</i>' : ''}${nf ? '<i class="f">◐</i>' : ''}${na ? `<i>${na}</i>` : ''}</span></button>`; }).join('');
   $('#rail').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.s));
 }
 async function loadSym(sym, selId) {
   S.D = await J('charts/' + sym + '.json');
   S.sym = sym; S.sel = null; S.hover = null;
-  $('#sym').value = sym;
+  $('#sym').value = sym; setFav();
   try { history.replaceState(null, '', '#' + sym); } catch (e) {}
   $('#rail').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.s === sym));
   const on = $('#rail button.on'); if (on) on.scrollIntoView({block: 'nearest'});
@@ -599,7 +625,7 @@ function draw() {
         if (an.k === 'label') { pill(an.t, X(an.x) - 8, Y(an.y), c, {size: 9, align: 'r', alpha: .9}); continue; }
         const x = X(an.x), y0 = Y(an.y0), y1 = Y(an.y1), H = Math.abs(an.y0 - an.y1);
         cx.strokeStyle = c; cx.lineWidth = 1.5; cx.setLineDash([]); cx.beginPath(); cx.moveTo(x - 5, y0); cx.lineTo(x + 5, y0); cx.moveTo(x - 5, y1); cx.lineTo(x + 5, y1); cx.moveTo(x, y0); cx.lineTo(x, y1); cx.stroke();
-        pill(`${an.t} ${fx(H)} · ${(H / Math.min(an.y0, an.y1) * 100).toFixed(1)} %`, x + 8, (y0 + y1) / 2, c, {size: 9, alpha: .9});
+        pill(`${an.t} ${fx(H)} · ${(H / Math.max(an.y0, an.y1) * 100).toFixed(1)} %`, x + 8, (y0 + y1) / 2, c, {size: 9, alpha: .9});
       }
     }
     cx.restore();
@@ -642,11 +668,13 @@ function draw() {
   if (S.f.hist) for (const p of pats) { const o = p.state === 'forming' ? null : rrOf(p).out; if (p === S.sel || !o || o.xi == null || !(o.res === 'target' || o.res === 'stop')) continue; const ok = o.res === 'target', xx = X(o.xi), yy = Y(o.xp); cx.globalAlpha = .85; cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 4.5, 0, 7); cx.fill(); cx.globalAlpha = 1; }
   // etiquetas: pastilla con nombre para las figuras; marcador pequeño para velas, rupturas y rebotes
   const stackUp = {}, stackDn = {};
+  const pri = p => (p.state === 'forming') * 4 + major(p) * 3 + p.active * 2 + (p.q || 0) / 100;
+  const named = new Set(order.filter(p => p.i >= R.i0 - 2 && p.i <= R.i1 + 2 && (major(p) || (S.view_.ppb >= 9 && p.fam !== 'velas'))).sort((u, v) => pri(v) - pri(u)).slice(0, S.view_.ppb >= 9 ? 10 : 6));    // sin selección: como mucho 6 etiquetas con nombre (10 con zoom, sin velas), el resto son marcadores
   for (const p of order) {
     const i = p.i; if (i < R.i0 - 2 || i > R.i1 + 2) continue;
     const x = X(i), below = p.dir > 0, sel = p === S.sel, hov = p === S.hover, c = p.state === 'forming' ? css('--amber') : col(p.dir);
     const alpha = sel || hov ? 1 : (S.sel ? .35 : .95);
-    if ((major(p) && !S.sel) || sel || hov || (!S.sel && S.view_.ppb >= 9)) {
+    if ((named.has(p) && !S.sel) || sel || hov) {
       let y = below ? Y(b.l[i]) + 15 : Y(b.h[i]) - 15;
       const text = (p.state === 'forming' ? '◐ ' : p.dir > 0 ? '▲ ' : p.dir < 0 ? '▼ ' : '◆ ') + p.label + (p.q != null ? ' · ' + p.q : '');
       cx.font = '10px ' + css('--f-mono');
@@ -682,10 +710,11 @@ function draw() {
 }
 
 /* ───────────────────────── gráfico: panel lateral ───────────────────────── */
+const scenTxt = p => (p.sc.up && p.sc.dn ? 'dos escenarios' : p.sc.up ? '▲ al alza' : '▼ a la baja') + (p.trig && p.trig.dist != null ? ' · ' + distTxt(p.trig.dist) : '');
 function card(p) {
   const r = p.state === 'forming' ? null : rrOf(p), [rc, rt] = status(p), sel = p === S.sel, fm = p.state === 'forming';
-  return `<div class="pc ${sel ? 'sel' : ''}" data-id="${p.id}"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span>${esc(p.label)}${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${qtag(p)}<span class="tag">${FAMS[p.fam] || p.fam}</span></div>
-    <div class="pc-s"><span>${dstr(S.D.bars.t[p.i])}</span><span>${fm ? 'dos escenarios' : 'R:R ' + (r.rr != null ? r.rr.toFixed(1) : '—')}</span><span class="res ${rc}">${rt}</span></div></div>`;
+  return `<div class="pc ${sel ? 'sel' : ''}" data-id="${p.id}"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span>${esc(p.label)}${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${p.new ? '<span class="tag new">NUEVO</span>' : ''}${!fm && p.plan.spent ? '<span class="tag spent" title="La ruptura ya recorrió la medida clásica de la figura">CONSUMIDO</span>' : ''}${qtag(p)}<span class="tag">${FAMS[p.fam] || p.fam}</span></div>
+    <div class="pc-s"><span>${dstr(S.D.bars.t[p.i])}</span><span>${fm ? scenTxt(p) : 'R:R ' + (r.rr != null ? r.rr.toFixed(1) : '—')}</span><span class="res ${rc}">${rt}</span></div></div>`;
 }
 const obsTxt = o => o && o.length ? `<div class="small" style="margin-top:4px"><b>En el camino al objetivo:</b> ${o.map(z => `${z.k === 'S' ? 'soporte' : 'resistencia'} ${fx(z.p)} (×${z.n})`).join(' · ')}. ${o.length >= 2 ? 'Varias barreras: el objetivo completo es poco probable sin pausas.' : 'El precio tiene que atravesarla.'}</div>` : '';
 function scTable(s, d) {
@@ -698,17 +727,19 @@ function scTable(s, d) {
 }
 function cardFull(p) {
   const fm = p.state === 'forming';
-  const hd = `<div class="pc sel" style="cursor:default"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span><span style="font-size:15px">${esc(p.label)}</span>${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${qtag(p)}<span style="margin-left:auto;cursor:pointer" id="clr" class="tag">cerrar ✕</span></div>`;
-  const desc = catOf(p.key).desc || 'compresión sin romper: se opera la ruptura, no la figura';
+  const hd = `<div class="pc sel" style="cursor:default"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span><span style="font-size:15px">${esc(p.label)}</span>${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${p.new ? '<span class="tag new">NUEVO</span>' : ''}${qtag(p)}<span style="margin-left:auto;cursor:pointer" id="clr" class="tag">cerrar ✕</span></div>`;
+  const one = fm && p.trig && p.trig.level != null;                                    // figura con un solo escenario (doble suelo, bandera, taza…) frente a compresión con dos
+  const desc = (fm ? catOf(p.key.replace(/^forming_/, '')).desc : catOf(p.key).desc) || 'compresión sin romper: se opera la ruptura, no la figura';
   if (fm) return hd + `<div class="small" style="margin-top:3px">${esc(desc)} · a fecha ${dstr(S.D.bars.t[p.i])}</div><div class="small">${esc(p.note)}</div>` + (p.sc.up ? scTable(p.sc.up, 1) : '') + (p.sc.dn ? scTable(p.sc.dn, -1) : '') +
-    `<div class="small" style="margin-top:8px">Las dos rectas se ajustan con los pivotes que el precio respeta; la entrada es el valor de cada recta en la próxima sesión (+0,15 ATR). Si el cierre sale por un lado, el otro escenario queda anulado.</div></div>`;
+    (one ? `<div class="small" style="margin-top:8px">El disparador es el nivel de la línea discontinua (cuello, borde o techo de la figura); la entrada supone un cierre 0,15 ATR más allá. Si el precio pierde antes la base de la figura, queda invalidada. La evidencia de abajo es la de la figura ya rota: el estudio no mide figuras en formación.</div></div>`
+      : `<div class="small" style="margin-top:8px">Las dos rectas se ajustan con los pivotes que el precio respeta; la entrada es el valor de cada recta en la próxima sesión (+0,15 ATR). Si el cierre sale por un lado, el otro escenario queda anulado.${p.trig && p.trig.dist != null ? ` Hoy el cierre está ${distTxt(p.trig.dist)} de la recta más cercana.` : ''}</div></div>`);
   const r = rrOf(p), [rc, rt] = resTxt(r.out), e = evOf(p.key), [vc, vt] = verdictOf(e.all);
   const same = S.D.patterns.filter(q => q.key === p.key && q !== p && q.out && (q.out.res === 'target' || q.out.res === 'stop')), w = same.filter(q => q.out.res === 'target').length;
   return hd + `<div class="small" style="margin-top:3px">${esc(desc)} · ${p.dir > 0 ? 'sesgo alcista' : p.dir < 0 ? 'sesgo bajista' : 'neutral'} · completado el ${dstr(S.D.bars.t[p.i])}</div>
     <table class="lv"><tr><td>Entrada</td><td>${fx(r.entry)}</td></tr><tr><td style="color:var(--emerald)">Objetivo</td><td>${fx(r.target)} (${pc((r.target / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(r.t1)} (${pc((r.t1 / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--ember)">Stop${r.tact ? ' táctico' : ' estructural'}</td><td>${fx(r.stop)} (${pc((r.stop / r.entry - 1) * 100 * p.dir)})</td></tr><tr><td>Recompensa / riesgo</td><td>${r.rr != null ? r.rr.toFixed(2) : '—'}</td></tr></table>
-    <div class="small">${esc(p.note)}</div>${p.conf && p.conf.length ? `<div class="small" style="margin-top:4px"><b>También saltan en esas sesiones</b> (mismo sentido, ±3): ${p.conf.map(esc).join(' · ')}. Suelen medir casi lo mismo: no son confirmaciones independientes.</div>` : ''}${obsTxt(p.plan.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
+    ${p.plan.spent ? '<div class="verdict r" style="margin:6px 0"><b>Objetivo consumido:</b> la ruptura ya recorrió casi toda la medida clásica de la figura, así que no queda recorrido hasta el objetivo. No se cuenta como activa.</div>' : ''}<div class="small">${esc(p.note)}</div>${p.conf && p.conf.length ? `<div class="small" style="margin-top:4px"><b>También saltan en esas sesiones</b> (mismo sentido, ±3): ${p.conf.map(esc).join(' · ')}. Suelen medir casi lo mismo: no son confirmaciones independientes.</div>` : ''}${obsTxt(p.plan.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>Qué pasó aquí:</b> ${rt}</div>
     ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'llegó' : 'llegaron'} al objetivo y ${same.length - w} al stop.</div>` : ''}
     <div class="verdict ${vc}">${S.ev ? 'Estudio: ' + esc(vt) : 'Sin estudio cargado.'}</div>${evLines(e)}</div>`;

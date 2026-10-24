@@ -1,11 +1,38 @@
-"""Universos de valores: la lista de seguimiento del laboratorio y el universo del estudio (S&P 500 + Nasdaq-100, con lista de reserva)."""
+"""Universos de valores: la lista de seguimiento del laboratorio (watchlist.txt, editable) y el universo del estudio (S&P 500 + Nasdaq-100, con lista de reserva)."""
 from __future__ import annotations
 import io
+import os
+import re
 import urllib.request
 from typing import List
 
 WATCHLIST = ('AAPL MSFT NVDA AMZN GOOGL META TSLA AVGO AMD NFLX ORCL CRM ADBE QCOM INTC MU PLTR COIN SMCI ARM UBER DIS BA CAT GE JPM BAC GS V MA LLY UNH XOM CVX COST WMT HD KO PEP PFE MRK ABBV '
              'NKE SBUX SPY QQQ IWM GLD TLT XLE XLF SMH').split()
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TICKER = re.compile(r'^[A-Z0-9^][A-Z0-9.=^-]{0,11}$')
+
+
+def parse_watchlist(text: str) -> List[str]:
+    """Valores de un watchlist.txt: separados por líneas, espacios o comas; # comenta; sin repetidos y en mayúsculas; los que no parecen un símbolo de Yahoo se descartan."""
+    out: List[str] = []
+    for line in text.splitlines():
+        for tok in re.split(r'[\s,;]+', line.split('#')[0].strip()):
+            t = tok.upper()
+            if t and TICKER.match(t) and t not in out:
+                out.append(t)
+    return out
+
+
+def watchlist(path: str = '') -> List[str]:
+    """Lista de seguimiento: watchlist.txt de la raíz del repositorio (o `path`); si no existe o está vacía, la lista interna."""
+    p = path or os.path.join(ROOT, 'watchlist.txt')
+    try:
+        got = parse_watchlist(open(p, encoding='utf-8').read())
+    except OSError:
+        got = []
+    return got or list(WATCHLIST)
+
 
 # lista de reserva si Wikipedia no responde: grandes compañías de EE.UU.
 FALLBACK = ('AAPL MSFT NVDA AMZN GOOGL META TSLA AVGO BRK-B LLY JPM V UNH XOM MA COST HD PG JNJ ORCL ABBV BAC KO CRM CVX MRK NFLX AMD PEP TMO WMT ADBE LIN ACN MCD CSCO ABT WFC TXN DIS GE IBM '

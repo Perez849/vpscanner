@@ -7,7 +7,7 @@ Motor geométrico de figuras (causal): reconoce las figuras como lo haría un an
   · Clasificación por pendientes y convergencia: triángulos, cuñas y rectángulo, con ápice y límites de duración y de altura de la base.
   · H-C-H y dobles/triples con criterios de forma, taza que abraza los mínimos y es redondeada, banderas con asta impulsiva, VCP, diamante, isla, directrices con ≥ 3 toques.
   · Cada figura recibe una CALIDAD 0–100 (toques, ajuste, duración, forma, ruptura, volumen); por debajo de QMIN no se considera figura.
-  · Las compresiones que aún NO han roto se devuelven aparte («en formación») para dibujar los dos escenarios.
+  · Las figuras que aún NO han roto (compresiones, dobles/triples, H-C-H, banderas, taza, VCP) se devuelven aparte («en formación») con su disparador y su distancia en ATR.
 
 Todo es causal: la decisión en la barra i solo usa datos hasta i (los pivotes se conocen K barras después).
 """
@@ -28,6 +28,8 @@ CLOSE = 0.15          # margen (ATR) de los cierres sobre la recta
 MAXLEN = 80           # duración máxima de una compresión (barras)
 MAXBASE = 0.16        # altura máxima de la base de una compresión (fracción del precio)
 MAXBASE_ATR = 9.0     # … y en ATR
+NEAR = 3.0            # una figura «se forma» cuando el cierre está a ≤ NEAR ATR de su disparador
+QFORM = 50            # calidad mínima de una figura en formación (sin ruptura ni volumen que puntuar)
 
 
 # ── utilidades ────────────────────────────────────────────────────────────
@@ -141,6 +143,8 @@ def compression(S: List[list], i: int, h, l, c, atr) -> Optional[Dict]:
             kind = 'falling_wedge'
     if kind is None and abs(du) <= FL and abs(dl) <= FL and w0 >= 2.5 * a and 0.65 <= conv <= 1.35 and nt_ >= 5:
         kind = 'rect'
+    if kind is None and nt_ >= 6 and w0 >= 2.5 * a and 0.75 <= conv <= 1.3 and xe - x0 >= 20 and abs(du - dl) <= 0.35 * max(abs(du), abs(dl)):     # canal: rectas paralelas con pendiente
+        kind = 'channel_up' if du >= FL and dl >= FL else 'channel_dn' if du <= -FL and dl <= -FL else None
     if kind is None:
         return None
     return {'kind': kind, 'U': U['L'], 'D': D['L'], 'tu': U['tch'], 'tl': D['tch'], 'x0': int(x0), 'xl': int(xl), 'apex': None if apex is None else float(apex),
@@ -180,8 +184,8 @@ def _q_common(brk: float, vr: float) -> int:
     return (10 if brk >= 0.5 else 6 if brk >= 0.2 else 3) + (10 if vr >= 1.5 else 6 if vr >= 1.15 else 2)
 
 
-def multi_bottom(S: List[list], i: int, d: int, h, l, c, atr, v) -> Optional[Tuple[str, Dict, int]]:
-    """Doble o triple suelo (d=+1) / techo (d=-1) cuyo cuello se rompe en la barra i."""
+def multi_bottom(S: List[list], i: int, d: int, h, l, c, atr, v, form: bool = False) -> Optional[Tuple[str, Dict, int]]:
+    """Doble o triple suelo (d=+1) / techo (d=-1) cuyo cuello se rompe en la barra i (con form=True, i es la barra siguiente a la última y el cuello aún no se ha roto)."""
     lo, hi, cl = _view(d, h, l, c)
     a = float(atr[i - 1])
     tt = -d
@@ -210,14 +214,19 @@ def multi_bottom(S: List[list], i: int, d: int, h, l, c, atr, v) -> Optional[Tup
                 continue
             if lo[js[-1]:i].min() < min(pv) - 0.5 * a:
                 continue
-            if not (cl[i] > neck and cl[i - 1] <= neck):
+            if form:
+                if not (cl[i - 1] <= neck and neck - cl[i - 1] <= NEAR * a and cl[i - 1] - min(pv) >= a):       # el cuello aún no se ha roto y el precio ya se ha despegado de los mínimos
+                    continue
+            elif not (cl[i] > neck and cl[i - 1] <= neck):
+                continue
+            if cl[js[-1] + 1:i].max() > neck:                         # la ruptura cuenta la primera vez que el cierre pasa el cuello: un nuevo cruce tras un fallo no es la figura
                 continue
             prior = _prior(hi, js[0], min(pv))
             if prior < 3.0 * a:
                 continue
-            brk = (cl[i] - neck) / a
+            brk, vr = (0.3, 1.2) if form else ((cl[i] - neck) / a, _vol_ratio(v, i))
             q = 15 + 20.0 * max(0.0, 1 - (max(pv) - min(pv)) / tol) + (15 if (neck - max(pv)) >= 5 * a else 10 if (neck - max(pv)) >= 3.5 * a else 6) \
-                + (15 if 15 <= js[-1] - js[0] <= 70 else 8) + (15 if prior >= 6 * a else 10 if prior >= 4 * a else 6) + _q_common(brk, _vol_ratio(v, i))
+                + (15 if 15 <= js[-1] - js[0] <= 70 else 8) + (15 if prior >= 6 * a else 10 if prior >= 4 * a else 6) + _q_common(brk, vr)
             if m == 3:
                 q += 6
             jm = [S[x + 1][0] for x in idx[:-1]]
@@ -230,7 +239,7 @@ def multi_bottom(S: List[list], i: int, d: int, h, l, c, atr, v) -> Optional[Tup
     return None if best is None else (best[0], best[1], best[2])
 
 
-def head_shoulders(S: List[list], i: int, d: int, h, l, c, atr, v) -> Optional[Tuple[str, Dict]]:
+def head_shoulders(S: List[list], i: int, d: int, h, l, c, atr, v, form: bool = False) -> Optional[Tuple[str, Dict]]:
     """Hombro-cabeza-hombro (d=-1, techo) o invertido (d=+1, suelo) con ruptura del cuello en la barra i."""
     lo, hi, cl = _view(d, h, l, c)
     a = float(atr[i - 1])
@@ -259,16 +268,22 @@ def head_shoulders(S: List[list], i: int, d: int, h, l, c, atr, v) -> Optional[T
             continue
         sl = (k2 - k1) / max(t2[0] - t1[0], 1)
         necki, neckp = k1 + sl * (i - t1[0]), k1 + sl * (i - 1 - t1[0])
-        if not (cl[i] > necki and cl[i - 1] <= neckp):
+        if form:
+            if not (cl[i - 1] <= neckp and neckp - cl[i - 1] <= NEAR * a):
+                continue
+        elif not (cl[i] > necki and cl[i - 1] <= neckp):
+            continue
+        xs_ = np.arange(rs[0] + 1, i - (0 if form else 1))
+        if len(xs_) and (cl[xs_] > k1 + sl * (xs_ - t1[0])).any():                  # el cuello se rompe la primera vez que el cierre lo pasa
             continue
         if lo[rs[0]:i].min() <= ph_:
             continue
         prior = _prior(hi, ls[0], pl_, 60)
         if prior < 3.0 * a:
             continue
-        brk = (cl[i] - necki) / a
+        brk, vr = (0.3, 1.2) if form else ((cl[i] - necki) / a, _vol_ratio(v, i))
         q = 15 + 20.0 * min((min(pl_, pr_) - ph_) / (3.0 * a), 1.0) + 15.0 * max(0.0, 1 - abs(pl_ - pr_) / (0.35 * depth)) + 10.0 * max(0.0, 1 - abs(np.log(r)) / 0.9) \
-            + 10.0 * max(0.0, 1 - abs(k2 - k1) / (0.5 * depth)) + (10 if prior >= 6 * a else 6) + _q_common(brk, _vol_ratio(v, i))
+            + 10.0 * max(0.0, 1 - abs(k2 - k1) / (0.5 * depth)) + (10 if prior >= 6 * a else 6) + _q_common(brk, vr)
         g = dict(ls=(ls[0], float(ls[1])), hd=(hd[0], float(hd[1])), rs=(rs[0], float(rs[1])), t1=(t1[0], float(t1[1])), t2=(t2[0], float(t2[1])), neck=float(d * necki),
                  hgt=float(abs((k1 + sl * (hd[0] - t1[0])) - ph_)), q=int(min(q, 100)))
         if best is None or g['q'] > best[1]['q']:
@@ -277,8 +292,8 @@ def head_shoulders(S: List[list], i: int, d: int, h, l, c, atr, v) -> Optional[T
 
 
 # ── banderas y banderines ─────────────────────────────────────────────────
-def flag(i: int, d: int, h, l, c, atr, v) -> Optional[Tuple[str, Dict]]:
-    """Bandera (canal paralelo) o banderín (convergente) tras un asta impulsiva; ruptura en la barra i en el sentido del asta."""
+def flag(i: int, d: int, h, l, c, atr, v, form: bool = False) -> Optional[Tuple[str, Dict]]:
+    """Bandera (canal paralelo) o banderín (convergente) tras un asta impulsiva; ruptura en la barra i en el sentido del asta (con form=True, i es la barra siguiente a la última y aún no ha roto)."""
     ll, hh, cl = _view(d, h, l, c)                                    # orientación alcista (mínimos, máximos, cierres)
     best = None
     for f in (4, 5, 6, 8, 10, 13, 16, 20):
@@ -287,7 +302,10 @@ def flag(i: int, d: int, h, l, c, atr, v) -> Optional[Tuple[str, Dict]]:
             continue
         fh, fl = hh[z0:i], ll[z0:i]
         top = float(fh.max())
-        if not (cl[i] > top and cl[i - 1] <= top):
+        if form:
+            if top - cl[i - 1] > NEAR * float(atr[i - 1]):
+                continue
+        elif not (cl[i] > top and cl[i - 1] <= top):
             continue
         for p in (4, 5, 6, 8, 10, 13, 15):
             pe, ps = z0 - 1, z0 - 1 - p
@@ -321,8 +339,8 @@ def flag(i: int, d: int, h, l, c, atr, v) -> Optional[Tuple[str, Dict]]:
             if not conv and slope > 0.1 * a:
                 continue
             resid = float(np.std(cl[z0:i] - np.polyval(np.polyfit(xs, cl[z0:i], 1), xs))) / a
-            brk = (cl[i] - top) / a
-            q = 15 + (15 if pole >= 8 * a else 10) + 10.0 * min(pole / path, 1.0) + (15 if retr <= 0.3 else 8) + (10 if 5 <= f <= 15 else 5) + 10.0 * max(0.0, 1 - resid / 0.6) + _q_common(brk, _vol_ratio(v, i))
+            brk, vr = (0.3, 1.2) if form else ((cl[i] - top) / a, _vol_ratio(v, i))
+            q = 15 + (15 if pole >= 8 * a else 10) + 10.0 * min(pole / path, 1.0) + (15 if retr <= 0.3 else 8) + (10 if 5 <= f <= 15 else 5) + 10.0 * max(0.0, 1 - resid / 0.6) + _q_common(brk, vr)
             jb = ps + int(np.argmin(ll[ps:pe + 1]))
             jt = int(np.clip(z0 - 1 + int(np.argmax(hh[z0 - 1:z0 + 2])), ps, i - 1))
             g = dict(ps=(jb, float((l if d > 0 else h)[jb])), pe=(jt, float((h if d > 0 else l)[jt])), z0=int(z0), fh=float(h[z0:i].max()), fl=float(l[z0:i].min()),
@@ -334,7 +352,7 @@ def flag(i: int, d: int, h, l, c, atr, v) -> Optional[Tuple[str, Dict]]:
 
 
 # ── taza con asa (con la curva pegada a los mínimos) ──────────────────────
-def cup(S: List[list], i: int, h, l, c, atr, v, sma200) -> Optional[Dict]:
+def cup(S: List[list], i: int, h, l, c, atr, v, sma200, form: bool = False) -> Optional[Dict]:
     a = float(atr[i - 1])
     Hs = [s for s in S[-14:] if s[2] > 0]
     best = None
@@ -371,13 +389,19 @@ def cup(S: List[list], i: int, h, l, c, atr, v, sma200) -> Optional[Dict]:
             pull = vb - hlow
             if pull > 0.4 * (min(va, vb) - bot) or pull < 0.3 * a:
                 continue
-            if not (c[i] > hhigh and c[i - 1] <= hhigh):
+            if form:
+                if not (c[i - 1] <= hhigh and hhigh - c[i - 1] <= NEAR * a):
+                    continue
+            elif not (c[i] > hhigh and c[i - 1] <= hhigh):
                 continue
-            if sma200[i] == sma200[i] and c[i] < 0.9 * sma200[i]:
+            if c[jb + 1:i].max() > hhigh:                              # la ruptura del asa cuenta la primera vez
                 continue
-            brk = (c[i] - hhigh) / a
+            ii = i - 1 if form else i
+            if sma200[ii] == sma200[ii] and c[ii] < 0.9 * sma200[ii]:
+                continue
+            brk, vr = (0.3, 1.2) if form else ((c[i] - hhigh) / a, _vol_ratio(v, i))
             q = 15 + 15.0 * min(round_ / 0.7, 1.0) + 15.0 * max(0.0, (r2 - 0.55) / 0.4) + (15 if 0.15 <= depth <= 0.33 else 8) + (10 if 40 <= W <= 100 else 5) \
-                + 10.0 * max(0.0, 1 - abs(vb / va - 1) / 0.06) + (10 if pull <= 0.25 * (min(va, vb) - bot) else 5) + _q_common(brk, _vol_ratio(v, i))
+                + 10.0 * max(0.0, 1 - abs(vb / va - 1) / 0.06) + (10 if pull <= 0.25 * (min(va, vb) - bot) else 5) + _q_common(brk, vr)
             g = dict(left=(ja, float(va)), bottom=(ja + bi, bot), right=(jb, float(vb)), handle=(hj, hlow), fit=[float(x_) for x_ in cf], w0=int(ja), W=int(W + 1), hhigh=hhigh, q=int(min(q, 100)))
             if best is None or g['q'] > best['q']:
                 best = g
@@ -401,10 +425,16 @@ def trend_lines(S: List[list], i: int, h, l, c, atr) -> Tuple[Optional[Dict], Op
 
 
 # ── VCP, isla, diamante, soportes y resistencias de 3 toques ──────────────
-def vcp(S: List[list], i: int, h, l, c, v, sma50, sma200, atr) -> Optional[Dict]:
+def vcp(S: List[list], i: int, h, l, c, v, sma50, sma200, atr, form: bool = False) -> Optional[Dict]:
     """Tres contracciones cada vez menos profundas bajo máximos parecidos, con precio sobre sus medias; ruptura del último máximo."""
     H = [(s[0], s[1]) for s in S if s[2] > 0][-3:]
-    if len(H) < 3 or H[-1][0] - H[0][0] > 120 or not (c[i] > sma50[i] > sma200[i]) or not (c[i] > H[-1][1] >= c[i - 1]):
+    ii = i - 1 if form else i
+    if len(H) < 3 or H[-1][0] - H[0][0] > 120 or not (c[ii] > sma50[ii] > sma200[ii]):
+        return None
+    if form:
+        if not (c[i - 1] <= H[-1][1] and H[-1][1] - c[i - 1] <= NEAR * float(atr[i - 1])):
+            return None
+    elif not (c[i] > H[-1][1] >= c[i - 1]):
         return None
     depths, lows = [], []
     for k in range(3):
@@ -415,8 +445,8 @@ def vcp(S: List[list], i: int, h, l, c, v, sma50, sma200, atr) -> Optional[Dict]
         lows.append((kk, float(l[kk])))
     if not (depths[0] > depths[1] > depths[2] and depths[2] <= 0.08 and depths[0] <= 0.40):
         return None
-    brk = (c[i] - H[-1][1]) / float(atr[i - 1])
-    q = 30 + (15 if depths[1] <= 0.75 * depths[0] else 8) + (15 if depths[2] <= 0.75 * depths[1] else 8) + (15 if depths[2] <= 0.05 else 8) + 10 + _q_common(brk, _vol_ratio(v, i))
+    brk, vr = (0.3, 1.2) if form else ((c[i] - H[-1][1]) / float(atr[i - 1]), _vol_ratio(v, i))
+    q = 30 + (15 if depths[1] <= 0.75 * depths[0] else 8) + (15 if depths[2] <= 0.75 * depths[1] else 8) + (15 if depths[2] <= 0.05 else 8) + 10 + _q_common(brk, vr)
     return dict(highs=H, lows=lows, depths=[float(d) for d in depths], q=int(min(q, 100)), key=(H[0][0], H[-1][0]))
 
 
@@ -472,11 +502,12 @@ def levels3(S: List[list], i: int, o, h, l, c, atr) -> Optional[Tuple[str, Dict]
 # ── motor principal ───────────────────────────────────────────────────────
 def _route(kind: str, d: int) -> Optional[str]:
     return {('asc_triangle', 1): 'asc_triangle', ('desc_triangle', -1): 'desc_triangle', ('sym_tri', 1): 'sym_tri_up', ('sym_tri', -1): 'sym_tri_dn',
-            ('rising_wedge', -1): 'rising_wedge', ('falling_wedge', 1): 'falling_wedge', ('rect', 1): 'rect_up', ('rect', -1): 'rect_dn'}.get((kind, d))
+            ('rising_wedge', -1): 'rising_wedge', ('falling_wedge', 1): 'falling_wedge', ('rect', 1): 'rect_up', ('rect', -1): 'rect_dn',
+            ('channel_up', 1): 'channel_up_up', ('channel_up', -1): 'channel_up_dn', ('channel_dn', -1): 'channel_dn_dn', ('channel_dn', 1): 'channel_dn_up'}.get((kind, d))
 
 
-def detect(F: Dict[str, np.ndarray]) -> Tuple[List[Dict], Optional[Dict]]:
-    """Eventos de las figuras geométricas [{name, i, q, g}] y la compresión aún sin romper en la última barra (o None)."""
+def detect(F: Dict[str, np.ndarray]) -> Tuple[List[Dict], List[Dict]]:
+    """Eventos de las figuras geométricas [{name, i, q, g}] y las figuras aún sin romper en la última barra (compresiones y demás, ver forming_figs)."""
     o, h, l, c, v, atr = F['o'], F['h'], F['l'], F['c'], F['v'], F['atr']
     sma50, sma200, sma20, atrp = F['sma50'], F['sma200'], F['sma20'], F['atrp']
     n = len(c)
@@ -566,7 +597,7 @@ def detect(F: Dict[str, np.ndarray]) -> Tuple[List[Dict], Optional[Dict]]:
         r = levels3(S, i, o, h, l, c, atr)
         if r:
             fire(r[0], r[1]['key'], i, None, {k: x for k, x in r[1].items() if k != 'key'})
-    forming = None
+    forming: List[Dict] = []
     if n > 40:
         st = compression(S, n, h, l, c, atr)
         if st is not None:
@@ -574,5 +605,41 @@ def detect(F: Dict[str, np.ndarray]) -> Tuple[List[Dict], Optional[Dict]]:
             ui, di = at(st['U'], n - 1), at(st['D'], n - 1)
             expired = st['apex'] is not None and (n - 1 - st['x0']) > 1.15 * (st['apex'] - st['x0'])
             if di - CLOSE * a <= float(c[n - 1]) <= ui + CLOSE * a and not expired and n - 1 - st['xl'] <= 45:
-                forming = dict(st, i=n - 1)
+                forming.append(dict(st, type='cmp', i=n - 1))
+        forming += forming_figs(S, n, h, l, c, v, atr, sma50, sma200)
     return events, forming
+
+
+def forming_figs(S: List[list], n: int, h, l, c, v, atr, sma50, sma200) -> List[Dict]:
+    """Figuras que en el último cierre ya están dibujadas pero aún no han roto: [{type:'fig', name, d, g, q, trig, dist}] (trig = nivel que hay que cerrar más allá; dist en ATR).
+    Se evalúan como si la barra n (la siguiente) fuese la de ruptura, con los mismos criterios que las rupturas, y sin usar nada posterior al último cierre."""
+    a = float(atr[n - 1])
+    if not a > 0:
+        return []
+    last = float(c[n - 1])
+    found: Dict[str, Dict] = {}
+
+    def keep(name: str, d: int, g: Dict, q: int, trig: float) -> None:
+        if q < QFORM or (d > 0 and trig < last) or (d < 0 and trig > last):
+            return
+        cur = found.get(name)
+        if cur is None or q > cur['q']:
+            found[name] = dict(type='fig', name=name, d=d, g={k: x for k, x in g.items() if k != 'q'}, q=int(q), trig=float(trig), dist=float(abs(trig - last) / a))
+
+    for d_ in (1, -1):
+        r = multi_bottom(S, n, d_, h, l, c, atr, v, form=True)
+        if r:
+            keep(r[0], d_, r[1], r[1]['q'], r[1]['neck'])
+        r = head_shoulders(S, n, d_, h, l, c, atr, v, form=True)
+        if r:
+            keep(r[0], d_, r[1], r[1]['q'], r[1]['neck'])
+        r = flag(n, d_, h, l, c, atr, v, form=True)
+        if r:
+            keep(r[0], d_, r[1], r[1]['q'], r[1]['fh'] if d_ > 0 else r[1]['fl'])
+    g = cup(S, n, h, l, c, atr, v, sma200, form=True)
+    if g:
+        keep('cup_handle', 1, g, g['q'], g['hhigh'])
+    g = vcp(S, n, h, l, c, v, sma50, sma200, atr, form=True)
+    if g:
+        keep('vcp', 1, g, g['q'], g['highs'][-1][1])
+    return sorted(found.values(), key=lambda f: (f['dist'], -f['q']))

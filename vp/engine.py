@@ -19,8 +19,8 @@ def cooldown(idx: np.ndarray, gap: int = COOLDOWN) -> List[int]:
     return keep
 
 
-def scan(F: Dict[str, np.ndarray], gap: int = COOLDOWN) -> Tuple[List[Dict], Optional[Dict]]:
-    """(eventos ordenados por barra, compresión en formación en la última barra o None)."""
+def scan(F: Dict[str, np.ndarray], gap: int = COOLDOWN) -> Tuple[List[Dict], List[Dict]]:
+    """(eventos ordenados por barra, figuras en formación en la última barra)."""
     events: List[Dict] = []
     for name, sig in candles.detect(F).items():
         events += [{'name': name, 'i': i, 'q': None, 'g': {}} for i in cooldown(np.flatnonzero(sig), gap)]

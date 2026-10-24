@@ -8,7 +8,7 @@ import sys
 def main() -> None:
     ap = argparse.ArgumentParser(prog='vp', description='VP Scanner: laboratorio de chartismo')
     ap.add_argument('cmd', choices=['lab', 'study'])
-    ap.add_argument('--symbols', default='', help='valores separados por comas (lab: lista de seguimiento por defecto; study: S&P 500 + Nasdaq-100)')
+    ap.add_argument('--symbols', default='', help='valores separados por comas (lab: watchlist.txt por defecto; study: S&P 500 + Nasdaq-100)')
     ap.add_argument('--out', default='data')
     ap.add_argument('--raw', default='', help='lab: carpeta donde volcar las series completas')
     ap.add_argument('--cache', default='.cache')
@@ -19,7 +19,7 @@ def main() -> None:
     syms = [s.strip().upper() for s in a.symbols.replace(',', ' ').split() if s.strip()]
     from . import lab, study, universe
     if a.cmd == 'lab':
-        lab.run(syms or list(universe.WATCHLIST), a.out, raw_dir=a.raw or None)
+        lab.run(syms or universe.watchlist(), a.out, raw_dir=a.raw or None)
     else:
         uni = syms or universe.study_universe()
         if a.max:

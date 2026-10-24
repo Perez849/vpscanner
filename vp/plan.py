@@ -13,6 +13,7 @@ HOLD = 40            # sesiones máximas del resultado simulado
 MIN_STOP = 1.0       # el stop nunca queda a menos de 1 ATR de la entrada (un stop pegado da R:R absurdos y salta con el ruido)
 FAR_STOP = 3.0       # por encima de 3 ATR el estructural se considera lejano: se ofrece además un stop táctico de 1,5 ATR
 TACT = 1.5
+SPENT = 1.0          # si la medida clásica deja menos de 1 ATR hasta el objetivo, la ruptura ya la consumió: no hay recorrido que operar
 
 
 def r(x: float) -> float:
@@ -52,6 +53,12 @@ def rule(name: str, g: Dict, F: Dict[str, np.ndarray], i: int, d: int, entry: Op
             return lastlo - 0.25 * a, (start if start > entry + 0.5 * a else entry + w0)
         start = at(D, x0)
         return lasthi + 0.25 * a, (start if start < entry - 0.5 * a else entry - w0)
+    if name.startswith('channel_'):
+        U, D = g['U'], g['D']
+        wi = max(at(U, i) - at(D, i), 0.5 * a)                           # los canales son paralelos: la anchura actual es la medida
+        if d > 0:
+            return (min(at(D, i), g['tl'][-1][1]) if g.get('tl') else at(D, i)) - 0.25 * a, entry + wi
+        return (max(at(U, i), g['tu'][-1][1]) if g.get('tu') else at(U, i)) + 0.25 * a, entry - wi
     if name == 'cup_handle':
         rim = max(g['left'][1], g['right'][1])
         return g['handle'][1] - 0.25 * a, rim + (rim - g['bottom'][1])
@@ -95,6 +102,7 @@ def rule(name: str, g: Dict, F: Dict[str, np.ndarray], i: int, d: int, entry: Op
 def box(F: Dict[str, np.ndarray], i: int, d: int, entry: float, stop: float, target: float) -> Dict:
     """Entrada, stop y objetivo (más el parcial T1 al 50 %) con un stop mínimo de 1 ATR y, si el estructural es muy lejano, un stop táctico de 1,5 ATR."""
     a = float(F['atr'][i])
+    spent = bool(d * (target - entry) < SPENT * a)                  # medido antes de corregir: un objetivo que la ruptura ya superó no se disfraza de 2R
     if d > 0 and not (stop < entry < target):
         stop, target = generic(entry, a, 1, max(abs(entry - stop), 0.6 * a))
     if d < 0 and not (target < entry < stop):
@@ -105,7 +113,7 @@ def box(F: Dict[str, np.ndarray], i: int, d: int, entry: float, stop: float, tar
     risk, reward = abs(entry - stop), abs(target - entry)
     far = risk > FAR_STOP * a
     stop_t = entry - d * TACT * a if far else None
-    return {'entry': r(entry), 'stop': r(stop), 'target': r(target), 't1': r(entry + d * 0.5 * reward), 'rr': float(round(reward / max(risk, 1e-9), 2)),
+    return {'entry': r(entry), 'stop': r(stop), 'target': r(target), 't1': r(entry + d * 0.5 * reward), 'rr': float(round(reward / max(risk, 1e-9), 2)), 'spent': spent,
             'risk_pct': float(round(risk / entry * 100, 2)), 'reward_pct': float(round(reward / entry * 100, 2)), 'stop_min': bool(stop_min), 'far': bool(far),
             'stop_t': None if stop_t is None else r(stop_t), 'rr_t': None if stop_t is None else float(round(reward / max(abs(entry - stop_t), 1e-9), 2)),
             '_stop': stop, '_stop_t': stop_t, '_target': target}
