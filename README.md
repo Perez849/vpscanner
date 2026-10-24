@@ -81,7 +81,7 @@ Con las 300 más negociadas (203.000 señales, 2016–2026) el exceso medio sobr
 
 - **Comprar rupturas a máximos** (55, 100 y 252 sesiones, base junto a máximos) rinde menos que entrar al azar con cualquier geometría (t entre −4,4 y −6,9): coincide con el estudio de evidencia.
 - La única señal positiva que se repite en las tres geometrías es la **ruptura de una directriz bajista** (+0,42 %, t +2,6), pero con 75 patrones probados no supera el umbral del mejor de N (3,35).
-- El tamaño del plan sí cambia la **tasa de acierto** (29 % de objetivos en las figuras con el plan de la web), pero la del azar con las mismas distancias es casi igual (26–36 %): la tasa de acierto la fija la geometría, no el patrón.
+- El tamaño del plan fija la **tasa de acierto**: con el plan de la web las figuras alcistas llegan al objetivo el 32 % de las veces, pero entrar al azar con las mismas distancias lo logra el 34 %. La tasa de acierto la decide la geometría, no el patrón.
 
 ## Lista de seguimiento
 
