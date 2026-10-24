@@ -43,6 +43,7 @@ jobs:
           INPUT_SYMBOLS: ${{ github.event.inputs.symbols }}
           INPUT_REPS: ${{ github.event.inputs.reps }}
         run: |
+          set -o pipefail
           mkdir -p /tmp/out
           CMD="${INPUT_CMD:-lab}"
           if [ "$CMD" = "lab" ]; then
