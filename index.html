@@ -274,10 +274,16 @@ function verdictOf(e) {
   const K = e.K300 && e.K300.n >= 30 ? 'K300' : e.K50 && e.K50.n >= mn ? 'K50' : null, k = K ? e[K] : null;
   if (!k || k.ex == null) return ['n', 'Muy pocas señales en el estudio para juzgarlo.'];
   const T = S.ev.meta.thr[K].p95;
-  if (k.t >= T && k.ex > 0) return ['g', `ventaja frente al azar de ${pc(k.ex, 2)} por operación (t = ${k.t.toFixed(1)}, supera el umbral del mejor de N: ${T}).`];
+  const loses = k.mean < 0 ? ` Ojo: la operación sigue perdiendo de media (${pc(k.mean, 2)}): solo pierde menos que entrar al azar.` : '';
+  if (k.t >= T && k.ex > 0) return ['g', `ventaja frente al azar de ${pc(k.ex, 2)} por operación (t = ${k.t.toFixed(1)}, supera el umbral del mejor de N: ${T}).${loses}`];
   if (k.t <= -T) return ['r', `rinde ${pc(k.ex, 2)} MENOS que entrar al azar (t = ${k.t.toFixed(1)}): operarlo ha sido peor que no mirar el gráfico.`];
-  if (k.ex > 0 && k.t >= 2) return ['a', `parece algo mejor que el azar (${pc(k.ex, 2)}, t = ${k.t.toFixed(1)}) pero no supera el umbral del mejor de N (${T}): no concluyente.`];
+  if (k.ex > 0 && k.t >= 2) return ['a', `parece algo mejor que el azar (${pc(k.ex, 2)}, t = ${k.t.toFixed(1)}) pero no supera el umbral del mejor de N (${T}): no concluyente.${loses}`];
   return ['n', `sin ventaja demostrada (exceso ${pc(k.ex, 2)}, t = ${k.t.toFixed(1)}).`];
+}
+function evSummary(K) {
+  const m = S.ev.meta, T = m.thr[K].p95, rows = Object.entries(S.ev.patterns).filter(([k, r]) => r[K] && r[K].n >= m.min_events && r[K].ex != null);
+  const base = rows.filter(([k, r]) => !r.hq), hq = rows.filter(([k, r]) => r.hq), ab = a => a.filter(([k, r]) => Math.abs(r[K].t) >= T).map(([k]) => k);
+  return {T, nBase: base.length, nAll: rows.length, pos: base.filter(([k, r]) => r[K].t >= T && r[K].ex > 0).map(([k]) => k), neg: base.filter(([k, r]) => r[K].t <= -T).map(([k]) => k), hqAbove: ab(hq).map(k => k.split(':')[0])};
 }
 function evRows() {
   const K = S.evK, out = [];
@@ -294,16 +300,15 @@ function evRows() {
 }
 function renderEvidence() {
   if (!S.ev) { $('#view').innerHTML = '<h2>Evidencia</h2><div class="empty">Todavía no hay estudio. Lanza el flujo «Estudio» (<code>python -m vp study</code>).</div>'; return; }
-  const m = S.ev.meta, K = S.evK, T = m.thr[K], tested = m.tested[K];
-  const above = tested.above.filter(k => !k.endsWith(':hq')), abovePos = tested.above_positive;
+  const m = S.ev.meta, K = S.evK, T = m.thr[K], E = evSummary(K);
   const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, t]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
   const lab = k => esc((catOf(k.split(':')[0]).label || k) + (k.endsWith(':hq') ? ' (Q≥75)' : ''));
-  $('#view').innerHTML = `<h2>Evidencia</h2><p class="lead">¿Baten los patrones a entrar al azar? Cada señal se opera en la apertura siguiente y se cierra a ${m.primary} sesiones (coste ${m.cost} %); los bajistas se miden en corto. «Exceso» es el rendimiento menos el de entrar al azar en el mismo universo el mismo año. El umbral del mejor de N corrige que, al probar ${tested.n} patrones, alguno saldrá «significativo» por casualidad.</p>
-    <div class="panel"><div class="verd"><div><div class="big">${tested.above_positive.length} de ${tested.n}</div><div class="small">patrones con ventaja positiva que supera el umbral<br>(|t| ≥ ${T.p95}, percentil 95 del mejor de N)</div></div>
-      <div style="flex:1;min-width:240px"><div class="small"><b>Superan el umbral (cualquier signo):</b> ${above.length ? above.map(lab).join(' · ') : 'ninguno'}.<br><b>Con ventaja positiva:</b> ${abovePos.length ? abovePos.map(lab).join(' · ') : 'ninguno'}.<br>Por puro azar se esperarían ≈ ${(0.05 * tested.n).toFixed(1)} si se miraran sueltos. Universo: ${m.universe} acciones · ${m.bars.toLocaleString('es-ES')} barras · ${m.from} → ${m.to}.</div></div></div></div>
+  $('#view').innerHTML = `<h2>Evidencia</h2><p class="lead">¿Baten los patrones a entrar al azar? Cada señal se opera en la apertura siguiente y se cierra a ${m.primary} sesiones (coste ${m.cost} %); los bajistas se miden en corto. «Exceso» es el rendimiento menos el de entrar al azar en el mismo universo el mismo año. El umbral del mejor de N corrige que, al probar ${E.nAll} patrones, alguno saldrá «significativo» por casualidad.</p>
+    <div class="panel"><div class="verd"><div><div class="big">${E.pos.length} de ${E.nBase}</div><div class="small">patrones con ventaja positiva que supera el umbral<br>(|t| ≥ ${T.p95}, percentil 95 del mejor de ${E.nAll})</div></div>
+      <div style="flex:1;min-width:240px"><div class="small"><b>Con ventaja positiva:</b> ${E.pos.length ? E.pos.map(lab).join(' · ') : 'ninguno'}.<br><b>Superan el umbral pero rinden PEOR que el azar:</b> ${E.neg.length ? E.neg.map(lab).join(' · ') : 'ninguno'}.<br>Variantes de calidad alta (Q ≥ 75) que superan el umbral: ${E.hqAbove.length ? E.hqAbove.map(lab).join(' · ') : 'ninguna'}.<br>Por puro azar se esperarían ≈ ${(0.05 * E.nAll).toFixed(1)} si se miraran sueltos. Universo: ${m.universe} acciones · ${m.bars.toLocaleString('es-ES')} barras · ${m.from} → ${m.to}.</div></div></div></div>
     <div class="bar">${seg('e-k', [['K50', '50 mayores'], ['K300', '300 mayores']], K)}${seg('e-f', [['all', 'Todas']].concat(Object.entries(FAMS)), S.evFam)}<input type="search" id="e-t" placeholder="Buscar patrón" value="${esc(S.evText)}" size="16"></div>
-    <div class="panel"><h3>Resumen por familia</h3><div class="small" style="margin-bottom:6px">Exceso medio sobre entrar al azar (a ${m.primary} sesiones) de los patrones de cada familia y sentido, y qué parte de ellos queda por encima del azar.</div><div id="e-fam"></div></div>
-    <div class="panel"><h3>t de cada patrón frente al azar</h3><div class="small" style="margin-bottom:4px">Cada punto es un patrón (verde alcista, rojo bajista; el anillo marca los de calidad alta). La banda sombreada es lo que se esperaría por azar para el mejor de ${tested.n}: casi todo cae dentro.</div><canvas id="strip"></canvas></div>
+    <div class="panel"><h3>Resumen por familia</h3><div class="small" style="margin-bottom:6px">Exceso mediano sobre entrar al azar (a ${m.primary} sesiones) de los patrones de cada familia y sentido, y qué parte de ellos queda por encima del azar.</div><div id="e-fam"></div></div>
+    <div class="panel"><h3>t de cada patrón frente al azar</h3><div class="small" style="margin-bottom:4px">Cada punto es un patrón (verde alcista, rojo bajista; el anillo marca los de calidad alta). La banda sombreada es lo que se esperaría por azar para el mejor de ${E.nAll}: casi todo cae dentro.</div><canvas id="strip"></canvas></div>
     <div class="tw"><table class="ev"><thead><tr>${[['label', 'Patrón'], ['n', 'n'], ['wr', 'Acierto'], ['mean', 'Media'], ['t', 'Exceso · t'], ['hq', 'Calidad ≥ 75']].map(([k, t]) => `<th data-k="${k}">${t}${S.evSort === k ? (S.evDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}<th>Años +</th><th></th></tr></thead><tbody id="e-body"></tbody></table></div>`;
   $('#e-k').querySelectorAll('button').forEach(b => b.onclick = () => { S.evK = b.dataset.v; renderEvidence(); });
   $('#e-f').querySelectorAll('button').forEach(b => b.onclick = () => { S.evFam = b.dataset.v; renderEvidence(); });
@@ -316,8 +321,8 @@ function fillFam() {
   const K = S.evK, rows = [];
   for (const [k, r] of Object.entries(S.ev.patterns)) if (!r.hq && r[K] && r[K].n >= S.ev.meta.min_events && r[K].ex != null) rows.push({fam: r.fam, d: r.dir, ex: r[K].ex});
   const out = [];
-  for (const f of Object.keys(FAMS)) for (const d of [1, -1]) { const x = rows.filter(r => r.fam === f && r.d === d); if (x.length) out.push([f, d, x.length, x.reduce((a, r) => a + r.ex, 0) / x.length, x.filter(r => r.ex > 0).length / x.length * 100]); }
-  el.innerHTML = '<table class="ev"><thead><tr><th>Familia</th><th>Sentido</th><th>Patrones</th><th>Exceso medio</th><th>Con exceso positivo</th></tr></thead><tbody>' + out.map(([f, d, n, ex, p]) => `<tr><td>${FAMS[f]}</td><td>${d > 0 ? 'alcistas (largo)' : 'bajistas (corto)'}</td><td>${n}</td><td class="${ex > 0 ? 'pos' : 'neg'}">${pc(ex, 2)}</td><td>${p.toFixed(0)} %</td></tr>`).join('') + '</tbody></table>';
+  for (const f of Object.keys(FAMS)) for (const d of [1, -1]) { const x = rows.filter(r => r.fam === f && r.d === d); if (x.length) { const ys = x.map(r => r.ex).sort((a, b) => a - b), md = ys.length % 2 ? ys[(ys.length - 1) / 2] : (ys[ys.length / 2 - 1] + ys[ys.length / 2]) / 2; out.push([f, d, x.length, md, x.filter(r => r.ex > 0).length / x.length * 100]); } }
+  el.innerHTML = '<table class="ev"><thead><tr><th>Familia</th><th>Sentido</th><th>Patrones</th><th>Exceso mediano</th><th>Con exceso positivo</th></tr></thead><tbody>' + out.map(([f, d, n, ex, p]) => `<tr><td>${FAMS[f]}</td><td>${d > 0 ? 'alcistas (largo)' : 'bajistas (corto)'}</td><td>${n}</td><td class="${ex > 0 ? 'pos' : 'neg'}">${pc(ex, 2)}</td><td>${p.toFixed(0)} %</td></tr>`).join('') + '</tbody></table>';
 }
 function fillEvTable() {
   const T = thr(), rows = evRows();
@@ -378,7 +383,7 @@ async function renderChartView(sym, selId) {
     <div id="stage"><canvas id="cv"></canvas><div id="tip"></div></div><div class="legend" id="legend"></div></div>
     <div class="side"><div class="tabs" id="tabs"></div><div class="pane" id="pane"></div></div></div>`;
   S.cv = $('#cv'); S.cx = S.cv.getContext('2d');
-  $('#warn').innerHTML = '<b>Herramienta para leer el gráfico, no una señal de compra.</b> Dibujar bien una figura no demuestra que funcione: ' + (S.ev ? `el estudio (pestaña Evidencia) encuentra ${S.ev.meta.tested.K300.above_positive.length} de ${S.ev.meta.tested.K300.n} patrones con ventaja que supere el azar.` : 'consulta la pestaña Evidencia.') + ' Cada patrón muestra su evidencia.';
+  $('#warn').innerHTML = '<b>Herramienta para leer el gráfico, no una señal de compra.</b> Dibujar bien una figura no demuestra que funcione: ' + (S.ev ? `el estudio (pestaña Evidencia) encuentra ${evSummary('K300').pos.length} de ${evSummary('K300').nBase} patrones con ventaja que supere el azar.` : 'consulta la pestaña Evidencia.') + ' Cada patrón muestra su evidencia.';
   $('#symlist').innerHTML = S.idx.symbols.map(s => `<option value="${s.sym}">`).join('');
   $('#sym').addEventListener('change', e => { const v = e.target.value.trim().toUpperCase(); if (S.idx.symbols.find(s => s.sym === v)) go(v); });
   $('#sym').addEventListener('focus', e => e.target.select());
