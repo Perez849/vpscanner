@@ -1,13 +1,19 @@
-name: Laboratorio (manual)
+name: Laboratorio y estudio (manual)
 
-# Ejecuta manualmente el laboratorio de investigación (por defecto la validación final) con 10 años de
-# datos del universo completo y vuelca el informe en la rama claude/research-results-<cmd>. No toca main.
+# Ejecuta a mano el laboratorio (analiza la lista de seguimiento) o el estudio de evidencia (S&P 500 + Nasdaq-100, 10 años) y vuelca el resultado
+# en la rama claude/research-results-<cmd>. No toca la rama desde la que se lanza.
 on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'final | moc | improve | gap | pelotazo | pelotazo2 | explore | meta … meta5 | regime'
-        default: 'final'
+        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia)'
+        default: 'lab'
+      symbols:
+        description: 'valores separados por comas (vacío = lista por defecto del lab o S&P 500 + Nasdaq-100 en el estudio)'
+        default: ''
+      reps:
+        description: 'study: desplazamientos temporales del umbral del mejor de N'
+        default: '150'
 
 permissions:
   contents: write
@@ -15,46 +21,49 @@ permissions:
 jobs:
   research:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Dependencias
-        run: pip install numpy pandas lxml scikit-learn
+        run: pip install numpy pandas lxml
       - name: Caché de precios
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
-          path: scanner/cache
-          key: prices-v2-${{ github.run_id }}
-          restore-keys: prices-v2-
-      - name: Universo
-        run: |
-          cd scanner
-          python universe.py --refresh || python universe.py
-      - name: Investigación
+          path: .cache
+          key: prices-vp-${{ github.run_id }}
+          restore-keys: prices-vp-
+      - name: Pruebas
+        run: python tests/test_vp.py
+      - name: Ejecutar
         env:
           INPUT_CMD: ${{ github.event.inputs.cmd }}
+          INPUT_SYMBOLS: ${{ github.event.inputs.symbols }}
+          INPUT_REPS: ${{ github.event.inputs.reps }}
         run: |
+          set -o pipefail
           mkdir -p /tmp/out
-          cd scanner
-          CMD="${INPUT_CMD:-final}"
-          python -u research.py $CMD --out /tmp/out 2>&1 | tee /tmp/out/research_log.txt
-      - name: Escaneo de prueba con el registro recién generado (datos reales)
-        run: |
-          if [ -f /tmp/out/validated.json ]; then
-            cd scanner
-            python -u scan.py --registry /tmp/out/validated.json --out /tmp/out/scan --no-notify 2>&1 | tee /tmp/out/scan_log.txt
+          CMD="${INPUT_CMD:-lab}"
+          if [ "$CMD" = "lab" ]; then
+            python -u -m vp lab --symbols "$INPUT_SYMBOLS" --out /tmp/out --raw /tmp/out/raw 2>&1 | tee /tmp/out/log.txt
+          else
+            python -u -m vp study --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-150}" 2>&1 | tee /tmp/out/log.txt
           fi
       - name: Publicar resultados en rama aparte
         if: always()
         env:
           INPUT_CMD: ${{ github.event.inputs.cmd }}
         run: |
-          cp scanner/universe.json /tmp/out/ || true
           cd /tmp/out
           git init -q && git checkout -q -b res
           git config user.name "vp-scanner-bot"; git config user.email "bot@users.noreply.github.com"
-          git add -A && git commit -q -m "research $(date -u +%F-%H%M) sha=${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" res:claude/research-results-${INPUT_CMD:-final}
+          git add -A && git commit -q -m "research ${INPUT_CMD:-lab} $(date -u +%F-%H%M) sha=${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" res:claude/research-results-${INPUT_CMD:-lab}
+      - name: Guardar caché (también si falla)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache
+          key: prices-vp-${{ github.run_id }}
