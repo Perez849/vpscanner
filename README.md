@@ -2,7 +2,7 @@
 
 Detecta **figuras, velas y rupturas** en acciones grandes de EE.UU., las **dibuja** sobre el gráfico con su plan (entrada, stop, objetivo) y **mide si funcionan**.
 
-- **Radar**: qué figuras se están formando o se han completado, por calidad.
+- **Radar**: qué figuras se están **formando** (con el nivel que las activa y a cuántos ATR está el precio), cuáles son **nuevas hoy** y cuáles se completaron hace poco; filtros «cerca del disparo», sentido, calidad y ★ favoritos.
 - **Gráfico**: velas con las figuras dibujadas (rectas con sus toques, ápice, medida), plan por patrón, resultado simulado y evidencia del estudio.
 - **Evidencia**: ¿baten los patrones a entrar al azar? Estudio con corrección por probar muchos patrones.
 - **Guía**: qué es cada patrón y cómo se calcula su plan.
@@ -18,7 +18,9 @@ Una figura no es «dos pivotes unidos por una recta». El motor:
 - **Clasificación por pendientes y convergencia**: triángulos (simétrico, ascendente, descendente), cuñas (≥ 5 toques) y rectángulo; duración ≤ 80 barras, base ≤ 16 % del precio y ≤ 9 ATR, anchura al romper ≤ 70 % de la inicial, con ápice.
 - **H-C-H** con cabeza ≥ 1,2 ATR más alta que los hombros, simetría en altura y tiempo y tendencia previa; **dobles y triples** techos/suelos; **banderas y banderines** con asta impulsiva (≥ 5 ATR) y retroceso ≤ 50 %; **taza con asa** con la parábola ajustada a los mínimos y prueba de redondez; **VCP**, **diamante**, **isla**, **directrices** con ≥ 3 toques y **rebotes en soportes y resistencias** de 3 toques.
 - **Calidad 0–100** por figura (toques, ajuste, simetría, duración, forma, ruptura, volumen); por debajo de 35 no es figura.
-- **Figuras en formación**: una compresión que aún no ha roto se dibuja con sus dos rectas y los dos escenarios (rompe arriba / rompe abajo).
+- **Canales**: dos rectas paralelas con pendiente y ≥ 6 toques; la ruptura a favor acelera la tendencia, la contraria la agota.
+- **Primera ruptura**: el cuello (o la taza, o la figura de compresión) solo se rompe la primera vez que el cierre lo pasa; un nuevo cruce tras un fallo no es la figura otra vez.
+- **Figuras en formación**: las figuras ya dibujadas que aún no han roto se devuelven aparte, evaluadas como si la próxima barra fuera la de ruptura y con los mismos criterios. Una compresión (triángulo, cuña, canal, rectángulo) tiene dos escenarios (rompe arriba / rompe abajo); doble y triple suelo o techo, H-C-H, bandera y banderín, taza con asa y VCP tienen uno, con su **disparador** (cuello, borde o techo) y la **distancia en ATR** (≤ 3 ATR y calidad ≥ 50). Es una lectura del último cierre: no aparece en el estudio, que solo mide figuras ya rotas.
 
 Además, 30 patrones de velas y 13 rupturas (máximos y mínimos de 55/100/252 sesiones, Bollinger y ATR comprimidos, caja de Darvas, base junto al máximo anual). El catálogo completo (`vp/catalog.py`) alimenta el motor, el estudio y la Guía.
 
@@ -28,6 +30,7 @@ Además, 30 patrones de velas y 13 rupturas (máximos y mínimos de 55/100/252 s
 - **Stop** estructural más allá de la figura (0,25 ATR de margen), **nunca a menos de 1 ATR** de la entrada y, si queda a más de 3 ATR, un stop táctico de 1,5 ATR.
 - **Obstáculos**: soportes y resistencias fuertes entre la entrada y el objetivo.
 - **Resultado simulado**: entrada en la apertura siguiente, el stop gana si se tocan ambos el mismo día, cierre a las 40 sesiones.
+- **Objetivo consumido**: si la ruptura ya recorrió la medida clásica (queda menos de 1 ATR hasta el objetivo) el patrón se marca como consumido y no cuenta como activo.
 
 ## Estudio de evidencia (`vp/study.py`)
 
@@ -60,10 +63,17 @@ Con las **300 más negociadas** de cada fecha y el umbral del mejor de 93 varian
 **Qué es entonces esta herramienta**: una forma rigurosa de *leer* el gráfico (qué figura hay, dónde está el stop, cuánto hay hasta el objetivo, qué barreras hay en medio) y de ver, con datos, que las figuras clásicas por sí solas no baten al mercado. No es un generador de señales.
 
 
+## Lista de seguimiento
+
+`watchlist.txt` (raíz del repositorio) manda: un símbolo de Yahoo por línea o varios separados por espacios o comas, `#` comenta. El escaneo diario la lee entera; para añadir o quitar valores basta editarla desde GitHub (lápiz) y el siguiente escaneo, o lanzarlo a mano desde Actions, los incluye. Un valor que Yahoo no devuelve o con menos de 400 sesiones se avisa en el Radar. Cada valor añade ~75 KB de `data/charts` al repositorio en cada escaneo, así que conviene no pasar de unos 150.
+
+Los ★ favoritos se guardan solo en el navegador (localStorage).
+
 ## Estructura
 
 ```
 index.html            la web (lee data/*.json)
+watchlist.txt         valores que vigila el escaneo diario (editable)
 vp/
   catalog.py          catálogo de patrones: nombre, descripción, regla del plan
   ta.py               indicadores (ATR, medias, RSI…) con NumPy
@@ -74,7 +84,7 @@ vp/
   plan.py             entrada, stop, objetivo, T1, obstáculos, resultado simulado
   lab.py              analiza un valor → JSON para la web
   study.py            estudio de evidencia
-  data.py, universe.py   descarga de Yahoo y universos
+  data.py, universe.py   descarga de Yahoo y universos (watchlist.txt)
 data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json
 tests/test_vp.py      pruebas (sin red)
 .github/workflows/    scan.yml (L–V 22:45 UTC) · evidence.yml (domingos) · research.yml (manual)
@@ -85,7 +95,7 @@ tests/test_vp.py      pruebas (sin red)
 ```bash
 pip install numpy pandas lxml
 python tests/test_vp.py                       # pruebas
-python -m vp lab                              # analiza la lista de seguimiento → data/
+python -m vp lab                              # analiza watchlist.txt → data/
 python -m vp lab --symbols AAPL,NVDA          # solo esos valores
 python -m vp study                            # estudio de evidencia (tarda; mejor en Actions)
 python -m http.server                         # abrir http://localhost:8000
