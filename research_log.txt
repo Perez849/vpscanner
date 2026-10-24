@@ -1,0 +1,3 @@
+  datos: 0 en caché, 52 por descargar (3y)
+  datos: OK 52 · fallidos 0
+  chartlab: 52 valores → /tmp/out/charts (fallidos [])
