@@ -148,7 +148,7 @@ async function getJSON(name) {
 }
 
 async function init() {
-  $('#warn').innerHTML = '<b>Herramienta para leer el gráfico, no una señal de compra.</b> Nuestro estudio de estos 65 patrones sobre las 50 y las 300 acciones de EE.UU. más negociadas (2017–2026, mejor de 65 corregido) <b>no encuentra ventaja</b>: las rupturas a máximos rinden menos que entrar al azar y los dibujos clásicos no baten al mercado. Cada patrón muestra su evidencia.';
+  $('#warn').innerHTML = '<b>Herramienta para leer el gráfico, no una señal de compra.</b> Dibujar bien una figura no demuestra que funcione: nuestro estudio sobre las acciones de EE.UU. más negociadas (2017–2026, corrigiendo por probar decenas de patrones) <b>no encuentra ventaja</b> en los dibujos clásicos, y las rupturas a máximos rinden menos que entrar al azar. Cada patrón muestra su evidencia.';
   try { S.idx = await getJSON('index'); } catch (e) { $('#pane').innerHTML = '<div class="empty">No hay datos todavía. Lanza el flujo «Laboratorio» con el comando <b>chartlab</b> o ejecuta <code>python scanner/chartlab.py</code>.</div>'; return; }
   $('#symlist').innerHTML = S.idx.symbols.map(s => `<option value="${s.sym}">`).join('');
   buildBar();
@@ -360,7 +360,7 @@ function draw() {
       cx.setLineDash(l.dash || l.k === 'neck' ? [6, 4] : []); cx.beginPath(); cx.moveTo(X(l.a[0]), Y(l.a[1])); cx.lineTo(X(l.b[0]), Y(l.b[1])); cx.stroke(); cx.setLineDash([]);
     }
     cx.globalAlpha = a;
-    for (const q of p.pts) { const x = X(q[0]), y = Y(q[1]); cx.fillStyle = css('--card'); cx.strokeStyle = c; cx.lineWidth = 2; cx.beginPath(); cx.arc(x, y, q[2] === 'ápice' ? 2.6 : 3.8, 0, 7); cx.fill(); cx.stroke(); if (q[2] && (sel || hov || (!S.sel && S.view.ppb > 5))) { cx.fillStyle = c; cx.font = '700 10px ' + css('--f-mono'); cx.textAlign = 'center'; cx.fillText(q[2], x, y + (q[2] === 'ápice' ? -12 : p.dir > 0 ? 14 : -13)); } }
+    for (const q of p.pts) { const x = X(q[0]), y = Y(q[1]); cx.fillStyle = css('--card'); cx.strokeStyle = c; cx.lineWidth = 2; cx.beginPath(); cx.arc(x, y, q[2] === 'ápice' ? 2.6 : 3.8, 0, 7); cx.fill(); cx.stroke(); if (q[2] && (sel || hov || (!S.sel && S.view.ppb > 5))) { cx.fillStyle = c; cx.font = '700 10px ' + css('--f-mono'); cx.textAlign = x > L.x1 - 26 ? 'right' : 'center'; cx.fillText(q[2], Math.min(x, L.x1 - 2), y + (q[2] === 'ápice' ? -12 : p.dir > 0 ? 14 : -13)); } }
     if (sel) {
       cx.globalAlpha = 1;
       for (const l of p.lines) if (l.n) pill(`${l.n} toques`, X(l.a[0] + 0.3 * (l.b[0] - l.a[0])), Y(l.a[1] + 0.3 * (l.b[1] - l.a[1])) + (l.k === 'upper' ? -13 : 13), c, {size: 9, align: 'c', alpha: .92});
