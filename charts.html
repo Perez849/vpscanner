@@ -200,6 +200,7 @@ function buildBar() {
 /* ───────────────────────── utilidades de patrones ───────────────────────── */
 const col = d => d > 0 ? css('--emerald') : d < 0 ? css('--ember') : css('--amber');
 function vis(p) {
+  if (p === S.sel) return true;
   if (!S.f[p.fam]) return false;
   if (p.q != null && p.q < S.f.q && p !== S.sel) return false;
   if (S.f.dir && p.dir !== S.f.dir) return false;
@@ -320,10 +321,11 @@ function draw() {
     cx.strokeStyle = c; cx.setLineDash([5, 4]); cx.beginPath(); cx.moveTo(L.x0, yc); cx.lineTo(L.x1, yc); cx.stroke(); cx.setLineDash([]); cx.globalAlpha = 1;
     labels.push({y: yc, t: (z.kind === 'S' ? 'S ' : 'R ') + fx(z.p) + ' ×' + z.touches, c});
   }
-  // rellenos de figuras (detrás de las velas)
+  // rellenos de figuras (detrás de las velas). Sin selección solo se dibujan completas las activas, las en formación y las de calidad alta; el resto, como marcadores.
   const pats = S.D.patterns.filter(vis);
   const dim = S.sel ? 0.07 : 1;
-  for (const p of pats) { if ((p.fam !== 'figuras' && p !== S.sel) || (S.sel && p !== S.sel)) continue; for (const pl of p.polys) if (pl.k === 'fill') poly(pl.pts, p.state === 'forming' ? css('--amber') : col(p.dir), null, 0.08 * (p === S.sel ? 1.8 : 1)); }
+  const major = p => p.fam === 'figuras' && (p.active || p.state === 'forming' || (p.q || 0) >= 75);
+  for (const p of pats) { if ((!major(p) && p !== S.sel) || (S.sel && p !== S.sel)) continue; for (const pl of p.polys) if (pl.k === 'fill') poly(pl.pts, p.state === 'forming' ? css('--amber') : col(p.dir), null, 0.08 * (p === S.sel ? 1.8 : 1)); }
   // medias
   if (S.f.sma) { line(S.D.sma200, css('--violet'), 1.4); line(S.D.sma50, css('--sapphire'), 1.4); }
   // velas
@@ -345,7 +347,6 @@ function draw() {
   S.hits = [];
   const placed = [];
   const order = pats.slice().sort((a, c) => (a === S.sel) - (c === S.sel));
-  const major = p => p.fam === 'figuras';
   for (const p of order) {
     const sel = p === S.sel, hov = p === S.hover;
     if (!(major(p) || sel || hov)) continue;
