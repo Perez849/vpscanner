@@ -40,9 +40,9 @@ Además, 30 patrones de velas y 13 rupturas (máximos y mínimos de 55/100/252 s
 - **Umbral del mejor de N**: se desplazan al azar las señales de cada valor y se anota el mayor |t| entre todos los patrones; solo «supera el azar» quien pasa el percentil 95 de ese máximo. Se estudian también las señales de **calidad ≥ 75** de cada figura.
 - **Limitación**: los miembros son los actuales (sesgo de supervivencia que favorece a los largos).
 
-## Resultados (estudio del 24-oct-2026: 500 acciones, 1,23 millones de barras, 2016–2026)
+## Resultados (estudio del 24-oct-2026: 500 acciones, 1,23 millones de barras, 2016–2026; se recalcula cada domingo)
 
-Con las **300 más negociadas** de cada fecha y el umbral del mejor de 93 variantes (|t| ≥ 3,34), **8 superan el azar; seis de ellas rinden MENOS que entrar al azar**:
+Con las **300 más negociadas** de cada fecha y el umbral del mejor de 101 variantes (|t| ≥ 3,35), **8 superan el azar; seis de ellas rinden MENOS que entrar al azar**:
 
 | patrón | exceso a 10 sesiones | t | años a favor |
 |---|---|---|---|
@@ -56,8 +56,9 @@ Con las **300 más negociadas** de cada fecha y el umbral del mejor de 93 varian
 - **La única figura con ventaja es la cuña ascendente (bajista)**: tras romperse a la baja, la acción rinde 0,60 puntos menos de lo que rinde una acción cualquiera esos días. Pero la operación en corto **pierde de media un 0,12 %** (gana menos de lo que pierde el mercado al alza): no es rentable por sí sola, y el estudio no incluye coste de préstamo ni dividendos.
 - **Comprar rupturas a máximos pierde frente al azar** (la reversión a corto plazo se come la ruptura); el VCP, la taza con asa y la base junto a máximos también.
 - Con las **50 mayores** solo supera el umbral la base junto a máximos (negativa).
-- Por familia (exceso mediano): figuras alcistas −0,18 % (solo el 15 % de ellas por encima del azar), figuras bajistas +0,04 %, rupturas alcistas −0,38 %, velas ≈ 0. Ninguna vela individual supera el umbral.
-- **¿Ayuda dibujar mejor la figura?** Las señales de calidad ≥ 75 mejoran el exceso en 13 de 22 figuras (media +0,18 %), pero con 100–400 señales por celda eso es compatible con ruido, y no rescata a las que pierden (VCP −0,39 → −0,40, taza −0,82 → −0,83, triángulo ascendente −0,40 → −0,53).
+- Por familia (exceso mediano): figuras alcistas −0,22 % (solo el 20 % de ellas por encima del azar), figuras bajistas +0,03 %, rupturas alcistas −0,38 %, rupturas bajistas −0,37 %, velas alcistas 0,00 % y bajistas +0,22 %. Ninguna vela individual supera el umbral.
+- **Los canales** (nuevos) no aportan nada: canal ascendente roto al alza −0,50 % (t −1,7), roto a la baja +0,36 % (t +1,3), descendente −0,73 % y +0,08 %; ninguno supera el umbral. Doble suelo −0,15 %, doble techo −0,18 %, H-C-H −0,18 % y su invertido +0,11 %, bandera alcista −0,06 %: todos indistinguibles del azar.
+- **¿Ayuda dibujar mejor la figura?** Las señales de calidad ≥ 75 mejoran el exceso en 13 de 24 figuras (media +0,11 %), pero con 100–400 señales por celda eso es compatible con ruido, y no rescata a las que pierden (VCP −0,39 → −0,40, taza −0,82 → −0,83, triángulo ascendente −0,40 → −0,53).
 - Una versión anterior del estudio (otro código y un universo con pertenencia histórica a índices) llegó a cifras casi idénticas (base junto a máximos −0,57 %, VCP −0,54 %, cuña ascendente +0,52 %): el resultado no depende de la implementación.
 
 **Qué es entonces esta herramienta**: una forma rigurosa de *leer* el gráfico (qué figura hay, dónde está el stop, cuánto hay hasta el objetivo, qué barreras hay en medio) y de ver, con datos, que las figuras clásicas por sí solas no baten al mercado. No es un generador de señales.
