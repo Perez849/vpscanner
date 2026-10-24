@@ -11,15 +11,18 @@
     --emerald:#0f9d58; --ember:#d93838; --amber:#d99000; --cyan:#0891b2;
     --sapphire:#2563eb; --violet:#7c3aed;
     --cu:#0f9d58; --cd:#d93838; --grid:#00000010; --axis:#6b7280;
+    --gbg:#e6f6ec; --gfg:#0d7a45; --rbg:#fbe9e9; --rfg:#b02a2a; --abg:#fdf3dc; --afg:#8a5a00;
     --f-display:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
     --f-text:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     --f-mono:'SF Mono','Roboto Mono',Menlo,Consolas,monospace;
     --r:10px;
   }
   @media (prefers-color-scheme: dark){
-    :root{--bg:#14161a;--card:#1c1f25;--ink:#eceae4;--sub:#9aa0aa;--dim:#6b7280;--rule:#272b33;--rule2:#30343d;--ink2:#23272e;--ink3:#1a1d22;
-          --emerald:#2fbf7a;--ember:#ef5b5b;--amber:#e8b64a;--cyan:#38bdd8;--sapphire:#6c9cff;--violet:#a78bfa;--cu:#2fbf7a;--cd:#ef5b5b;--grid:#ffffff12;--axis:#9aa0aa;}
+    :root:not([data-theme="light"]){--bg:#14161a;--card:#1c1f25;--ink:#eceae4;--sub:#9aa0aa;--dim:#6b7280;--rule:#272b33;--rule2:#30343d;--ink2:#23272e;--ink3:#1a1d22;
+          --emerald:#2fbf7a;--ember:#ef5b5b;--amber:#e8b64a;--cyan:#38bdd8;--sapphire:#6c9cff;--violet:#a78bfa;--cu:#2fbf7a;--cd:#ef5b5b;--grid:#ffffff12;--axis:#9aa0aa;--gbg:#12301f;--gfg:#5fd69b;--rbg:#3a1a1a;--rfg:#f08585;--abg:#352a10;--afg:#e8b64a;color-scheme:dark;}
   }
+  :root[data-theme="dark"]{--bg:#14161a;--card:#1c1f25;--ink:#eceae4;--sub:#9aa0aa;--dim:#6b7280;--rule:#272b33;--rule2:#30343d;--ink2:#23272e;--ink3:#1a1d22;
+          --emerald:#2fbf7a;--ember:#ef5b5b;--amber:#e8b64a;--cyan:#38bdd8;--sapphire:#6c9cff;--violet:#a78bfa;--cu:#2fbf7a;--cd:#ef5b5b;--grid:#ffffff12;--axis:#9aa0aa;--gbg:#12301f;--gfg:#5fd69b;--rbg:#3a1a1a;--rfg:#f08585;--abg:#352a10;--afg:#e8b64a;color-scheme:dark;}
   *{box-sizing:border-box}
   html,body{margin:0}
   body{background:var(--bg);color:var(--ink);font-family:var(--f-text);-webkit-font-smoothing:antialiased;line-height:1.45}
@@ -38,6 +41,7 @@
   .tg i{display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.35}
   .tg.on{color:var(--ink);border-color:var(--ink);font-weight:700}
   .tg.on i{opacity:1}
+  @media (max-width:700px){.bar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.bar>*{flex:none}.warn{font-size:11px}}
   .seg{display:flex;border:1px solid var(--rule2);border-radius:8px;overflow:hidden}
   .seg button{font-family:var(--f-mono);font-size:11px;padding:6px 10px;border:0;background:var(--card);color:var(--sub);cursor:pointer}
   .seg button.on{background:var(--ink);color:var(--bg);font-weight:700}
@@ -58,7 +62,7 @@
   .side{display:flex;flex-direction:column;gap:12px;max-height:calc(640px + 40px);overflow:auto}
   @media (max-width:1050px){.side{max-height:none}}
   .tabs{display:flex;border-bottom:1px solid var(--rule2)}
-  .tabs button{flex:1;font-family:var(--f-mono);font-size:11px;padding:10px 6px;border:0;background:none;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
+  .tabs button{flex:1;font-family:var(--f-mono);font-size:11px;padding:10px 4px;border:0;background:none;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
   .tabs button.on{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
   .pane{padding:10px;max-height:560px;overflow:auto}
   .pc{border:1px solid var(--rule2);border-radius:9px;padding:9px 11px;margin-bottom:8px;cursor:pointer;background:var(--card)}
@@ -74,8 +78,7 @@
   table.lv{width:100%;border-collapse:collapse;font-family:var(--f-mono);font-size:12px;margin:8px 0}
   table.lv td{padding:3px 0}table.lv td:last-child{text-align:right;font-weight:700}
   .verdict{border-radius:8px;padding:8px 10px;font-size:12px;margin:8px 0;line-height:1.45}
-  .verdict.g{background:#e7f6ee;color:#0b7a43}.verdict.r{background:#fdeaea;color:#b42626}.verdict.a{background:#fcf3e0;color:#9a6700}.verdict.n{background:var(--ink2);color:var(--sub)}
-  @media (prefers-color-scheme: dark){.verdict.g{background:#12301f;color:#5fd69b}.verdict.r{background:#3a1a1a;color:#f08585}.verdict.a{background:#352a10;color:#e8b64a}}
+  .verdict.g{background:var(--gbg);color:var(--gfg)}.verdict.r{background:var(--rbg);color:var(--rfg)}.verdict.a{background:var(--abg);color:var(--afg)}.verdict.n{background:var(--ink2);color:var(--sub)}
   .small{font-size:11.5px;color:var(--sub)}
   .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-family:var(--f-mono);font-size:11.5px;margin:6px 0}
   .kv span:nth-child(odd){color:var(--sub)}
@@ -83,8 +86,7 @@
   .empty{color:var(--sub);font-size:12.5px;padding:18px 6px;text-align:center}
   .top{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}
   .chip{font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:7px;background:var(--ink2);color:var(--sub);cursor:pointer}
-  .chip.u{background:#e7f6ee;color:#0b7a43}.chip.d{background:#fdeaea;color:#b42626}
-  @media (prefers-color-scheme: dark){.chip.u{background:#12301f;color:#5fd69b}.chip.d{background:#3a1a1a;color:#f08585}}
+  .chip.u{background:var(--gbg);color:var(--gfg)}.chip.d{background:var(--rbg);color:var(--rfg)}
 </style>
 </head>
 <body>
@@ -427,7 +429,7 @@ function poly(pts, color, w, fillA, smooth) {
 function renderPane() {
   if (!S.D) return;
   const act = S.D.patterns.filter(p => p.active && vis(p)), hist = S.D.patterns.filter(vis).slice().sort((a, b) => b.i - a.i);
-  $('#tabs').innerHTML = [['act', `Activos (${act.length})`], ['hist', `Historial (${hist.length})`], ['read', 'Lectura'], ['radar', 'Radar']].map(([k, t]) => `<button data-k="${k}" class="${S.tab === k ? 'on' : ''}">${t}</button>`).join('');
+  $('#tabs').innerHTML = [['act', `Activos (${act.length})`], ['hist', `Histórico (${hist.length})`], ['read', 'Lectura'], ['radar', 'Radar']].map(([k, t]) => `<button data-k="${k}" class="${S.tab === k ? 'on' : ''}">${t}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { S.tab = b.dataset.k; renderPane(); });
   const el = $('#pane');
   let h = '';
@@ -456,7 +458,7 @@ function cardFull(p) {
     <tr><td style="color:var(--ember)">Stop${r.tact ? ' táctico' : ' estructural'}</td><td>${fx(r.stop)} (${pc((r.stop / r.entry - 1) * 100 * p.dir)})</td></tr><tr><td>Recompensa / riesgo</td><td>${r.rr != null ? r.rr.toFixed(2) : '—'}</td></tr></table>
     <div class="small">${p.note}</div>
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>Qué pasó aquí:</b> ${rt}</div>
-    ${same.length ? `<div class="small">En este valor, otras ${same.length} señales cerradas de «${p.label}»: ${w} llegaron al objetivo y ${same.length - w} al stop.</div>` : ''}
+    ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${p.label}»: ${w} ${w === 1 ? 'llegó' : 'llegaron'} al objetivo y ${same.length - w} al stop.</div>` : ''}
     <div class="verdict ${vc}">${vt}</div>${evLines(p.ev)}</div>`;
 }
 function radar() {
@@ -541,6 +543,7 @@ function tip(q, p) {
 $('#legend').innerHTML = '<span style="color:var(--emerald)"><s></s>alcista</span><span style="color:var(--ember)"><s></s>bajista</span><span style="color:var(--amber)"><s></s>neutral</span><span style="color:var(--sapphire)"><s></s>media 50</span><span style="color:var(--violet)"><s></s>media 200</span><span style="color:var(--cyan)"><u style="background:var(--cyan)"></u>soporte</span><span style="color:var(--violet)"><u style="background:var(--violet)"></u>resistencia</span><span><u style="background:var(--emerald)"></u>recompensa</span><span><u style="background:var(--ember)"></u>riesgo</span><span>arrastra · rueda: zoom · clic en una etiqueta · ◀ ▶ recorre los patrones · Mayús+◀▶ cambia de valor</span>';
 $('#png').onclick = () => { const a = document.createElement('a'); a.download = S.sym + '-patrones.png'; a.href = cv.toDataURL('image/png'); a.click(); };
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { draw(); renderPane(); });
+new MutationObserver(() => { draw(); renderPane(); }).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
 init();
 </script>
 </body>
