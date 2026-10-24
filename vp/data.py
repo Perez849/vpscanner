@@ -15,7 +15,7 @@ import numpy as np
 
 HOSTS = ('query1.finance.yahoo.com', 'query2.finance.yahoo.com')          # se alternan en los reintentos
 URL = 'https://{host}/v8/finance/chart/{sym}?{span}&interval=1d&includeAdjustedClose=true&events=div%7Csplit'
-UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 Bars = Dict[str, np.ndarray]
 ERRORS: Dict[str, str] = {}          # último motivo de fallo por valor (para el diagnóstico)
 WAIT = 1.0                           # factor de las esperas (las pruebas lo ponen a 0)
