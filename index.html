@@ -302,13 +302,22 @@ function renderEvidence() {
     <div class="panel"><div class="verd"><div><div class="big">${tested.above_positive.length} de ${tested.n}</div><div class="small">patrones con ventaja positiva que supera el umbral<br>(|t| ≥ ${T.p95}, percentil 95 del mejor de N)</div></div>
       <div style="flex:1;min-width:240px"><div class="small"><b>Superan el umbral (cualquier signo):</b> ${above.length ? above.map(lab).join(' · ') : 'ninguno'}.<br><b>Con ventaja positiva:</b> ${abovePos.length ? abovePos.map(lab).join(' · ') : 'ninguno'}.<br>Por puro azar se esperarían ≈ ${(0.05 * tested.n).toFixed(1)} si se miraran sueltos. Universo: ${m.universe} acciones · ${m.bars.toLocaleString('es-ES')} barras · ${m.from} → ${m.to}.</div></div></div></div>
     <div class="bar">${seg('e-k', [['K50', '50 mayores'], ['K300', '300 mayores']], K)}${seg('e-f', [['all', 'Todas']].concat(Object.entries(FAMS)), S.evFam)}<input type="search" id="e-t" placeholder="Buscar patrón" value="${esc(S.evText)}" size="16"></div>
+    <div class="panel"><h3>Resumen por familia</h3><div class="small" style="margin-bottom:6px">Exceso medio sobre entrar al azar (a ${m.primary} sesiones) de los patrones de cada familia y sentido, y qué parte de ellos queda por encima del azar.</div><div id="e-fam"></div></div>
     <div class="panel"><h3>t de cada patrón frente al azar</h3><div class="small" style="margin-bottom:4px">Cada punto es un patrón (verde alcista, rojo bajista; el anillo marca los de calidad alta). La banda sombreada es lo que se esperaría por azar para el mejor de ${tested.n}: casi todo cae dentro.</div><canvas id="strip"></canvas></div>
     <div class="tw"><table class="ev"><thead><tr>${[['label', 'Patrón'], ['n', 'n'], ['wr', 'Acierto'], ['mean', 'Media'], ['t', 'Exceso · t'], ['hq', 'Calidad ≥ 75']].map(([k, t]) => `<th data-k="${k}">${t}${S.evSort === k ? (S.evDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}<th>Años +</th><th></th></tr></thead><tbody id="e-body"></tbody></table></div>`;
   $('#e-k').querySelectorAll('button').forEach(b => b.onclick = () => { S.evK = b.dataset.v; renderEvidence(); });
   $('#e-f').querySelectorAll('button').forEach(b => b.onclick = () => { S.evFam = b.dataset.v; renderEvidence(); });
   $('#e-t').oninput = e => { S.evText = e.target.value; fillEvTable(); drawStrip(); };
   $('.ev thead').querySelectorAll('th[data-k]').forEach(th => th.onclick = () => { const k = th.dataset.k; if (S.evSort === k) S.evDir *= -1; else { S.evSort = k; S.evDir = -1; } renderEvidence(); });
-  fillEvTable(); drawStrip();
+  fillEvTable(); fillFam(); drawStrip();
+}
+function fillFam() {
+  const el = $('#e-fam'); if (!el) return;
+  const K = S.evK, rows = [];
+  for (const [k, r] of Object.entries(S.ev.patterns)) if (!r.hq && r[K] && r[K].n >= S.ev.meta.min_events && r[K].ex != null) rows.push({fam: r.fam, d: r.dir, ex: r[K].ex});
+  const out = [];
+  for (const f of Object.keys(FAMS)) for (const d of [1, -1]) { const x = rows.filter(r => r.fam === f && r.d === d); if (x.length) out.push([f, d, x.length, x.reduce((a, r) => a + r.ex, 0) / x.length, x.filter(r => r.ex > 0).length / x.length * 100]); }
+  el.innerHTML = '<table class="ev"><thead><tr><th>Familia</th><th>Sentido</th><th>Patrones</th><th>Exceso medio</th><th>Con exceso positivo</th></tr></thead><tbody>' + out.map(([f, d, n, ex, p]) => `<tr><td>${FAMS[f]}</td><td>${d > 0 ? 'alcistas (largo)' : 'bajistas (corto)'}</td><td>${n}</td><td class="${ex > 0 ? 'pos' : 'neg'}">${pc(ex, 2)}</td><td>${p.toFixed(0)} %</td></tr>`).join('') + '</tbody></table>';
 }
 function fillEvTable() {
   const T = thr(), rows = evRows();

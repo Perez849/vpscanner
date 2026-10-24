@@ -319,9 +319,19 @@ def test_data_retries():
             raise urllib.error.HTTPError(req.full_url, 404, 'Not Found', {}, None)
         urllib.request.urlopen = nf
         assert data.fetch_one('NOPE', '1y') is None and len(calls) == 1
+        # límite persistente: tras MAX_STRIKES respuestas 429 seguidas se abandona sin seguir esperando
+        calls.clear(); data._strikes = 0
+
+        def tm(req, timeout=0):
+            calls.append(1)
+            raise urllib.error.HTTPError(req.full_url, 429, 'Too Many', {}, None)
+        urllib.request.urlopen = tm
+        res = [data.fetch_one(f'T{k}', '1y') for k in range(8)]
+        assert all(r_ is None for r_ in res) and len(calls) <= data.MAX_STRIKES + 1 and data.throttled(), (len(calls), data._strikes)
     finally:
         urllib.request.urlopen, data.WAIT = real, real_wait
-    print('ok · datos: reintento ante 429 con el otro servidor y sin reintentos ante 404')
+        data._strikes = 0
+    print('ok · datos: reintento ante 429 con el otro servidor, sin reintentos ante 404 y abandono ante un límite persistente')
 
 
 def test_lab_json(tmp='/tmp/vp_lab_test'):

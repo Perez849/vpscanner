@@ -21,12 +21,24 @@ ERRORS: Dict[str, str] = {}          # último motivo de fallo por valor (para e
 WAIT = 1.0                           # factor de las esperas (las pruebas lo ponen a 0)
 _lock = threading.Lock()
 _pause_until = 0.0                   # cuando Yahoo responde 429, todos los hilos esperan a la vez
+_strikes = 0                         # 429 seguidos sin ninguna respuesta buena: con MAX_STRIKES se abandona (Yahoo está limitando esta IP)
+MAX_STRIKES = 12
 
 
 def _throttle(seconds: float) -> None:
-    global _pause_until
+    global _pause_until, _strikes
     with _lock:
+        _strikes += 1
         _pause_until = max(_pause_until, time.time() + seconds * WAIT)
+
+
+def _ok() -> None:
+    global _strikes
+    _strikes = 0
+
+
+def throttled() -> bool:
+    return _strikes >= MAX_STRIKES
 
 
 def _wait_pause() -> None:
@@ -82,12 +94,16 @@ def span(rng: str, now: Optional[float] = None) -> str:
 
 def fetch_one(sym: str, rng: str = '3y', tries: int = 5, timeout: int = 25) -> Optional[Bars]:
     for k in range(tries):
+        if throttled():
+            ERRORS[sym] = 'HTTP 429 (se abandona: Yahoo limita las peticiones desde esta IP)'
+            return None
         _wait_pause()
         url = URL.format(host=HOSTS[k % len(HOSTS)], sym=sym.replace('.', '-'), span=span(rng))
         try:
             req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 b = parse(json.loads(r.read().decode('utf-8')))
+            _ok()
             return drop_open_bar(b) if b is not None else None
         except urllib.error.HTTPError as e:
             ERRORS[sym] = f'HTTP {e.code}'
@@ -129,6 +145,8 @@ def fetch_many(symbols: List[str], rng: str = '3y', workers: int = 6, cache_dir:
             out[s] = b
         else:
             todo.append(s)
+    global _strikes
+    _strikes = 0
     if verbose:
         print(f'  datos: {len(out)} en caché, {len(todo)} por descargar ({rng})', flush=True)
 
