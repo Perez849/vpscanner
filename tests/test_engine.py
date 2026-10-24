@@ -678,7 +678,44 @@ def test_charts_planted():
     print(f'ok · chartismo: {len(cases) + len(figs) + 24} patrones plantados se detectan en su barra y las {len(full)} señales son causales')
 
 
+def test_chartlab():
+    """Laboratorio de gráficos: geometría, niveles con la medida clásica (doble suelo), resultado simulado (objetivo/stop), soportes y salida JSON."""
+    import json
+    import chartlab
+    quiet = lambda n, p, sd=0.12, seed=5: list(p + np.random.default_rng(seed).normal(0, sd, n))
+    def run(tail):
+        an = [(0, 100), (20, 80), (32, 92), (44, 80.5), (52, 93.5)] + tail
+        xs, ys = np.array([a[0] for a in an]), np.array([a[1] for a in an])
+        cl = np.interp(np.arange(xs[0], xs[-1] + 1), xs, ys)
+        b = _plant_closes(np.array(quiet(260, 100) + list(cl)), wick=0.4)
+        res = chartlab.analyze('T', b, nb=300)
+        return res, [p for p in res['patterns'] if p['name'] == 'double_bottom']
+    res, dbs = run([(60, 112)])                                   # tras la ruptura sube hasta pasar el objetivo
+    assert dbs, 'no se detecta el doble suelo'
+    p = dbs[-1]
+    rr = p['rr']
+    neck = next(l['a'][1] for l in p['lines'] if l['k'] == 'neck')
+    low = min(q[1] for q in p['pts'] if q[2] in ('1', '2'))
+    assert rr['stop'] < rr['entry'] < rr['target'] and p['dir'] == 1
+    assert abs(rr['target'] - (neck + (neck - low))) < 0.02, (rr, neck, low)          # objetivo = cuello + altura del patrón
+    assert rr['stop'] < low and abs(rr['stop'] - (low - 0.25 * res['summary']['atr'])) < 3.0
+    assert p['out']['res'] == 'target' and p['out']['ret'] > 0 and p['out']['xi'] > p['i']
+    res2, dbs2 = run([(56, 70)])                                  # tras la ruptura se hunde: el stop
+    assert dbs2 and dbs2[-1]['out']['res'] == 'stop' and dbs2[-1]['out']['ret'] < 0
+    # soportes y resistencias con ≥ 2 toques, JSON y coherencia de índices
+    assert all(z['touches'] >= 2 and z['lo'] < z['p'] < z['hi'] for z in res['sr'])
+    s = json.dumps(res)
+    n = res['n']
+    assert len(res['bars']['c']) == n == len(res['sma50']) and all(0 <= pp['i'] < n for pp in res['patterns'])
+    assert all(pp['out']['res'] in ('target', 'stop', 'open', 'timeout', 'na') for pp in res['patterns'])
+    # un patrón bajista: stop por encima, objetivo por debajo
+    bear = [pp for pp in res['patterns'] if pp['dir'] < 0]
+    assert all(pp['rr']['target'] < pp['rr']['entry'] < pp['rr']['stop'] for pp in bear)
+    print(f'ok · chartlab: {len(res["patterns"])} patrones, niveles con la medida clásica, resultados simulados y JSON de {len(s) // 1024} KB')
+
+
 if __name__ == '__main__':
+    test_chartlab()
     test_charts_planted()
     test_alt_joins()
     test_osc_causal()

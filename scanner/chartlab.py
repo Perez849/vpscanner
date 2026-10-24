@@ -409,6 +409,8 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
         d, fam, desc = pat_info(pname)
         if pname in ('support_bounce', 'resistance_reject'):
             fam = 'rebotes'
+        if pname in ('trendline_up', 'trendline_dn'):
+            fam = 'directrices'
         for i in CH.cooldown(np.flatnonzero(sig)):
             i = int(i)
             if i < s0 or i >= n:
@@ -416,6 +418,9 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
             g = rec.get(pname, {}).get(i) or vector_geom(pname, F, i)
             try:
                 geo = geometry(pname, g, F, i)
+                if fam == 'velas':
+                    m_ = CANDLE_BARS.get(pname, 1)
+                    geo['zones'].append({'i0': i - m_ + 1, 'i1': i, 'lo': _r(F['l'][i - m_ + 1:i + 1].min()), 'hi': _r(F['h'][i - m_ + 1:i + 1].max()), 'k': 'candle'})
                 stop, tgt, note = levels(pname, g, F, i, d if d != 0 else (1 if F['c'][i] > F['sma50'][i] else -1))
             except Exception as exc:                       # un patrón mal formado no debe romper el valor
                 print(f'  [{sym}] {pname}@{i}: {type(exc).__name__}: {exc}', flush=True)
@@ -501,7 +506,8 @@ def run_cli(symbols: List[str], out_dir: str, rng: str = '3y', stats_path: Optio
         res = analyze(s, bars[s], stats=stats)
         json.dump(res, open(os.path.join(out_dir, f'{s}.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
         act = [p for p in res['patterns'] if p['active']]
-        index.append({'sym': s, 'close': res['summary']['close'], 'asof': res['asof'], 'n': len(res['patterns']), 'active': [(p['label'], p['dir']) for p in act][:6]})
+        index.append({'sym': s, 'close': res['summary']['close'], 'asof': res['asof'], 'n': len(res['patterns']), 'atrp': res['summary']['atrp'], 'rsi2': res['summary']['rsi2'],
+                      'active': [{'id': p['id'], 'label': p['label'], 'dir': p['dir'], 'fam': p['fam'], 'rr': p['rr']['rr']} for p in act][:10]})
     json.dump({'generated': int(__import__('time').time()), 'symbols': index, 'stats_meta': meta}, open(os.path.join(out_dir, 'index.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     print(f'  chartlab: {len(index)} valores → {out_dir} (fallidos {failed})', flush=True)
 

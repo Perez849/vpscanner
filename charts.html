@@ -97,6 +97,7 @@
     </div>
     <div class="price" id="price"></div>
     <div class="meta" id="meta"></div>
+    <span class="tag" id="png" style="cursor:pointer;padding:5px 9px" title="Descarga el gráfico como imagen">PNG ⤓</span>
   </header>
   <div class="warn" id="warn"></div>
   <div class="bar" id="bar"></div>
@@ -118,7 +119,7 @@
 const $ = s => document.querySelector(s);
 const DAY = 86400000;
 const BASE = 'scanner/data/charts/';
-const FAMS = {figuras:'Figuras', rupturas:'Rupturas', velas:'Velas', rebotes:'Rebotes S/R'};
+const FAMS = {figuras:'Figuras', rupturas:'Rupturas', velas:'Velas', directrices:'Directrices', rebotes:'Rebotes en S/R'};
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fx = (x, d = 2) => x == null || !isFinite(x) ? '—' : (Math.abs(x) >= 1000 ? x.toLocaleString('es-ES', {maximumFractionDigits: 0}) : x.toFixed(Math.abs(x) < 10 ? Math.max(d, 2) : d));
 const pc = (x, d = 1) => x == null || !isFinite(x) ? '—' : (x >= 0 ? '+' : '') + x.toFixed(d) + ' %';
@@ -128,7 +129,7 @@ const mon = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','
 const S = {
   idx: null, sym: null, D: null, sel: null, hover: null, tab: 'act', cross: null,
   view: {start: 0, ppb: 6},                 // primera barra visible (decimal) y píxeles por barra
-  f: {figuras: 1, rupturas: 1, velas: 1, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'e'},
+  f: {figuras: 1, rupturas: 1, velas: 1, directrices: 0, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'e'},
   hits: [], W: 0, H: 0, dpr: 1, cache: {}
 };
 
@@ -156,7 +157,7 @@ async function init() {
   await loadSym(first.sym);
 }
 
-async function loadSym(sym) {
+async function loadSym(sym, selId) {
   S.D = await getJSON(sym);
   S.sym = sym; S.sel = null; S.hover = null;
   $('#sym').value = sym;
@@ -169,8 +170,8 @@ async function loadSym(sym) {
   $('#price').innerHTML = `${fx(sm.close)}<small style="color:${ch >= 0 ? 'var(--emerald)' : 'var(--ember)'}">${pc(ch)} · ATR ${fx(sm.atr)} (${sm.atrp} %) · RSI(14) ${sm.rsi14}</small>`;
   $('#meta').innerHTML = `datos hasta ${dstr(S.D.asof)}<br>${S.D.patterns.length} patrones · ${S.D.patterns.filter(p => p.active).length} activos`;
   resize();
-  const act = S.D.patterns.filter(p => p.active), pick = act.filter(p => p.fam === 'figuras').pop() || act.pop();
-  if (pick) select(pick, true); else renderPane();
+  const act = S.D.patterns.filter(p => p.active), pick = (selId && S.D.patterns.find(p => p.id === selId)) || act.filter(p => p.fam === 'figuras').pop() || act.pop();
+  if (pick) { S.tab = selId ? 'radar' : S.tab; select(pick, true); } else renderPane();
 }
 
 /* ───────────────────────── barra de filtros ───────────────────────── */
@@ -329,7 +330,7 @@ function draw() {
     if (!(major(p) || sel || hov)) continue;
     const a = sel || hov ? 1 : (S.sel ? dim : 0.8), c = col(p.dir);
     cx.save(); cx.globalAlpha = a;
-    for (const z of p.zones) { const x0 = X(z.i0) - S.view.ppb / 2, x1 = X(z.i1) + S.view.ppb / 2; cx.fillStyle = c; cx.globalAlpha = a * .08; cx.fillRect(x0, Y(z.hi), x1 - x0, Y(z.lo) - Y(z.hi)); cx.globalAlpha = a * .8; cx.strokeStyle = c; cx.setLineDash([4, 3]); cx.lineWidth = 1.2; cx.strokeRect(x0, Y(z.hi), x1 - x0, Y(z.lo) - Y(z.hi)); cx.setLineDash([]); }
+    for (const z of p.zones) { const x0 = X(z.i0) - S.view.ppb / 2, x1 = X(z.i1) + S.view.ppb / 2; if (z.k === 'candle') { cx.strokeStyle = c; cx.lineWidth = 2; cx.setLineDash([]); cx.beginPath(); cx.roundRect(x0 - 2, Y(z.hi) - 4, x1 - x0 + 4, Y(z.lo) - Y(z.hi) + 8, 5); cx.stroke(); cx.globalAlpha = a * .1; cx.fillStyle = c; cx.fill(); cx.globalAlpha = a; continue; } cx.fillStyle = c; cx.globalAlpha = a * .08; cx.fillRect(x0, Y(z.hi), x1 - x0, Y(z.lo) - Y(z.hi)); cx.globalAlpha = a * .8; cx.strokeStyle = c; cx.setLineDash([4, 3]); cx.lineWidth = 1.2; cx.strokeRect(x0, Y(z.hi), x1 - x0, Y(z.lo) - Y(z.hi)); cx.setLineDash([]); }
     cx.globalAlpha = a;
     for (const pl of p.polys) if (pl.k !== 'fill') poly(pl.pts, c, (pl.k === 'curve' ? 2.2 : 2) * (sel ? 1.2 : 1), 0, pl.k === 'curve');
     for (const l of p.lines) {
@@ -425,17 +426,19 @@ function poly(pts, color, w, fillA, smooth) {
 function renderPane() {
   if (!S.D) return;
   const act = S.D.patterns.filter(p => p.active && vis(p)), hist = S.D.patterns.filter(vis).slice().sort((a, b) => b.i - a.i);
-  $('#tabs').innerHTML = [['act', `Activos (${act.length})`], ['hist', `Historial (${hist.length})`], ['read', 'Lectura']].map(([k, t]) => `<button data-k="${k}" class="${S.tab === k ? 'on' : ''}">${t}</button>`).join('');
+  $('#tabs').innerHTML = [['act', `Activos (${act.length})`], ['hist', `Historial (${hist.length})`], ['read', 'Lectura'], ['radar', 'Radar']].map(([k, t]) => `<button data-k="${k}" class="${S.tab === k ? 'on' : ''}">${t}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { S.tab = b.dataset.k; renderPane(); });
   const el = $('#pane');
   let h = '';
   if (S.sel) h += cardFull(S.sel);
   if (S.tab === 'act') h += act.length ? act.map(card).join('') : '<div class="empty">Ningún patrón completándose ahora con los filtros actuales.</div>';
   else if (S.tab === 'hist') h += hist.length ? hist.map(card).join('') : '<div class="empty">Sin patrones con estos filtros.</div>';
+  else if (S.tab === 'radar') h += radar();
   else h += reading();
   el.innerHTML = h;
   el.querySelectorAll('[data-id]').forEach(e => e.onclick = ev => { if (ev.target.closest('.nofocus')) return; select(S.D.patterns.find(p => p.id === e.dataset.id), true); });
   const x = el.querySelector('#clr'); if (x) x.onclick = () => select(null);
+  el.querySelectorAll('[data-go]').forEach(e => e.onclick = async () => { const [sym, id] = e.dataset.go.split('|'); await loadSym(sym, id); });
 }
 function card(p) {
   const r = rrOf(p), [rc, rt] = resTxt(r.out), sel = p === S.sel;
@@ -454,6 +457,14 @@ function cardFull(p) {
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>Qué pasó aquí:</b> ${rt}</div>
     ${same.length ? `<div class="small">En este valor, otras ${same.length} señales cerradas de «${p.label}»: ${w} llegaron al objetivo y ${same.length - w} al stop.</div>` : ''}
     <div class="verdict ${vc}">${vt}</div>${evLines(p.ev)}</div>`;
+}
+function radar() {
+  const rows = S.idx.symbols.filter(x => (x.active || []).length).map(x => {
+    const a = x.active.filter(q => S.f[q.fam] && (!S.f.dir || q.dir === S.f.dir));
+    return {x, a, fig: a.filter(q => q.fam === 'figuras').length};
+  }).filter(r => r.a.length).sort((u, v) => v.fig - u.fig || v.a.length - u.a.length);
+  if (!rows.length) return '<div class="empty">Ningún valor con patrones activos y los filtros actuales.</div>';
+  return `<div class="small" style="margin-bottom:8px">Valores con patrones completados en las últimas sesiones (según los filtros de familia y sentido). Clic para abrirlos con el patrón seleccionado.</div>` + rows.map(r => `<div class="pc" data-go="${r.x.sym}|${(r.a.find(q => q.fam === 'figuras') || r.a[0]).id}"><div class="pc-h"><span style="font-size:14px">${r.x.sym}</span><span class="tag">${fx(r.x.close)}</span><span class="tag">ATR ${r.x.atrp} %</span></div><div class="top">${r.a.map(q => `<span class="chip ${q.dir > 0 ? 'u' : q.dir < 0 ? 'd' : ''}">${q.dir > 0 ? '▲' : q.dir < 0 ? '▼' : '◆'} ${q.label}${q.rr ? ' · ' + q.rr.toFixed(1) : ''}</span>`).join('')}</div></div>`).join('');
 }
 function reading() {
   const D = S.D, sm = D.summary, c = sm.close, b = D.bars, n = D.n;
@@ -515,7 +526,8 @@ function setupInput() {
   st.addEventListener('touchstart', e => { if (e.touches.length === 1) { drag = {x: e.touches[0].clientX, s: S.view.start}; moved = 0; } else if (e.touches.length === 2) { drag = null; pinch = {d: Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY), p: S.view.ppb}; } }, {passive: true});
   st.addEventListener('touchmove', e => { e.preventDefault(); if (e.touches.length === 1 && drag) { moved += 1; S.view.start = drag.s - (e.touches[0].clientX - drag.x) / S.view.ppb; clampView(); draw(); } else if (e.touches.length === 2 && pinch) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); S.view.ppb = Math.max(1.6, Math.min(40, pinch.p * d / pinch.d)); clampView(); draw(); } }, {passive: false});
   st.addEventListener('touchend', e => { if (drag && moved < 4 && e.changedTouches.length) { const r = st.getBoundingClientRect(), t = e.changedTouches[0], p = hitAt(t.clientX - r.left, t.clientY - r.top); if (p) select(p, false); } drag = null; pinch = null; });
-  window.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.key === 'Escape') select(null); const k = S.idx && S.idx.symbols; if (!k) return; const i = k.findIndex(s => s.sym === S.sym); if (e.key === 'ArrowRight' && e.shiftKey) loadSym(k[(i + 1) % k.length].sym); if (e.key === 'ArrowLeft' && e.shiftKey) loadSym(k[(i - 1 + k.length) % k.length].sym); });
+  window.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; if (e.key === 'Escape') select(null);
+    if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.shiftKey && S.D) { const l = S.D.patterns.filter(vis).sort((a, b) => a.i - b.i); if (l.length) { const k = S.sel ? l.indexOf(S.sel) : -1; const nx = e.key === 'ArrowRight' ? l[Math.min(l.length - 1, k + 1)] : l[Math.max(0, (k < 0 ? l.length : k) - 1)]; select(nx, true); e.preventDefault(); } } const k = S.idx && S.idx.symbols; if (!k) return; const i = k.findIndex(s => s.sym === S.sym); if (e.key === 'ArrowRight' && e.shiftKey) loadSym(k[(i + 1) % k.length].sym); if (e.key === 'ArrowLeft' && e.shiftKey) loadSym(k[(i - 1 + k.length) % k.length].sym); });
 }
 function tip(q, p) {
   const el = $('#tip'), b = S.D.bars, i = Math.round(iFromX(q.x));
@@ -525,7 +537,8 @@ function tip(q, p) {
   el.innerHTML = h; el.style.display = 'block';
   const w = el.offsetWidth; el.style.left = Math.min(q.x + 16, S.W - w - 8) + 'px'; el.style.top = Math.max(q.y - 70, 6) + 'px';
 }
-$('#legend').innerHTML = '<span style="color:var(--emerald)"><s></s>alcista</span><span style="color:var(--ember)"><s></s>bajista</span><span style="color:var(--amber)"><s></s>neutral</span><span style="color:var(--sapphire)"><s></s>media 50</span><span style="color:var(--violet)"><s></s>media 200</span><span style="color:var(--cyan)"><u style="background:var(--cyan)"></u>soporte</span><span style="color:var(--violet)"><u style="background:var(--violet)"></u>resistencia</span><span><u style="background:var(--emerald)"></u>recompensa</span><span><u style="background:var(--ember)"></u>riesgo</span><span>arrastra · rueda para zoom · clic en una etiqueta · Mayús+◀▶ cambia de valor</span>';
+$('#legend').innerHTML = '<span style="color:var(--emerald)"><s></s>alcista</span><span style="color:var(--ember)"><s></s>bajista</span><span style="color:var(--amber)"><s></s>neutral</span><span style="color:var(--sapphire)"><s></s>media 50</span><span style="color:var(--violet)"><s></s>media 200</span><span style="color:var(--cyan)"><u style="background:var(--cyan)"></u>soporte</span><span style="color:var(--violet)"><u style="background:var(--violet)"></u>resistencia</span><span><u style="background:var(--emerald)"></u>recompensa</span><span><u style="background:var(--ember)"></u>riesgo</span><span>arrastra · rueda: zoom · clic en una etiqueta · ◀ ▶ recorre los patrones · Mayús+◀▶ cambia de valor</span>';
+$('#png').onclick = () => { const a = document.createElement('a'); a.download = S.sym + '-patrones.png'; a.href = cv.toDataURL('image/png'); a.click(); };
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { draw(); renderPane(); });
 init();
 </script>
