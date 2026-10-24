@@ -475,12 +475,13 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB,
             'sr': sr, 'patterns': items, 'summary': summ}
 
 
-def load_stats(path: str) -> Dict:
+def load_stats(path: str) -> Tuple[Dict, Dict]:
+    """(estadísticas por patrón, metadatos: umbrales del mejor de N, horizonte, coste) del estudio `charts`."""
     try:
         d = json.load(open(path, encoding='utf-8'))
-        return d.get('patterns', d)
+        return d.get('patterns', {}), {k: d[k] for k in ('primary', 'cost', 'thr', 'ks') if k in d}
     except Exception:
-        return {}
+        return {}, {}
 
 
 DEFAULT = ('AAPL MSFT NVDA AMZN GOOGL META TSLA AVGO AMD NFLX ORCL CRM ADBE QCOM INTC MU PLTR COIN SMCI ARM UBER DIS BA CAT GE JPM BAC GS V MA LLY UNH XOM CVX COST WMT HD KO PEP PFE MRK ABBV NKE SBUX '
@@ -489,7 +490,7 @@ DEFAULT = ('AAPL MSFT NVDA AMZN GOOGL META TSLA AVGO AMD NFLX ORCL CRM ADBE QCOM
 
 def run_cli(symbols: List[str], out_dir: str, rng: str = '3y', stats_path: Optional[str] = None) -> None:
     import data as D
-    stats = load_stats(stats_path) if stats_path else {}
+    stats, meta = load_stats(stats_path) if stats_path else ({}, {})
     bars, failed = D.fetch_many(symbols, rng=rng, workers=6, cache_path=None, verbose=True)
     os.makedirs(out_dir, exist_ok=True)
     index = []
@@ -501,7 +502,7 @@ def run_cli(symbols: List[str], out_dir: str, rng: str = '3y', stats_path: Optio
         json.dump(res, open(os.path.join(out_dir, f'{s}.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
         act = [p for p in res['patterns'] if p['active']]
         index.append({'sym': s, 'close': res['summary']['close'], 'asof': res['asof'], 'n': len(res['patterns']), 'active': [(p['label'], p['dir']) for p in act][:6]})
-    json.dump({'generated': int(__import__('time').time()), 'symbols': index}, open(os.path.join(out_dir, 'index.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+    json.dump({'generated': int(__import__('time').time()), 'symbols': index, 'stats_meta': meta}, open(os.path.join(out_dir, 'index.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     print(f'  chartlab: {len(index)} valores → {out_dir} (fallidos {failed})', flush=True)
 
 
