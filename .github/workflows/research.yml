@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo)'
+        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra)'
         default: 'lab'
       symbols:
         description: 'valores separados por comas (vacío = lista por defecto del lab o S&P 500 + Nasdaq-100 en el estudio)'
@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Dependencias
-        run: pip install numpy pandas lxml
+        run: pip install numpy pandas lxml scikit-learn
       - name: Caché de precios
         uses: actions/cache/restore@v4
         with:
@@ -48,6 +48,8 @@ jobs:
           CMD="${INPUT_CMD:-lab}"
           if [ "$CMD" = "lab" ]; then
             python -u -m vp lab --symbols "$INPUT_SYMBOLS" --out /tmp/out --raw /tmp/out/raw 2>&1 | tee /tmp/out/log.txt
+          elif [ "$CMD" = "ml" ]; then
+            python -u -m vp ml --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "plan" ]; then
             python -u -m vp plan --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
           else
