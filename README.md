@@ -115,6 +115,26 @@ Con las 300 más negociadas (220.000 señales, 2016–2026) el exceso medio sobr
 - La única señal positiva que se repite en las tres geometrías es la **ruptura de una directriz bajista** (+0,33 %, t +2,1), pero con 104 patrones probados no supera el umbral del mejor de N (3,46).
 - El tamaño del plan fija la **tasa de acierto**: con el plan de la web las figuras alcistas llegan al objetivo el 30 % de las veces, pero entrar al azar con las mismas distancias lo logra el 31 %. La tasa de acierto la decide la geometría, no el patrón.
 
+### Stop que persigue (trailing) en lugar de objetivo fijo
+
+La idea de muchos operadores discrecionales es «dejar correr las ganancias»: sin objetivo, con un stop que sube a 3 o 5 ATR del mejor cierre (60 sesiones como máximo). `python -m vp plan` lo simula (`trail3`, `trail5`) y lo compara con entradas al azar con la misma regla de salida:
+
+| grupo (50 más negociadas) | stop 3 ATR | stop 5 ATR |
+|---|---|---|
+| todos | −0,36 % (t −2,4) | −0,62 % (t −3,3) |
+| rupturas alcistas | −0,99 % (t −4,6) | −1,55 % (t −5,0) |
+| velas bajistas | +0,37 % (t +1,8) | +0,73 % (t +2,6) |
+| rebotes bajistas | +1,62 % (t +2,8) | +2,30 % (t +2,9) |
+
+El stop que persigue no rescata ninguna familia: las rupturas alcistas siguen rindiendo menos que entrar al azar, y lo poco positivo (velas bajistas, rebotes bajistas) no supera el umbral del mejor de N con 86 patrones probados. Calibrado sobre paseos aleatorios el método sesga −0,12 a −0,17 %.
+
+## Otros mercados: ¿es que las acciones grandes son demasiado eficientes?
+
+`python -m vp study --universe smallmid|mixed` repite el estudio de evidencia con las mismas reglas en mercados menos eficientes (informes `data/evidence_report_smallmid.txt` y `data/evidence_report_mixed.txt`):
+
+- **Acciones medianas y pequeñas** (S&P 400 + S&P 600, 989 valores, 2,3 millones de barras, coste del 0,30 %): lo que pasa el umbral del mejor de N son otra vez las **rupturas alcistas a máximos, por debajo del azar** (−0,5 %, t entre −4,6 y −5,5) y la base junto a máximos. Ninguna vela, figura ni consenso lo supera. Las velas bajistas salen todas algo positivas (+0,47 % de media, 88 % de ellas positivas) y las alcistas todas negativas (−0,84 %): que las dos direcciones sean «correctas» a la vez no es una ventaja direccional: lo más probable (no comprobado) es un efecto de selección, porque las velas grandes se dan en valores volátiles que rinden menos que la media del año, y el comparador del estudio de evidencia no iguala la volatilidad (el del plan sí).
+- **Cripto, divisas, materias primas e índices** (49 símbolos): solo supera el umbral la base junto a máximos (negativa, t −6,5). Las rupturas alcistas de máximos salen algo positivas aquí (+0,8 a +0,9 %, t entre +2,2 y +2,6, 6 o 7 años de 10), lo contrario que en acciones: con 49 series y 103 patrones, una pista que tendría que repetirse en datos nuevos.
+
 ## Lista de seguimiento
 
 `watchlist.txt` (raíz del repositorio) manda: un símbolo de Yahoo por línea o varios separados por espacios o comas, `#` comenta. El escaneo diario la lee entera; para añadir o quitar valores basta editarla desde GitHub (lápiz) y el siguiente escaneo, o lanzarlo a mano desde Actions, los incluye. Un valor que Yahoo no devuelve o con menos de 400 sesiones se avisa en el Radar. Cada valor añade ~75 KB de `data/charts` al repositorio en cada escaneo, así que conviene no pasar de unos 150.

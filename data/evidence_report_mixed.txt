@@ -1,0 +1,40 @@
+ESTUDIO DE EVIDENCIA · 49 acciones · 131,532 barras · 2016-10-18 → 2026-10-25 · coste 0.15 % · salida a 10 sesiones
+
+=== Las 49 acciones más negociadas en cada fecha (128,641 barras) · umbral del mejor de 103: |t| ≥ 5.61 (p95) / 5.98 (p99) ===
+  patrón                            n  acierto   media  exceso      t  años+
+  ▲ base_near_high★              1585    51.7%  +0.04%  -0.67%   -6.5   2/10
+  ▼ spin_bear                     560    40.2%  -3.89%  -2.83%   -3.3   1/10
+  ▲ piercing                       65    40.0%  -3.80%  -4.34%   -3.2   0/3 
+  ▲ asc_triangle                  142    44.4%  -0.20%  -0.86%   -3.0   2/9 
+  ▲ asc_triangle:hq                62    41.9%  -0.53%  -1.21%   -2.8   0/3 
+  ▼ island_bear                   191    48.2%  -0.03%  +0.88%   +2.8   8/10
+  ▲ marubozu_bull                 519    52.2%  +2.98%  +2.30%   +2.8   8/10
+  ▼ rising_wedge                  406    43.1%  -0.35%  +0.58%   +2.7   7/10
+  ▲ donch100_up                  2321    52.8%  +1.69%  +0.83%   +2.6   7/10
+  ▲ donch55_up                   3019    52.6%  +1.58%  +0.76%   +2.5   6/10
+  ▼ doji_bear                     882    45.0%  -2.02%  -1.06%   -2.4   4/10
+  ▼ shooting_star                 807    43.1%  -2.02%  -1.08%   -2.3   1/10
+  ▼ sym_tri_dn:hq                  36    50.0%  +0.23%  +1.42%   +2.3   0/0 
+  ▲ channel_up_up                  45    48.9%  -0.89%  -1.53%   -2.2   0/1 
+  ▲ donch252_up                  1553    51.6%  +1.79%  +0.88%   +2.2   6/10
+  ▲ atr_squeeze_up                116    56.0%  +4.08%  +3.69%   +2.1   6/8 
+  ▼ hs_top                         78    50.0%  +1.21%  +1.92%   +2.1   4/4 
+  ▲ triple_bottom                  24    75.0%  +6.74%  +6.09%   +2.0   0/0 
+  ▲ double_bottom:hq               76    56.6%  +4.91%  +4.54%   +2.0   4/5 
+  ▼ trendline_dn:hq               121    47.1%  +0.35%  +1.30%   +2.0   6/8 
+  ▲ harami_cross_bull              38    68.4%  +2.14%  +1.88%   +2.0   1/1 
+  ▲ tweezer_bottom                705    47.8%  -0.52%  -1.00%   -2.0   2/10
+  ▼ consenso_bajista_2           1112    43.2%  -1.79%  -0.75%   -1.9   4/10
+  ▲ double_bottom                 263    52.5%  +2.36%  +1.87%   +1.9   7/10
+  ▲ inside_break_up               403    51.9%  +2.61%  +1.80%   +1.9   7/10
+  superan el umbral del mejor de 103: 1 (base_near_high); por azar se esperarían ≈ 5.2 si se miraran sueltos
+  figuras      alcistas  14 patrones · exceso medio +0.501 % · positivos 43 %
+  figuras      bajistas  11 patrones · exceso medio +0.865 % · positivos 91 %
+  rupturas     alcistas   7 patrones · exceso medio +0.980 % · positivos 86 %
+  rupturas     bajistas   6 patrones · exceso medio -0.002 % · positivos 33 %
+  velas        alcistas  21 patrones · exceso medio -0.132 % · positivos 29 %
+  velas        bajistas  23 patrones · exceso medio -0.633 % · positivos 30 %
+  directrices  alcistas   1 patrones · exceso medio +0.271 % · positivos 100 %
+  directrices  bajistas   1 patrones · exceso medio +0.452 % · positivos 100 %
+  rebotes      alcistas   1 patrones · exceso medio -0.532 % · positivos 0 %
+  rebotes      bajistas   1 patrones · exceso medio +0.312 % · positivos 100 %

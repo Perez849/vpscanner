@@ -1,4 +1,4 @@
-CALIBRACIÓN con paseos aleatorios (sin ventaja posible; el exceso que salga aquí es sesgo del método y hay que descontarlo): plan: -0.08 % (t -1.8, n 40683) · tact: -0.07 % (t -1.8, n 40683) · fix: -0.05 % (t -1.2, n 40683)
+CALIBRACIÓN con paseos aleatorios (sin ventaja posible; el exceso que salga aquí es sesgo del método y hay que descontarlo): plan: -0.08 % (t -1.8, n 40683) · tact: -0.07 % (t -1.8, n 40683) · fix: -0.05 % (t -1.2, n 40683) · trail3: -0.17 % (t -2.7, n 40080) · trail5: -0.12 % (t -1.5, n 40080)
 ESTUDIO DEL PLAN · 500 acciones · 1,228,474 barras · 2016-10-17 → 2026-10-23 · coste 0.15 % · cierre a 40 sesiones · 8 entradas al azar por señal
 
 === PLAN: stop estructural y objetivo clásico (lo que dibuja la web) · las 50 más negociadas ===
@@ -79,6 +79,58 @@ ESTUDIO DEL PLAN · 500 acciones · 1,228,474 barras · 2016-10-17 → 2026-10-2
     ▲ box_up                     1645  +0.21%  +0.59%  -0.38%   -2.0   acierto  38 % (azar  39 %)
   patrones con n ≥ 20: 86 · exceso medio -0.040 % · con exceso positivo 38 % · |t| ≥ 3,35: 1
 
+=== STOP QUE PERSIGUE a 3 ATR del mejor cierre, sin objetivo, hasta 60 sesiones · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t    | objetivo/stop/sin resolver señal vs azar   stop/obj (ATR)
+  todos                      37006  -0.20%  +0.16%  -0.36%   -2.4            |   0/ 92/  8  vs    0/ 92/  8   3.0/0.0
+  figuras alcistas            1932  +1.28%  +1.94%  -0.66%   -2.1            |   0/ 92/  8  vs    0/ 91/  9   3.0/0.0
+  figuras bajistas            1501  -2.31%  -2.36%  +0.05%   +0.1            |   0/ 93/  7  vs    0/ 94/  6   3.0/0.0
+  rupturas alcistas          11656  +1.00%  +1.99%  -0.99%   -4.6            |   0/ 94/  6  vs    0/ 92/  8   3.0/0.0
+  rupturas bajistas           5486  -3.17%  -2.48%  -0.69%   -2.1            |   0/ 94/  6  vs    0/ 93/  7   3.0/0.0
+  velas alcistas              5805  +2.03%  +2.22%  -0.19%   -0.3            |   0/ 86/ 14  vs    0/ 88/ 12   3.0/0.0
+  velas bajistas              7980  -1.66%  -2.02%  +0.37%   +1.8            |   0/ 94/  6  vs    0/ 95/  5   3.0/0.0
+  directrices alcistas         930  +2.80%  +2.00%  +0.80%   +1.5            |   0/ 86/ 14  vs    0/ 89/ 11   3.0/0.0
+  directrices bajistas        1195  -2.05%  -2.14%  +0.09%   +0.3            |   0/ 94/  6  vs    0/ 94/  6   3.0/0.0
+  rebotes alcistas             271  +2.44%  +2.44%  +0.01%   +0.0            |   0/ 92/  8  vs    0/ 89/ 11   3.0/0.0
+  rebotes bajistas             250  -0.26%  -1.88%  +1.62%   +2.8            |   0/ 90/ 10  vs    0/ 96/  4   3.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ inside_break_up             455  -0.53%  +2.51%  -3.05%   -5.3   acierto   0 % (azar   0 %)
+    ▲ base_near_high              865  +0.13%  +1.15%  -1.02%   -4.7   acierto   0 % (azar   0 %)
+    ▲ donch252_up                1989  +0.85%  +2.37%  -1.52%   -4.7   acierto   0 % (azar   0 %)
+    ▲ donch55_up                 3342  +1.16%  +2.05%  -0.89%   -3.4   acierto   0 % (azar   0 %)
+    ▲ donch100_up                2655  +1.14%  +2.05%  -0.91%   -3.3   acierto   0 % (azar   0 %)
+    ▼ bb_squeeze_dn               936  -2.56%  -1.53%  -1.03%   -3.0   acierto   0 % (azar   0 %)
+    ▲ cup_handle                   71  -1.51%  +1.24%  -2.75%   -2.8   acierto   0 % (azar   0 %)
+    ▼ resistance_reject           250  -0.26%  -1.88%  +1.62%   +2.8   acierto   0 % (azar   0 %)
+    ▲ box_up                     1655  +0.96%  +1.81%  -0.84%   -2.5   acierto   0 % (azar   0 %)
+    ▼ island_bear                 154  -0.56%  -3.45%  +2.90%   +2.3   acierto   0 % (azar   0 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.152 % · con exceso positivo 43 % · |t| ≥ 3,35: 4
+
+=== STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t    | objetivo/stop/sin resolver señal vs azar   stop/obj (ATR)
+  todos                      37006  -0.17%  +0.45%  -0.62%   -3.3            |   0/ 68/ 32  vs    0/ 65/ 35   5.0/0.0
+  figuras alcistas            1932  +2.65%  +3.32%  -0.66%   -1.6            |   0/ 63/ 37  vs    0/ 61/ 39   5.0/0.0
+  figuras bajistas            1501  -3.81%  -3.75%  -0.06%   -0.1            |   0/ 69/ 31  vs    0/ 70/ 30   5.0/0.0
+  rupturas alcistas          11656  +2.21%  +3.76%  -1.55%   -5.0            |   0/ 71/ 29  vs    0/ 63/ 37   5.0/0.0
+  rupturas bajistas           5486  -5.12%  -3.90%  -1.21%   -2.7            |   0/ 70/ 30  vs    0/ 67/ 33   5.0/0.0
+  velas alcistas              5805  +3.19%  +3.85%  -0.66%   -0.9            |   0/ 56/ 44  vs    0/ 55/ 45   5.0/0.0
+  velas bajistas              7980  -2.81%  -3.53%  +0.73%   +2.6            |   0/ 72/ 28  vs    0/ 74/ 26   5.0/0.0
+  directrices alcistas         930  +4.01%  +3.50%  +0.51%   +0.8            |   0/ 54/ 46  vs    0/ 57/ 43   5.0/0.0
+  directrices bajistas        1195  -3.51%  -3.45%  -0.06%   -0.1            |   0/ 71/ 29  vs    0/ 72/ 28   5.0/0.0
+  rebotes alcistas             271  +4.80%  +3.80%  +1.00%   +0.7            |   0/ 54/ 46  vs    0/ 60/ 40   5.0/0.0
+  rebotes bajistas             250  -0.80%  -3.10%  +2.30%   +2.9            |   0/ 64/ 36  vs    0/ 73/ 27   5.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ base_near_high              865  +0.33%  +2.01%  -1.68%   -5.2   acierto   0 % (azar   0 %)
+    ▲ donch252_up                1989  +2.23%  +4.48%  -2.25%   -4.7   acierto   0 % (azar   0 %)
+    ▲ donch100_up                2655  +2.47%  +4.10%  -1.62%   -4.2   acierto   0 % (azar   0 %)
+    ▲ donch55_up                 3342  +2.34%  +3.77%  -1.44%   -3.9   acierto   0 % (azar   0 %)
+    ▲ inside_break_up             455  +1.24%  +4.60%  -3.36%   -3.6   acierto   0 % (azar   0 %)
+    ▼ bb_squeeze_dn               936  -4.30%  -2.74%  -1.56%   -3.5   acierto   0 % (azar   0 %)
+    ▼ resistance_reject           250  -0.80%  -3.10%  +2.30%   +2.9   acierto   0 % (azar   0 %)
+    ▲ box_up                     1655  +2.10%  +3.38%  -1.28%   -2.9   acierto   0 % (azar   0 %)
+    ▲ bull_pennant                150  +1.06%  +5.00%  -3.94%   -2.6   acierto   0 % (azar   0 %)
+    ▼ desc_triangle                37  -5.30%  -1.54%  -3.76%   -2.6   acierto   0 % (azar   0 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.221 % · con exceso positivo 42 % · |t| ≥ 3,35: 6
+
 === PLAN: stop estructural y objetivo clásico (lo que dibuja la web) · las 300 más negociadas ===
   grupo                          n   media    azar  exceso      t    | objetivo/stop/sin resolver señal vs azar   stop/obj (ATR)
   todos                     219658  -0.24%  -0.09%  -0.15%   -2.0            |  34/ 57/  9  vs   36/ 55/  9   1.7/3.1
@@ -156,3 +208,55 @@ ESTUDIO DEL PLAN · 500 acciones · 1,228,474 barras · 2016-10-17 → 2026-10-2
     ▲ bb_squeeze_up              6954  +0.12%  +0.37%  -0.24%   -2.5   acierto  37 % (azar  38 %)
     ▼ doji_bear                  3427  -0.48%  -0.80%  +0.32%   +2.5   acierto  31 % (azar  28 %)
   patrones con n ≥ 20: 104 · exceso medio -0.040 % · con exceso positivo 45 % · |t| ≥ 3,35: 5
+
+=== STOP QUE PERSIGUE a 3 ATR del mejor cierre, sin objetivo, hasta 60 sesiones · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t    | objetivo/stop/sin resolver señal vs azar   stop/obj (ATR)
+  todos                     220667  -0.31%  -0.11%  -0.19%   -1.9            |   0/ 92/  8  vs    0/ 92/  8   3.0/0.0
+  figuras alcistas           11413  +0.84%  +1.08%  -0.24%   -1.6            |   0/ 91/  9  vs    0/ 91/  9   3.0/0.0
+  figuras bajistas            9056  -1.75%  -1.92%  +0.17%   +0.8            |   0/ 94/  6  vs    0/ 94/  6   3.0/0.0
+  rupturas alcistas          68150  +0.39%  +1.22%  -0.83%   -8.3            |   0/ 93/  7  vs    0/ 91/  9   3.0/0.0
+  rupturas bajistas          35101  -2.49%  -2.27%  -0.22%   -0.7            |   0/ 94/  6  vs    0/ 93/  7   3.0/0.0
+  velas alcistas             34446  +2.02%  +1.71%  +0.31%   +0.6            |   0/ 85/ 15  vs    0/ 87/ 13   3.0/0.0
+  velas bajistas             45790  -1.47%  -1.65%  +0.18%   +1.6            |   0/ 94/  6  vs    0/ 95/  5   3.0/0.0
+  directrices alcistas        5645  +1.99%  +1.26%  +0.73%   +2.9            |   0/ 87/ 13  vs    0/ 89/ 11   3.0/0.0
+  directrices bajistas        7494  -1.77%  -1.73%  -0.05%   -0.3            |   0/ 94/  6  vs    0/ 95/  5   3.0/0.0
+  rebotes alcistas            1647  +1.26%  +1.17%  +0.09%   +0.3            |   0/ 91/  9  vs    0/ 89/ 11   3.0/0.0
+  rebotes bajistas            1925  -1.24%  -1.40%  +0.16%   +0.8            |   0/ 93/  7  vs    0/ 94/  6   3.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ donch252_up               10757  +0.17%  +1.36%  -1.20%   -8.8   acierto   0 % (azar   0 %)
+    ▲ donch100_up               15166  +0.38%  +1.36%  -0.98%   -8.1   acierto   0 % (azar   0 %)
+    ▲ base_near_high             5280  +0.03%  +0.82%  -0.79%   -7.0   acierto   0 % (azar   0 %)
+    ▲ donch55_up                19388  +0.48%  +1.25%  -0.76%   -6.5   acierto   0 % (azar   0 %)
+    ▲ inside_break_up            2339  +0.40%  +1.54%  -1.14%   -4.6   acierto   0 % (azar   0 %)
+    ▲ bb_squeeze_up              6945  +0.42%  +1.06%  -0.65%   -4.4   acierto   0 % (azar   0 %)
+    ▲ box_up                    10578  +0.58%  +1.13%  -0.55%   -3.7   acierto   0 % (azar   0 %)
+    ▼ rising_wedge               2294  -0.70%  -1.18%  +0.48%   +3.1   acierto   0 % (azar   0 %)
+    ▲ trendline_up               5645  +1.99%  +1.26%  +0.73%   +2.9   acierto   0 % (azar   0 %)
+    ▲ bull_flag                  2692  +0.76%  +1.46%  -0.70%   -2.9   acierto   0 % (azar   0 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.028 % · con exceso positivo 53 % · |t| ≥ 3,35: 7
+
+=== STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t    | objetivo/stop/sin resolver señal vs azar   stop/obj (ATR)
+  todos                     220667  -0.33%  +0.01%  -0.34%   -2.8            |   0/ 65/ 35  vs    0/ 64/ 36   5.0/0.0
+  figuras alcistas           11413  +1.66%  +1.98%  -0.32%   -1.5            |   0/ 62/ 38  vs    0/ 61/ 39   5.0/0.0
+  figuras bajistas            9056  -2.87%  -2.96%  +0.10%   +0.3            |   0/ 70/ 30  vs    0/ 69/ 31   5.0/0.0
+  rupturas alcistas          68150  +1.16%  +2.29%  -1.13%   -7.8            |   0/ 66/ 34  vs    0/ 62/ 38   5.0/0.0
+  rupturas bajistas          35101  -4.17%  -3.51%  -0.66%   -1.9            |   0/ 69/ 31  vs    0/ 65/ 35   5.0/0.0
+  velas alcistas             34446  +3.09%  +3.02%  +0.07%   +0.1            |   0/ 54/ 46  vs    0/ 54/ 46   5.0/0.0
+  velas bajistas             45790  -2.16%  -2.67%  +0.51%   +3.2            |   0/ 70/ 30  vs    0/ 71/ 29   5.0/0.0
+  directrices alcistas        5645  +2.87%  +2.30%  +0.57%   +1.9            |   0/ 55/ 45  vs    0/ 57/ 43   5.0/0.0
+  directrices bajistas        7494  -2.85%  -2.72%  -0.13%   -0.5            |   0/ 70/ 30  vs    0/ 70/ 30   5.0/0.0
+  rebotes alcistas            1647  +2.17%  +2.29%  -0.13%   -0.3            |   0/ 58/ 42  vs    0/ 57/ 43   5.0/0.0
+  rebotes bajistas            1925  -2.08%  -2.27%  +0.19%   +0.7            |   0/ 69/ 31  vs    0/ 70/ 30   5.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ base_near_high             5280  +0.07%  +1.46%  -1.39%   -8.9   acierto   0 % (azar   0 %)
+    ▲ donch252_up               10757  +0.98%  +2.62%  -1.63%   -8.3   acierto   0 % (azar   0 %)
+    ▲ donch100_up               15166  +1.31%  +2.55%  -1.24%   -7.0   acierto   0 % (azar   0 %)
+    ▲ bb_squeeze_up              6945  +0.89%  +2.02%  -1.13%   -5.6   acierto   0 % (azar   0 %)
+    ▲ donch55_up                19388  +1.41%  +2.33%  -0.92%   -5.5   acierto   0 % (azar   0 %)
+    ▲ box_up                    10578  +1.36%  +2.08%  -0.72%   -3.7   acierto   0 % (azar   0 %)
+    ▲ inside_break_up            2339  +1.44%  +2.73%  -1.29%   -3.5   acierto   0 % (azar   0 %)
+    ▼ spin_bear                  3699  -1.82%  -2.57%  +0.75%   +3.1   acierto   0 % (azar   0 %)
+    ▼ consenso_bajista_2         4782  -1.95%  -2.66%  +0.71%   +2.8   acierto   0 % (azar   0 %)
+    ▼ doji_bear                  3463  -1.89%  -2.58%  +0.69%   +2.8   acierto   0 % (azar   0 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.200 % · con exceso positivo 47 % · |t| ≥ 3,35: 7
