@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, data, engine, lab, ml, planstudy, shapes, study, ta, universe
+from vp import breakouts, candles, context, data, engine, lab, ml, planstudy, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -589,8 +589,43 @@ def test_ml_pipeline():
     print(f'ok · aprendizaje automático: reversión plantada detectada fuera de muestra (IC {s["ic"]:+.3f}, t {s["ic_t"]:.0f}) y nada en paseos aleatorios (IC {s0["ic"]:+.3f})')
 
 
+def test_context_experiment():
+    """Los filtros de contexto: un efecto plantado solo para «velas alcistas con volumen» aparece justo ahí y el umbral del mejor de N no lo confunde con ruido; el meta-etiquetado lo aprende."""
+    try:
+        import pandas, sklearn                                            # noqa: F401
+    except ImportError:
+        print('omitida · contexto y confluencia: faltan pandas o scikit-learn')
+        return
+    bars = {f'S{j}': _walk_ar(1500, 500 + j, 0.0) for j in range(50)}
+    work = {s: ml._work((s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}))[1] for s, b in bars.items()}
+    D = ml.Data(work, k=50)
+    E = context.events(D)
+    assert (E['row'] >= 0).sum() > 5000 and E['conf'].max() >= 1
+    row = E['row']
+    r = np.where(row >= 0, row, 0)
+    F = context.filters(D, row, E['conf'], E['dir'])
+    assert set(F) == set(context.FILTERS) and all(v.dtype == bool for v in F.values()) and not F['volumen'][row < 0].any()
+    # efecto plantado: +2 % de exceso en las velas alcistas con volumen alto (se suma al rendimiento relativo de esas filas)
+    plant = (E['fam'] == 0) & (E['dir'] == 1) & F['volumen'] & (row >= 0)
+    assert plant.sum() > 100
+    D.rel[row[plant]] += 3.0
+    ex = context.experiment(D, E, reps=15, dev_end=2019)
+    g = ex['grupos']['velas alcistas']['filtros']
+    assert g['volumen']['cumple']['t'] > 4 and g['volumen']['cumple_final']['mean'] > 0.5 and g['volumen']['cumple']['mean'] > g['volumen']['no_cumple']['mean'] + 0.5, g['volumen']
+    other = ex['grupos']['figuras bajistas']['filtros']
+    assert all(abs(v['cumple']['t']) < ex['umbral']['p99'] + 2 for v in other.values() if 't' in v['cumple']), (other, ex['umbral'])
+    assert ex['umbral']['p95'] > 2 and ex['umbral']['combinaciones'] == 12 * 13
+    # meta-etiquetado: el modelo aprende dónde está el efecto plantado
+    fast = {'A': dict(max_iter=40, learning_rate=0.1, max_leaf_nodes=8, min_samples_leaf=100, l2_regularization=10.0, max_bins=128, random_state=0)}
+    mt = context.meta(D, E, [2020, 2021], dev_end=2020, grid=fast, min_train=2000)
+    f_ = mt['modelo']['final']
+    assert mt['configuracion']['elegida'] == 'A' and f_['mejor'] > f_['todas'] + 0.3 and f_['ic'] > 0.03, f_
+    assert mt['azar']['final']['ic'] < 0.03 and 'AÑOS' not in context.report({'meta': {'universe': 50, 'señales': 1, 'k': 50, 'from': 'a', 'to': 'b', 'horizonte': 10, 'desarrollo_hasta': 2022}, 'experimento': ex, 'meta_etiquetado': mt})[:5]
+    print(f'ok · contexto y confluencia: efecto plantado en «velas alcistas con volumen» detectado (t {g["volumen"]["cumple"]["t"]:.0f}) y aprendido por el meta-etiquetado (IC {f_["ic"]:+.2f})')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_ml_pipeline]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_ml_pipeline, test_context_experiment]
 
 if __name__ == '__main__':
     for fn in ALL:
