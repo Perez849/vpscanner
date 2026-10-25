@@ -459,6 +459,9 @@ def vcp(S: List[list], i: int, h, l, c, v, sma50, sma200, atr, form: bool = Fals
         lows.append((kk, float(l[kk])))
     if not (depths[0] > depths[1] > depths[2] and depths[2] <= 0.08 and depths[0] <= 0.40):
         return None
+    hv = [x[1] for x in H]
+    if (max(hv) - min(hv)) > min(0.06 * max(hv), 0.6 * depths[0] * max(hv), 2.5 * float(atr[i - 1])):       # los tres máximos forman un techo casi plano
+        return None
     brk, vr = (0.3, 1.2) if form else ((c[i] - H[-1][1]) / float(atr[i - 1]), _vol_ratio(v, i))
     q = 30 + (15 if depths[1] <= 0.75 * depths[0] else 8) + (15 if depths[2] <= 0.75 * depths[1] else 8) + (15 if depths[2] <= 0.05 else 8) + 10 + _q_common(brk, vr)
     return dict(highs=H, lows=lows, depths=[float(d) for d in depths], q=int(min(q, 100)), key=(H[0][0], H[-1][0]))
