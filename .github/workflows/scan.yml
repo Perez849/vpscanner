@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Dependencias
-        run: pip install numpy
+        run: pip install numpy pandas scikit-learn         # las pruebas incluyen el aprendizaje automático
       - name: Pruebas
         run: python tests/test_vp.py
       - name: Escanear

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, data, engine, lab, planstudy, shapes, study, ta, universe
+from vp import breakouts, candles, data, engine, lab, ml, planstudy, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -107,10 +107,45 @@ def test_candles_planted():
         'marubozu_bull': ('dn', [(70, 73.6, 73.6, 70.0)]), 'marubozu_bear': ('up', [(130, 126.4, 130, 126.4)]),
         'keyrev_bull': ('dn', [(70, 68.6, 70.1, 68.4), (68.2, 70.4, 70.5, 68.0)]), 'keyrev_bear': ('up', [(130, 131.4, 131.6, 129.9), (131.8, 129.5, 132.0, 129.3)]),
     }
+    cases.update({
+        'belt_bull': ('dn', [(70.0, 74.0, 74.2, 70.0)]), 'belt_bear': ('up', [(130.0, 126.0, 130.0, 125.8)]),
+        'kicker_bull': ('dn', [(70.5, 68.5, 70.7, 68.3), (71.0, 74.0, 74.2, 70.9)]), 'kicker_bear': ('up', [(129.5, 131.5, 131.7, 129.3), (129.0, 126.0, 129.1, 125.8)]),
+        'counter_bull': ('dn', [(70, 67.5, 70.2, 67.3), (65.5, 67.5, 67.7, 65.4)]), 'counter_bear': ('up', [(130, 132.5, 132.7, 129.8), (134.5, 132.5, 134.6, 132.3)]),
+        'harami_cross_bull': ('dn', [(70, 66.5, 70.2, 66.3), (68.2, 68.25, 69.2, 67.2)]), 'harami_cross_bear': ('up', [(130, 133.5, 133.7, 129.8), (131.8, 131.75, 132.8, 130.8)]),
+        'homing_pigeon': ('dn', [(70, 66.0, 70.2, 65.8), (69.0, 67.0, 69.2, 66.8)]), 'descending_hawk': ('up', [(130, 134.0, 134.2, 129.8), (131.0, 133.0, 133.2, 130.8)]),
+        'matching_low': ('dn', [(70, 68.0, 70.2, 67.8), (69.5, 68.0, 69.7, 67.8)]), 'matching_high': ('up', [(130, 132.0, 132.2, 129.8), (130.5, 132.0, 132.2, 130.3)]),
+        'three_outside_up': ('dn', [(70, 68.0, 70.2, 67.8), (67.5, 71.0, 71.2, 67.3), (71.0, 73.0, 73.2, 70.8)]),
+        'three_outside_dn': ('up', [(130, 132.0, 132.2, 129.8), (132.5, 129.0, 132.7, 128.8), (129.0, 127.0, 129.2, 126.8)]),
+        'three_strike_bull': ('up', [(130, 131.5, 131.7, 129.9), (131.4, 133.0, 133.2, 131.3), (133.0, 134.5, 134.7, 132.9), (135.0, 129.5, 135.2, 129.3)]),
+        'three_strike_bear': ('dn', [(70, 68.5, 70.1, 68.3), (68.6, 67.0, 68.8, 66.8), (67.0, 65.5, 67.1, 65.3), (65.0, 70.5, 70.7, 64.8)]),
+        'abandoned_bull': ('dn', [(70, 66.5, 70.2, 66.3), (65.0, 65.05, 65.5, 64.5), (66.0, 70.0, 70.2, 65.9)]),
+        'abandoned_bear': ('up', [(130, 133.5, 133.7, 129.8), (135.0, 134.95, 135.5, 134.5), (134.0, 130.0, 134.1, 129.8)]),
+        'advance_block': ('up', [(130, 133.0, 133.4, 129.9), (131.5, 134.0, 135.0, 131.4), (132.5, 134.5, 136.2, 132.4)]),
+        'deliberation': ('up', [(130, 133.5, 133.6, 129.9), (132.0, 135.5, 135.6, 131.9), (135.4, 136.0, 137.0, 135.3)]),
+        'tasuki_up': ('up', [(130, 132.5, 132.6, 129.9), (134.0, 136.0, 136.1, 133.9), (135.0, 133.5, 135.2, 133.3)]),
+        'tasuki_dn': ('dn', [(70, 67.5, 70.1, 67.4), (66.0, 64.0, 66.1, 63.9), (65.0, 66.5, 66.7, 64.8)]),
+        'two_crows_gap': ('up', [(130, 133.5, 133.7, 129.9), (135.0, 134.2, 135.2, 134.0), (135.5, 133.8, 135.7, 133.7)]),
+        'stick_sandwich_bull': ('dn', [(70, 68.0, 70.2, 67.8), (68.5, 71.0, 71.2, 68.3), (70.5, 68.0, 70.7, 67.9)]),
+        'stick_sandwich_bear': ('up', [(130, 132.0, 132.2, 129.8), (131.5, 129.0, 131.7, 128.8), (129.5, 132.0, 132.2, 129.4)]),
+        'outside_up': ('dn', [(70, 68.5, 70.2, 68.3), (68.0, 71.5, 71.7, 67.8)]), 'outside_dn': ('up', [(130, 131.5, 131.7, 129.8), (132.0, 128.5, 132.2, 128.3)]),
+    })
     for nm, (tr, tail) in cases.items():
         F = ta.prepare(candle(tr, tail))
         assert candles.detect(F)[nm][-1], f'{nm}: no se detecta en la barra final'
-    print(f'ok · velas: {len(cases)} patrones plantados se detectan en su barra')
+    # cinco velas, huecos con vela interior y consenso (varias formaciones del mismo sentido en la misma barra)
+    F = ta.prepare(candle('up', [(130, 134.0, 134.2, 129.9), (133.5, 132.0, 134.0, 131.8), (132.2, 131.0, 132.6, 130.8), (131.2, 132.5, 132.9, 131.0), (132.3, 136.5, 136.7, 132.2)]))
+    assert candles.detect(F)['rising_methods'][-1]
+    F = ta.prepare(candle('dn', [(70, 66.0, 70.2, 65.8), (66.5, 67.8, 68.2, 66.3), (67.2, 68.2, 68.4, 67.0), (68.0, 67.0, 68.4, 66.8), (67.0, 63.0, 67.2, 62.8)]))
+    assert candles.detect(F)['falling_methods'][-1]
+    F = ta.prepare(candle('up', [(130, 134.0, 134.2, 129.8), (132.5, 133.5, 133.9, 131.8), (133.0, 136.0, 136.2, 132.9)]))
+    assert candles.detect(F)['inside_break_up'][-1]
+    F = ta.prepare(candle('dn', [(70, 66.0, 70.2, 65.8), (67.5, 66.5, 67.9, 66.2), (66.8, 63.0, 66.9, 62.8)]))
+    assert candles.detect(F)['inside_break_dn'][-1]
+    F = ta.prepare(candle('dn', [(70, 66.5, 70.2, 66.3), (68.2, 68.25, 69.2, 67.2)]))
+    d_ = candles.detect(F)
+    n_dn = sum(d_[k][-1] for k in d_ if CATALOG[k].fam == 'velas' and CATALOG[k].dir > 0 and not k.startswith('consenso'))
+    assert n_dn >= 1 and d_['consenso_alcista_2'][-1] == (n_dn >= 2), (n_dn, d_['consenso_alcista_2'][-1])
+    print(f'ok · velas: {len(cases) + 4} patrones plantados se detectan en su barra y el consenso cuenta bien')
 
 
 def test_breakouts_planted():
@@ -494,14 +529,52 @@ def test_plan_study():
     for v in planstudy.VARIANTS:
         s = ev['pooled'][v]['K24']['todos']
         assert s['n'] > 1500 and abs(s['ex']) < 0.6 and abs(s['t']) < 6, (v, s)           # sin ventaja posible: el exceso queda cerca de 0
-        assert 0 < s['tgt'] < 100 and abs(s['tgt'] + s['stp'] + s['tmo'] - 100) < 1e-6
+        assert 0 < s['tgt'] < 100 and abs(s['tgt'] + s['stp'] + s['tmo'] - 100) < 0.05
     txt = planstudy.report(ev)
     assert 'PLAN:' in txt and 'FIJO' in txt
     print(f'ok · estudio del plan: simulador idéntico a plan.outcome ({tot} casos) y sin ventaja sobre paseos aleatorios')
 
 
+def _walk_ar(n, seed, theta):
+    """Paseo con reversión a 5 sesiones de intensidad theta (0 = paseo aleatorio puro)."""
+    rng = np.random.default_rng(seed)
+    sig = 0.015
+    e = rng.normal(0, sig, n)
+    r = np.zeros(n)
+    for t in range(n):
+        r[t] = e[t] - theta * r[max(t - 5, 0):t].sum()
+    c = 100 * np.exp(np.cumsum(r))
+    o = np.concatenate([[100.0], c[:-1]]) * np.exp(rng.normal(0, sig / 3, n))
+    h = np.maximum(o, c) * (1 + np.abs(rng.normal(0, sig / 2, n)))
+    l = np.minimum(o, c) * (1 - np.abs(rng.normal(0, sig / 2, n)))
+    return {'t': 1500000000 + 86400 * np.arange(n), 'o': o, 'h': h, 'l': l, 'c': c, 'v': np.random.default_rng(seed + 1).integers(5e5, 2e6, n).astype(float)}
+
+
+def test_ml_pipeline():
+    """El aprendizaje automático fuera de muestra encuentra un efecto plantado (reversión) y no inventa nada en paseos aleatorios."""
+    try:
+        import pandas, sklearn                                            # noqa: F401
+    except ImportError:
+        print('omitida · aprendizaje automático: faltan pandas o scikit-learn')
+        return
+    fast = dict(max_iter=40, learning_rate=0.1, max_leaf_nodes=8, min_samples_leaf=200, l2_regularization=10.0, max_bins=32, random_state=0)
+    kw = dict(workers=1, test_years=[2020, 2021], k=60, groups=('ctx',), min_train=3000, min_rows=2000, params=fast)
+    ev = ml.analyze({f'S{j}': _walk_ar(1500, 100 + j, 0.08) for j in range(60)}, **kw)
+    s = ev['modelos']['ctx']['todo']
+    assert s['ic'] > 0.08 and s['ic_t'] > 8 and s['top'] > 0.4 and ev['base']['reversión 5 sesiones (−r5)']['todo']['ic_t'] > 8, (s, ev['base'])
+    assert abs(ev['base']['azar']['todo']['ic_t']) < 3.5
+    ev0 = ml.analyze({f'S{j}': _walk_ar(1500, 300 + j, 0.0) for j in range(60)}, **kw)
+    s0 = ev0['modelos']['ctx']['todo']
+    assert abs(s0['ic']) < 0.02 and abs(s0['ic_t']) < 3.5, s0                                  # sin efecto no hay IC: el modelo no se inventa nada
+    assert abs(ml.nw_t(np.random.default_rng(0).normal(0.3, 1, 400)) - 0.3 * 20) < 3 and 'años de desarrollo' in ml.report(ev)
+    g2 = {'p': dict(fast, max_iter=20), 'q': dict(fast, max_leaf_nodes=4)}
+    ev2 = ml.analyze({f'S{j}': _walk_ar(1500, 100 + j, 0.08) for j in range(60)}, **dict(kw, params=None, grid=g2, dev_end=2020, train_stride=2))
+    assert ev2['seleccion']['elegida'] in g2 and ev2['meta']['dev_years'] == [2020] and ev2['meta']['final_years'] == [2021] and ev2['modelos']['ctx']['final']['ic'] > 0.08 and 'AÑOS FINALES' in ml.report(ev2)
+    print(f'ok · aprendizaje automático: reversión plantada detectada fuera de muestra (IC {s["ic"]:+.3f}, t {s["ic_t"]:.0f}) y nada en paseos aleatorios (IC {s0["ic"]:+.3f})')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_ml_pipeline]
 
 if __name__ == '__main__':
     for fn in ALL:

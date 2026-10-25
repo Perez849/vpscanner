@@ -28,6 +28,10 @@ CLOSE = 0.15          # margen (ATR) de los cierres sobre la recta
 MAXLEN = 80           # duración máxima de una compresión (barras)
 MAXBASE = 0.16        # altura máxima de la base de una compresión (fracción del precio)
 MAXBASE_ATR = 9.0     # … y en ATR
+EQ_REL = 0.18          # extremos «iguales» de un doble o triple: dispersión ≤ 18 % de la altura de la figura…
+EQ_ATR = 0.75          # … y ≤ 0,75 ATR
+MID_REL = 0.35         # los valles (o picos) intermedios de un triple, a ≤ 35 % de la altura entre sí: el cuello es horizontal
+FLAT_REL = 0.15        # una recta «plana» de una compresión se desvía ≤ 15 % de la base (y entre 0,5 y 1,3 ATR)
 NEAR = 3.0            # una figura «se forma» cuando el cierre está a ≤ NEAR ATR de su disparador
 QFORM = 50            # calidad mínima de una figura en formación (sin ruptura ni volumen que puntuar)
 
@@ -127,9 +131,12 @@ def compression(S: List[list], i: int, h, l, c, atr) -> Optional[Dict]:
     conv = w1 / w0
     su, sl = U['L'][2], D['L'][2]
     apex = x0 + w0 / (sl - su) if sl - su > 1e-12 else None
-    FL, UP, DN = 1.3, 1.6, 1.6
-    kind = None
     nt_ = len(U['tch']) + len(D['tch'])
+    if nt_ < 5 or max(len(U['tch']), len(D['tch'])) < 3:                    # una recta se valida con 3 toques: con 2 + 2 cualquier cuatro pivotes «forman» un triángulo
+        return None
+    FL = float(np.clip(FLAT_REL * (w0 / a), 0.5, 1.3))                      # tolerancia de «plana» relativa a la base
+    UP, DN, SLOPE = 1.6, 1.6, 1.3                                           # pendiente mínima para decir que una recta sube o baja (en ATR a lo largo de la figura)
+    kind = None
     if conv <= 0.7 and apex is not None and apex > xe:
         if abs(du) <= FL and dl >= UP:
             kind = 'asc_triangle'
@@ -137,14 +144,14 @@ def compression(S: List[list], i: int, h, l, c, atr) -> Optional[Dict]:
             kind = 'desc_triangle'
         elif du <= -DN and dl >= UP:
             kind = 'sym_tri'
-        elif du >= FL and dl >= UP and dl > du and nt_ >= 5:
+        elif du >= SLOPE and dl >= UP and dl > du and nt_ >= 5:
             kind = 'rising_wedge'
-        elif du <= -DN and dl <= -FL and -du > -dl and nt_ >= 5:
+        elif du <= -DN and dl <= -SLOPE and -du > -dl and nt_ >= 5:
             kind = 'falling_wedge'
     if kind is None and abs(du) <= FL and abs(dl) <= FL and w0 >= 2.5 * a and 0.65 <= conv <= 1.35 and nt_ >= 5:
         kind = 'rect'
     if kind is None and nt_ >= 6 and w0 >= 2.5 * a and 0.75 <= conv <= 1.3 and xe - x0 >= 20 and abs(du - dl) <= 0.35 * max(abs(du), abs(dl)):     # canal: rectas paralelas con pendiente
-        kind = 'channel_up' if du >= FL and dl >= FL else 'channel_dn' if du <= -FL and dl <= -FL else None
+        kind = 'channel_up' if du >= SLOPE and dl >= SLOPE else 'channel_dn' if du <= -SLOPE and dl <= -SLOPE else None
     if kind is None:
         return None
     return {'kind': kind, 'U': U['L'], 'D': D['L'], 'tu': U['tch'], 'tl': D['tch'], 'x0': int(x0), 'xl': int(xl), 'apex': None if apex is None else float(apex),
@@ -204,14 +211,22 @@ def multi_bottom(S: List[list], i: int, d: int, h, l, c, atr, v, form: bool = Fa
                 continue
             pv = [d * S[x][1] for x in idx]
             js = [S[x][0] for x in idx]
-            if js[-1] - js[0] < 8 or js[-1] - js[0] > (80 if m == 2 else 110):
-                continue
-            tol = max(0.025 * abs(min(pv)), 1.2 * a)
-            if max(pv) - min(pv) > tol:
+            if js[-1] - js[0] < (10 if m == 2 else 16) or js[-1] - js[0] > (80 if m == 2 else 110):
                 continue
             neck = float(hi[js[0]:js[-1] + 1].max())
             if neck - max(pv) < 2.5 * a:
                 continue
+            hgt_ = neck - min(pv)
+            tol = min(EQ_REL * hgt_, EQ_ATR * a)                       # «iguales» se mide contra la altura de la figura, no solo contra el ruido diario
+            if max(pv) - min(pv) > tol:
+                continue
+            jm = [S[x + 1][0] for x in idx[:-1]]
+            if m == 3:
+                if abs(float(np.polyfit(js, pv, 1)[0])) * (js[-1] - js[0]) > 0.6 * tol:                      # sin deriva en diagonal
+                    continue
+                mv = [float(hi[x]) for x in jm]
+                if max(mv) - min(mv) > MID_REL * hgt_:                                                       # el cuello (los valles entre extremos) también es plano
+                    continue
             if lo[js[-1]:i].min() < min(pv) - 0.5 * a:
                 continue
             if form:
@@ -229,7 +244,6 @@ def multi_bottom(S: List[list], i: int, d: int, h, l, c, atr, v, form: bool = Fa
                 + (15 if 15 <= js[-1] - js[0] <= 70 else 8) + (15 if prior >= 6 * a else 10 if prior >= 4 * a else 6) + _q_common(brk, vr)
             if m == 3:
                 q += 6
-            jm = [S[x + 1][0] for x in idx[:-1]]
             g = dict(neck=d * neck, hgt=float(neck - min(pv)), pts=[(js[x], d * pv[x]) for x in range(m)], mids=[(jm[x], d * float(hi[jm[x]])) for x in range(m - 1)], q=int(min(q, 100)))
             if m == 2:
                 g.update(p1=g['pts'][0], p2=g['pts'][1], mid=g['mids'][0])
@@ -258,13 +272,13 @@ def head_shoulders(S: List[list], i: int, d: int, h, l, c, atr, v, form: bool = 
         k1, k2 = d * t1[1], d * t2[1]
         neck_mid = (k1 + k2) / 2.0
         depth = neck_mid - ph_
-        if depth <= 0 or min(pl_, pr_) - ph_ < 1.2 * a or min(pl_, pr_) - ph_ < 0.12 * depth:
+        if depth <= 0 or min(pl_, pr_) - ph_ < 1.5 * a or min(pl_, pr_) - ph_ < 0.2 * depth:                  # la cabeza destaca claramente sobre ambos hombros
             continue
-        if abs(pl_ - pr_) > 0.35 * depth or abs(k2 - k1) > 0.5 * depth:
+        if abs(pl_ - pr_) > 0.22 * depth or abs(k2 - k1) > 0.33 * depth:                                      # hombros a la misma altura y cuello casi plano
             continue
         r = (hd[0] - ls[0]) / max(rs[0] - hd[0], 1)
         span = rs[0] - ls[0]
-        if not (0.4 <= r <= 2.5 and 15 <= span <= 120):
+        if not (0.5 <= r <= 2.0 and 15 <= span <= 120):
             continue
         sl = (k2 - k1) / max(t2[0] - t1[0], 1)
         necki, neckp = k1 + sl * (i - t1[0]), k1 + sl * (i - 1 - t1[0])
@@ -282,8 +296,8 @@ def head_shoulders(S: List[list], i: int, d: int, h, l, c, atr, v, form: bool = 
         if prior < 3.0 * a:
             continue
         brk, vr = (0.3, 1.2) if form else ((cl[i] - necki) / a, _vol_ratio(v, i))
-        q = 15 + 20.0 * min((min(pl_, pr_) - ph_) / (3.0 * a), 1.0) + 15.0 * max(0.0, 1 - abs(pl_ - pr_) / (0.35 * depth)) + 10.0 * max(0.0, 1 - abs(np.log(r)) / 0.9) \
-            + 10.0 * max(0.0, 1 - abs(k2 - k1) / (0.5 * depth)) + (10 if prior >= 6 * a else 6) + _q_common(brk, vr)
+        q = 15 + 20.0 * min((min(pl_, pr_) - ph_) / (3.0 * a), 1.0) + 15.0 * max(0.0, 1 - abs(pl_ - pr_) / (0.22 * depth)) + 10.0 * max(0.0, 1 - abs(np.log(r)) / 0.7) \
+            + 10.0 * max(0.0, 1 - abs(k2 - k1) / (0.33 * depth)) + (10 if prior >= 6 * a else 6) + _q_common(brk, vr)
         g = dict(ls=(ls[0], float(ls[1])), hd=(hd[0], float(hd[1])), rs=(rs[0], float(rs[1])), t1=(t1[0], float(t1[1])), t2=(t2[0], float(t2[1])), neck=float(d * necki),
                  hgt=float(abs((k1 + sl * (hd[0] - t1[0])) - ph_)), q=int(min(q, 100)))
         if best is None or g['q'] > best[1]['q']:
@@ -444,6 +458,9 @@ def vcp(S: List[list], i: int, h, l, c, v, sma50, sma200, atr, form: bool = Fals
         depths.append((H[k][1] - float(l[kk])) / H[k][1])
         lows.append((kk, float(l[kk])))
     if not (depths[0] > depths[1] > depths[2] and depths[2] <= 0.08 and depths[0] <= 0.40):
+        return None
+    hv = [x[1] for x in H]
+    if (max(hv) - min(hv)) > min(0.06 * max(hv), 0.6 * depths[0] * max(hv), 2.5 * float(atr[i - 1])):       # los tres máximos forman un techo casi plano
         return None
     brk, vr = (0.3, 1.2) if form else ((c[i] - H[-1][1]) / float(atr[i - 1]), _vol_ratio(v, i))
     q = 30 + (15 if depths[1] <= 0.75 * depths[0] else 8) + (15 if depths[2] <= 0.75 * depths[1] else 8) + (15 if depths[2] <= 0.05 else 8) + 10 + _q_common(brk, vr)

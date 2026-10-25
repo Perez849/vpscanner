@@ -15,14 +15,16 @@ Una figura no es «dos pivotes unidos por una recta». El motor:
 
 - **Oscilaciones por zigzag de ATR**: un pivote solo cuenta si la oscilación mide ≥ 1 ATR, alternando máximo/mínimo; se confirma 3 barras después.
 - **Rectas por toques**: entre todos los pares de pivotes se elige la recta con más **toques** (pivotes a ≤ 0,35 ATR) que el precio respeta (los cierres no la cruzan, las mechas no la superan en más de 0,6 ATR), que pasa por uno de los dos últimos pivotes y no queda lejos del precio actual.
-- **Clasificación por pendientes y convergencia**: triángulos (simétrico, ascendente, descendente), cuñas (≥ 5 toques) y rectángulo; duración ≤ 80 barras, base ≤ 16 % del precio y ≤ 9 ATR, anchura al romper ≤ 70 % de la inicial, con ápice.
-- **H-C-H** con cabeza ≥ 1,2 ATR más alta que los hombros, simetría en altura y tiempo y tendencia previa; **dobles y triples** techos/suelos; **banderas y banderines** con asta impulsiva (≥ 5 ATR) y retroceso ≤ 50 %; **taza con asa** con la parábola ajustada a los mínimos y prueba de redondez; **VCP**, **diamante**, **isla**, **directrices** con ≥ 3 toques y **rebotes en soportes y resistencias** de 3 toques.
+- **Clasificación por pendientes y convergencia**: triángulos (simétrico, ascendente, descendente), cuñas y rectángulo con **≥ 5 toques y ≥ 3 en una de las rectas** (con 2 + 2 cualquier cuatro pivotes «forman» un triángulo); la recta «plana» se desvía ≤ 15 % de la base; duración ≤ 80 barras, base ≤ 16 % del precio y ≤ 9 ATR, anchura al romper ≤ 70 % de la inicial, con ápice.
+- **Dobles y triples** techos y suelos con extremos de verdad iguales: dispersión ≤ 18 % de la altura de la figura y ≤ 0,75 ATR; en los triples, sin deriva en diagonal y con los valles intermedios (el cuello) también planos (≤ 35 % de la altura); al menos 10 barras entre extremos en los dobles y 16 en los triples.
+- **H-C-H**: cabeza ≥ máx(1,5 ATR, 20 % de la profundidad) sobre ambos hombros, hombros a ≤ 22 % de la profundidad entre sí, cuello casi plano (≤ 33 %), simetría de tiempo entre 0,5 y 2 y tendencia previa.
+- **Banderas y banderines** con asta impulsiva (≥ 5 ATR) y retroceso ≤ 50 %; **taza con asa** con la parábola ajustada a los mínimos y prueba de redondez; **VCP** con tres contracciones decrecientes bajo un techo casi plano (los tres máximos a ≤ 6 % y ≤ 2,5 ATR); **diamante**, **isla**, **directrices** con ≥ 3 toques y **rebotes en soportes y resistencias** de 3 toques.
 - **Calidad 0–100** por figura (toques, ajuste, simetría, duración, forma, ruptura, volumen); por debajo de 35 no es figura.
 - **Canales**: dos rectas paralelas con pendiente y ≥ 6 toques; la ruptura a favor acelera la tendencia, la contraria la agota.
 - **Primera ruptura**: el cuello (o la taza, o la figura de compresión) solo se rompe la primera vez que el cierre lo pasa; un nuevo cruce tras un fallo no es la figura otra vez.
 - **Figuras en formación**: las figuras ya dibujadas que aún no han roto se devuelven aparte, evaluadas como si la próxima barra fuera la de ruptura y con los mismos criterios. Una compresión (triángulo, cuña, canal, rectángulo) tiene dos escenarios (rompe arriba / rompe abajo); doble y triple suelo o techo, H-C-H, bandera y banderín, taza con asa y VCP tienen uno, con su **disparador** (cuello, borde o techo) y la **distancia en ATR** (≤ 3 ATR y calidad ≥ 50). Es una lectura del último cierre: no aparece en el estudio, que solo mide figuras ya rotas.
 
-Además, 30 patrones de velas y 13 rupturas (máximos y mínimos de 55/100/252 sesiones, Bollinger y ATR comprimidos, caja de Darvas, base junto al máximo anual). El catálogo completo (`vp/catalog.py`) alimenta el motor, el estudio y la Guía.
+Además, **65 formaciones de vela** (30 clásicas y 31 más: cinturón, kicker, contraataque, harami cruz, paloma y halcón, tres exteriores, tres golpes, bebé abandonado, bloqueo de avance, tres métodos, tasuki, sándwich, vela exterior y ruptura de vela interior, entre otras) con **4 de consenso** (dos o más formaciones del mismo sentido y ninguna contraria en la misma sesión, o tres o más), y **13 rupturas** (máximos y mínimos de 55/100/252 sesiones, Bollinger y ATR comprimidos, caja de Darvas, base junto al máximo anual). El catálogo completo (`vp/catalog.py`, 110 patrones) alimenta el motor, el estudio y la Guía.
 
 ## El plan de cada patrón (`vp/plan.py`)
 
@@ -40,9 +42,9 @@ Además, 30 patrones de velas y 13 rupturas (máximos y mínimos de 55/100/252 s
 - **Umbral del mejor de N**: se desplazan al azar las señales de cada valor y se anota el mayor |t| entre todos los patrones; solo «supera el azar» quien pasa el percentil 95 de ese máximo. Se estudian también las señales de **calidad ≥ 75** de cada figura.
 - **Limitación**: los miembros son los actuales (sesgo de supervivencia que favorece a los largos).
 
-## Resultados (estudio del 24-oct-2026: 500 acciones, 1,23 millones de barras, 2016–2026; se recalcula cada domingo)
+## Resultados (estudio del 25-oct-2026: 500 acciones, 1,23 millones de barras, 2016–2026; se recalcula cada domingo)
 
-Con las **300 más negociadas** de cada fecha y el umbral del mejor de 101 variantes (|t| ≥ 3,35), **8 superan el azar; seis de ellas rinden MENOS que entrar al azar**:
+Con las **300 más negociadas** de cada fecha y el umbral del mejor de 130 variantes (|t| ≥ 3,46), **6 superan el azar y cuatro de ellas rinden MENOS que entrar al azar**:
 
 | patrón | exceso a 10 sesiones | t | años a favor |
 |---|---|---|---|
@@ -50,38 +52,68 @@ Con las **300 más negociadas** de cada fecha y el umbral del mejor de 101 varia
 | Ruptura del máximo de 100 sesiones (compra) | −0,44 % | −4,9 | 1/10 |
 | Ruptura del máximo de 55 sesiones (compra) | −0,38 % | −4,5 | 1/10 |
 | Ruptura del máximo anual (compra) | −0,45 % | −4,3 | 2/10 |
-| VCP (compra) | −0,39 % | −3,5 | 0/10 |
 | **Cuña ascendente (corto)** | **+0,60 %** | **+4,6** | **9/10** |
+| **Triángulo simétrico roto a la baja (corto)** | **+0,99 %** | **+3,5** | **6/10** |
 
-- **La única figura con ventaja es la cuña ascendente (bajista)**: tras romperse a la baja, la acción rinde 0,60 puntos menos de lo que rinde una acción cualquiera esos días. Pero la operación en corto **pierde de media un 0,12 %** (gana menos de lo que pierde el mercado al alza): no es rentable por sí sola, y el estudio no incluye coste de préstamo ni dividendos.
-- **Comprar rupturas a máximos pierde frente al azar** (la reversión a corto plazo se come la ruptura); el VCP, la taza con asa y la base junto a máximos también.
+- **Comprar rupturas a máximos pierde frente al azar** (la reversión a corto plazo se come la ruptura).
+- **Las dos figuras con ventaja son bajistas**: tras romperse a la baja, la cuña ascendente y el triángulo simétrico rinden 0,6 y 1,0 puntos menos que una acción cualquiera esos días. Pero la operación en corto de la cuña **pierde de media un 0,12 %** (gana menos de lo que pierde el mercado al alza): no es rentable por sí sola, y el estudio no incluye coste de préstamo ni dividendos. El triángulo simétrico bajista pasa el umbral por un pelo (3,5 contra 3,46) y 6 años de 10: está por confirmar.
 - Con las **50 mayores** solo supera el umbral la base junto a máximos (negativa).
-- Por familia (exceso mediano): figuras alcistas −0,22 % (solo el 20 % de ellas por encima del azar), figuras bajistas +0,03 %, rupturas alcistas −0,38 %, rupturas bajistas −0,37 %, velas alcistas 0,00 % y bajistas +0,22 %. Ninguna vela individual supera el umbral.
-- **Los canales** (nuevos) no aportan nada: canal ascendente roto al alza −0,50 % (t −1,7), roto a la baja +0,36 % (t +1,3), descendente −0,73 % y +0,08 %; ninguno supera el umbral. Doble suelo −0,15 %, doble techo −0,18 %, H-C-H −0,18 % y su invertido +0,11 %, bandera alcista −0,06 %: todos indistinguibles del azar.
-- **¿Ayuda dibujar mejor la figura?** Las señales de calidad ≥ 75 mejoran el exceso en 13 de 24 figuras (media +0,11 %), pero con 100–400 señales por celda eso es compatible con ruido, y no rescata a las que pierden (VCP −0,39 → −0,40, taza −0,82 → −0,83, triángulo ascendente −0,40 → −0,53).
-- Una versión anterior del estudio (otro código y un universo con pertenencia histórica a índices) llegó a cifras casi idénticas (base junto a máximos −0,57 %, VCP −0,54 %, cuña ascendente +0,52 %): el resultado no depende de la implementación.
+- **Triples y dobles con extremos realmente iguales** (n entre 200 y 1.600): triple suelo +0,48 % (t +1,0), triple techo −0,43 % (t −0,9), doble suelo −0,19 %, doble techo −0,04 %, H-C-H +0,10 % en corto (el invertido +0,26 %): indistinguibles del azar. Afinar la geometría deja la figura bien dibujada, no más fiable.
+- **VCP con techo plano**: con la definición anterior (más laxa) salía significativamente negativo (−0,39 %, t −3,5); con tres máximos casi iguales queda en −0,27 % (t −1,7, n 1.600) y ya no supera el umbral.
+- Por familia (exceso mediano a 10 sesiones): figuras alcistas −0,19 % (solo el 27 % de ellas por encima del azar), figuras bajistas +0,10 %, rupturas alcistas −0,38 %, rupturas bajistas −0,37 %, velas alcistas −0,11 % y bajistas +0,12 %. **Ninguna vela, de las 65, supera el umbral.** El mejor caso aislado es el kicker alcista (+1,76 %, t +2,4, 78 señales), que con 130 patrones probados es lo que sale por azar.
+- **Consenso de velas**: dos formaciones del mismo sentido (+0,01 % alcista, +0,14 % bajista) o tres o más (+0,28 % y +0,24 %) mejoran algo el exceso de las velas sueltas (más con tres que con dos), pero ninguno es significativo (t entre 0,0 y 1,0): confluir ayuda a dibujar, no demuestra ventaja.
+- **¿Ayuda dibujar mejor la figura?** Las señales de calidad ≥ 75 mejoran el exceso en 11 de 24 figuras (media +0,10 %): compatible con ruido.
+- Una versión anterior del estudio (otro código y un universo con pertenencia histórica a índices) llegó a cifras casi idénticas en lo que no ha cambiado (base junto a máximos −0,57 %, cuña ascendente +0,52 %): el resultado no depende de la implementación.
 
 **Qué es entonces esta herramienta**: una forma rigurosa de *leer* el gráfico (qué figura hay, dónde está el stop, cuánto hay hasta el objetivo, qué barreras hay en medio) y de ver, con datos, que las figuras clásicas por sí solas no baten al mercado. No es un generador de señales.
 
+### ¿Se fía uno de estas estadísticas? Comprobaciones del propio método
+
+- Con un efecto plantado de +3 % el estudio lo detecta (t = 16); con 24 paseos aleatorios no sale ningún patrón «significativo» de 66 (prueba automática).
+- Control positivo con datos reales: en las mismas fechas, el factor clásico de impulso (rendimiento a 120 sesiones) deja al 10 % mejor +0,71 % por encima del resto a 10 sesiones (t +3,2): el método detecta efectos pequeños reales cuando los hay.
+- El umbral del mejor de N corrige que, entre 130 patrones, alguno saldrá «significativo» por casualidad. Los porcentajes de acierto de casi todos los patrones rondan el 50 % porque las acciones grandes y líquidas son muy eficientes: es lo que cabe esperar de datos reales, no un fallo del cálculo.
+
+## Aprendizaje automático (`vp/ml.py`): ¿combinar todo mejora?
+
+`python -m vp ml` entrena un gradient boosting para ordenar las 300 acciones más negociadas de cada día por su rendimiento relativo a 10 sesiones, con **24 variables de contexto** (rendimientos a 1–250 sesiones, RSI, distancias a medias, rango anual, volatilidad, volumen, forma de la vela; todo como percentil del día) y **118 de patrones** (las 65 velas y su consenso de hoy; figuras y rupturas de las últimas 5 sesiones). Reglas para no engañarse:
+
+- **Validación hacia delante**: para predecir el año Y se entrena solo con lo anterior a enero de Y (menos 15 días) y nunca se vuelve atrás.
+- **Desarrollo y final separados**: 5 configuraciones fijadas de antemano; la elegida (la «grande») sale de los años 2020–2023 y se **juzga una sola vez en 2024–2026**, que no se toca.
+- Cuatro conjuntos de variables (solo contexto, + velas, + figuras, todo) para ver si los patrones aportan algo, y factores simples (reversión, impulso, RSI, volatilidad) como control. Una puntuación al azar da IC ≈ 0.
+- Medidas por fecha con t de Newey–West (los rendimientos a 10 sesiones de días contiguos se solapan).
+
+Resultado en los **años finales (2024–2026)**:
+
+| modelo | IC | mejor 10 % (a 10 sesiones) | t | neto de costes |
+|---|---|---|---|---|
+| solo contexto | +0,024 | +0,78 % | +2,6 | +0,63 % |
+| contexto + velas (consenso incluido) | +0,026 | +0,77 % | +2,6 | +0,62 % |
+| contexto + figuras y rupturas | +0,025 | +0,76 % | +2,6 | +0,61 % |
+| todo | +0,024 | +0,73 % | +2,5 | +0,58 % |
+| *referencia: ranking por impulso (r120)* | *+0,015* | *+1,18 %* | *+2,8* | *+1,03 %* |
+
+- **Los patrones no añaden nada al modelo**: las diferencias de IC entre los cuatro conjuntos (±0,002) son ruido, tanto en los años finales como en los de desarrollo. Ni las velas, ni su consenso, ni las figuras.
+- El contexto sí da una señal pequeña (IC ≈ 0,02 positivo los 7 años; el 10 % mejor rinde entre +0,3 % y +0,8 % más que el resto a 10 sesiones y gana en 6 de 7 años), pero **no mejora a un ranking por impulso** y 2022 salió plano. Con t entre 2 y 3 y varios modelos probados, es una pista, no una conclusión.
+- No hay puntuación de aprendizaje automático en la web: no hay mejora demostrada que justifique enseñarla. El informe completo está en `data/ml_report.txt`.
 
 ## ¿Los stops y objetivos grandes explican el mal resultado? (`vp/planstudy.py`)
 
 Una objeción razonable: «quizá no funcionan porque el stop y el objetivo son enormes». El estudio de evidencia no usa stops ni objetivos (salida a tiempo fijo), así que no puede ser la causa de su resultado; pero para comprobar el plan completo, `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop y objetivo del plan, el stop gana si se tocan el mismo día, cierre a las 40 sesiones, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor con el mismo sentido y las mismas distancias de stop y objetivo en ATR** (y volatilidad relativa parecida). Tres geometrías: el plan de la web, stop táctico de 1,5 ATR con el mismo objetivo, y una **fija igual para todos** (stop 1,5 ATR, objetivo 3 ATR). Informe en `data/plan_report.txt`.
 
-Con las 300 más negociadas (203.000 señales, 2016–2026) el exceso medio sobre el azar con las mismas distancias es **−0,20 % con el plan de la web, −0,13 % con stop táctico y −0,11 % con la geometría fija**. Calibrado sobre paseos aleatorios, donde no puede haber ventaja, el método sesga el resultado en −0,05 a −0,07 %, así que lo que queda es una pérdida pequeña, no una ventaja escondida por el tamaño de los stops:
+Con las 300 más negociadas (220.000 señales, 2016–2026) el exceso medio sobre el azar con las mismas distancias es **−0,15 % con el plan de la web, −0,13 % con stop táctico y −0,11 % con la geometría fija**. Calibrado sobre paseos aleatorios, donde no puede haber ventaja, el método sesga el resultado en −0,05 a −0,08 %, así que lo que queda es una pérdida pequeña, no una ventaja escondida por el tamaño de los stops:
 
 | grupo (300 más negociadas) | plan web | stop táctico | fijo 1,5/3 ATR |
 |---|---|---|---|
-| todos | −0,20 % (t −2,9) | −0,13 % (t −2,4) | −0,11 % (t −2,1) |
-| figuras alcistas | −0,40 % (t −3,4) | −0,15 % | −0,13 % |
-| figuras bajistas | −0,09 % | +0,05 % | +0,05 % |
-| rupturas alcistas | −0,48 % (t −6,1) | −0,40 % (t −6,3) | −0,35 % (t −5,8) |
-| velas | ≈ 0 | ≈ 0 | ≈ 0 |
-| directrices alcistas | +0,42 % (t +2,6) | +0,42 % | +0,42 % |
+| todos | −0,15 % (t −2,0) | −0,13 % (t −2,2) | −0,11 % (t −2,0) |
+| figuras alcistas | −0,29 % (t −2,2) | −0,12 % | −0,09 % |
+| figuras bajistas | +0,07 % | +0,14 % | +0,12 % |
+| rupturas alcistas | −0,49 % (t −6,3) | −0,42 % (t −6,5) | −0,36 % (t −6,0) |
+| velas | ≈ 0 (+0,09 / +0,10) | ≈ 0 (−0,07 / +0,07) | ≈ 0 (−0,10 / +0,10) |
+| directrices alcistas | +0,33 % (t +2,1) | +0,33 % | +0,33 % |
 
-- **Comprar rupturas a máximos** (55, 100 y 252 sesiones, base junto a máximos) rinde menos que entrar al azar con cualquier geometría (t entre −4,4 y −6,9): coincide con el estudio de evidencia.
-- La única señal positiva que se repite en las tres geometrías es la **ruptura de una directriz bajista** (+0,42 %, t +2,6), pero con 75 patrones probados no supera el umbral del mejor de N (3,35).
-- El tamaño del plan fija la **tasa de acierto**: con el plan de la web las figuras alcistas llegan al objetivo el 32 % de las veces, pero entrar al azar con las mismas distancias lo logra el 34 %. La tasa de acierto la decide la geometría, no el patrón.
+- **Comprar rupturas a máximos** (55, 100 y 252 sesiones, base junto a máximos) rinde menos que entrar al azar con cualquier geometría (t entre −5,0 y −6,8): coincide con el estudio de evidencia.
+- La única señal positiva que se repite en las tres geometrías es la **ruptura de una directriz bajista** (+0,33 %, t +2,1), pero con 104 patrones probados no supera el umbral del mejor de N (3,46).
+- El tamaño del plan fija la **tasa de acierto**: con el plan de la web las figuras alcistas llegan al objetivo el 30 % de las veces, pero entrar al azar con las mismas distancias lo logra el 31 %. La tasa de acierto la decide la geometría, no el patrón.
 
 ## Lista de seguimiento
 
@@ -97,7 +129,7 @@ watchlist.txt         valores que vigila el escaneo diario (editable)
 vp/
   catalog.py          catálogo de patrones: nombre, descripción, regla del plan
   ta.py               indicadores (ATR, medias, RSI…) con NumPy
-  candles.py          30 patrones de velas
+  candles.py          65 formaciones de vela y 4 de consenso
   breakouts.py        13 rupturas y compresiones
   shapes.py           motor geométrico de figuras (swings, rectas por toques, calidad, formación)
   engine.py           junta todo en eventos causales
@@ -105,8 +137,9 @@ vp/
   lab.py              analiza un valor → JSON para la web
   study.py            estudio de evidencia
   planstudy.py        estudio del plan completo (stop y objetivo) frente a entradas al azar
+  ml.py               aprendizaje automático fuera de muestra (contexto, velas, figuras)
   data.py, universe.py   descarga de Yahoo y universos (watchlist.txt)
-data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json, plan_report.txt
+data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json, plan_report.txt, ml_report.txt
 tests/test_vp.py      pruebas (sin red)
 .github/workflows/    scan.yml (L–V 22:45 UTC) · evidence.yml (domingos) · research.yml (manual)
 ```
@@ -120,6 +153,7 @@ python -m vp lab                              # analiza watchlist.txt → data/
 python -m vp lab --symbols AAPL,NVDA          # solo esos valores
 python -m vp study                            # estudio de evidencia (tarda; mejor en Actions)
 python -m vp plan                             # estudio del plan completo con stop y objetivo
+python -m vp ml                               # aprendizaje automático fuera de muestra (necesita scikit-learn)
 python -m http.server                         # abrir http://localhost:8000
 ```
 

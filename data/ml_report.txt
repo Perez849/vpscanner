@@ -1,0 +1,65 @@
+APRENDIZAJE AUTOMÁTICO · 500 acciones · 712,658 filas (las 300 más negociadas) · 2017-04-25 → 2026-10-09 · objetivo: rendimiento relativo a 10 sesiones · 24 variables de contexto y 118 de patrones · entrenamiento: 3 modelos por año con desfases de días
+Validación hacia delante. Años de DESARROLLO (se usan para elegir la configuración): 2020, 2021, 2022, 2023. Años FINALES (se miran una vez, sin retocar nada): 2024, 2025, 2026.
+IC = correlación de rangos diaria entre la puntuación y el rendimiento relativo; «mejor/peor 10 %» = rendimiento relativo medio (bruto) a 10 sesiones del 10 % mejor y peor puntuado; neto = menos el coste; t de Newey–West.
+--- configuración (IC en los años de desarrollo) ---
+  A pequeño    IC +0.0092 (t +0.7) · mejor 10 % +0.217 %
+  B medio      IC +0.0121 (t +1.1) · mejor 10 % +0.275 %
+  C grande     IC +0.0137 (t +1.3) · mejor 10 % +0.317 %   ← elegida
+  D lento      IC +0.0080 (t +0.7) · mejor 10 % +0.252 %
+  E rápido     IC +0.0136 (t +1.3) · mejor 10 % +0.293 %
+
+=== AÑOS FINALES (la cifra que cuenta) ===
+                                        IC      t  +días |  mejor 10%      t    neto |  peor 10% |   spread      t    neto
+--- referencias (control positivo del método) ---
+reversión 5 sesiones (−r5)         +0.0131   +1.1    52% |    +0.426%   +2.2 +0.276% |   +0.296% |  +0.130%   +0.4 -0.170%
+impulso 12-1 meses (r120)          +0.0146   +0.8    56% |    +1.183%   +2.8 +1.033% |   +0.122% |  +1.062%   +1.7 +0.762%
+RSI(2) bajo (−rsi2)                +0.0063   +0.7    49% |    -0.009%   -0.1 -0.159% |   -0.117% |  +0.108%   +0.4 -0.192%
+cerca del máximo anual (pos52)     +0.0148   +0.9    56% |    -0.047%   -0.2 -0.197% |   -0.231% |  +0.185%   +0.5 -0.115%
+baja volatilidad (−atrp)           -0.0442   -1.8    42% |    -0.407%   -1.7 -0.557% |   +1.309% |  -1.716%   -2.6 -2.016%
+azar                               -0.0002   -0.1    50% |    -0.015%   -0.3 -0.165% |   +0.026% |  -0.041%   -0.7 -0.341%
+--- modelos fuera de muestra ---
+ctx                                +0.0241   +1.8    54% |    +0.778%   +2.6 +0.628% |   -0.116% |  +0.894%   +2.3 +0.594%
+ctx+velas                          +0.0257   +1.9    55% |    +0.768%   +2.6 +0.618% |   -0.149% |  +0.917%   +2.4 +0.617%
+ctx+figuras                        +0.0247   +1.8    55% |    +0.755%   +2.6 +0.605% |   -0.188% |  +0.942%   +2.5 +0.642%
+todo                               +0.0238   +1.8    55% |    +0.729%   +2.5 +0.579% |   -0.117% |  +0.846%   +2.2 +0.546%
+
+=== años de desarrollo (con la configuración elegida a la vista: optimista) ===
+                                        IC      t  +días |  mejor 10%      t    neto |  peor 10% |   spread      t    neto
+--- referencias (control positivo del método) ---
+reversión 5 sesiones (−r5)         +0.0018   +0.1    51% |    +0.087%   +0.4 -0.063% |   +0.191% |  -0.104%   -0.3 -0.404%
+impulso 12-1 meses (r120)          +0.0005   +0.0    53% |    +0.380%   +1.7 +0.230% |   +0.134% |  +0.246%   +0.5 -0.054%
+RSI(2) bajo (−rsi2)                +0.0054   +0.5    49% |    +0.113%   +0.8 -0.037% |   -0.040% |  +0.154%   +0.6 -0.146%
+cerca del máximo anual (pos52)     -0.0054   -0.3    52% |    -0.076%   -0.4 -0.226% |   +0.185% |  -0.261%   -0.6 -0.561%
+baja volatilidad (−atrp)           -0.0180   -0.8    50% |    -0.234%   -1.1 -0.384% |   +0.412% |  -0.646%   -1.1 -0.946%
+azar                               -0.0000   -0.0    50% |    +0.038%   +1.2 -0.112% |   -0.008% |  +0.047%   +1.0 -0.253%
+--- modelos fuera de muestra ---
+ctx                                +0.0135   +1.4    53% |    +0.329%   +1.6 +0.179% |   -0.146% |  +0.475%   +1.8 +0.175%
+ctx+velas                          +0.0145   +1.4    53% |    +0.326%   +1.6 +0.176% |   -0.166% |  +0.492%   +1.8 +0.192%
+ctx+figuras                        +0.0132   +1.3    54% |    +0.308%   +1.5 +0.158% |   -0.120% |  +0.427%   +1.5 +0.127%
+todo                               +0.0137   +1.3    53% |    +0.317%   +1.5 +0.167% |   -0.143% |  +0.461%   +1.6 +0.161%
+
+=== todos los años de prueba ===
+                                        IC      t  +días |  mejor 10%      t    neto |  peor 10% |   spread      t    neto
+--- referencias (control positivo del método) ---
+reversión 5 sesiones (−r5)         +0.0064   +0.7    51% |    +0.226%   +1.6 +0.076% |   +0.234% |  -0.008%   -0.0 -0.308%
+impulso 12-1 meses (r120)          +0.0062   +0.5    55% |    +0.708%   +3.2 +0.558% |   +0.129% |  +0.579%   +1.5 +0.279%
+RSI(2) bajo (−rsi2)                +0.0058   +0.8    49% |    +0.063%   +0.6 -0.087% |   -0.072% |  +0.135%   +0.7 -0.165%
+cerca del máximo anual (pos52)     +0.0029   +0.2    54% |    -0.064%   -0.4 -0.214% |   +0.015% |  -0.079%   -0.3 -0.379%
+baja volatilidad (−atrp)           -0.0287   -1.7    47% |    -0.305%   -1.9 -0.455% |   +0.779% |  -1.084%   -2.5 -1.384%
+azar                               -0.0001   -0.1    50% |    +0.017%   +0.6 -0.133% |   +0.006% |  +0.011%   +0.3 -0.289%
+--- modelos fuera de muestra ---
+ctx                                +0.0178   +2.2    53% |    +0.512%   +3.0 +0.362% |   -0.134% |  +0.646%   +2.9 +0.346%
+ctx+velas                          +0.0190   +2.4    53% |    +0.507%   +3.0 +0.357% |   -0.159% |  +0.666%   +2.9 +0.366%
+ctx+figuras                        +0.0179   +2.2    54% |    +0.490%   +2.8 +0.340% |   -0.148% |  +0.638%   +2.8 +0.338%
+todo                               +0.0179   +2.2    54% |    +0.486%   +2.8 +0.336% |   -0.133% |  +0.618%   +2.7 +0.318%
+
+--- IC por año y modelo ---
+ctx           2020:+0.015 2021:+0.015 2022:+0.007 2023:+0.017 2024:+0.008 2025:+0.035 2026:+0.031
+ctx+velas     2020:+0.015 2021:+0.016 2022:+0.006 2023:+0.020 2024:+0.010 2025:+0.035 2026:+0.034
+ctx+figuras   2020:+0.007 2021:+0.020 2022:+0.004 2023:+0.022 2024:+0.010 2025:+0.035 2026:+0.031
+todo          2020:+0.010 2021:+0.017 2022:+0.004 2023:+0.024 2024:+0.009 2025:+0.033 2026:+0.031
+--- mejor 10 % (rendimiento relativo bruto, %) por año y modelo ---
+ctx           2020:+0.57 2021:+0.28 2022:-0.20 2023:+0.67 2024:+0.42 2025:+0.94 2026:+1.03
+ctx+velas     2020:+0.57 2021:+0.25 2022:-0.21 2023:+0.69 2024:+0.43 2025:+0.89 2026:+1.05
+ctx+figuras   2020:+0.42 2021:+0.31 2022:-0.17 2023:+0.68 2024:+0.38 2025:+0.96 2026:+0.98
+todo          2020:+0.47 2021:+0.25 2022:-0.16 2023:+0.71 2024:+0.31 2025:+0.96 2026:+0.97

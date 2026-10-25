@@ -55,8 +55,46 @@ for key, label, d, bars, desc in (
     ('doji_star_bear', 'Estrella doji ↓', -1, 3, 'Estrella de la tarde cuya vela central es un doji.'),
     ('three_inside_up', 'Tres interiores ↑', 1, 3, 'Harami alcista confirmado por un cierre sobre la apertura de la primera vela.'),
     ('three_inside_dn', 'Tres interiores ↓', -1, 3, 'Harami bajista confirmado por un cierre bajo la apertura de la primera vela.'),
+    ('belt_bull', 'Cinturón alcista', 1, 1, 'Vela verde larga que abre en su mínimo tras una caída: los compradores dominan desde la apertura.'),
+    ('belt_bear', 'Cinturón bajista', -1, 1, 'Vela roja larga que abre en su máximo tras una subida: los vendedores dominan desde la apertura.'),
+    ('kicker_bull', 'Kicker alcista', 1, 2, 'Vela verde larga que abre con hueco por encima de la apertura de la roja anterior y no la devuelve: cambio brusco de sentimiento.'),
+    ('kicker_bear', 'Kicker bajista', -1, 2, 'Vela roja larga que abre con hueco por debajo de la apertura de la verde anterior y no la devuelve.'),
+    ('counter_bull', 'Contraataque alcista', 1, 2, 'Tras una vela roja larga, hueco a la baja y cierre exacto en el cierre anterior: los vendedores pierden el hueco.'),
+    ('counter_bear', 'Contraataque bajista', -1, 2, 'Tras una vela verde larga, hueco al alza y cierre exacto en el cierre anterior: los compradores pierden el hueco.'),
+    ('harami_cross_bull', 'Harami cruz alcista', 1, 2, 'Doji contenido en el cuerpo de una vela roja larga tras una caída: la presión vendedora se detiene por completo.'),
+    ('harami_cross_bear', 'Harami cruz bajista', -1, 2, 'Doji contenido en el cuerpo de una vela verde larga tras una subida: la presión compradora se detiene por completo.'),
+    ('homing_pigeon', 'Paloma mensajera', 1, 2, 'Dos velas rojas con la segunda pequeña dentro del cuerpo de la primera: la caída pierde fuerza.'),
+    ('descending_hawk', 'Halcón descendente', -1, 2, 'Dos velas verdes con la segunda pequeña dentro del cuerpo de la primera: la subida pierde fuerza.'),
+    ('matching_low', 'Mínimo coincidente', 1, 2, 'Dos velas rojas que cierran en el mismo nivel tras una caída: soporte que aguanta dos veces.'),
+    ('matching_high', 'Máximo coincidente', -1, 2, 'Dos velas verdes que cierran en el mismo nivel tras una subida: resistencia que aguanta dos veces.'),
+    ('three_outside_up', 'Tres exteriores alcistas', 1, 3, 'Envolvente alcista confirmada por una tercera vela verde que cierra más alto.'),
+    ('three_outside_dn', 'Tres exteriores bajistas', -1, 3, 'Envolvente bajista confirmada por una tercera vela roja que cierra más bajo.'),
+    ('three_strike_bull', 'Tres golpes alcista', 1, 4, 'Tres velas verdes con cierres crecientes y una roja grande que las borra: en tendencia alcista suele ser una pausa, no un giro.'),
+    ('three_strike_bear', 'Tres golpes bajista', -1, 4, 'Tres velas rojas con cierres decrecientes y una verde grande que las borra: en tendencia bajista suele ser una pausa.'),
+    ('abandoned_bull', 'Bebé abandonado alcista', 1, 3, 'Vela roja larga, doji aislado con hueco a ambos lados y vela verde: suelo muy fiable en teoría y muy raro.'),
+    ('abandoned_bear', 'Bebé abandonado bajista', -1, 3, 'Vela verde larga, doji aislado con hueco a ambos lados y vela roja: techo muy fiable en teoría y muy raro.'),
+    ('advance_block', 'Bloqueo de avance', -1, 3, 'Tres velas verdes con cuerpos cada vez más pequeños y sombras superiores crecientes: la subida se agota.'),
+    ('deliberation', 'Deliberación', -1, 3, 'Dos velas verdes largas y una tercera pequeña pegada al máximo: los compradores dudan.'),
+    ('rising_methods', 'Tres métodos alcistas', 1, 5, 'Vela verde larga, tres velas pequeñas dentro de su rango y otra verde que supera el cierre: la tendencia continúa.'),
+    ('falling_methods', 'Tres métodos bajistas', -1, 5, 'Vela roja larga, tres velas pequeñas dentro de su rango y otra roja que pierde el cierre: la tendencia continúa.'),
+    ('tasuki_up', 'Tasuki alcista', 1, 3, 'Hueco al alza entre dos velas verdes y una roja que entra en el hueco sin cerrarlo: continuación alcista.'),
+    ('tasuki_dn', 'Tasuki bajista', -1, 3, 'Hueco a la baja entre dos velas rojas y una verde que entra en el hueco sin cerrarlo: continuación bajista.'),
+    ('two_crows_gap', 'Dos cuervos con hueco', -1, 3, 'Vela verde larga, hueco al alza con una roja y otra roja que la envuelve sin perder el cierre de la verde: techo.'),
+    ('stick_sandwich_bull', 'Sándwich alcista', 1, 3, 'Roja, verde y roja con el mismo cierre que la primera tras una caída: soporte confirmado.'),
+    ('stick_sandwich_bear', 'Sándwich bajista', -1, 3, 'Verde, roja y verde con el mismo cierre que la primera tras una subida: resistencia confirmada.'),
+    ('outside_up', 'Vela exterior alcista', 1, 2, 'Vela verde larga cuyo rango envuelve el de la anterior y cierra sobre su máximo tras una caída.'),
+    ('outside_dn', 'Vela exterior bajista', -1, 2, 'Vela roja larga cuyo rango envuelve el de la anterior y cierra bajo su mínimo tras una subida.'),
+    ('inside_break_up', 'Ruptura de vela interior ↑', 1, 3, 'Una vela cabe dentro de la anterior (compresión) y la siguiente cierra por encima del máximo de la vela madre.'),
+    ('inside_break_dn', 'Ruptura de vela interior ↓', -1, 3, 'Una vela cabe dentro de la anterior (compresión) y la siguiente cierra por debajo del mínimo de la vela madre.'),
 ):
     _add(key, label, d, 'velas', desc, GEN2R, bars)
+for key, label, d, desc in (
+    ('consenso_alcista_2', 'Consenso de velas ↑ (2)', 1, 'Dos o más formaciones de velas alcistas se completan en la misma sesión y ninguna bajista.'),
+    ('consenso_alcista_3', 'Consenso de velas ↑ (3+)', 1, 'Tres o más formaciones de velas alcistas se completan en la misma sesión y ninguna bajista.'),
+    ('consenso_bajista_2', 'Consenso de velas ↓ (2)', -1, 'Dos o más formaciones de velas bajistas se completan en la misma sesión y ninguna alcista.'),
+    ('consenso_bajista_3', 'Consenso de velas ↓ (3+)', -1, 'Tres o más formaciones de velas bajistas se completan en la misma sesión y ninguna alcista.'),
+):
+    _add(key, label, d, 'velas', desc, GEN2R, 1)
 
 for p, nm in ((55, '55 sesiones'), (100, '100 sesiones'), (252, 'un año')):
     _add(f'donch{p}_up', f'Ruptura máx. {nm}' if p != 252 else 'Ruptura máx. anual', 1, 'rupturas', f'El cierre supera el máximo de {nm}.', 'Objetivo genérico de 2R. Stop 1,5 ATR más allá del nivel roto.')
