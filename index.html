@@ -144,6 +144,7 @@ table.ev tr:hover td{background:var(--ink2)}
 .gc h4{margin:0 0 4px;font-size:14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .gc p{margin:4px 0;font-size:12px;color:var(--sub)}
 .gc .rl{font-size:11.5px;border-left:3px solid var(--rule2);padding-left:8px;color:var(--ink)}
+.pathbox{margin:8px 0 2px}.pathbox svg{display:block;width:100%;height:auto}.pathbox .cap{font-size:10.5px;color:var(--sub);line-height:1.4}
 .foot{font-size:11px;color:var(--dim);padding:18px 0 4px;max-width:90ch}
 
 @media (max-width:1250px){.chartwrap{grid-template-columns:minmax(0,1fr) 340px}.rail{display:none}}
@@ -200,6 +201,21 @@ async function J(path) {
 }
 const catOf = k => (S.cat && S.cat.patterns[k]) || {};
 const evOf = k => S.ev && S.ev.patterns ? {all: S.ev.patterns[k], hq: S.ev.patterns[k + ':hq']} : {};
+const pathOf = k => { const P = S.ev && S.ev.paths && S.ev.paths[k]; if (!P) return null; const a = P.K300 && P.K300.n >= 30 ? P.K300 : P.K50 && P.K50.n >= 20 ? P.K50 : null; return a ? {...a, K: P.K300 === a ? 300 : 50} : null; };
+function pathSvg(ps) {
+  if (!ps) return '';
+  const m = ps.m, se = ps.se, n = m.length, W = 300, H = 104, L = 30, R = 6, T = 8, B = 18;
+  const lo = Math.min(0, ...m.map((v, i) => v - 1.96 * (se[i] || 0))), hi = Math.max(0, ...m.map((v, i) => v + 1.96 * (se[i] || 0))), pad = (hi - lo) * 0.08 || 0.1;
+  const x = i => L + i / (n - 1) * (W - L - R), y = v => T + (hi + pad - v) / (hi - lo + 2 * pad) * (H - T - B), up = m[n - 1] >= 0, c = up ? 'var(--emerald)' : 'var(--ember)';
+  const band = m.map((v, i) => `${x(i).toFixed(1)},${y(v + 1.96 * (se[i] || 0)).toFixed(1)}`).concat(m.map((v, i) => `${x(n - 1 - i).toFixed(1)},${y(m[n - 1 - i] - 1.96 * (se[n - 1 - i] || 0)).toFixed(1)}`)).join(' ');
+  const line = m.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const sig = Math.abs(m[n - 1]) > 1.96 * (se[n - 1] || 1e9);
+  return `<div class="pathbox"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Trayectoria media tras el patrón"><line x1="${L}" x2="${W - R}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="var(--dim)" stroke-dasharray="3 3"/>
+    <polygon points="${band}" fill="${c}" opacity=".15"/><polyline points="${line}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/><circle cx="${x(n - 1).toFixed(1)}" cy="${y(m[n - 1]).toFixed(1)}" r="3" fill="${c}"/>
+    <text x="${L - 4}" y="${y(0) + 3}" text-anchor="end" font-size="8" fill="var(--sub)" font-family="var(--f-mono)">0</text><text x="${L}" y="${H - 4}" font-size="8" fill="var(--sub)" font-family="var(--f-mono)">sesión 1</text><text x="${W - R}" y="${H - 4}" text-anchor="end" font-size="8" fill="var(--sub)" font-family="var(--f-mono)">20</text>
+    <text x="${W - R}" y="${Math.max(10, y(m[n - 1]) - 6)}" text-anchor="end" font-size="9" font-weight="700" fill="${c}" font-family="var(--f-mono)">${pc(m[n - 1], 2)}</text></svg>
+    <div class="cap">Qué pasa después: exceso medio del lado operado sobre entrar al azar, de 1 a 20 sesiones (banda del 95 %, ${ps.K} mayores, n=${ps.n}). ${sig ? 'La banda no incluye el cero al final.' : 'La banda incluye el cero: no se distingue del azar.'}</div></div>`;
+}
 const thr = () => (S.ev && S.ev.meta.thr[S.evK].p95) || 3.3;
 
 /* ───────────────────────── arranque y rutas ───────────────────────── */
@@ -396,7 +412,7 @@ function renderGuide() {
     <div class="bar">${seg}<input type="search" id="g-t" placeholder="Buscar" value="${esc(S.gtext || '')}" size="16"></div>
     <div class="gcards">${items.map(([k, p]) => { const e = evOf(k), [vc, vt] = verdictOf(e.all), hqv = e.hq && e.hq.K300 && e.hq.K300.n >= 30 ? e.hq.K300 : null;
       return `<div class="gc"><h4><span class="dot" style="background:${col(p.dir)}"></span>${esc(p.label)}<span class="tag">${FAMS[p.fam]}</span>${p.bars ? `<span class="tag">${p.bars} vela${p.bars > 1 ? 's' : ''}</span>` : ''}</h4>
-        <p>${esc(p.desc)}</p><p class="rl">${esc(p.rule)}</p>${S.ev ? `<div class="verdict ${vc}" style="margin:6px 0 0">${esc(vt)}</div>` : ''}${hqv ? `<p>Solo con calidad ≥ 75: exceso ${pc(hqv.ex, 2)} (t ${hqv.t.toFixed(1)}, n ${hqv.n}).</p>` : ''}</div>`; }).join('')}</div>`;
+        <p>${esc(p.desc)}</p><p class="rl">${esc(p.rule)}</p>${S.ev ? `<div class="verdict ${vc}" style="margin:6px 0 0">${esc(vt)}</div>` : ''}${S.ev ? pathSvg(pathOf(k)) : ''}${hqv ? `<p>Solo con calidad ≥ 75: exceso ${pc(hqv.ex, 2)} (t ${hqv.t.toFixed(1)}, n ${hqv.n}).</p>` : ''}</div>`; }).join('')}</div>`;
   $('#g-f').querySelectorAll('button').forEach(b => b.onclick = () => { S.gfam = b.dataset.v; renderGuide(); });
   $('#g-t').oninput = e => { S.gtext = e.target.value; renderGuide(); const i = $('#g-t'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
 }
@@ -743,7 +759,7 @@ function cardFull(p) {
     ${p.plan.spent ? '<div class="verdict r" style="margin:6px 0"><b>Objetivo consumido:</b> la ruptura ya recorrió casi toda la medida clásica de la figura, así que no queda recorrido hasta el objetivo. No se cuenta como activa.</div>' : ''}<div class="small">${esc(p.note)}</div>${p.conf && p.conf.length ? `<div class="small" style="margin-top:4px"><b>También saltan en esas sesiones</b> (mismo sentido, ±3): ${p.conf.map(esc).join(' · ')}. Suelen medir casi lo mismo: no son confirmaciones independientes.</div>` : ''}${obsTxt(p.plan.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>Qué pasó aquí:</b> ${rt}</div>
     ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'llegó' : 'llegaron'} al objetivo y ${same.length - w} al stop.</div>` : ''}
-    <div class="verdict ${vc}">${S.ev ? 'Estudio: ' + esc(vt) : 'Sin estudio cargado.'}</div>${evLines(e)}</div>`;
+    <div class="verdict ${vc}">${S.ev ? 'Estudio: ' + esc(vt) : 'Sin estudio cargado.'}</div>${S.ev ? pathSvg(pathOf(p.key)) : ''}${evLines(e)}</div>`;
 }
 function candlesToday() {
   const n = S.D.n, t = S.D.patterns.filter(p => p.fam === 'velas' && p.i === n - 1 && !p.key.startsWith('consenso')), u = t.filter(p => p.dir > 0), d = t.filter(p => p.dir < 0);

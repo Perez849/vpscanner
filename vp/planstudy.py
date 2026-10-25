@@ -25,7 +25,9 @@ import numpy as np
 from . import engine, plan as P, study, ta
 from .catalog import CATALOG, HQ
 
-VARIANTS = ('plan', 'tact', 'fix')
+VARIANTS = ('plan', 'tact', 'fix', 'trail3', 'trail5')
+TRAIL = {'trail3': 3.0, 'trail5': 5.0}      # stop que persigue al cierre más alto (o bajo) a N ATR, sin objetivo
+TRAIL_HOLD = 60
 HOLD = P.HOLD
 COST = study.COST
 M = 8                      # entradas al azar por señal y variante
@@ -63,6 +65,31 @@ def sim(o, h, l, c, i: int, d: int, stop: float, target: float, maxb: int = HOLD
     return RES['timeout'], d * (float(c[e + maxb - 1]) / entry - 1.0) * 100.0
 
 
+def sim_trail(o, h, l, c, i: int, d: int, mult: float, a: float, maxb: int = TRAIL_HOLD) -> Optional[Tuple[int, float]]:
+    """Entrada en la apertura de i+1 y stop a `mult` ATR del mejor cierre desde la entrada (solo se acerca, nunca se aleja), sin objetivo; cierre a las `maxb` sesiones.
+    El stop de cada sesión se fija con los cierres anteriores; un hueco más allá del stop sale a la apertura. Devuelve (1 = stop, 2 = cierre por tiempo, rentabilidad %)."""
+    n = len(c)
+    e = i + 1
+    if e + maxb > n:
+        return None
+    entry = float(o[e])
+    cl = c[e:e + maxb - 1]
+    if d > 0:
+        ext = np.maximum.accumulate(np.concatenate([[entry], cl]))[:maxb]
+        stop = np.maximum(ext, entry) - mult * a
+        hit = l[e:e + maxb] <= stop
+    else:
+        ext = np.minimum.accumulate(np.concatenate([[entry], cl]))[:maxb]
+        stop = np.minimum(ext, entry) + mult * a
+        hit = h[e:e + maxb] >= stop
+    if hit.any():
+        k = int(np.argmax(hit))
+        gap = (o[e + k] <= stop[k]) if d > 0 else (o[e + k] >= stop[k])
+        px = float(o[e + k]) if gap else float(stop[k])
+        return 1, d * (px / entry - 1.0) * 100.0
+    return 2, d * (float(c[e + maxb - 1]) / entry - 1.0) * 100.0
+
+
 def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict[str, Tuple[float, float]]]:
     """(stop, objetivo) de cada variante para el evento e."""
     i, name = e['i'], e['name']
@@ -85,7 +112,7 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
     sym, b = args
     F = ta.prepare(b)
     events, _ = engine.scan(F)
-    w = study.work_from(F, events)
+    w = study.work_from(F, events, paths=False)
     o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
     n = len(c)
     rng = np.random.default_rng(zlib.crc32(sym.encode()))
@@ -109,6 +136,24 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
         near = np.abs(lat[pool] - lat[i])                           # entradas al azar con la misma volatilidad relativa (ATR / precio) que la señal
         cand = pool[near <= VOL_BAND] if (near <= VOL_BAND).sum() >= 30 else pool[np.argsort(near)[:30]]
         js = rng.choice(cand, M)
+        for v in TRAIL:
+            m_ = TRAIL[v]
+            r0 = sim_trail(o, h, l, c, i, d, m_, a)
+            if r0 is None:
+                continue
+            rs = []
+            for j in js:
+                rj = sim_trail(o, h, l, c, int(j), d, m_, float(atr[int(j)]))
+                if rj is not None:
+                    rs.append(rj)
+            if len(rs) < M // 2:
+                continue
+            res = np.array([x[0] for x in rs])
+            t = out[v]
+            t['i'].append(i); t['pid'].append(pid); t['hq'].append(hq); t['ret'].append(r0[1] - COST); t['res'].append(r0[0])
+            t['base'].append(float(np.mean([x[1] for x in rs])) - COST)
+            t['bt'].append(0.0); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
+            t['ra'].append(m_); t['rw'].append(0.0)
         for v, (stop, tgt) in gm.items():
             r0 = sim(o, h, l, c, i, d, stop, tgt)
             if r0 is None:
@@ -225,7 +270,8 @@ def report(ev: Dict) -> str:
         L.append('CALIBRACIÓN con paseos aleatorios (sin ventaja posible; el exceso que salga aquí es sesgo del método y hay que descontarlo): ' +
                  ' · '.join(f"{v}: {c['ex']:+.2f} % (t {c['t']:+.1f}, n {c['n']})" for v, c in ev['calibration'].items()))
     L.append(f"ESTUDIO DEL PLAN · {m['universe']} acciones · {m['bars']:,} barras · {m['from']} → {m['to']} · coste {m['cost']} % · cierre a {m['hold']} sesiones · {m['random_entries']} entradas al azar por señal")
-    desc = {'plan': 'PLAN: stop estructural y objetivo clásico (lo que dibuja la web)', 'tact': 'TÁCTICO: stop de 1,5 ATR y el objetivo clásico', 'fix': f"FIJO: stop {m['fix'][0]} ATR y objetivo {m['fix'][1]} ATR para todos los patrones"}
+    desc = {'trail3': 'STOP QUE PERSIGUE a 3 ATR del mejor cierre, sin objetivo, hasta 60 sesiones', 'trail5': 'STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones',
+            'plan': 'PLAN: stop estructural y objetivo clásico (lo que dibuja la web)', 'tact': 'TÁCTICO: stop de 1,5 ATR y el objetivo clásico', 'fix': f"FIJO: stop {m['fix'][0]} ATR y objetivo {m['fix'][1]} ATR para todos los patrones"}
     for K in m['ks']:
         for v in m['variants']:
             if v not in ev['pooled']:

@@ -28,6 +28,7 @@ PRIMARY = 10
 COST = 0.15
 MEM_WINDOW = 60
 MIN_EVENTS = 20
+PATH = 20                  # sesiones de la trayectoria media que se dibuja tras cada patrón
 
 
 def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
@@ -38,7 +39,7 @@ def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
     return sym, work_from(F, events)
 
 
-def work_from(F: Dict[str, np.ndarray], events: List[Dict]) -> Dict:
+def work_from(F: Dict[str, np.ndarray], events: List[Dict], paths: bool = True) -> Dict:
     """Lo mismo que _work pero con los indicadores y los eventos ya calculados (el estudio del plan reutiliza el escaneo)."""
     n = len(F['c'])
     o, c = F['o'], F['c']
@@ -61,7 +62,14 @@ def work_from(F: Dict[str, np.ndarray], events: List[Dict]) -> Dict:
         idx.setdefault(e['name'], []).append(e['i'])
         if e['q'] is not None and e['q'] >= HQ:
             idx.setdefault(e['name'] + ':hq', []).append(e['i'])
-    return {'t': (F['t'] // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
+    out = {'t': (F['t'] // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
+    if paths:                                                   # rendimiento acumulado de 1 a PATH sesiones desde la apertura siguiente (para dibujar qué pasa después)
+        pa = np.full((n, PATH), np.nan, dtype=np.float32)
+        for k in range(1, PATH + 1):
+            if n > k + 1:
+                pa[:n - k, k - 1] = (c[k:] / entry[:n - k] - 1.0) * 100.0
+        out['path'] = pa
+    return out
 
 
 class Panel:
@@ -92,12 +100,22 @@ class Panel:
             r = np.concatenate([work[s]['ret'][hz] for s in self.syms])
             self.ret[('long', hz)] = r - cost
             self.ret[('short', hz)] = -r - cost
+        self.path = np.vstack([work[s]['path'] for s in self.syms]) if all('path' in work[s] for s in self.syms) else None
         self.ev: Dict[str, np.ndarray] = {}
         for j, s in enumerate(self.syms):
             for k, ix in work[s]['idx'].items():
                 self.ev.setdefault(k, []).append(ix + self.off[j])                           # type: ignore[arg-type]
         self.ev = {k: np.concatenate(v) for k, v in self.ev.items()}
         ny = int(self.year.max()) - self.y0 + 1
+        self.pbase: Dict[int, np.ndarray] = {}                      # trayectoria media de las barras del universo móvil por año
+        if self.path is not None:
+            for K in ks:
+                pb = np.full((ny, PATH), np.nan)
+                for y in range(ny):
+                    m = self.mem[K] & (self.year - self.y0 == y)
+                    if m.sum() > 20:
+                        pb[y] = np.nanmean(self.path[m], axis=0)
+                self.pbase[K] = pb
         self.base: Dict[Tuple, np.ndarray] = {}
         for K in ks:
             for key, r in self.ret.items():
@@ -133,6 +151,34 @@ class Panel:
                 pos += int(ex[m].mean() > 0)
         return {'n': int(ok.sum()), 'wr': float((x > 0).mean() * 100), 'mean': float(x.mean()), 'med': float(np.median(x)), 'ex': float(ex.mean()),
                 't': self.t_cluster(ex, self.dcode[i2]), 'pos': pos, 'tot': tot}
+
+    def se_cluster(self, ex: np.ndarray, code: np.ndarray) -> float:
+        """Error estándar de la media con agrupación por día (el denominador de t_cluster)."""
+        n = len(ex)
+        if n < 5:
+            return float('nan')
+        m = ex.mean()
+        s = np.bincount(code, weights=ex, minlength=self.ndays)
+        k = np.bincount(code, minlength=self.ndays)
+        return float(np.sqrt(((s - m * k) ** 2).sum()) / n)
+
+    def path_stat(self, idx: np.ndarray, K: int, side: str) -> Optional[Dict]:
+        """Trayectoria media (sesiones 1..PATH, %) del lado operado menos la del universo ese año, con su error estándar agrupado por día."""
+        if self.path is None or K not in self.pbase:
+            return None
+        sg = 1.0 if side == 'long' else -1.0
+        ok = self.mem[K][idx]
+        if ok.sum() < 5:
+            return None
+        i2 = idx[ok]
+        ex = sg * (self.path[i2] - self.pbase[K][self.year[i2] - self.y0])
+        mean, se = np.full(PATH, np.nan), np.full(PATH, np.nan)
+        for k in range(PATH):
+            f = np.isfinite(ex[:, k])
+            if f.sum() >= 5:
+                mean[k] = ex[f, k].mean()
+                se[k] = self.se_cluster(ex[f, k], self.dcode[i2][f])
+        return {'m': [round(float(x), 3) for x in mean], 'se': [round(float(x), 3) for x in se], 'n': int(ok.sum())}
 
     def null_max_t(self, K: int, reps: int, seed: int = 5) -> np.ndarray:
         """Distribución del mayor |t| entre todos los patrones cuando las señales de cada valor se desplazan en el tiempo (circularmente y al azar)."""
@@ -181,7 +227,7 @@ def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = 
     out: Dict = {'meta': {'generated': int(time.time()), 'universe': len(P.syms), 'bars': int(len(P.dayv)), 'from': str(np.datetime64(int(P.dayv.min()), 'D')), 'to': str(np.datetime64(int(P.dayv.max()), 'D')),
                           'cost': P.cost, 'primary': PRIMARY, 'horizons': list(HORIZONS), 'ks': list(ks), 'hq': HQ, 'thr': {}, 'tested': {}, 'min_events': MIN_EVENTS,
                           'note': 'Universo = miembros actuales del S&P 500 y del Nasdaq-100: sesgo de supervivencia que favorece a los largos.'},
-                 'baseline': {}, 'patterns': {}}
+                 'baseline': {}, 'patterns': {}, 'paths': {}}
     for K in ks:
         null = P.null_max_t(K, reps)
         out['meta']['thr'][f'K{K}'] = {'p95': round(float(np.quantile(null, 0.95)), 2), 'p99': round(float(np.quantile(null, 0.99)), 2), 'bars': int(P.mem[K].sum())}
@@ -200,6 +246,10 @@ def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = 
                         if 'ex' in sh:
                             s[f'h{hz}'] = {'ex': round(sh['ex'], 3), 't': round(sh['t'], 2), 'mean': round(sh['mean'], 3)}
                 rec[f'K{K}'] = {a: (round(b, 3) if isinstance(b, float) else b) for a, b in s.items()}
+                if not rec['hq']:
+                    ps = P.path_stat(v, K, side)
+                    if ps:
+                        out['paths'].setdefault(k, {})[f'K{K}'] = ps
         out['patterns'][k] = rec
     for K in ks:
         rows = [(k, r[f'K{K}']) for k, r in out['patterns'].items() if f'K{K}' in r and r[f'K{K}'].get('n', 0) >= MIN_EVENTS and 'ex' in r[f'K{K}']]

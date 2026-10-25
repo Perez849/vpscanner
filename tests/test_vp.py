@@ -483,10 +483,17 @@ def test_study_mechanics():
         r = w['ret'][10].copy()
         r[idx] += 3.0
         w['ret'][10] = r
+        pa = w['path'].copy()
+        pa[idx, 9:] += 3.0                                      # el efecto plantado también aparece en la trayectoria desde la sesión 10
+        w['path'] = pa
         work2[f'S{j}'] = w
     P2 = study.Panel(work2, ks=(8,))
     st = P2.stat(P2.ev['hammer'], 8, 'long', 10)
     assert st['n'] > 500 and st['ex'] > 2.5 and st['t'] > 10, st
+    ps = P2.path_stat(P2.ev['hammer'], 8, 'long')
+    assert abs(ps['m'][9] - 3.0) < 0.4 and abs(ps['m'][0]) < 0.4 and ps['se'][9] > 0 and len(ps['m']) == study.PATH, ps
+    ps_s = P2.path_stat(P2.ev['hammer'], 8, 'short')
+    assert ps_s['m'][9] < -2.5                                  # en corto el mismo efecto cuenta al revés
     print(f'ok · estudio: t por clústeres exacta y ventaja plantada de +3 % detectada (t = {st["t"]:.0f})')
 
 
@@ -523,13 +530,22 @@ def test_plan_study():
                 continue
             tot += 1
             assert {'target': 0, 'stop': 1, 'timeout': 2}[r['res']] == s1[0] and abs(s1[1] - r['ret']) < 1e-2, (s1, r)
+    # stop que persigue: sube, y al caer sale a 3 ATR del mejor cierre (a 127 si el máximo fue 130); en corto, sin tocarse, cierra por tiempo
+    n_ = 200
+    cc = np.concatenate([np.linspace(100, 130, 60), np.linspace(130, 90, 140)])
+    oo, hh, ll = np.concatenate([[100.0], cc[:-1]]), cc + 0.5, cc - 0.5
+    res_l = planstudy.sim_trail(oo, hh, ll, cc, 10, 1, 3.0, 1.0)
+    assert res_l[0] == 1 and abs(res_l[1] - (127.0 / oo[11] - 1) * 100) < 1e-6, res_l
+    res_s = planstudy.sim_trail(oo, hh, ll, cc, 100, -1, 3.0, 1.0)
+    assert res_s[0] == 2 and abs(res_s[1] - (1 - cc[160] / oo[101]) * 100) < 1e-6, res_s
+    assert planstudy.sim_trail(oo, hh, ll, cc, n_ - 30, 1, 3.0, 1.0) is None                      # sin sesiones suficientes: no se opera
     bars = {f'S{j}': walk(1500, seed=700 + j, t0=1500000000) for j in range(24)}
     ev = planstudy.analyze_plan(bars, ks=(24,), workers=1)
     assert set(ev['pooled']) == set(planstudy.VARIANTS) and ev['meta']['universe'] == 24
     for v in planstudy.VARIANTS:
         s = ev['pooled'][v]['K24']['todos']
         assert s['n'] > 1500 and abs(s['ex']) < 0.6 and abs(s['t']) < 6, (v, s)           # sin ventaja posible: el exceso queda cerca de 0
-        assert 0 < s['tgt'] < 100 and abs(s['tgt'] + s['stp'] + s['tmo'] - 100) < 0.05
+        assert (0 < s['tgt'] < 100 or v.startswith('trail')) and abs(s['tgt'] + s['stp'] + s['tmo'] - 100) < 0.05      # con stop que persigue no hay objetivo
     txt = planstudy.report(ev)
     assert 'PLAN:' in txt and 'FIJO' in txt
     print(f'ok · estudio del plan: simulador idéntico a plan.outcome ({tot} casos) y sin ventaja sobre paseos aleatorios')
