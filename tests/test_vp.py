@@ -555,13 +555,16 @@ def test_ml_pipeline():
     fast = dict(max_iter=40, learning_rate=0.1, max_leaf_nodes=8, min_samples_leaf=200, l2_regularization=10.0, max_bins=32, random_state=0)
     kw = dict(workers=1, test_years=[2020, 2021], k=60, groups=('ctx',), min_train=3000, min_rows=2000, params=fast)
     ev = ml.analyze({f'S{j}': _walk_ar(1500, 100 + j, 0.08) for j in range(60)}, **kw)
-    s = ev['modelos']['ctx']
-    assert s['ic'] > 0.08 and s['ic_t'] > 8 and s['top'] > 0.4 and ev['base']['reversión 5 sesiones (−r5)']['ic_t'] > 8, (s, ev['base'])
-    assert abs(ev['base']['azar']['ic_t']) < 3.5
+    s = ev['modelos']['ctx']['todo']
+    assert s['ic'] > 0.08 and s['ic_t'] > 8 and s['top'] > 0.4 and ev['base']['reversión 5 sesiones (−r5)']['todo']['ic_t'] > 8, (s, ev['base'])
+    assert abs(ev['base']['azar']['todo']['ic_t']) < 3.5
     ev0 = ml.analyze({f'S{j}': _walk_ar(1500, 300 + j, 0.0) for j in range(60)}, **kw)
-    s0 = ev0['modelos']['ctx']
+    s0 = ev0['modelos']['ctx']['todo']
     assert abs(s0['ic']) < 0.02 and abs(s0['ic_t']) < 3.5, s0                                  # sin efecto no hay IC: el modelo no se inventa nada
-    assert abs(ml.nw_t(np.random.default_rng(0).normal(0.3, 1, 400)) - 0.3 * 20) < 3 and 'validación hacia delante' in ml.report(ev)
+    assert abs(ml.nw_t(np.random.default_rng(0).normal(0.3, 1, 400)) - 0.3 * 20) < 3 and 'años de desarrollo' in ml.report(ev)
+    g2 = {'p': dict(fast, max_iter=20), 'q': dict(fast, max_leaf_nodes=4)}
+    ev2 = ml.analyze({f'S{j}': _walk_ar(1500, 100 + j, 0.08) for j in range(60)}, **dict(kw, params=None, grid=g2, dev_end=2020, train_stride=2))
+    assert ev2['seleccion']['elegida'] in g2 and ev2['meta']['dev_years'] == [2020] and ev2['meta']['final_years'] == [2021] and ev2['modelos']['ctx']['final']['ic'] > 0.08 and 'AÑOS FINALES' in ml.report(ev2)
     print(f'ok · aprendizaje automático: reversión plantada detectada fuera de muestra (IC {s["ic"]:+.3f}, t {s["ic_t"]:.0f}) y nada en paseos aleatorios (IC {s0["ic"]:+.3f})')
 
 

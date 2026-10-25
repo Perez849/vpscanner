@@ -36,8 +36,16 @@ MEM_WINDOW = 60
 RECENT = 5                 # una figura o ruptura cuenta durante 5 sesiones
 PARAMS = dict(max_iter=200, learning_rate=0.05, max_leaf_nodes=15, min_samples_leaf=1000, l2_regularization=10.0, max_bins=64, random_state=0)   # fijados de antemano
 GROUPS = ('ctx', 'ctx+velas', 'ctx+figuras', 'todo')
+GRID = {                                                                   # 5 configuraciones fijadas de antemano; se elige UNA con los años de desarrollo
+    'A pequeño': dict(max_iter=100, learning_rate=0.05, max_leaf_nodes=8, min_samples_leaf=2000, l2_regularization=10.0, max_bins=64, random_state=0),
+    'B medio': dict(max_iter=200, learning_rate=0.05, max_leaf_nodes=15, min_samples_leaf=1000, l2_regularization=10.0, max_bins=64, random_state=0),
+    'C grande': dict(max_iter=300, learning_rate=0.03, max_leaf_nodes=31, min_samples_leaf=500, l2_regularization=10.0, max_bins=64, random_state=0),
+    'D lento': dict(max_iter=300, learning_rate=0.03, max_leaf_nodes=8, min_samples_leaf=3000, l2_regularization=30.0, max_bins=64, random_state=0),
+    'E rápido': dict(max_iter=100, learning_rate=0.1, max_leaf_nodes=15, min_samples_leaf=1000, l2_regularization=10.0, max_bins=64, random_state=0),
+}
+DEV_END = 2023                                                             # años de prueba hasta aquí = desarrollo (se usan para elegir); después = final (se mira una sola vez)
 
-CTX = ['r1', 'r5', 'r10', 'r20', 'r60', 'r120', 'rsi2', 'rsi14', 'dist20', 'dist50', 'dist200', 'slope50', 'pos52', 'dd252', 'atrp', 'volrel', 'dvol', 'rvol',
+CTX = ['r1', 'r5', 'r10', 'r20', 'r60', 'r120', 'r250', 'mom12_1', 'rsi2', 'rsi14', 'dist20', 'dist50', 'dist200', 'slope50', 'pos52', 'dd252', 'atrp', 'volrel', 'dvol', 'rvol',
        'gap', 'rng', 'body', 'clpos']
 
 
@@ -55,7 +63,7 @@ def _ctx(F: Dict[str, np.ndarray]) -> np.ndarray:
         r1 = r(1)
         rv = ta.rstd(np.nan_to_num(r1), 20)
         cols = {
-            'r1': r1, 'r5': r(5), 'r10': r(10), 'r20': r(20), 'r60': r(60), 'r120': r(120), 'rsi2': F['rsi2'], 'rsi14': F['rsi14'],
+            'r1': r1, 'r5': r(5), 'r10': r(10), 'r20': r(20), 'r60': r(60), 'r120': r(120), 'r250': r(250), 'mom12_1': shift(lc, 20) - shift(lc, 250), 'rsi2': F['rsi2'], 'rsi14': F['rsi14'],
             'dist20': c / F['sma20'] - 1, 'dist50': c / F['sma50'] - 1, 'dist200': c / F['sma200'] - 1, 'slope50': F['sma50'] / shift(F['sma50'], 10) - 1,
             'pos52': F['pos52'], 'dd252': c / ta.rmax(h, 252) - 1, 'atrp': F['atrp'], 'volrel': np.log(v / v20), 'dvol': np.log(ta.sma(dv, 60)),
             'rvol': rv / (F['atrp'] / 100.0), 'gap': o / shift(c, 1) - 1, 'rng': rng / atr, 'body': (c - o) / atr, 'clpos': np.where(rng > 0, (c - l) / rng, 0.5),
@@ -211,23 +219,27 @@ def summarize(dm: Dict[str, np.ndarray], mask_days: np.ndarray, cost: float = CO
             'spread': float(spread.mean()), 'spread_t': nw_t(spread), 'spread_neto': float(spread.mean() - 2 * cost)}
 
 
-def walk_forward(D: Data, group: str, test_years: List[int], params: Optional[Dict] = None, train_stride: int = 2, verbose: bool = False, min_train: int = 50000) -> np.ndarray:
+def walk_forward(D: Data, group: str, test_years: List[int], params: Optional[Dict] = None, train_stride: int = 3, verbose: bool = False, min_train: int = 50000) -> np.ndarray:
     """Puntuación fuera de muestra de cada fila de los años de prueba (NaN en el resto)."""
     from sklearn.ensemble import HistGradientBoostingRegressor
     X, _ = D.matrix(group)
     pred = np.full(len(D.y), np.nan, dtype=np.float32)
     for Y in test_years:
         cut = np.datetime64(f'{Y}-01-01') - np.timedelta64(15, 'D')
-        tr = (D.date[D.dcode] < cut) & (D.dcode % train_stride == 0)
+        past = D.date[D.dcode] < cut
         te = D.year == Y
-        if tr.sum() < min_train or te.sum() == 0:
+        if (past & (D.dcode % train_stride == 0)).sum() < min_train or te.sum() == 0:
             continue
         t0 = time.time()
-        m = HistGradientBoostingRegressor(**(params or PARAMS))
-        m.fit(X[tr], D.y[tr])
-        pred[te] = m.predict(X[te])
+        acc = np.zeros(int(te.sum()))
+        for off in range(train_stride):                              # un modelo por desfase de días de entrenamiento: entre todos usan todas las filas
+            tr = past & (D.dcode % train_stride == off)
+            m = HistGradientBoostingRegressor(**(params or PARAMS))
+            m.fit(X[tr], D.y[tr])
+            acc += m.predict(X[te])
+        pred[te] = acc / train_stride
         if verbose:
-            print(f'    {group} · {Y}: entrena {int(tr.sum()):,} filas, predice {int(te.sum()):,} · {time.time() - t0:.0f}s', flush=True)
+            print(f'    {group} · {Y}: {train_stride} modelos con {int(past.sum()):,} filas, predice {int(te.sum()):,} · {time.time() - t0:.0f}s', flush=True)
     return pred
 
 
@@ -238,8 +250,17 @@ def baselines(D: Data, mask_rows: np.ndarray) -> Dict[str, np.ndarray]:
             'cerca del máximo anual (pos52)': D.X_ctx[:, j['pos52']], 'baja volatilidad (−atrp)': -D.X_ctx[:, j['atrp']], 'azar': np.random.default_rng(0).random(len(D.y))}
 
 
+def _days(D: Data, years: List[int]) -> np.ndarray:
+    m = np.zeros(D.nd, bool)
+    if years:
+        m[np.unique(D.dcode[np.isin(D.year, years)])] = True
+    return m
+
+
 def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, test_years: Optional[List[int]] = None, params: Optional[Dict] = None, verbose: bool = False,
-            k: int = K, groups: Tuple[str, ...] = GROUPS, train_stride: int = 2, min_train: int = 50000, min_rows: int = 20000) -> Dict:
+            k: int = K, groups: Tuple[str, ...] = GROUPS, train_stride: int = 3, min_train: int = 50000, min_rows: int = 20000, grid: Optional[Dict[str, Dict]] = None,
+            dev_end: int = DEV_END) -> Dict:
+    """Panel → resultados fuera de muestra. Si se da `grid`, la configuración se elige con los años de desarrollo (≤ dev_end) y se juzga en los posteriores."""
     t0 = time.time()
     jobs = [(s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}) for s, b in bars.items() if len(b['c']) > 400]
     work: Dict[str, Dict] = {}
@@ -257,25 +278,37 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, test_years
     years = sorted(set(int(y) for y in np.unique(D.year)))
     if test_years is None:
         test_years = [y for y in years if y >= years[0] + 3 and int((D.year == y).sum()) > min_rows]
+    dev_years = [y for y in test_years if y <= dev_end]
+    fin_years = [y for y in test_years if y > dev_end]
     out: Dict = {'meta': {'generated': int(time.time()), 'universe': len(D.syms), 'filas': int(len(D.y)), 'fechas': int(D.nd), 'from': str(D.date[0]), 'to': str(D.date[-1]), 'k': k,
-                          'horizonte': HZ, 'coste': COST, 'test_years': test_years, 'params': params or PARAMS, 'variables': {'contexto': len(CTX), 'patrones': len(D.pnames)}},
-                 'modelos': {}, 'base': {}, 'por_año': {}}
+                          'horizonte': HZ, 'coste': COST, 'test_years': test_years, 'dev_years': dev_years, 'final_years': fin_years,
+                          'variables': {'contexto': len(CTX), 'patrones': len(D.pnames)}, 'entrenamiento': f'{train_stride} modelos por año con desfases de días'},
+                 'seleccion': {}, 'modelos': {}, 'base': {}, 'por_año': {}}
+    if grid and params is None:
+        sel = {}
+        for name, pr in grid.items():
+            pred = walk_forward(D, 'todo', dev_years, pr, train_stride=train_stride, verbose=False, min_train=min_train)
+            ok = np.isfinite(pred)
+            sel[name] = summarize(daily_metrics(pred[ok], D.dcode[ok], D.rel[ok], D.nd), _days(D, dev_years))
+            if verbose:
+                print(f'    configuración {name}: IC desarrollo {sel[name]["ic"]:+.4f} (t {sel[name]["ic_t"]:+.1f}) · mejor 10 % {sel[name]["top"]:+.3f} % · {time.time() - t0:.0f}s', flush=True)
+        best = max(sel, key=lambda n: sel[n]['ic'])
+        params = grid[best]
+        out['seleccion'] = {'resultados_en_desarrollo': sel, 'elegida': best}
+    params = params or PARAMS
+    out['meta']['params'] = params
+    spans = {'desarrollo': _days(D, dev_years), 'final': _days(D, fin_years), 'todo': _days(D, test_years)}
     test_rows = np.isin(D.year, test_years)
-    day_mask = np.zeros(D.nd, bool)
-    day_mask[np.unique(D.dcode[test_rows])] = True
+    both = lambda dm: {n: (summarize(dm, m) if m.any() else None) for n, m in spans.items()}
     for name, score in baselines(D, test_rows).items():
-        sc = np.where(test_rows, score, np.nan)
-        out['base'][name] = summarize(daily_metrics(np.nan_to_num(sc, nan=0.0)[test_rows], D.dcode[test_rows], D.rel[test_rows], D.nd), day_mask)
+        sc = np.nan_to_num(score, nan=0.0)
+        out['base'][name] = both(daily_metrics(sc[test_rows], D.dcode[test_rows], D.rel[test_rows], D.nd))
     for g in groups:
         pred = walk_forward(D, g, test_years, params, train_stride=train_stride, verbose=verbose, min_train=min_train)
         ok = np.isfinite(pred)
         dm = daily_metrics(pred[ok], D.dcode[ok], D.rel[ok], D.nd)
-        out['modelos'][g] = summarize(dm, day_mask)
-        out['por_año'][g] = {}
-        for Y in test_years:
-            mk = np.zeros(D.nd, bool)
-            mk[np.unique(D.dcode[D.year == Y])] = True
-            out['por_año'][g][str(Y)] = summarize(dm, mk)
+        out['modelos'][g] = both(dm)
+        out['por_año'][g] = {str(Y): summarize(dm, _days(D, [Y])) for Y in test_years}
     if verbose:
         print(f'  aprendizaje automático: {len(D.y):,} filas · {time.time() - t0:.0f}s', flush=True)
     return out
@@ -284,17 +317,23 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, test_years
 def report(ev: Dict) -> str:
     m = ev['meta']
     L = [f"APRENDIZAJE AUTOMÁTICO · {m['universe']} acciones · {m['filas']:,} filas (las {m['k']} más negociadas) · {m['from']} → {m['to']} · objetivo: rendimiento relativo a {m['horizonte']} sesiones · "
-         f"validación hacia delante en {', '.join(map(str, m['test_years']))} · {m['variables']['contexto']} variables de contexto y {m['variables']['patrones']} de patrones",
-         'IC = correlación de rangos diaria entre la puntuación y el rendimiento relativo; «mejor/peor 10 %» = rendimiento relativo medio (bruto) de las acciones mejor y peor puntuadas; t de Newey–West.',
-         f"{'':34s}{'IC':>8s}{'t':>7s}{'+días':>7s} | {'mejor 10%':>10s}{'t':>7s}{'neto':>8s} | {'peor 10%':>9s} | {'spread':>8s}{'t':>7s}{'neto':>8s}"]
+         f"{m['variables']['contexto']} variables de contexto y {m['variables']['patrones']} de patrones · entrenamiento: {m['entrenamiento']}",
+         f"Validación hacia delante. Años de DESARROLLO (se usan para elegir la configuración): {', '.join(map(str, m['dev_years'])) or '—'}. Años FINALES (se miran una vez, sin retocar nada): {', '.join(map(str, m['final_years'])) or '—'}.",
+         'IC = correlación de rangos diaria entre la puntuación y el rendimiento relativo; «mejor/peor 10 %» = rendimiento relativo medio (bruto) a 10 sesiones del 10 % mejor y peor puntuado; neto = menos el coste; t de Newey–West.']
+    if ev.get('seleccion'):
+        L.append('--- configuración (IC en los años de desarrollo) ---')
+        for n, s in ev['seleccion']['resultados_en_desarrollo'].items():
+            L.append(f"  {n:12s} IC {s['ic']:+.4f} (t {s['ic_t']:+.1f}) · mejor 10 % {s['top']:+.3f} %" + ('   ← elegida' if n == ev['seleccion']['elegida'] else ''))
+    head = f"{'':34s}{'IC':>8s}{'t':>7s}{'+días':>7s} | {'mejor 10%':>10s}{'t':>7s}{'neto':>8s} | {'peor 10%':>9s} | {'spread':>8s}{'t':>7s}{'neto':>8s}"
     row = lambda n, s: f"{n:34s}{s['ic']:+8.4f}{s['ic_t']:+7.1f}{s['ic_pos']:6.0f}% | {s['top']:+9.3f}%{s['top_t']:+7.1f}{s['top_neto']:+7.3f}% | {s['bot']:+8.3f}% | {s['spread']:+7.3f}%{s['spread_t']:+7.1f}{s['spread_neto']:+7.3f}%"
-    L.append('--- referencias (control positivo del método) ---')
-    for n, s in ev['base'].items():
-        L.append(row(n, s))
-    L.append('--- modelos (fuera de muestra) ---')
-    for n, s in ev['modelos'].items():
-        L.append(row(n, s))
-    L.append('--- IC por año y modelo ---')
+    for span, title in (('final', 'AÑOS FINALES (la cifra que cuenta)'), ('desarrollo', 'años de desarrollo (con la configuración elegida a la vista: optimista)'), ('todo', 'todos los años de prueba')):
+        if not any(v.get(span) for v in ev['modelos'].values()):
+            continue
+        L += ['', f'=== {title} ===', head, '--- referencias (control positivo del método) ---']
+        L += [row(n, v[span]) for n, v in ev['base'].items() if v.get(span)]
+        L.append('--- modelos fuera de muestra ---')
+        L += [row(n, v[span]) for n, v in ev['modelos'].items() if v.get(span)]
+    L += ['', '--- IC por año y modelo ---']
     for n, ys in ev['por_año'].items():
         L.append(f'{n:14s}' + ' '.join(f"{y}:{s['ic']:+.3f}" for y, s in ys.items()))
     L.append('--- mejor 10 % (rendimiento relativo bruto, %) por año y modelo ---')
@@ -308,7 +347,7 @@ def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[
     bars, failed = data.fetch_many(symbols, rng=rng, workers=4, cache_dir=cache_dir, max_age_h=24 * 3, verbose=True)
     if len(bars) < 0.9 * len(symbols):
         raise SystemExit(f'solo {len(bars)} de {len(symbols)} valores descargados (Yahoo limita las peticiones): se detiene; lo ya descargado queda en la caché')
-    ev = analyze(bars, workers=workers, verbose=True, train_stride=3)
+    ev = analyze(bars, workers=workers, verbose=True, grid=GRID)
     os.makedirs(out_dir, exist_ok=True)
     json.dump(ev, open(os.path.join(out_dir, 'ml.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     txt = report(ev)
