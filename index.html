@@ -744,6 +744,12 @@ function cardFull(p) {
     ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'llegó' : 'llegaron'} al objetivo y ${same.length - w} al stop.</div>` : ''}
     <div class="verdict ${vc}">${S.ev ? 'Estudio: ' + esc(vt) : 'Sin estudio cargado.'}</div>${evLines(e)}</div>`;
 }
+function candlesToday() {
+  const n = S.D.n, t = S.D.patterns.filter(p => p.fam === 'velas' && p.i === n - 1 && !p.key.startsWith('consenso')), u = t.filter(p => p.dir > 0), d = t.filter(p => p.dir < 0);
+  if (!t.length) return 'ninguna formación completa';
+  const nm = a => a.map(p => esc(p.label)).join(', ');
+  return `${u.length ? `<span style="color:var(--emerald)">▲ ${u.length}: ${nm(u)}</span>` : ''}${u.length && d.length ? '<br>' : ''}${d.length ? `<span style="color:var(--ember)">▼ ${d.length}: ${nm(d)}</span>` : ''}<br><span class="small">${u.length >= 2 && !d.length ? 'Consenso alcista' : d.length >= 2 && !u.length ? 'Consenso bajista' : u.length && d.length ? 'Señales contrarias: sin consenso' : 'Una sola formación'}</span>`;
+}
 function reading() {
   const D = S.D, sm = D.summary, c = sm.close, n = D.n, s50 = D.sma50[n - 1], s200 = D.sma200[n - 1];
   const trend = s50 == null ? '—' : (c > s50 && s50 > (s200 ?? 0)) ? 'alcista (precio sobre la media de 50 y esta sobre la de 200)' : c < s50 && s50 < (s200 ?? 1e9) ? 'bajista (precio bajo la media de 50 y esta bajo la de 200)' : 'mixta';
@@ -753,6 +759,7 @@ function reading() {
   return `<h3>${S.sym} · lectura</h3><div class="kv"><span>Tendencia</span><span>${trend}</span><span>Cierre</span><span>${fx(c)}</span><span>Media 50 / 200</span><span>${fx(s50)} / ${fx(s200)}</span>
     <span>Distancia a la media 200</span><span>${sm.dist200 == null ? '—' : pc(sm.dist200)}</span><span>Rango anual</span><span>${sm.pos52 == null ? '—' : (sm.pos52 * 100).toFixed(0) + ' % (0 = mínimo, 100 = máximo)'}</span>
     <span>RSI(14) / RSI(2)</span><span>${sm.rsi14} / ${sm.rsi2}</span><span>ATR (14)</span><span>${fx(sm.atr)} · ${sm.atrp} % del precio</span>
+    <span>Velas de la última sesión</span><span>${candlesToday()}</span>
     <span>Resistencia más cercana</span><span>${up ? fx(up.p) + ' (' + pc((up.p / c - 1) * 100) + ', ' + up.touches + ' toques)' : '—'}</span><span>Soporte más cercano</span><span>${dn ? fx(dn.p) + ' (' + pc((dn.p / c - 1) * 100) + ', ' + dn.touches + ' toques)' : '—'}</span></div>
     <h3 style="margin-top:12px">Qué pasó con los patrones de este valor</h3>
     <div class="small">${done.length} patrones llegaron a su objetivo o a su stop en los últimos ${n} días: <b>${won}</b> al objetivo y <b>${done.length - won}</b> al stop (${done.length ? (won / done.length * 100).toFixed(0) : '—'} %). Con un R:R de 2 hace falta acertar más del 33 % para no perder, pero hay que descontar costes y el sesgo de elegir qué patrones mirar a posteriori.</div>
