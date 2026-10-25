@@ -36,12 +36,34 @@ FILTERS = {
     'lider': 'valor líder: rendimiento a 120 sesiones en el 30 % mejor (alcista) o peor (bajista) del día',
     'mercado': 'mercado a favor: más del 55 % de las acciones sobre su media de 200 (alcista) o menos del 45 % (bajista)',
     'mercado_contra': 'mercado en contra del patrón',
-    'confluencia': 'confluencia: al menos 2 señales más del mismo sentido, de otros patrones, en ±2 sesiones',
+    'confluencia': 'confluencia: al menos 2 señales más del mismo sentido, de otros patrones, en la propia sesión y las 2 anteriores',
     'volatilidad_baja': 'volatilidad baja: ATR / precio en el 40 % más bajo del día',
     'sobreextendido': 'sobreextendido a favor del giro: RSI(14) en el 30 % más bajo (alcista) o más alto (bajista)',
     'extremo52': 'junto al extremo anual: cerca del máximo de 52 semanas (alcista) o del mínimo (bajista)',
     'todo_favorable': 'contexto favorable: cumple al menos 4 de [tendencia, volumen, nivel, líder, mercado, confluencia]',
 }
+
+
+def confluence(sym: np.ndarray, bar: np.ndarray, pid: np.ndarray, d: np.ndarray, nsym: int, win: int = 2) -> np.ndarray:
+    """Otras señales del mismo sentido y de otro patrón en el mismo valor durante las `win` barras anteriores y la propia.
+    Solo mira hacia atrás: una señal posterior (ya con el movimiento hecho) no puede contar para decidir en esa barra."""
+    conf = np.zeros(len(d), dtype=np.int32)
+    order = np.lexsort((bar, sym))                                   # por valor y barra
+    s_, b_, p_, d_ = sym[order], bar[order], pid[order], d[order]
+    start = np.searchsorted(s_, np.arange(nsym), side='left')
+    end = np.searchsorted(s_, np.arange(nsym), side='right')
+    cv = np.zeros(len(order), dtype=np.int32)
+    for j in range(nsym):
+        a, z = start[j], end[j]
+        if z <= a:
+            continue
+        bb, pp, dd = b_[a:z], p_[a:z], d_[a:z]
+        lo, hi = np.searchsorted(bb, bb - win, side='left'), np.searchsorted(bb, bb, side='right')
+        for q in range(len(bb)):
+            w = slice(lo[q], hi[q])
+            cv[a + q] = int(((dd[w] == dd[q]) & (pp[w] != pp[q])).sum())
+    conf[order] = cv
+    return conf
 
 
 def events(D: ml.Data) -> Dict[str, np.ndarray]:
@@ -50,22 +72,7 @@ def events(D: ml.Data) -> Dict[str, np.ndarray]:
     pfam = np.array([FAMS.index(CATALOG[k].fam) for k in ALL])
     d = pdir[D.ev_pid]
     row = D.b2r[D.boff[D.ev_sym] + D.ev_bar]
-    conf = np.zeros(len(d), dtype=np.int32)
-    order = np.lexsort((D.ev_bar, D.ev_sym))                         # por valor y barra
-    s_, b_, p_, d_ = D.ev_sym[order], D.ev_bar[order], D.ev_pid[order], d[order]
-    start = np.searchsorted(s_, np.arange(len(D.syms)), side='left')
-    end = np.searchsorted(s_, np.arange(len(D.syms)), side='right')
-    cv = np.zeros(len(order), dtype=np.int32)
-    for j in range(len(D.syms)):
-        a, z = start[j], end[j]
-        if z <= a:
-            continue
-        bb, pp, dd = b_[a:z], p_[a:z], d_[a:z]
-        lo, hi = np.searchsorted(bb, bb - 2, side='left'), np.searchsorted(bb, bb + 2, side='right')
-        for q in range(len(bb)):                                    # otros patrones del mismo sentido en ±2 barras
-            w = slice(lo[q], hi[q])
-            cv[a + q] = int(((dd[w] == dd[q]) & (pp[w] != pp[q])).sum())
-    conf[order] = cv
+    conf = confluence(D.ev_sym, D.ev_bar, D.ev_pid, d, len(D.syms))
     return {'row': row, 'dir': d, 'fam': pfam[D.ev_pid], 'pid': D.ev_pid, 'q': D.ev_q, 'conf': conf, 'sym': D.ev_sym, 'bar': D.ev_bar}
 
 
@@ -207,14 +214,20 @@ META_GRID = {
 }
 
 
-def _meta_predict(D, E, X, names, y, test_years, params, min_train=3000) -> np.ndarray:
+CONTROL_OUT = ('familia', 'patron', 'calidad', 'conf')               # el control no sabe qué patrón es ni cuántos más hay
+
+
+def _meta_predict(D, E, X, names, y, test_years, params, min_train=3000, drop=()) -> np.ndarray:
     from sklearn.ensemble import HistGradientBoostingRegressor
+    keep = [i for i, nm in enumerate(names) if nm not in drop]
+    names = [names[i] for i in keep]
+    X = X[:, keep]
     row = E['row']
     r = np.where(row >= 0, row, 0)
     ok = row >= 0
     year = D.year[r]
     date = D.date[D.dcode[r]]
-    cat = [names.index(c) for c in ('familia', 'patron', 'sentido')]
+    cat = [names.index(c) for c in ('familia', 'patron', 'sentido') if c in names]
     pred = np.full(len(y), np.nan, dtype=np.float32)
     for Y in test_years:
         cut = np.datetime64(f'{Y}-01-01') - np.timedelta64(15, 'D')
@@ -271,12 +284,14 @@ def meta(D: ml.Data, E: Dict[str, np.ndarray], test_years: List[int], dev_end: i
             print(f'    configuración {gname}: IC desarrollo {sel[gname].get("ic", float("nan")):+.4f} · mejor 10 % {sel[gname].get("mejor", float("nan")):+.3f} %', flush=True)
     best = max(sel, key=lambda g: sel[g].get('ic', -9))
     pred = _meta_predict(D, E, X, names, y, test_years, grid[best], min_train)
+    ctrl = _meta_predict(D, E, X, names, y, test_years, grid[best], min_train, drop=CONTROL_OUT)
     rnd = np.random.default_rng(0).random(len(y)).astype(np.float32)
     rnd = np.where(np.isfinite(pred), rnd, np.nan)
     spans = {'desarrollo': np.isin(year, dev_years), 'final': np.isin(year, fin_years), 'todo': np.isin(year, test_years)}
-    out = {'configuracion': {'elegida': best, 'en_desarrollo': sel, 'params': grid[best]}, 'años': {'desarrollo': dev_years, 'final': fin_years}, 'variables': names, 'modelo': {}, 'azar': {}, 'por_sentido': {}}
+    out = {'configuracion': {'elegida': best, 'en_desarrollo': sel, 'params': grid[best]}, 'años': {'desarrollo': dev_years, 'final': fin_years}, 'variables': names, 'modelo': {}, 'contexto': {}, 'azar': {}, 'por_sentido': {}}
     for sp, m in spans.items():
         out['modelo'][sp] = _decile_stats(D, E, pred, y, m)
+        out['contexto'][sp] = _decile_stats(D, E, ctrl, y, m)
         out['azar'][sp] = _decile_stats(D, E, rnd, y, m)
         out['por_sentido'][sp] = {dn: _decile_stats(D, E, pred, y, m & (E['dir'] == d)) for d, dn in ((1, 'alcistas'), (-1, 'bajistas'))}
     return out
@@ -343,6 +358,9 @@ def report(ev: Dict) -> str:
         a = mm['azar'].get(sp, {})
         L += ['', f'--- {sp} ---', head,
               f"{'modelo':12s}{s['n']:9,}{s['todas']:+8.3f}% | {s['mejor']:+8.3f}%{s['mejor_t']:+7.1f}{s['mejor_neto']:+8.3f}% | {s['peor']:+8.3f}%{s['peor_t']:+7.1f} | {s['ic']:+8.4f}{s['ic_t']:+7.1f}"]
+        c = mm.get('contexto', {}).get(sp, {})
+        if 'mejor' in c:
+            L.append(f"{'solo contexto':12s}{c['n']:9,}{c['todas']:+8.3f}% | {c['mejor']:+8.3f}%{c['mejor_t']:+7.1f}{c['mejor_neto']:+8.3f}% | {c['peor']:+8.3f}%{c['peor_t']:+7.1f} | {c['ic']:+8.4f}{c['ic_t']:+7.1f}")
         if 'mejor' in a:
             L.append(f"{'azar':12s}{a['n']:9,}{a['todas']:+8.3f}% | {a['mejor']:+8.3f}%{a['mejor_t']:+7.1f}{a['mejor_neto']:+8.3f}% | {a['peor']:+8.3f}%{a['peor_t']:+7.1f} | {a['ic']:+8.4f}{a['ic_t']:+7.1f}")
         for dn, v in mm['por_sentido'].get(sp, {}).items():

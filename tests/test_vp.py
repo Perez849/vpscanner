@@ -596,6 +596,48 @@ def test_ml_pipeline():
     print(f'ok · aprendizaje automático: reversión plantada detectada fuera de muestra (IC {s["ic"]:+.3f}, t {s["ic_t"]:.0f}) y nada en paseos aleatorios (IC {s0["ic"]:+.3f})')
 
 
+def test_ml_features_causal():
+    """Las variables de contexto, los niveles, el volumen relativo y las señales de una barra no cambian al quitar las barras posteriores."""
+    try:
+        import pandas, sklearn                                            # noqa: F401
+    except ImportError:
+        print('omitida · variables del aprendizaje automático: faltan pandas o scikit-learn')
+        return
+    b = _walk_ar(700, 77, 0.0)
+    cut = 500
+    full = ml._work(('X', b))[1]
+    part = ml._work(('X', {k: v[:cut] for k, v in b.items()}))[1]
+    for key in ('ctx', 'lvl', 'volraw'):
+        a, p = np.asarray(full[key])[:cut - 20], np.asarray(part[key])[:cut - 20]
+        assert np.allclose(a, p, equal_nan=True, rtol=1e-5, atol=1e-6), (key, np.nanmax(np.abs(a - p)))
+    ef = {tuple(r) for r in full['ev'] if r[0] < cut - 20}
+    ep = {tuple(r) for r in part['ev'] if r[0] < cut - 20}
+    assert ef == ep, (len(ef), len(ep), list(ef ^ ep)[:5])
+    print(f'ok · variables del aprendizaje automático: causales ({len(ef)} señales y {cut - 20} barras comparadas)')
+
+
+def test_confluence_causal():
+    """La confluencia de una señal solo cuenta señales de su misma sesión y las anteriores: añadir señales posteriores no la cambia."""
+    sym = np.array([0, 0, 0, 0, 1, 0])
+    bar = np.array([10, 12, 12, 30, 12, 13])
+    pid = np.array([0, 1, 2, 0, 1, 1])
+    d = np.array([1, 1, 1, 1, 1, -1])
+    c = context.confluence(sym, bar, pid, d, 2)
+    assert c[0] == 0, c                                                   # la 12 y la 12 son posteriores a la 10
+    assert c[1] == 2 and c[2] == 2, c                                     # la 10 y la otra señal de la sesión 12 (otro patrón, mismo sentido)
+    assert c[3] == 0 and c[4] == 0 and c[5] == 0, c                       # lejos / otro valor / sentido contrario
+    keep = np.arange(len(c)) < 3
+    c2 = context.confluence(sym[keep], bar[keep], pid[keep], d[keep], 2)
+    assert (c2 == c[keep]).all()
+    rng = np.random.default_rng(1)
+    n = 400
+    sy, ba, pi_, di = rng.integers(0, 5, n), rng.integers(0, 200, n), rng.integers(0, 6, n), rng.choice([-1, 1], n)
+    full = context.confluence(sy, ba, pi_, di, 5)
+    early = ba <= 100
+    assert (context.confluence(sy[early], ba[early], pi_[early], di[early], 5) == full[early]).all()      # recortar el futuro no cambia el pasado
+    print('ok · confluencia: solo mira hacia atrás')
+
+
 def test_context_experiment():
     """Los filtros de contexto: un efecto plantado solo para «velas alcistas con volumen» aparece justo ahí y el umbral del mejor de N no lo confunde con ruido; el meta-etiquetado lo aprende."""
     try:
@@ -627,12 +669,12 @@ def test_context_experiment():
     mt = context.meta(D, E, [2020, 2021], dev_end=2020, grid=fast, min_train=2000)
     f_ = mt['modelo']['final']
     assert mt['configuracion']['elegida'] == 'A' and f_['mejor'] > f_['todas'] + 0.3 and f_['ic'] > 0.03, f_
-    assert mt['azar']['final']['ic'] < 0.03 and 'AÑOS' not in context.report({'meta': {'universe': 50, 'señales': 1, 'k': 50, 'from': 'a', 'to': 'b', 'horizonte': 10, 'desarrollo_hasta': 2022}, 'experimento': ex, 'meta_etiquetado': mt})[:5]
+    assert mt['contexto']['final']['ic'] > 0.03 and mt['azar']['final']['ic'] < 0.03 and 'AÑOS' not in context.report({'meta': {'universe': 50, 'señales': 1, 'k': 50, 'from': 'a', 'to': 'b', 'horizonte': 10, 'desarrollo_hasta': 2022}, 'experimento': ex, 'meta_etiquetado': mt})[:5]
     print(f'ok · contexto y confluencia: efecto plantado en «velas alcistas con volumen» detectado (t {g["volumen"]["cumple"]["t"]:.0f}) y aprendido por el meta-etiquetado (IC {f_["ic"]:+.2f})')
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_ml_pipeline, test_context_experiment]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment]
 
 if __name__ == '__main__':
     for fn in ALL:
