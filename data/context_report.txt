@@ -1,0 +1,196 @@
+CONTEXTO Y CONFLUENCIA · 500 acciones · 219,631 señales de patrón (las 300 más negociadas) · 2017-04-25 → 2026-10-09 · exceso = rendimiento a 10 sesiones menos el del conjunto ese día, con el signo del sentido
+Umbral del mejor de 156 combinaciones: |t| ≥ 6.87 (p95) / 7.09 (p99). Desarrollo ≤ 2022, final después. ★ = supera el umbral y mantiene el signo en el final.
+
+=== velas alcistas · sin filtrar: n 34,283 · exceso -0.011 % (t -0.2) ===
+    extremo52          cumple: n   6,177 exceso +0.236 % (t  +2.1)  desarrollo +0.155 %  final +0.350 % (n 2,545)   no cumple: -0.065 %
+    contra             cumple: n  16,929 exceso -0.202 % (t  -1.7)  desarrollo -0.254 %  final -0.113 % (n 6,226)   no cumple: +0.176 %
+    lider              cumple: n   8,507 exceso +0.227 % (t  +1.7)  desarrollo +0.171 %  final +0.321 % (n 3,187)   no cumple: -0.089 %
+    tendencia          cumple: n  16,456 exceso +0.159 % (t  +1.5)  desarrollo +0.297 %  final -0.044 % (n 6,645)   no cumple: -0.168 %
+    mercado_contra     cumple: n   9,178 exceso -0.199 % (t  -1.4)  desarrollo -0.132 %  final -0.467 % (n 1,848)   no cumple: +0.058 %
+    sobreextendido     cumple: n  17,357 exceso -0.144 % (t  -1.3)  desarrollo -0.125 %  final -0.175 % (n 6,668)   no cumple: +0.125 %
+    todo_favorable     cumple: n   6,945 exceso +0.214 % (t  +1.3)  desarrollo +0.347 %  final +0.025 % (n 2,867)   no cumple: -0.068 %
+    volatilidad_baja   cumple: n  11,906 exceso -0.151 % (t  -1.0)  desarrollo +0.122 %  final -0.570 % (n 4,698)   no cumple: +0.063 %
+    mercado            cumple: n  20,723 exceso +0.066 % (t  +0.9)  desarrollo +0.152 %  final -0.040 % (n 9,254)   no cumple: -0.129 %
+    volumen            cumple: n   8,022 exceso -0.146 % (t  -0.9)  desarrollo -0.123 %  final -0.182 % (n 3,134)   no cumple: +0.030 %
+    confluencia        cumple: n  15,372 exceso +0.064 % (t  +0.5)  desarrollo +0.140 %  final -0.067 % (n 5,690)   no cumple: -0.071 %
+    nivel              cumple: n  13,432 exceso +0.017 % (t  +0.2)  desarrollo +0.144 %  final -0.196 % (n 5,031)   no cumple: -0.029 %
+
+=== velas bajistas · sin filtrar: n 45,263 · exceso -0.006 % (t -0.1) ===
+    volatilidad_baja   cumple: n  18,240 exceso +0.235 % (t  +3.1)  desarrollo +0.170 %  final +0.332 % (n 7,281)   no cumple: -0.169 %
+    extremo52          cumple: n   2,614 exceso -0.379 % (t  -1.3)  desarrollo -0.243 %  final -0.551 % (n 1,152)   no cumple: +0.017 %
+    todo_favorable     cumple: n   3,117 exceso +0.224 % (t  +0.9)  desarrollo +0.308 %  final +0.056 % (n 1,043)   no cumple: -0.023 %
+    volumen            cumple: n   7,798 exceso -0.108 % (t  -0.8)  desarrollo +0.002 %  final -0.279 % (n 3,057)   no cumple: +0.015 %
+    lider              cumple: n   9,900 exceso +0.073 % (t  +0.6)  desarrollo +0.227 %  final -0.157 % (n 3,969)   no cumple: -0.028 %
+    mercado_contra     cumple: n  35,119 exceso -0.029 % (t  -0.4)  desarrollo +0.004 %  final -0.067 % (n 16,235)   no cumple: +0.072 %
+    nivel              cumple: n  16,615 exceso +0.030 % (t  +0.4)  desarrollo +0.003 %  final +0.069 % (n 6,718)   no cumple: -0.027 %
+    contra             cumple: n  33,302 exceso +0.021 % (t  +0.3)  desarrollo -0.007 %  final +0.058 % (n 14,381)   no cumple: -0.082 %
+    confluencia        cumple: n  19,663 exceso +0.031 % (t  +0.3)  desarrollo +0.128 %  final -0.099 % (n 8,402)   no cumple: -0.034 %
+    mercado            cumple: n   6,127 exceso +0.054 % (t  +0.3)  desarrollo -0.046 %  final +1.138 % (n 519)   no cumple: -0.015 %
+    tendencia          cumple: n  10,203 exceso +0.021 % (t  +0.2)  desarrollo +0.135 %  final -0.145 % (n 4,151)   no cumple: -0.014 %
+    sobreextendido     cumple: n  25,023 exceso +0.007 % (t  +0.1)  desarrollo +0.060 %  final -0.064 % (n 10,684)   no cumple: -0.022 %
+
+=== figuras alcistas · sin filtrar: n 11,272 · exceso +0.023 % (t +0.3) ===
+    mercado_contra     cumple: n   1,212 exceso -0.556 % (t  -2.9)  desarrollo -0.521 %  final -0.925 % (n 106)   no cumple: +0.092 %
+    todo_favorable     cumple: n   3,392 exceso +0.223 % (t  +1.9)  desarrollo +0.060 %  final +0.432 % (n 1,486)   no cumple: -0.064 %
+    extremo52          cumple: n   5,700 exceso +0.166 % (t  +1.8)  desarrollo +0.035 %  final +0.346 % (n 2,400)   no cumple: -0.124 %
+    volatilidad_baja   cumple: n   5,239 exceso -0.126 % (t  -1.6)  desarrollo +0.033 %  final -0.360 % (n 2,118)   no cumple: +0.152 %
+    confluencia        cumple: n   5,488 exceso +0.134 % (t  +1.4)  desarrollo -0.029 %  final +0.369 % (n 2,237)   no cumple: -0.083 %
+    contra             cumple: n   2,151 exceso -0.219 % (t  -1.4)  desarrollo -0.243 %  final -0.183 % (n 867)   no cumple: +0.080 %
+    lider              cumple: n   4,239 exceso +0.111 % (t  +1.0)  desarrollo -0.138 %  final +0.468 % (n 1,745)   no cumple: -0.031 %
+    tendencia          cumple: n   8,758 exceso +0.074 % (t  +1.0)  desarrollo -0.019 %  final +0.205 % (n 3,635)   no cumple: -0.156 %
+    volumen            cumple: n   2,027 exceso +0.155 % (t  +1.0)  desarrollo +0.074 %  final +0.271 % (n 830)   no cumple: -0.006 %
+    nivel              cumple: n   2,573 exceso +0.120 % (t  +0.9)  desarrollo +0.136 %  final +0.096 % (n 1,022)   no cumple: -0.006 %
+    mercado            cumple: n   9,047 exceso +0.060 % (t  +0.8)  desarrollo +0.017 %  final +0.116 % (n 3,901)   no cumple: -0.128 %
+    sobreextendido     cumple: n     657 exceso -0.138 % (t  -0.6)  desarrollo -0.249 %  final +0.085 % (n 219)   no cumple: +0.033 %
+
+=== figuras bajistas · sin filtrar: n 8,954 · exceso -0.034 % (t -0.4) ===
+    volatilidad_baja   cumple: n   3,465 exceso +0.239 % (t  +2.7)  desarrollo +0.128 %  final +0.409 % (n 1,375)   no cumple: -0.206 %
+    sobreextendido     cumple: n     710 exceso +0.451 % (t  +1.8)  desarrollo +0.348 %  final +0.664 % (n 231)   no cumple: -0.075 %
+    nivel              cumple: n   3,135 exceso +0.168 % (t  +1.5)  desarrollo +0.209 %  final +0.105 % (n 1,240)   no cumple: -0.142 %
+    extremo52          cumple: n   1,806 exceso -0.284 % (t  -1.1)  desarrollo -0.164 %  final -0.466 % (n 715)   no cumple: +0.030 %
+    mercado            cumple: n   1,826 exceso -0.184 % (t  -0.7)  desarrollo -0.117 %  final -0.582 % (n 264)   no cumple: +0.005 %
+    confluencia        cumple: n   3,151 exceso -0.106 % (t  -0.7)  desarrollo -0.034 %  final -0.219 % (n 1,233)   no cumple: +0.006 %
+    tendencia          cumple: n   4,236 exceso -0.105 % (t  -0.7)  desarrollo -0.139 %  final -0.051 % (n 1,653)   no cumple: +0.030 %
+    todo_favorable     cumple: n   1,233 exceso +0.164 % (t  +0.6)  desarrollo +0.361 %  final -0.283 % (n 378)   no cumple: -0.065 %
+    lider              cumple: n   3,270 exceso -0.081 % (t  -0.5)  desarrollo -0.059 %  final -0.117 % (n 1,230)   no cumple: -0.007 %
+    volumen            cumple: n   2,229 exceso -0.064 % (t  -0.4)  desarrollo -0.024 %  final -0.130 % (n 845)   no cumple: -0.024 %
+    mercado_contra     cumple: n   6,155 exceso +0.033 % (t  +0.4)  desarrollo +0.070 %  final -0.013 % (n 2,704)   no cumple: -0.181 %
+    contra             cumple: n   4,466 exceso +0.023 % (t  +0.2)  desarrollo +0.075 %  final -0.055 % (n 1,801)   no cumple: -0.090 %
+
+=== rupturas alcistas · sin filtrar: n 67,754 · exceso -0.075 % (t -1.4) ===
+    mercado_contra     cumple: n   5,073 exceso -0.723 % (t  -3.6)  desarrollo -0.653 %  final -1.744 % (n 326)   no cumple: -0.023 %
+    contra             cumple: n   5,080 exceso -0.474 % (t  -3.5)  desarrollo -0.521 %  final -0.409 % (n 2,109)   no cumple: -0.043 %
+    volatilidad_baja   cumple: n  34,957 exceso -0.187 % (t  -3.1)  desarrollo -0.049 %  final -0.416 % (n 13,088)   no cumple: +0.043 %
+    confluencia        cumple: n  50,048 exceso -0.070 % (t  -1.1)  desarrollo -0.079 %  final -0.058 % (n 19,936)   no cumple: -0.090 %
+    nivel              cumple: n   5,606 exceso -0.102 % (t  -0.9)  desarrollo -0.082 %  final -0.127 % (n 2,419)   no cumple: -0.073 %
+    tendencia          cumple: n  60,708 exceso -0.052 % (t  -0.9)  desarrollo -0.060 %  final -0.039 % (n 24,610)   no cumple: -0.279 %
+    sobreextendido     cumple: n     305 exceso +0.284 % (t  +0.7)  desarrollo +0.357 %  final +0.084 % (n 81)   no cumple: -0.077 %
+    extremo52          cumple: n  49,938 exceso -0.029 % (t  -0.5)  desarrollo -0.047 %  final -0.003 % (n 20,174)   no cumple: -0.205 %
+    volumen            cumple: n  15,898 exceso +0.020 % (t  +0.2)  desarrollo -0.114 %  final +0.205 % (n 6,653)   no cumple: -0.104 %
+    mercado            cumple: n  58,177 exceso -0.009 % (t  -0.2)  desarrollo -0.021 %  final +0.007 % (n 24,372)   no cumple: -0.478 %
+    todo_favorable     cumple: n  34,057 exceso +0.006 % (t  +0.1)  desarrollo -0.073 %  final +0.111 % (n 14,474)   no cumple: -0.157 %
+    lider              cumple: n  36,663 exceso -0.001 % (t  -0.0)  desarrollo -0.067 %  final +0.098 % (n 14,798)   no cumple: -0.164 %
+
+=== rupturas bajistas · sin filtrar: n 35,495 · exceso -0.160 % (t -1.7) ===
+    volatilidad_baja   cumple: n  10,605 exceso +0.277 % (t  +2.6)  desarrollo +0.116 %  final +0.485 % (n 4,637)   no cumple: -0.346 %
+    mercado            cumple: n  10,217 exceso -0.433 % (t  -1.9)  desarrollo -0.390 %  final -0.637 % (n 1,803)   no cumple: -0.049 %
+    contra             cumple: n   9,037 exceso -0.167 % (t  -1.6)  desarrollo -0.267 %  final -0.035 % (n 3,888)   no cumple: -0.158 %
+    tendencia          cumple: n  25,652 exceso -0.152 % (t  -1.3)  desarrollo -0.225 %  final -0.048 % (n 10,556)   no cumple: -0.180 %
+    sobreextendido     cumple: n     570 exceso -0.742 % (t  -1.2)  desarrollo -1.003 %  final +0.082 % (n 137)   no cumple: -0.150 %
+    confluencia        cumple: n  19,233 exceso -0.137 % (t  -1.0)  desarrollo -0.257 %  final +0.044 % (n 7,654)   no cumple: -0.187 %
+    lider              cumple: n  19,436 exceso -0.110 % (t  -0.8)  desarrollo -0.198 %  final +0.015 % (n 8,054)   no cumple: -0.221 %
+    extremo52          cumple: n  15,025 exceso -0.095 % (t  -0.5)  desarrollo -0.185 %  final +0.039 % (n 6,037)   no cumple: -0.208 %
+    nivel              cumple: n   6,913 exceso -0.056 % (t  -0.5)  desarrollo -0.090 %  final -0.007 % (n 2,798)   no cumple: -0.185 %
+    mercado_contra     cumple: n  20,628 exceso -0.020 % (t  -0.2)  desarrollo -0.081 %  final +0.044 % (n 9,994)   no cumple: -0.354 %
+    todo_favorable     cumple: n   9,711 exceso +0.036 % (t  +0.2)  desarrollo -0.074 %  final +0.268 % (n 3,140)   no cumple: -0.234 %
+    volumen            cumple: n  12,718 exceso -0.016 % (t  -0.1)  desarrollo -0.079 %  final +0.076 % (n 5,129)   no cumple: -0.240 %
+
+=== directrices alcistas · sin filtrar: n 5,657 · exceso +0.077 % (t +0.8) ===
+    volatilidad_baja   cumple: n   2,114 exceso -0.286 % (t  -2.5)  desarrollo -0.326 %  final -0.230 % (n 870)   no cumple: +0.294 %
+    tendencia          cumple: n   2,615 exceso +0.328 % (t  +2.4)  desarrollo +0.357 %  final +0.288 % (n 1,090)   no cumple: -0.138 %
+    todo_favorable     cumple: n     695 exceso +0.459 % (t  +1.7)  desarrollo +0.539 %  final +0.365 % (n 319)   no cumple: +0.024 %
+    lider              cumple: n     997 exceso +0.421 % (t  +1.7)  desarrollo +0.511 %  final +0.294 % (n 413)   no cumple: +0.004 %
+    sobreextendido     cumple: n     838 exceso -0.406 % (t  -1.7)  desarrollo -0.116 %  final -0.926 % (n 300)   no cumple: +0.161 %
+    extremo52          cumple: n     922 exceso +0.224 % (t  +1.2)  desarrollo +0.160 %  final +0.327 % (n 354)   no cumple: +0.049 %
+    nivel              cumple: n   2,781 exceso +0.144 % (t  +1.1)  desarrollo +0.223 %  final +0.021 % (n 1,091)   no cumple: +0.013 %
+    contra             cumple: n   2,890 exceso -0.132 % (t  -1.0)  desarrollo -0.116 %  final -0.156 % (n 1,150)   no cumple: +0.296 %
+    confluencia        cumple: n     755 exceso +0.088 % (t  +0.4)  desarrollo -0.124 %  final +0.373 % (n 322)   no cumple: +0.076 %
+    mercado            cumple: n   3,740 exceso +0.038 % (t  +0.3)  desarrollo +0.167 %  final -0.115 % (n 1,715)   no cumple: +0.154 %
+    volumen            cumple: n     824 exceso -0.036 % (t  -0.2)  desarrollo +0.191 %  final -0.337 % (n 355)   no cumple: +0.097 %
+    mercado_contra     cumple: n   1,203 exceso -0.006 % (t  -0.0)  desarrollo -0.135 %  final +1.003 % (n 137)   no cumple: +0.100 %
+
+=== directrices bajistas · sin filtrar: n 7,458 · exceso -0.114 % (t -1.3) ===
+    mercado            cumple: n   1,111 exceso -0.560 % (t  -2.0)  desarrollo -0.318 %  final -2.451 % (n 126)   no cumple: -0.036 %
+    volatilidad_baja   cumple: n   3,006 exceso +0.166 % (t  +1.7)  desarrollo -0.014 %  final +0.452 % (n 1,162)   no cumple: -0.303 %
+    confluencia        cumple: n   1,169 exceso +0.198 % (t  +1.1)  desarrollo +0.048 %  final +0.429 % (n 459)   no cumple: -0.172 %
+    contra             cumple: n   5,129 exceso -0.097 % (t  -0.9)  desarrollo -0.126 %  final -0.057 % (n 2,162)   no cumple: -0.151 %
+    nivel              cumple: n   3,716 exceso -0.076 % (t  -0.7)  desarrollo +0.020 %  final -0.225 % (n 1,454)   no cumple: -0.152 %
+    sobreextendido     cumple: n     674 exceso -0.154 % (t  -0.6)  desarrollo -0.058 %  final -0.317 % (n 249)   no cumple: -0.110 %
+    lider              cumple: n   1,785 exceso -0.110 % (t  -0.6)  desarrollo +0.048 %  final -0.378 % (n 663)   no cumple: -0.115 %
+    tendencia          cumple: n   2,115 exceso -0.104 % (t  -0.6)  desarrollo -0.077 %  final -0.147 % (n 814)   no cumple: -0.118 %
+    volumen            cumple: n   1,682 exceso -0.073 % (t  -0.5)  desarrollo -0.145 %  final +0.039 % (n 662)   no cumple: -0.126 %
+    todo_favorable     cumple: n     532 exceso +0.141 % (t  +0.4)  desarrollo +0.647 %  final -0.926 % (n 171)   no cumple: -0.133 %
+    extremo52          cumple: n     509 exceso -0.108 % (t  -0.3)  desarrollo -0.001 %  final -0.254 % (n 217)   no cumple: -0.114 %
+    mercado_contra     cumple: n   5,620 exceso -0.014 % (t  -0.2)  desarrollo -0.010 %  final -0.020 % (n 2,497)   no cumple: -0.418 %
+
+=== rebotes alcistas · sin filtrar: n 1,607 · exceso +0.058 % (t +0.4) ===
+    mercado_contra     cumple: n     242 exceso +0.799 % (t  +1.6)  desarrollo +0.761 %  final +1.052 % (n 32)   no cumple: -0.074 %
+    volatilidad_baja   cumple: n     614 exceso -0.258 % (t  -1.3)  desarrollo -0.200 %  final -0.330 % (n 273)   no cumple: +0.253 %
+    lider              cumple: n     380 exceso +0.452 % (t  +1.3)  desarrollo +0.530 %  final +0.370 % (n 185)   no cumple: -0.064 %
+    mercado            cumple: n   1,165 exceso -0.158 % (t  -0.9)  desarrollo -0.018 %  final -0.305 % (n 568)   no cumple: +0.625 %
+    tendencia          cumple: n     881 exceso +0.171 % (t  +0.9)  desarrollo +0.225 %  final +0.103 % (n 391)   no cumple: -0.080 %
+    todo_favorable     cumple: n     344 exceso +0.274 % (t  +0.9)  desarrollo +0.409 %  final +0.143 % (n 174)   no cumple: -0.001 %
+    extremo52          cumple: n     314 exceso +0.234 % (t  +0.8)  desarrollo +0.381 %  final -0.014 % (n 117)   no cumple: +0.015 %
+    nivel              cumple: n   1,521 exceso +0.077 % (t  +0.5)  desarrollo +0.239 %  final -0.126 % (n 675)   no cumple: -0.285 %
+    sobreextendido     cumple: n     727 exceso +0.042 % (t  +0.2)  desarrollo +0.107 %  final -0.044 % (n 315)   no cumple: +0.071 %
+    volumen            cumple: n     207 exceso -0.077 % (t  -0.2)  desarrollo -0.773 %  final +0.791 % (n 92)   no cumple: +0.078 %
+    confluencia        cumple: n     103 exceso +0.062 % (t  +0.1)  desarrollo +0.625 %  final -1.032 % (n 35)   no cumple: +0.057 %
+    contra             cumple: n     691 exceso +0.003 % (t  +0.0)  desarrollo +0.295 %  final -0.353 % (n 312)   no cumple: +0.099 %
+
+=== rebotes bajistas · sin filtrar: n 1,888 · exceso +0.344 % (t +2.4) ===
+    volatilidad_baja   cumple: n     915 exceso +0.671 % (t  +3.8)  desarrollo +0.680 %  final +0.654 % (n 331)   no cumple: +0.038 %
+    tendencia          cumple: n     529 exceso +0.726 % (t  +2.4)  desarrollo +0.665 %  final +0.816 % (n 213)   no cumple: +0.196 %
+    nivel              cumple: n   1,788 exceso +0.317 % (t  +2.2)  desarrollo +0.383 %  final +0.203 % (n 658)   no cumple: +0.839 %
+    lider              cumple: n     509 exceso +0.644 % (t  +2.2)  desarrollo +0.736 %  final +0.493 % (n 193)   no cumple: +0.234 %
+    mercado            cumple: n     262 exceso +0.701 % (t  +1.8)  desarrollo +0.619 %  final +1.416 % (n 27)   no cumple: +0.287 %
+    sobreextendido     cumple: n     411 exceso +0.563 % (t  +1.7)  desarrollo +0.496 %  final +0.687 % (n 144)   no cumple: +0.284 %
+    volumen            cumple: n     212 exceso +0.995 % (t  +1.7)  desarrollo +1.131 %  final +0.811 % (n 90)   no cumple: +0.262 %
+    confluencia        cumple: n     124 exceso +0.614 % (t  +1.4)  desarrollo +0.340 %  final +1.019 % (n 50)   no cumple: +0.325 %
+    mercado_contra     cumple: n   1,443 exceso +0.204 % (t  +1.4)  desarrollo +0.192 %  final +0.222 % (n 584)   no cumple: +0.798 %
+    contra             cumple: n   1,302 exceso +0.202 % (t  +1.2)  desarrollo +0.343 %  final -0.040 % (n 481)   no cumple: +0.661 %
+    todo_favorable     cumple: n     107 exceso +0.420 % (t  +0.6)  desarrollo -0.359 %  final +2.022 % (n 35)   no cumple: +0.340 %
+    extremo52          cumple: n     123 exceso +0.407 % (t  +0.5)  desarrollo +0.628 %  final +0.189 % (n 62)   no cumple: +0.340 %
+
+=== todas alcistas · sin filtrar: n 120,573 · exceso -0.039 % (t -1.0) ===
+    mercado_contra     cumple: n  16,908 exceso -0.354 % (t  -3.6)  desarrollo -0.320 %  final -0.555 % (n 2,449)   no cumple: +0.012 %
+    volatilidad_baja   cumple: n  54,830 exceso -0.178 % (t  -3.0)  desarrollo -0.017 %  final -0.436 % (n 21,047)   no cumple: +0.077 %
+    contra             cumple: n  27,741 exceso -0.241 % (t  -2.9)  desarrollo -0.273 %  final -0.189 % (n 10,664)   no cumple: +0.021 %
+    sobreextendido     cumple: n  19,884 exceso -0.141 % (t  -1.4)  desarrollo -0.112 %  final -0.189 % (n 7,583)   no cumple: -0.019 %
+    todo_favorable     cumple: n  45,433 exceso +0.063 % (t  +0.9)  desarrollo +0.015 %  final +0.127 % (n 19,320)   no cumple: -0.100 %
+    lider              cumple: n  50,786 exceso +0.059 % (t  +0.8)  desarrollo -0.016 %  final +0.171 % (n 20,328)   no cumple: -0.110 %
+    confluencia        cumple: n  71,766 exceso -0.024 % (t  -0.4)  desarrollo -0.025 %  final -0.022 % (n 28,220)   no cumple: -0.061 %
+    mercado            cumple: n  92,852 exceso +0.014 % (t  +0.3)  desarrollo +0.027 %  final -0.003 % (n 39,810)   no cumple: -0.218 %
+    extremo52          cumple: n  63,051 exceso +0.020 % (t  +0.3)  desarrollo -0.014 %  final +0.069 % (n 25,590)   no cumple: -0.103 %
+    nivel              cumple: n  25,913 exceso +0.019 % (t  +0.3)  desarrollo +0.111 %  final -0.123 % (n 10,238)   no cumple: -0.055 %
+    tendencia          cumple: n  89,418 exceso +0.013 % (t  +0.3)  desarrollo +0.024 %  final -0.004 % (n 36,371)   no cumple: -0.187 %
+    volumen            cumple: n  26,978 exceso -0.022 % (t  -0.3)  desarrollo -0.098 %  final +0.088 % (n 11,064)   no cumple: -0.044 %
+
+=== todas bajistas · sin filtrar: n 99,058 · exceso -0.065 % (t -1.4) ===
+    volatilidad_baja   cumple: n  36,231 exceso +0.253 % (t  +4.0)  desarrollo +0.149 %  final +0.404 % (n 14,786)   no cumple: -0.249 %
+    mercado            cumple: n  19,543 exceso -0.249 % (t  -1.7)  desarrollo -0.231 %  final -0.359 % (n 2,739)   no cumple: -0.020 %
+    tendencia          cumple: n  42,735 exceso -0.093 % (t  -1.0)  desarrollo -0.112 %  final -0.066 % (n 17,387)   no cumple: -0.044 %
+    extremo52          cumple: n  20,077 exceso -0.146 % (t  -0.9)  desarrollo -0.182 %  final -0.094 % (n 8,183)   no cumple: -0.044 %
+    confluencia        cumple: n  43,340 exceso -0.048 % (t  -0.6)  desarrollo -0.061 %  final -0.029 % (n 17,798)   no cumple: -0.079 %
+    nivel              cumple: n  32,167 exceso +0.029 % (t  +0.5)  desarrollo +0.028 %  final +0.030 % (n 12,868)   no cumple: -0.110 %
+    todo_favorable     cumple: n  14,700 exceso +0.093 % (t  +0.5)  desarrollo +0.067 %  final +0.148 % (n 4,767)   no cumple: -0.093 %
+    volumen            cumple: n  24,639 exceso -0.045 % (t  -0.4)  desarrollo -0.042 %  final -0.049 % (n 9,783)   no cumple: -0.072 %
+    lider              cumple: n  34,900 exceso -0.044 % (t  -0.4)  desarrollo -0.036 %  final -0.057 % (n 14,109)   no cumple: -0.076 %
+    contra             cumple: n  53,236 exceso -0.018 % (t  -0.3)  desarrollo -0.046 %  final +0.020 % (n 22,713)   no cumple: -0.120 %
+    mercado_contra     cumple: n  68,965 exceso -0.015 % (t  -0.3)  desarrollo -0.011 %  final -0.019 % (n 32,014)   no cumple: -0.181 %
+    sobreextendido     cumple: n  27,388 exceso +0.007 % (t  +0.1)  desarrollo +0.044 %  final -0.044 % (n 11,445)   no cumple: -0.093 %
+
+=== META-ETIQUETADO (gradient boosting; configuración C elegida con [2020, 2021, 2022]; juzgada en [2023, 2024, 2025, 2026]) ===
+
+--- final ---
+                    n    todas | mejor 10%      t     neto |  peor 10%      t |       IC      t
+modelo         87,273  -0.036% |   +0.318%   +2.1  +0.168% |   -0.539%   -3.0 |  +0.0281   +4.1
+solo contexto   87,273  -0.036% |   +0.246%   +1.5  +0.096% |   -0.542%   -2.9 |  +0.0216   +3.0
+azar           87,273  -0.036% |   +0.062%   +0.8  -0.088% |   -0.027%   -0.3 |  -0.0012   -0.3
+  alcistas     47,100  -0.064% |   +0.700%   +3.1  +0.550% |   +0.106%   +0.5 |  +0.0164   +1.8
+  bajistas     40,173  -0.002% |   -0.124%   -0.7  -0.274% |   -1.200%   -4.3 |  +0.0273   +2.8
+
+--- desarrollo ---
+                    n    todas | mejor 10%      t     neto |  peor 10%      t |       IC      t
+modelo         69,295  -0.081% |   -0.150%   -0.7  -0.300% |   -0.249%   -0.8 |  +0.0094   +0.9
+solo contexto   69,295  -0.081% |   -0.313%   -1.3  -0.463% |   -0.243%   -0.7 |  +0.0085   +0.8
+azar           69,295  -0.081% |   -0.065%   -0.6  -0.215% |   -0.109%   -1.1 |  +0.0046   +1.2
+  alcistas     37,713  -0.053% |   -0.169%   -0.5  -0.319% |   -0.359%   -1.5 |  +0.0057   +0.4
+  bajistas     31,582  -0.115% |   -0.121%   -0.4  -0.271% |   -0.027%   -0.0 |  +0.0141   +0.9
+
+--- todo ---
+                    n    todas | mejor 10%      t     neto |  peor 10%      t |       IC      t
+modelo        156,568  -0.056% |   +0.111%   +0.8  -0.039% |   -0.411%   -2.3 |  +0.0192   +3.1
+solo contexto  156,568  -0.056% |   -0.001%   -0.0  -0.151% |   -0.410%   -2.3 |  +0.0162   +2.5
+azar          156,568  -0.056% |   +0.005%   +0.1  -0.145% |   -0.063%   -1.0 |  +0.0014   +0.5
+  alcistas     84,813  -0.059% |   +0.314%   +1.7  +0.164% |   -0.101%   -0.6 |  +0.0142   +1.8
+  bajistas     71,755  -0.052% |   -0.123%   -0.7  -0.273% |   -0.684%   -2.2 |  +0.0205   +2.4

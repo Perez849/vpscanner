@@ -135,6 +135,20 @@ El stop que persigue no rescata ninguna familia: las rupturas alcistas siguen ri
 - **Acciones medianas y pequeñas** (S&P 400 + S&P 600, 989 valores, 2,3 millones de barras, coste del 0,30 %): lo que pasa el umbral del mejor de N son otra vez las **rupturas alcistas a máximos, por debajo del azar** (−0,5 %, t entre −4,6 y −5,5) y la base junto a máximos. Ninguna vela, figura ni consenso lo supera. Las velas bajistas salen todas algo positivas (+0,47 % de media, 88 % de ellas positivas) y las alcistas todas negativas (−0,84 %): que las dos direcciones sean «correctas» a la vez no es una ventaja direccional: lo más probable (no comprobado) es un efecto de selección, porque las velas grandes se dan en valores volátiles que rinden menos que la media del año, y el comparador del estudio de evidencia no iguala la volatilidad (el del plan sí).
 - **Cripto, divisas, materias primas e índices** (49 símbolos): solo supera el umbral la base junto a máximos (negativa, t −6,5). Las rupturas alcistas de máximos salen algo positivas aquí (+0,8 a +0,9 %, t entre +2,2 y +2,6, 6 o 7 años de 10), lo contrario que en acciones: con 49 series y 103 patrones, una pista que tendría que repetirse en datos nuevos.
 
+## ¿Y los operadores que «lo clavan» con dibujitos y velas? Contexto, confluencia y dónde se acaba el estudio (`vp/context.py`)
+
+Un operador discrecional no compra cada patrón: lo mira *en contexto* (a favor de la tendencia, en un soporte, con volumen, con el mercado a favor, con varias señales a la vez). `python -m vp context` prueba exactamente eso con 12 filtros fijados de antemano sobre 220.000 señales (las 300 más negociadas, 2017–2026), por familia y sentido, con las mismas reglas de antes: desarrollo (≤ 2022) y final separados, t agrupada por día y **umbral del mejor de 156 combinaciones** (|t| ≥ 6,87). Informe completo en `data/context_report.txt`. Sobre 10 sesiones, en exceso sobre la media de todas las acciones ese día:
+
+- **Ninguna combinación supera el umbral** (la mayor es |t| = 4,0). Las que más se acercan son todas el mismo hecho: con **volatilidad baja** las señales alcistas salen peor que la media (−0,18 %, t −3,0) y las bajistas mejor (+0,25 %, t +4,0), es decir, las acciones tranquilas rinden menos que las movidas en este periodo alcista. Lo más probable es que sea una característica del valor (el factor de baja volatilidad) y no una ventaja del patrón: que funcione igual de bien en un sentido y en el contrario lo delata.
+- **Una fuga de información que casi me engaña.** La primera versión definía la confluencia («al menos dos señales más del mismo sentido en ±2 sesiones») mirando también las **dos sesiones siguientes**, es decir, premiaba señales que ya habían subido. Con esa fuga la confluencia daba t = +3,9 en figuras alcistas, +5,3 en directrices bajistas y +5,0 en rebotes bajistas, y el meta-etiquetado un IC de 0,056 con el 10 % mejor en +0,78 % (t 4,6). Al restringirla a la sesión y las dos anteriores: t +1,1 en directrices bajistas, nada en figuras ni rebotes, IC 0,028 y 10 % mejor +0,32 % (t 2,1). Ahora hay una prueba que falla si la confluencia vuelve a mirar hacia delante (`test_confluence_causal`) y otra que comprueba que las variables del aprendizaje automático son causales.
+- **Meta-etiquetado** (un gradient boosting que decide cuándo fiarse de cada señal; entrenado hacia delante, configuración elegida con 2020–2022 y juzgada en 2023–2026): IC +0,028 (t +4,1), 10 % mejor +0,32 % a 10 sesiones (+0,17 % neto), 10 % peor −0,54 %. **El mismo modelo sin saber qué patrón es** (solo contexto) da IC +0,022 y 10 % mejor +0,25 % (t 1,5): el patrón añade ≈ 0,006 de IC, dentro del ruido, y en los años de desarrollo no hay nada (IC +0,009). Coincide con el estudio de aprendizaje automático: lo poco que hay viene del contexto del valor, no del dibujo.
+
+**Qué dice todo esto sobre quien «nunca falla»**: no hay forma, con datos de 10 años de grandes acciones, de distinguir un patrón (solo o con contexto, con stop fijo o que persigue, en acciones grandes, medianas, cripto o divisas) de entrar al azar con el mismo riesgo. Este estudio no mide a personas, así que lo que sigue son hipótesis, no resultados; pero hay tres explicaciones razonables de que alguien parezca infalible que no requieren que el patrón funcione: (1) **sesgo de recuerdo**: se ven los aciertos dibujados a posteriori y las operaciones perdedoras se olvidan o se reinterpretan («la figura no era buena»); (2) **tasa de acierto alta con pérdidas grandes ocasionales** (objetivo cercano y stop lejano acierta el 70 %, y pierde en cuanto llega una mala racha), algo que la tasa de acierto sola no distingue; (3) **selección**: del grupo que operaba así, los que sobreviven y cuentan su historia son los que tuvieron suerte. Este laboratorio mide lo único que se puede medir: lo que pasó de media tras cada patrón.
+
+### Qué pasa tras cada patrón (dibujado)
+
+En la **Guía** y en el panel de cada gráfico se dibuja la **trayectoria media** de las 20 sesiones siguientes a cada patrón (con el signo de su sentido, menos la media de las acciones esos años) con su banda del 95 %. Si la línea y la banda se quedan alrededor de cero, el patrón no cambia la dirección esperada. Salen de `evidence.json` (`paths`) y se recalculan cada domingo.
+
 ## Lista de seguimiento
 
 `watchlist.txt` (raíz del repositorio) manda: un símbolo de Yahoo por línea o varios separados por espacios o comas, `#` comenta. El escaneo diario la lee entera; para añadir o quitar valores basta editarla desde GitHub (lápiz) y el siguiente escaneo, o lanzarlo a mano desde Actions, los incluye. Un valor que Yahoo no devuelve o con menos de 400 sesiones se avisa en el Radar. Cada valor añade ~75 KB de `data/charts` al repositorio en cada escaneo, así que conviene no pasar de unos 150.
@@ -158,8 +172,9 @@ vp/
   study.py            estudio de evidencia
   planstudy.py        estudio del plan completo (stop y objetivo) frente a entradas al azar
   ml.py               aprendizaje automático fuera de muestra (contexto, velas, figuras)
+  context.py          filtros de contexto, confluencia y meta-etiquetado
   data.py, universe.py   descarga de Yahoo y universos (watchlist.txt)
-data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json, plan_report.txt, ml_report.txt
+data/                 charts/<VALOR>.json, index.json, catalog.json, evidence.json, informes (evidence_report*, plan_report, ml_report, context_report)
 tests/test_vp.py      pruebas (sin red)
 .github/workflows/    scan.yml (L–V 22:45 UTC) · evidence.yml (domingos) · research.yml (manual)
 ```
@@ -174,6 +189,8 @@ python -m vp lab --symbols AAPL,NVDA          # solo esos valores
 python -m vp study                            # estudio de evidencia (tarda; mejor en Actions)
 python -m vp plan                             # estudio del plan completo con stop y objetivo
 python -m vp ml                               # aprendizaje automático fuera de muestra (necesita scikit-learn)
+python -m vp context                          # filtros de contexto, confluencia y meta-etiquetado
+python -m vp study --universe smallmid        # otros mercados: smallmid (S&P 400 + 600) o mixed (cripto, divisas, materias primas, índices)
 python -m http.server                         # abrir http://localhost:8000
 ```
 
