@@ -552,6 +552,11 @@ def _walk_ar(n, seed, theta):
 
 def test_ml_pipeline():
     """El aprendizaje automático fuera de muestra encuentra un efecto plantado (reversión) y no inventa nada en paseos aleatorios."""
+    try:
+        import pandas, sklearn                                            # noqa: F401
+    except ImportError:
+        print('omitida · aprendizaje automático: faltan pandas o scikit-learn')
+        return
     fast = dict(max_iter=40, learning_rate=0.1, max_leaf_nodes=8, min_samples_leaf=200, l2_regularization=10.0, max_bins=32, random_state=0)
     kw = dict(workers=1, test_years=[2020, 2021], k=60, groups=('ctx',), min_train=3000, min_rows=2000, params=fast)
     ev = ml.analyze({f'S{j}': _walk_ar(1500, 100 + j, 0.08) for j in range(60)}, **kw)
