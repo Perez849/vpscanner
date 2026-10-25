@@ -65,6 +65,43 @@ def nasdaq100() -> List[str]:
     return []
 
 
+def sp400() -> List[str]:
+    t = _read_html('https://en.wikipedia.org/wiki/List_of_S%26P_400_companies')[0]
+    return _clean(t['Symbol'])
+
+
+def sp600() -> List[str]:
+    t = _read_html('https://en.wikipedia.org/wiki/List_of_S%26P_600_companies')[0]
+    return _clean(t['Symbol'])
+
+
+def smallmid() -> List[str]:
+    """Acciones medianas y pequeñas de EE.UU.: miembros actuales del S&P 400 y del S&P 600 (menos líquidas y menos vigiladas que las grandes). Vacía si Wikipedia no responde."""
+    got: List[str] = []
+    for fn in (sp400, sp600):
+        try:
+            got += fn()
+        except Exception as exc:
+            print(f'  universo: {fn.__name__} falló ({type(exc).__name__}: {exc})', flush=True)
+    return sorted(set(got))
+
+
+# cesta de otros mercados: criptomonedas, divisas, materias primas, bonos, índices bursátiles y futuros de índices
+MIXED = ('BTC-USD ETH-USD BNB-USD XRP-USD ADA-USD SOL-USD DOGE-USD LTC-USD LINK-USD XLM-USD '
+         'EURUSD=X GBPUSD=X USDJPY=X AUDUSD=X USDCAD=X USDCHF=X NZDUSD=X EURJPY=X GBPJPY=X EURGBP=X '
+         'GC=F SI=F HG=F CL=F BZ=F NG=F ZC=F ZW=F ZS=F KC=F SB=F CT=F '
+         'ES=F NQ=F YM=F RTY=F ZN=F ZB=F '
+         '^GSPC ^NDX ^DJI ^RUT ^FTSE ^GDAXI ^FCHI ^N225 ^HSI ^STOXX50E ^IBEX').split()
+
+
+def mixed() -> List[str]:
+    return list(MIXED)
+
+
+def universe_by_name(name: str) -> List[str]:
+    return {'large': study_universe, 'smallmid': smallmid, 'mixed': mixed}[name]()
+
+
 def study_universe() -> List[str]:
     """S&P 500 ∪ Nasdaq-100 ∪ lista de seguimiento. Si Wikipedia falla, la lista de reserva. Devuelve (valores)."""
     got: List[str] = []

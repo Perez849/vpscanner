@@ -291,6 +291,9 @@ def test_spent_target_and_first_break():
 def test_watchlist():
     got = universe.parse_watchlist('# comentario\naapl, msft;nvda  # y esto\n  BRK-B ^GSPC $$$ AAPL\n\n')
     assert got == ['AAPL', 'MSFT', 'NVDA', 'BRK-B', '^GSPC'], got
+    assert universe._clean(['BRK.B', 'aapl', 1, 'TOOLONGSYMBOL', ' msft ']) == ['AAPL', 'BRK-B', 'MSFT']
+    mx = universe.mixed()
+    assert len(mx) >= 40 and len(set(mx)) == len(mx) and 'BTC-USD' in mx and 'EURUSD=X' in mx and universe.universe_by_name('mixed') == mx
     w = universe.watchlist()
     assert len(w) >= 50 and len(set(w)) == len(w) and 'AAPL' in w and all(universe.TICKER.match(x) for x in w)
     assert universe.watchlist('/ruta/que/no/existe.txt') == list(universe.WATCHLIST)
@@ -420,6 +423,10 @@ def test_data_retries():
     try:
         b = data.fetch_one('ZZZ', '1y')
         assert b is not None and len(b['c']) == 8 and 'query1' in calls[0] and 'query2' in calls[1]
+        calls.clear()
+        urllib.request.urlopen = lambda req, timeout=0: (calls.append(req.full_url), Resp(payload))[1]
+        assert data.fetch_one('^GSPC', '1y') is not None and '%5EGSPC' in calls[0] and data.fetch_one('EURUSD=X', '1y') is not None and 'EURUSD%3DX' in calls[1]      # símbolos de índices y divisas
+        urllib.request.urlopen = fake
         calls.clear()
 
         def nf(req, timeout=0):

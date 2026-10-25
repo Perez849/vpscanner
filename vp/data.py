@@ -6,6 +6,7 @@ import random
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -98,7 +99,7 @@ def fetch_one(sym: str, rng: str = '3y', tries: int = 5, timeout: int = 25) -> O
             ERRORS[sym] = 'HTTP 429 (se abandona: Yahoo limita las peticiones desde esta IP)'
             return None
         _wait_pause()
-        url = URL.format(host=HOSTS[k % len(HOSTS)], sym=sym.replace('.', '-'), span=span(rng))
+        url = URL.format(host=HOSTS[k % len(HOSTS)], sym=urllib.parse.quote(sym.replace('.', '-'), safe=''), span=span(rng))        # ^GSPC, EURUSD=X, GC=F… con la codificación de URL
         try:
             req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
             with urllib.request.urlopen(req, timeout=timeout) as r:

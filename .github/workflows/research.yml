@@ -14,6 +14,9 @@ on:
       reps:
         description: 'study: desplazamientos temporales del umbral del mejor de N'
         default: '150'
+      universe:
+        description: 'study: large (S&P 500 + Nasdaq-100) | smallmid (S&P 400 + 600) | mixed (cripto, divisas, materias primas, índices)'
+        default: 'large'
 
 permissions:
   contents: write
@@ -42,6 +45,7 @@ jobs:
           INPUT_CMD: ${{ github.event.inputs.cmd }}
           INPUT_SYMBOLS: ${{ github.event.inputs.symbols }}
           INPUT_REPS: ${{ github.event.inputs.reps }}
+          INPUT_UNIVERSE: ${{ github.event.inputs.universe }}
         run: |
           set -o pipefail
           mkdir -p /tmp/out
@@ -55,7 +59,7 @@ jobs:
           elif [ "$CMD" = "plan" ]; then
             python -u -m vp plan --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
           else
-            python -u -m vp study --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-150}" 2>&1 | tee /tmp/out/log.txt
+            python -u -m vp study --symbols "$INPUT_SYMBOLS" --universe "${INPUT_UNIVERSE:-large}" --out /tmp/out --reps "${INPUT_REPS:-150}" 2>&1 | tee /tmp/out/log.txt
           fi
       - name: Publicar resultados en rama aparte
         if: always()

@@ -208,7 +208,7 @@ class Panel:
         return out
 
 
-def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = KS, reps: int = 150, workers: int = 1, verbose: bool = False) -> Dict:
+def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = KS, reps: int = 150, workers: int = 1, verbose: bool = False, cost: float = COST) -> Dict:
     """Barras por valor → estadísticas de evidencia (el contenido de data/evidence.json)."""
     t0 = time.time()
     jobs = [(s, {k: b[k] for k in ('t', 'o', 'h', 'l', 'c', 'v')}) for s, b in bars.items() if len(b['c']) > 300]
@@ -223,7 +223,7 @@ def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = 
         for k, jb in enumerate(jobs):
             s, w = _work(jb)
             work[s] = w
-    P = Panel(work, ks)
+    P = Panel(work, ks, cost)
     out: Dict = {'meta': {'generated': int(time.time()), 'universe': len(P.syms), 'bars': int(len(P.dayv)), 'from': str(np.datetime64(int(P.dayv.min()), 'D')), 'to': str(np.datetime64(int(P.dayv.max()), 'D')),
                           'cost': P.cost, 'primary': PRIMARY, 'horizons': list(HORIZONS), 'ks': list(ks), 'hq': HQ, 'thr': {}, 'tested': {}, 'min_events': MIN_EVENTS,
                           'note': 'Universo = miembros actuales del S&P 500 y del Nasdaq-100: sesgo de supervivencia que favorece a los largos.'},
@@ -284,16 +284,19 @@ def report(ev: Dict) -> str:
     return '\n'.join(L)
 
 
-def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, reps: int = 150, workers: int = 2) -> Dict:
+def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, reps: int = 150, workers: int = 2, ks: Tuple[int, ...] = KS, cost: float = COST, tag: str = '', note: str = '') -> Dict:
     from . import data
     bars, failed = data.fetch_many(symbols, rng=rng, workers=4, cache_dir=cache_dir, max_age_h=24 * 3, verbose=True)
     if len(bars) < 0.9 * len(symbols):                    # lo descargado queda en la caché: se vuelve a lanzar y continúa donde lo dejó
         raise SystemExit(f'solo {len(bars)} de {len(symbols)} valores descargados (Yahoo limita las peticiones): se detiene; lo ya descargado queda en la caché')
-    ev = analyze_panel(bars, KS, reps, workers, verbose=True)
+    ev = analyze_panel(bars, ks, reps, workers, verbose=True, cost=cost)
+    if note:
+        ev['meta']['note'] = note
+    ev['meta']['tag'] = tag
     os.makedirs(out_dir, exist_ok=True)
-    json.dump(ev, open(os.path.join(out_dir, 'evidence.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    json.dump(ev, open(os.path.join(out_dir, f'evidence{tag}.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     txt = report(ev)
-    open(os.path.join(out_dir, 'evidence_report.txt'), 'w', encoding='utf-8').write(txt)
+    open(os.path.join(out_dir, f'evidence_report{tag}.txt'), 'w', encoding='utf-8').write(txt)
     print(txt, flush=True)
     sys.stdout.flush()
     return ev
