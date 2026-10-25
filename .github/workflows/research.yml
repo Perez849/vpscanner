@@ -65,12 +65,15 @@ jobs:
         if: always()
         env:
           INPUT_CMD: ${{ github.event.inputs.cmd }}
+          INPUT_UNIVERSE: ${{ github.event.inputs.universe }}
         run: |
           cd /tmp/out
+          BR="${INPUT_CMD:-lab}"
+          if [ "$BR" = "study" ] && [ -n "$INPUT_UNIVERSE" ] && [ "$INPUT_UNIVERSE" != "large" ]; then BR="study-$INPUT_UNIVERSE"; fi
           git init -q && git checkout -q -b res
           git config user.name "vp-scanner-bot"; git config user.email "bot@users.noreply.github.com"
           git add -A && git commit -q -m "research ${INPUT_CMD:-lab} $(date -u +%F-%H%M) sha=${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" res:claude/research-results-${INPUT_CMD:-lab}
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" res:claude/research-results-${BR}
       - name: Guardar caché (también si falla)
         if: always()
         uses: actions/cache/save@v4
