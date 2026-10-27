@@ -180,7 +180,6 @@ def group_trades(items: List[Dict], last: int) -> Dict:
     """Una operación por valor: las señales de un mismo valor se agrupan en operaciones para no contar varias veces el mismo movimiento.
     · La primera señal (si coinciden varias en la misma barra, la de mayor rango: figura > ruptura > directriz > rebote > vela, y a igualdad la de mayor calidad) abre la operación
       y su plan es el que se simula. Si la señal queda fuera de niveles en la apertura siguiente (resultado «na») no abre nada.
-    · Las señales sin plan operable (recompensa / riesgo por debajo del mínimo o objetivo ya consumido) no abren operación ni confirman: son «no operables».
     · Mientras esa operación sigue abierta, las señales del mismo sentido son «confirmaciones» (no suman otra operación) y las del sentido contrario «contrarias» (aviso de conflicto).
     · Cada operación se cuenta una sola vez, gane o pierda; gana quien termina con ganancia neta, llegue o no al objetivo.
     `last` es la última barra (relativa) de la ventana exportada; una operación aún abierta bloquea hasta ahí."""
@@ -193,9 +192,6 @@ def group_trades(items: List[Dict], last: int) -> Dict:
         if o['res'] == 'na':
             it['trade'] = {'role': 'na'}
             continue
-        if not (it.get('plan') or {}).get('ok', True):                         # sin R:R suficiente o objetivo consumido: no se habría operado
-            it['trade'] = {'role': 'no_operable'}
-            continue
         e = it['i'] + 1
         if cur is not None and e <= cur['exit']:
             same = it['dir'] == cur['dir']
@@ -203,7 +199,7 @@ def group_trades(items: List[Dict], last: int) -> Dict:
             it['trade'] = {'role': 'confirma' if same else 'contraria', 'with': cur['id']}
             continue
         exit_ = o['xi'] if o['res'] in ('target', 'stop', 'timeout') and o.get('xi') is not None else last
-        cur = {'id': it['id'], 'key': it['key'], 'label': it['label'], 'dir': it['dir'], 'fam': it['fam'], 'i': it['i'], 'res': o['res'], 'net': o.get('net'), 'r': o.get('r'), 'ret_m': o.get('ret_m'),
+        cur = {'id': it['id'], 'key': it['key'], 'label': it['label'], 'dir': it['dir'], 'fam': it['fam'], 'i': it['i'], 'res': o['res'], 'net': o.get('net'), 'r': o.get('r'), 
                'mfe': o.get('mfe'), 'prog': o.get('prog'), 'exit': int(exit_), 'conf': [], 'contra': []}
         out.append(cur)
         it['trade'] = {'role': 'lider'}
@@ -215,7 +211,8 @@ def group_trades(items: List[Dict], last: int) -> Dict:
         return {'n': len(ts), 'won': sum(1 for x in nets if x > 0), 'lost': sum(1 for x in nets if x <= 0), 'tgt': sum(1 for t in ts if t['res'] == 'target'), 'stp': sum(1 for t in ts if t['res'] == 'stop'),
                 'tmo': sum(1 for t in ts if t['res'] == 'timeout'), 'tmo_won': sum(1 for t in ts if t['res'] == 'timeout' and t['net'] > 0), 'mean_net': round(float(np.mean(nets)), 3) if nets else None,
                 'sum_net': round(float(np.sum(nets)), 2) if nets else 0.0, 'mean_r': round(float(np.mean(rs)), 3) if rs else None,
-                'mean_m': round(float(np.mean([t['ret_m'] for t in ts if t.get('ret_m') is not None])), 3) if any(t.get('ret_m') is not None for t in ts) else None}
+                'avg_win': round(float(np.mean([x for x in nets if x > 0])), 3) if any(x > 0 for x in nets) else None,
+                'avg_loss': round(float(np.mean([x for x in nets if x <= 0])), 3) if any(x <= 0 for x in nets) else None}
 
     return {'list': out, 'open': sum(1 for t in out if t['res'] == 'open'), 'conflicts': sum(1 for t in out if t['contra']), 'all': tally(closed),
             'by_fam': {f: tally([t for t in closed if t['fam'] == f]) for f in sorted({t['fam'] for t in closed})}}
@@ -245,26 +242,24 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
             continue
         entry = float(F['c'][i])
         bx = P.box(F, i, d, entry, stop, tgt)
-        stop, tgt, stop_s, tgt_c = bx.pop('_stop'), bx.pop('_target'), bx.pop('_stop_s'), bx.pop('_target_c')
-        note = pat.rule
+        stop, lock, stop_s, tgt_c = bx.pop('_stop'), bx.pop('_target'), bx.pop('_stop_s'), bx.pop('_target_c')
+        note = pat.rule.replace('Objetivo genérico de 2R con stop de', 'Stop de').replace('Objetivo genérico de 2R. ', '')   # el objetivo del catálogo es del plan clásico
         if bx['stop_cap']:
             note += f' El stop estructural quedaba a {bx["risk_s_pct"]:.1f} % de la entrada (más de {P.MAX_RISK_ATR:g} ATR): se ha acortado a {bx["risk_pct"]:.1f} %.'
         if bx['stop_min']:
             note += f' El stop estructural quedaba a menos de {P.MIN_STOP:g} ATR: se ha ampliado a {P.MIN_STOP:g} ATR.'
-        if bx['tgt_cap']:
-            note += f' La medida clásica daba {abs(tgt_c / entry - 1) * 100:.1f} %: el objetivo se limita a {P.MAX_RR:g} veces el riesgo.'
-        out = P.outcome(F, i, d, stop, tgt)
-        out_s = P.outcome(F, i, d, stop_s, tgt_c) if (bx['stop_cap'] or bx['stop_min'] or bx['tgt_cap']) else None      # el plan clásico sin límites, solo como referencia
-        for o_, st_, tg_ in ((out, stop, tgt), (out_s, stop_s, tgt_c)):          # con parcial: la mitad en T1 y el stop del resto a la entrada
-            if o_ and o_.get('res') in ('target', 'stop', 'timeout'):
-                eo = float(F['o'][i + 1])
-                m_ = P.managed(F, i, d, st_, tg_, eo + d * 0.5 * abs(tg_ - eo))
-                o_['ret_m'] = None if m_ is None else P.r(m_ - P.COST)
-        active = (n - 1 - i) <= ACTIVE and out['res'] == 'open' and bx['ok']
+        note += f' Plan del operador: al cerrar una sesión por encima de +{P.LOCK_PCT:g} % el stop sube a ese nivel y persigue al mejor cierre a {P.TRAIL_ATR:g} ATR; sin objetivo fijo (la medida clásica daba +{bx["reward_c_pct"]:.1f} %).'
+        if bx['risk_hi']:
+            note += f' Aviso: el stop queda a {bx["risk_pct"]:.1f} % del precio, más de {P.MAX_RISK_PCT:g} %: valor muy volátil.'
+        elif bx['rr_low']:
+            note += f' Aviso: el stop ({bx["risk_pct"]:.1f} %) está más lejos que el +{P.LOCK_PCT:g} % que se quiere asegurar.'
         if bx['spent']:
-            note += ' La ruptura ya recorrió casi toda la medida clásica: el objetivo queda a menos de 1 ATR de la entrada, así que no hay recorrido que operar.'
+            note += ' Aviso: la ruptura ya recorrió casi toda la medida clásica de la figura (el objetivo clásico queda a menos de 1 ATR).'
+        out = P.outcome_lock(F, i, d, stop)
+        out_s = P.outcome(F, i, d, stop_s, tgt_c)                                  # el plan clásico sin límites, solo como referencia
+        active = (n - 1 - i) <= ACTIVE and out['res'] == 'open'
         if active:
-            bx['obs'] = P.obstacles(zs, entry, tgt)
+            bx['obs'] = P.obstacles(zs, entry, tgt_c)
         _shift(geo, s0)
         for o_ in (out, out_s):
             if o_ and 'xi' in o_:

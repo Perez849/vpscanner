@@ -1,17 +1,22 @@
 """
-Estudio del PLAN completo: ¿el resultado de operar cada señal con su stop y su objetivo supera al de entrar al azar con las mismas distancias?
+Estudio del PLAN completo: ¿el resultado de operar cada señal con su plan supera al de entrar al azar con las mismas distancias?
 
-El estudio de evidencia (study.py) mide salidas a tiempo fijo, sin stop ni objetivo. Este responde a la objeción contraria: «quizá no funcionan porque el stop y el objetivo son enormes».
+El estudio de evidencia (study.py) mide salidas a tiempo fijo, sin stop ni objetivo. Este responde a la objeción contraria: «quizá no funcionan porque el stop y el objetivo son enormes»
+y, sobre todo, evalúa la forma de operar de un discrecional: stop inicial razonable, asegurar la ganancia al pasar de +4 % (o +5 %) y dejar correr el resto con un stop que sube.
 
-  · Cada señal se opera como en la web: entrada en la apertura siguiente, stop y objetivo del plan, el stop gana si se tocan ambos el mismo día, cierre a las 40 sesiones. Coste de ida y vuelta del 0,15 %.
-  · Referencia por señal: M entradas al azar en el mismo valor (toda su historia) con el MISMO sentido y las MISMAS distancias de stop y de objetivo medidas en ATR de su propia barra
+  · Cada señal se opera como en la web: entrada en la apertura siguiente, el stop gana si se tocan ambos el mismo día, coste de ida y vuelta del 0,15 %. NO se descarta ninguna señal.
+  · Referencia por señal: M entradas al azar en el mismo valor (toda su historia) con el MISMO sentido y las MISMAS distancias de stop (en ATR de su propia barra) y la misma regla de salida,
     y con una volatilidad relativa parecida (así la volatilidad del momento no cuenta como ventaja). «Exceso» = resultado de la señal − media de sus M entradas al azar.
     No se usa «el mismo año»: la referencia de ese año contendría la tendencia que provocó la señal y sesgaría el exceso hacia abajo (comprobado con paseos aleatorios).
-  · Tres geometrías: «plan» (stop estructural y objetivo clásico, lo que dibuja la web), «tact» (stop táctico de 1,5 ATR con el mismo objetivo) y «fix» (stop 1,5 ATR y objetivo 3 ATR para todos).
-    Con «fix» el tamaño de stop y objetivo es idéntico en todos los patrones: lo que quede es la dirección que aporta el patrón.
+  · Geometrías:
+      «lock4» y «lock5» (el plan del operador de la web): stop inicial = el estructural acotado a 1–2 ATR; cuando una sesión cierra a +4 % (o +5 %) a favor el stop sube a ese nivel y persigue al mejor
+        cierre a 3 ATR, sin objetivo, hasta 60 sesiones;
+      «lock4f»: lo mismo con el stop inicial a 1,5 ATR para todos los patrones (idéntico en todos: lo que quede es la dirección que aporta el patrón);
+      «struct»: el plan clásico sin límites (stop al otro lado de la figura y objetivo por la medida clásica), que daba stops del 10–40 %, solo como referencia;
+      «fix»: stop 1,5 ATR y objetivo 3 ATR para todos; «trail3» y «trail5»: stop que persigue a 3 y 5 ATR del mejor cierre desde la entrada, sin asegurar nada.
   · t con errores estándar agrupados en bloques de tantas sesiones como dura la operación (40 y 60): las operaciones de días vecinos comparten casi todo su recorrido y agrupar solo por día
     no lo recoge. Universo y miembros móviles como en study.py (las 50 y las 300 más negociadas).
-  · «Ganan» = parte de las operaciones que terminan con ganancia neta (después de costes), llegue o no al objetivo; el reparto objetivo / stop / cierre por tiempo es solo descriptivo.
+  · «Ganan» = parte de las operaciones que terminan con ganancia neta (después de costes), llegue o no a ningún nivel; el reparto asegurado / stop / cierre por tiempo es solo descriptivo.
 """
 from __future__ import annotations
 import json
@@ -27,7 +32,9 @@ import numpy as np
 from . import engine, plan as P, study, ta
 from .catalog import CATALOG, HQ
 
-VARIANTS = ('plan', 'struct', 'fix', 'trail3', 'trail5')
+VARIANTS = ('lock4', 'lock5', 'lock4f', 'struct', 'fix', 'trail3', 'trail5')
+LOCK = {'lock4': (4.0, None), 'lock5': (5.0, None), 'lock4f': (4.0, 1.5)}   # (nivel que se asegura en %, stop inicial fijo en ATR; None = el estructural acotado)
+LOCK_TRAIL = 3.0
 TRAIL = {'trail3': 3.0, 'trail5': 5.0}      # stop que persigue al cierre más alto (o bajo) a N ATR, sin objetivo
 TRAIL_HOLD = 60
 HOLD = P.HOLD
@@ -92,8 +99,42 @@ def sim_trail(o, h, l, c, i: int, d: int, mult: float, a: float, maxb: int = TRA
     return 2, d * (float(c[e + maxb - 1]) / entry - 1.0) * 100.0
 
 
-def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict[str, Optional[Tuple[float, float]]]]:
-    """(stop, objetivo) de cada variante para el evento e; la variante «plan» es None si la señal no es operable (recompensa / riesgo bajo, riesgo alto u objetivo consumido)."""
+def sim_lock(o, h, l, c, i: int, d: int, stop: float, lock_pct: float, a: float, trail: float = LOCK_TRAIL, maxb: int = TRAIL_HOLD) -> Optional[Tuple[int, float]]:
+    """Mismo resultado que plan.outcome_lock pero con cortes de NumPy: (0 = se llegó a asegurar, 1 = stop inicial, 2 = cierre por tiempo sin asegurar, rentabilidad % antes de costes)."""
+    n = len(c)
+    e = i + 1
+    if e + maxb > n:
+        return None
+    entry = float(o[e])
+    if (d > 0 and entry <= stop) or (d < 0 and entry >= stop):
+        return None
+    hh, ll, cc, oo = h[e:e + maxb], l[e:e + maxb], c[e:e + maxb], o[e:e + maxb]
+    lock = entry * (1.0 + d * lock_pct / 100.0)
+    hs, trig = (ll <= stop, cc >= lock) if d > 0 else (hh >= stop, cc <= lock)
+    ks = int(np.argmax(hs)) if hs.any() else maxb
+    kt = int(np.argmax(trig)) if trig.any() else maxb
+    pct = lambda px: d * (px / entry - 1.0) * 100.0
+    if ks < maxb and ks <= kt:                                   # el stop inicial salta antes (o el mismo día) de asegurar
+        gap = (oo[ks] <= stop) if d > 0 else (oo[ks] >= stop)
+        return 1, pct(float(oo[ks]) if gap else stop)
+    if kt >= maxb:
+        return 2, pct(float(cc[-1]))
+    best = np.maximum.accumulate(cc) if d > 0 else np.minimum.accumulate(cc)
+    stp = np.maximum(lock, best - trail * a) if d > 0 else np.minimum(lock, best + trail * a)      # stop que rige la barra siguiente
+    idx = np.arange(kt + 1, maxb)
+    if len(idx):
+        sk = stp[idx - 1]
+        hit = (ll[idx] <= sk) if d > 0 else (hh[idx] >= sk)
+        if hit.any():
+            j = int(np.argmax(hit))
+            k = int(idx[j])
+            gap = (oo[k] <= sk[j]) if d > 0 else (oo[k] >= sk[j])
+            return 0, pct(float(oo[k]) if gap else float(sk[j]))
+    return 0, pct(float(cc[-1]))
+
+
+def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict]:
+    """Por evento: (stop, objetivo) del plan clásico («struct») y de «fix», y el stop inicial del plan del operador («lock»: el estructural acotado a 1–2 ATR). None si no se puede calcular."""
     i, name = e['i'], e['name']
     d = CATALOG[name].dir
     a = float(F['atr'][i])
@@ -105,7 +146,7 @@ def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict[str, Optional[Tup
         bx = P.box(F, i, d, entry, stop, tgt)
     except Exception:
         return None
-    return {'plan': (bx['_stop'], bx['_target']) if bx['ok'] else None, 'struct': (bx['_stop_s'], bx['_target_c']), 'fix': (entry - d * FIX_STOP * a, entry + d * FIX_TARGET * a)}
+    return {'struct': (bx['_stop_s'], bx['_target_c']), 'fix': (entry - d * FIX_STOP * a, entry + d * FIX_TARGET * a), 'lock': bx['_stop']}
 
 
 def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
@@ -156,9 +197,30 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
             t['bt'].append(0.0); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
             t['ra'].append(m_); t['rw'].append(0.0)
             t['win'].append(float(r0[1] - COST > 0)); t['bwin'].append(float(np.mean([x[1] - COST > 0 for x in rs])))
-        for v, st_tg in gm.items():
-            if st_tg is None:
+        for v, (lp, fixed) in LOCK.items():                         # plan del operador: se asegura a +lp % y se deja correr; todas las señales
+            stop0 = gm['lock'] if fixed is None else entry - d * fixed * a
+            ra = abs(entry - stop0) / a
+            if not ra > 0:
                 continue
+            r0 = sim_lock(o, h, l, c, i, d, stop0, lp, a)
+            if r0 is None:
+                continue
+            rs = []
+            for j in js:
+                j = int(j)
+                rj = sim_lock(o, h, l, c, j, d, float(c[j]) - d * ra * float(atr[j]), lp, float(atr[j]))
+                if rj is not None:
+                    rs.append(rj)
+            if len(rs) < M // 2:
+                continue
+            res = np.array([x[0] for x in rs])
+            t = out[v]
+            t['i'].append(i); t['pid'].append(pid); t['hq'].append(hq); t['ret'].append(r0[1] - COST); t['res'].append(r0[0])
+            t['base'].append(float(np.mean([x[1] for x in rs])) - COST)
+            t['bt'].append(float((res == 0).mean())); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
+            t['ra'].append(ra); t['rw'].append(lp / (a / entry * 100.0))
+            t['win'].append(float(r0[1] - COST > 0)); t['bwin'].append(float(np.mean([x[1] - COST > 0 for x in rs])))
+        for v, st_tg in ((k_, g_) for k_, g_ in gm.items() if k_ in ('struct', 'fix')):
             stop, tgt = st_tg
             r0 = sim(o, h, l, c, i, d, stop, tgt)
             if r0 is None:
@@ -235,7 +297,7 @@ def analyze_plan(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = s
         gi, hq, pid = np.concatenate(gi), np.concatenate(hq).astype(bool), np.concatenate(pid)
         t = {k: np.concatenate(x) for k, x in cols.items()}
         fam = np.array([CATALOG[x].fam for x in pid])
-        blk = TRAIL_HOLD if v in TRAIL else HOLD                      # bloque de los errores estándar = duración de la operación
+        blk = TRAIL_HOLD if (v in TRAIL or v in LOCK) else HOLD      # bloque de los errores estándar = duración de la operación
         dr = np.array([CATALOG[x].dir for x in pid])
         for K in ks:
             for nm in np.unique(pid):
@@ -278,15 +340,18 @@ def report(ev: Dict) -> str:
         L.append('CALIBRACIÓN con paseos aleatorios (sin ventaja posible; el exceso que salga aquí es sesgo del método y hay que descontarlo): ' +
                  ' · '.join(f"{v}: {c['ex']:+.2f} % (t {c['t']:+.1f}, n {c['n']})" for v, c in ev['calibration'].items()))
     L.append(f"ESTUDIO DEL PLAN · {m['universe']} acciones · {m['bars']:,} barras · {m['from']} → {m['to']} · coste {m['cost']} % · cierre a {m['hold']} sesiones · {m['random_entries']} entradas al azar por señal")
-    desc = {'trail3': 'STOP QUE PERSIGUE a 3 ATR del mejor cierre, sin objetivo, hasta 60 sesiones', 'trail5': 'STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones',
-            'plan': 'PLAN OPERABLE: stop estructural acotado a 2 ATR, objetivo ≤ 3 veces el riesgo, solo señales con recompensa / riesgo ≥ 1,5 y riesgo ≤ 8 % (lo que dibuja la web)',
-            'struct': 'PLAN CLÁSICO sin límites: stop al otro lado de la figura y objetivo por la medida clásica (referencia: da stops del 10–40 %)', 'fix': f"FIJO: stop {m['fix'][0]} ATR y objetivo {m['fix'][1]} ATR para todos los patrones"}
+    desc = {'lock4': 'PLAN DEL OPERADOR: stop inicial estructural acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR (todas las señales, hasta 60 sesiones)',
+            'lock5': 'PLAN DEL OPERADOR con +5 %: al cerrar a +5 % el stop sube a +5 % y persigue a 3 ATR',
+            'lock4f': 'PLAN DEL OPERADOR con stop inicial de 1,5 ATR para todos los patrones y aseguramiento a +4 %',
+            'struct': 'PLAN CLÁSICO sin límites: stop al otro lado de la figura y objetivo por la medida clásica (referencia: da stops del 10–40 %)',
+            'fix': f"FIJO: stop {m['fix'][0]} ATR y objetivo {m['fix'][1]} ATR para todos los patrones",
+            'trail3': 'STOP QUE PERSIGUE a 3 ATR del mejor cierre desde la entrada, sin asegurar nada, hasta 60 sesiones', 'trail5': 'STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin asegurar nada, hasta 60 sesiones'}
     for K in m['ks']:
         for v in m['variants']:
             if v not in ev['pooled']:
                 continue
             L.append(f"\n=== {desc[v]} · las {K} más negociadas ===")
-            L.append('  grupo'.ljust(26) + 'n'.rjust(8) + 'media'.rjust(8) + 'azar'.rjust(8) + 'exceso'.rjust(8) + 't'.rjust(7) + '  ganan señal/azar'.rjust(19) + ' | objetivo/stop/tiempo señal vs azar'.rjust(40) + '   stop/obj (ATR)')
+            L.append('  grupo'.ljust(26) + 'n'.rjust(8) + 'media'.rjust(8) + 'azar'.rjust(8) + 'exceso'.rjust(8) + 't'.rjust(7) + '  ganan señal/azar'.rjust(19) + ' | asegurado/stop/tiempo señal vs azar'.rjust(40) + '   stop/obj (ATR)')
             for g, s in ev['pooled'][v][f'K{K}'].items():
                 if s.get('n', 0) < 20 or 'ex' not in s:
                     continue

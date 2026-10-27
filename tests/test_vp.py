@@ -276,7 +276,7 @@ def test_spent_target_and_first_break():
     b, _ = plant_fig('double_bottom', an=[(0, 100), (20, 80), (32, 92), (44, 80.5), (51, 90), (52, 112)])
     res = lab.analyze('T', b, nb=300)
     db = [p for p in res['patterns'] if p['key'] == 'double_bottom']
-    assert db and db[-1]['plan']['spent'] and not db[-1]['active'] and 'recorrió casi toda la medida' in db[-1]['note']
+    assert db and db[-1]['plan']['spent'] and 'recorrió casi toda la medida' in db[-1]['note']
     ok, _ = plant_fig('double_bottom')
     res = lab.analyze('T', ok, nb=300)
     db = [p for p in res['patterns'] if p['key'] == 'double_bottom']
@@ -326,12 +326,13 @@ def test_plan():
     rr = p['plan']
     neck = next(l['a'][1] for l in p['lines'] if l['k'] == 'neck')
     low = min(q[1] for q in p['pts'] if q[2] in ('1', '2'))
-    assert rr['stop'] < rr['entry'] < rr['t1'] < rr['target'] and p['dir'] == 1
+    assert rr['stop'] < rr['entry'] < rr['target'] and p['dir'] == 1
     assert abs(rr['target_c'] - (neck + (neck - low))) < 0.02, (rr, neck, low)        # objetivo clásico = cuello + altura de la figura
     assert rr['stop_s'] < low                                                         # stop clásico bajo el mínimo más bajo
-    assert rr['stop'] > rr['stop_s'] and rr['stop_cap']                               # ese stop está lejísimos en ATR: el plan operable lo acorta
-    assert rr['target'] <= rr['entry'] + plan.MAX_RR * (rr['entry'] - rr['stop']) + 0.02
-    assert p['out']['res'] == 'target' and p['out']['ret'] > 0 and p['out']['xi'] > p['i']
+    assert rr['stop'] > rr['stop_s'] and rr['stop_cap']                               # ese stop está lejísimos en ATR: el plan del operador lo acorta
+    assert abs(rr['target'] - rr['entry'] * 1.04) < 0.02                              # nivel que se asegura: +4 %
+    assert p['out_s']['res'] == 'target' and p['out_s']['ret'] > 0 and p['out_s']['xi'] > p['i']          # el plan clásico llega al objetivo
+    assert p['out']['res'] in ('target', 'open') and p['out']['locked'] and p['out']['ret'] >= 3.9 and p['out']['xi'] > p['i']      # y el del operador asegura el +4 % (la serie acaba con la operación en curso)
     res2, dbs2 = run([(56, 70)])
     assert dbs2 and dbs2[-1]['out']['res'] == 'stop' and dbs2[-1]['out']['ret'] < 0
     # invariantes de todos los patrones del valor: stop a ≥ 1 ATR, T1 intermedio, lados correctos
@@ -340,7 +341,7 @@ def test_plan():
             r_ = q['plan']
             if r_ is None:
                 continue
-            assert (r_['stop'] < r_['entry'] < r_['t1'] < r_['target']) if q['dir'] > 0 else (r_['target'] < r_['t1'] < r_['entry'] < r_['stop']), (q['key'], r_)
+            assert (r_['stop'] < r_['entry'] < r_['target']) if q['dir'] > 0 else (r_['target'] < r_['entry'] < r_['stop']), (q['key'], r_)
     s = json.dumps(res)
     assert all(z['touches'] >= 2 and z['lo'] < z['p'] < z['hi'] for z in res['zones'])
     assert len(res['bars']['c']) == res['n'] == len(res['sma50']) and all(0 <= pp['i'] < res['n'] for pp in res['patterns'])
@@ -348,25 +349,23 @@ def test_plan():
 
 
 def test_plan_rules():
-    """Reglas de riesgo del plan: stop estructural acotado a 2 ATR (y ≥ 1), objetivo ≤ 3 veces el riesgo, «no operable» con recompensa / riesgo < 1,5, riesgo > 8 % o objetivo consumido."""
+    """Plan del operador: stop estructural acotado a [1, 2] ATR, nivel de aseguramiento a +4 % y avisos informativos que NO excluyen la señal."""
     n = 80
     c = np.full(n, 100.0)
     F = {'atr': np.full(n, 2.0), 'c': c, 'o': c, 'h': c + 1, 'l': c - 1}                    # ATR 2 % del precio
-    a = plan.box(F, 60, 1, 100.0, 80.0, 140.0)                                                # stop estructural a 20 % y objetivo a 40 %
-    assert a['stop'] == 96.0 and a['stop_cap'] and a['risk_atr'] == 2.0 and a['target'] == 112.0 and a['tgt_cap'] and a['rr'] == 3.0 and a['ok'], a      # 2 ATR = 4 %; objetivo 3R = 12 %
+    a = plan.box(F, 60, 1, 100.0, 80.0, 140.0)                                                # stop estructural a 20 % y objetivo clásico a 40 %
+    assert a['stop'] == 96.0 and a['stop_cap'] and a['risk_atr'] == 2.0 and a['target'] == 104.0 and a['lock_pct'] == 4.0 and a['rr'] == 1.0 and a['ok'], a      # 2 ATR = 4 %; se asegura a +4 %
     assert a['stop_s'] == 80.0 and a['target_c'] == 140.0 and a['rr_s'] == 2.0                # el plan clásico se conserva como referencia
     b = plan.box(F, 60, 1, 100.0, 99.0, 105.0)                                                # stop pegado: se ensancha a 1 ATR
-    assert b['stop'] == 98.0 and b['stop_min'] and not b['stop_cap'] and b['rr'] == 2.5 and b['ok'], b
-    d = plan.box(F, 60, 1, 100.0, 96.0, 103.0)                                                # recompensa 3 contra riesgo 4: 0,75 R, no operable
-    assert abs(d['rr'] - 0.75) < 1e-9 and not d['ok'] and not d['spent'], d
-    e = plan.box(F, 60, -1, 100.0, 105.0, 90.0)                                               # corto: stop de 5 % acortado a 4 %, objetivo de 10 % (< 3R = 12 %) se queda
-    assert e['stop'] == 104.0 and e['target'] == 90.0 and e['rr'] == 2.5 and e['stop_cap'] and not e['tgt_cap'] and e['ok'], e
-    f = plan.box(F, 60, 1, 100.0, 97.0, 101.0)                                                # objetivo a menos de 1 ATR de la entrada: consumido
-    assert f['spent'] and not f['ok']
-    F2 = {'atr': np.full(n, 6.0), 'c': c, 'o': c, 'h': c + 1, 'l': c - 1}                    # ATR 6 %: el stop estructural a 10 % pasa del 8 %: valor demasiado volátil
-    g = plan.box(F2, 60, 1, 100.0, 90.0, 140.0)
-    assert g['risk_pct'] == 10.0 and g['risk_hi'] and not g['ok'], g
-    print('ok · plan operable: stop acotado a 2 ATR, objetivo ≤ 3R, y «no operable» con R:R bajo, riesgo alto u objetivo consumido')
+    assert b['stop'] == 98.0 and b['stop_min'] and not b['stop_cap'] and b['rr'] == 2.0 and b['ok'], b
+    e = plan.box(F, 60, -1, 100.0, 105.0, 90.0)                                               # corto: stop de 5 % acortado a 4 %, se asegura a −4 %
+    assert e['stop'] == 104.0 and e['target'] == 96.0 and e['stop_cap'] and e['ok'], e
+    F2 = {'atr': np.full(n, 6.0), 'c': c, 'o': c, 'h': c + 1, 'l': c - 1}                    # ATR 6 %: el stop de 6 % está más lejos que el +4 % que se asegura
+    g = plan.box(F2, 60, 1, 100.0, 94.0, 140.0)
+    assert g['risk_pct'] == 6.0 and g['rr_low'] and not g['risk_hi'] and g['ok'], g           # aviso, no exclusión
+    g2 = plan.box({'atr': np.full(n, 6.0), 'c': c, 'o': c, 'h': c + 1, 'l': c - 1}, 60, 1, 100.0, 85.0, 140.0)
+    assert g2['risk_pct'] == 12.0 and g2['risk_hi'] and g2['ok'], g2                          # riesgo alto: aviso, sigue contando
+    print('ok · plan del operador: stop acotado a 2 ATR, aseguramiento a +4 %, avisos sin excluir ninguna señal')
 
 
 def test_min_stop_and_forming():
@@ -388,7 +387,7 @@ def test_min_stop_and_forming():
     assert len(fm) == 1 and fm[0]['key'] == 'forming_sym_tri' and fm[0]['dir'] == 0 and set(fm[0]['sc']) == {'up', 'dn'}
     up, dn = fm[0]['sc']['up'], fm[0]['sc']['dn']
     last = res['summary']['close']
-    assert dn['stop'] > dn['entry'] > dn['t1'] > dn['target'] and up['stop'] < up['entry'] < up['t1'] < up['target'] and dn['entry'] < last < up['entry']
+    assert dn['stop'] > dn['entry'] > dn['target'] and up['stop'] < up['entry'] < up['target'] and dn['entry'] < last < up['entry']
     assert fm[0]['ann'] and 0 <= fm[0]['q'] <= 100 and all(ln.get('n', 2) >= 2 for ln in fm[0]['lines'])
     print('ok · figuras en formación con dos escenarios y stop mínimo de 1 ATR')
 
@@ -494,7 +493,7 @@ def test_lab_json(tmp='/tmp/vp_lab_test'):
     assert row['sym'] == 'RW' and len(row['spark']) == lab.SPARK
     T = res['trades']
     done = [p for p in res['patterns'] if p['state'] == 'done']
-    assert len(T['list']) < len(done) and T['all']['n'] <= len(T['list']) and all(p['trade']['role'] in ('lider', 'confirma', 'contraria', 'na', 'no_operable') for p in done)     # las señales solapadas no se cuentan una a una
+    assert len(T['list']) < len(done) and T['all']['n'] <= len(T['list']) and all(p['trade']['role'] in ('lider', 'confirma', 'contraria', 'na') for p in done)     # las señales solapadas no se cuentan una a una
     assert sum(1 for p in done if p['trade']['role'] == 'lider') == len(T['list'])
     for p in done:
         o = p['out']
@@ -594,6 +593,24 @@ def test_plan_study():
                 continue
             tot += 1
             assert {'target': 0, 'stop': 1, 'timeout': 2}[r['res']] == s1[0] and abs(s1[1] - r['ret']) < 1e-2, (s1, r)
+    # el plan del operador vectorizado coincide con plan.outcome_lock (con 3 años de paseo aleatorio, largos y cortos, varios niveles)
+    nl = 0
+    for seed in range(3):
+        b = walk(900, seed=40 + seed)
+        F = ta.prepare(b)
+        o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
+        for _ in range(150):
+            i, d, lp = int(rng.integers(60, 780)), int(rng.choice([-1, 1])), float(rng.choice([3.0, 4.0, 5.0]))
+            a = float(atr[i])
+            stop = c[i] - d * rng.uniform(1.0, 2.0) * a
+            v1, r1 = planstudy.sim_lock(o, h, l, c, i, d, stop, lp, a), P_.outcome_lock(F, i, d, stop, lock_pct=lp)
+            if v1 is None:
+                assert r1['res'] in ('na', 'open') or r1['bars'] < planstudy.TRAIL_HOLD, (v1, r1)
+                continue
+            nl += 1
+            code = 0 if r1['res'] == 'target' else 1 if r1['res'] == 'stop' else 2
+            assert code == v1[0] and abs(v1[1] - r1['ret']) < 1e-2, (v1, r1)
+    assert nl > 200
     # stop que persigue: sube, y al caer sale a 3 ATR del mejor cierre (a 127 si el máximo fue 130); en corto, sin tocarse, cierra por tiempo
     n_ = 200
     cc = np.concatenate([np.linspace(100, 130, 60), np.linspace(130, 90, 140)])
@@ -611,7 +628,7 @@ def test_plan_study():
         assert s['n'] > 1500 and abs(s['ex']) < 0.6 and abs(s['t']) < 6, (v, s)           # sin ventaja posible: el exceso queda cerca de 0
         assert (0 < s['tgt'] < 100 or v.startswith('trail')) and abs(s['tgt'] + s['stp'] + s['tmo'] - 100) < 0.05      # con stop que persigue no hay objetivo
     txt = planstudy.report(ev)
-    assert 'PLAN OPERABLE' in txt and 'PLAN CLÁSICO' in txt and 'FIJO' in txt and 'ganan' in txt
+    assert 'PLAN DEL OPERADOR' in txt and 'PLAN CLÁSICO' in txt and 'FIJO' in txt and 'ganan' in txt
     print(f'ok · estudio del plan: simulador idéntico a plan.outcome ({tot} casos) y sin ventaja sobre paseos aleatorios')
 
 
@@ -731,21 +748,30 @@ def test_context_experiment():
 
 
 def test_outcome_counts_real_result():
-    """Gana quien termina con ganancia neta, llegue o no al objetivo: un cierre por tiempo con +7 % cuenta como ganado; el parcial en T1 y el recorrido máximo se calculan bien."""
+    """Gana quien termina con ganancia neta, llegue o no a ningún nivel. Plan clásico (objetivo) y plan del operador (asegurar +4 % y dejar correr)."""
     o = np.array([100, 100, 101, 104, 106, 108, 109.0]); h = np.array([101, 102, 104, 106, 108, 109.5, 111.0]); l = np.array([99, 99, 100, 103, 105, 107, 108.0]); c = np.array([100, 101, 103, 105.5, 107, 109, 110.5])
-    F = dict(o=o, h=h, l=l, c=c)
+    F = dict(o=o, h=h, l=l, c=c, atr=np.full(7, 1.0))
     a = plan.outcome(F, 0, 1, 95, 110)
-    assert a['res'] == 'target' and a['bars'] == 6 and abs(a['ret'] - 10) < 1e-6 and abs(a['net'] - (10 - plan.COST)) < 1e-6 and abs(a['r'] - 2.0) < 1e-6 and a['t1'] and a['mfe'] >= 10, a
-    assert abs(plan.managed(F, 0, 1, 95, 110, 105.0) - 7.5) < 1e-6                                   # mitad en T1 (+5 %) y mitad en el objetivo (+10 %)
+    assert a['res'] == 'target' and a['bars'] == 6 and abs(a['ret'] - 10) < 1e-6 and abs(a['net'] - (10 - plan.COST)) < 1e-6 and abs(a['r'] - 2.0) < 1e-6 and a['mfe'] >= 10, a
     b = plan.outcome(F, 0, 1, 95, 120, maxb=4)                                                       # objetivo +20 %: no llega, cierra a las 4 sesiones con +7 %
-    assert b['res'] == 'timeout' and abs(b['ret'] - 7.0) < 1e-6 and b['net'] > 0 and abs(b['prog'] - 0.4) < 1e-6 and not b['t1'], b          # prog = 8 % de recorrido máximo sobre el 20 % del objetivo
+    assert b['res'] == 'timeout' and abs(b['ret'] - 7.0) < 1e-6 and b['net'] > 0 and abs(b['prog'] - 0.4) < 1e-6, b          # prog = 8 % de recorrido máximo sobre el 20 % del objetivo
     d = plan.outcome(F, 0, 1, 99.5, 110)                                                              # stop pegado: salta en la primera sesión (mínimo 99) y pierde
     assert d['res'] == 'stop' and d['net'] < 0 and d['r'] < 0 and d['xi'] == 1, d
     assert plan.outcome(F, 0, 1, 100, 110)['res'] == 'na'                                             # abre en el stop: no se opera
     # corto: espejo del largo
     sh = plan.outcome(dict(o=200 - o, h=200 - l, l=200 - h, c=200 - c), 0, -1, 105, 90)
     assert sh['res'] == 'target' and abs(sh['ret'] - 10) < 0.6 and sh['r'] > 1.5, sh
-    print('ok · resultado de cada operación: ganancia neta, múltiplo del riesgo, recorrido máximo y parcial en T1; un cierre por tiempo con ganancia cuenta como ganado')
+    # plan del operador: entrada 100 (apertura de la barra 1), stop 95; la barra 3 cierra en 105,5 (≥ +4 %): el stop sube a 104 y persigue a 3 ATR (ATR 1 → 102,5 con el cierre de 105,5)
+    lk = plan.outcome_lock(F, 0, 1, 95.0, maxb=6)
+    assert lk['locked'] and lk['res'] == 'target' and lk['net'] > 3.5, lk                          # llega al final con lo asegurado (cierre 110,5)
+    F2 = dict(o=o, h=h, l=l, c=c, atr=np.full(7, 1.0))
+    l2 = l.copy(); l2[4] = 103.5                                                                      # la barra 4 toca 103,5: el stop asegurado (104) salta y sale a 104 = +4 %
+    lk2 = plan.outcome_lock(dict(F2, l=l2), 0, 1, 95.0)
+    assert lk2['locked'] and lk2['res'] == 'target' and abs(lk2['ret'] - 4.0) < 1e-6 and lk2['bars'] == 4, lk2
+    l3 = l.copy(); l3[1] = 94.0                                                                       # antes de asegurar toca el stop inicial: pierde
+    lk3 = plan.outcome_lock(dict(F2, l=l3), 0, 1, 95.0)
+    assert lk3['res'] == 'stop' and not lk3['locked'] and lk3['ret'] < 0, lk3
+    print('ok · resultado de cada operación: ganancia neta, múltiplo del riesgo, recorrido máximo; plan clásico y plan del operador (asegurar +4 % y dejar correr)')
 
 
 def test_group_trades():
@@ -757,18 +783,17 @@ def test_group_trades():
              it('shooting_star', 'velas', 14, -1, 'stop', -2.0, xi=15),                                                                            # contraria
              it('marubozu_bull', 'velas', 30, 1, 'timeout', 4.0, xi=45),                                                                           # operación nueva: cerrada por tiempo con ganancia
              it('hs_top', 'figuras', 31, -1, 'na', None),                                                                                          # fuera de niveles: no abre nada
-             it('donch55_dn', 'rupturas', 60, -1, 'stop', -3.0, xi=62),
-             dict(it('box_up', 'rupturas', 80, 1, 'target', 9.0, xi=90), plan={'ok': False})]                                                       # sin R:R suficiente: no se habría operado
+             it('donch55_dn', 'rupturas', 60, -1, 'stop', -3.0, xi=62)]
     tr = lab.group_trades(items, 100)
     assert [t['key'] for t in tr['list']] == ['double_bottom', 'marubozu_bull', 'donch55_dn'], [t['key'] for t in tr['list']]
     first = tr['list'][0]
     assert first['conf'] == ['hammer', 'bull_engulf'] or sorted(first['conf']) == ['bull_engulf', 'hammer'], first
     assert first['contra'] == ['shooting_star'] and tr['conflicts'] == 1
     roles = {x['key']: x['trade']['role'] for x in items}
-    assert roles == {'hammer': 'confirma', 'double_bottom': 'lider', 'bull_engulf': 'confirma', 'shooting_star': 'contraria', 'marubozu_bull': 'lider', 'hs_top': 'na', 'donch55_dn': 'lider', 'box_up': 'no_operable'}, roles
+    assert roles == {'hammer': 'confirma', 'double_bottom': 'lider', 'bull_engulf': 'confirma', 'shooting_star': 'contraria', 'marubozu_bull': 'lider', 'hs_top': 'na', 'donch55_dn': 'lider'}, roles
     A = tr['all']
     assert A['n'] == 3 and A['won'] == 2 and A['lost'] == 1 and A['tmo'] == 1 and A['tmo_won'] == 1 and abs(A['mean_net'] - (7.0 + 4.0 - 3.0) / 3) < 1e-3, A
-    print('ok · operaciones únicas: 8 señales solapadas = 3 operaciones, con las contrarias avisadas y el cierre por tiempo con ganancia contado como ganado')
+    print('ok · operaciones únicas: 7 señales solapadas = 3 operaciones, con las contrarias avisadas y el cierre por tiempo con ganancia contado como ganado')
 
 
 def test_combos_unique_valuedays():

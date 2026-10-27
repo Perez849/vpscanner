@@ -1,12 +1,13 @@
-"""Plan de cada patrón: entrada, stop y objetivo; objetivo parcial T1, obstáculos y resultado simulado.
+"""Plan de cada patrón: entrada, stop inicial, nivel de aseguramiento y resultado simulado.
 
-El plan clásico (stop al otro lado de la figura y objetivo por la medida clásica) da cosas sin sentido operativo: stops del 10, 26 o 43 % con objetivos del 4 %. Por eso el plan que se muestra, se simula
-y se cuenta tiene reglas de riesgo explícitas y fijadas de antemano (no optimizadas con los resultados):
-  · el stop estructural se respeta solo si queda a ≤ MAX_RISK_ATR ATR de la entrada; si está más lejos se acorta a ese límite, y nunca queda a menos de MIN_STOP ATR (un stop pegado salta con el ruido);
-  · el objetivo es la medida clásica, pero a lo sumo MAX_RR veces el riesgo (más allá no es realista en 40 sesiones);
-  · si con ese stop el objetivo no da al menos MIN_RR veces el riesgo, o el riesgo pasa del MAX_RISK_PCT % del precio (valor demasiado volátil para este plan), o la ruptura ya consumió la medida,
-    la señal es «no operable»: se dibuja, pero no se cuenta como operación.
-El plan clásico (sin límites) se conserva como referencia (`stop_s`, `target_c`, `rr_s`)."""
+Plan del operador (el que se muestra, se simula y se cuenta con TODAS las señales: ninguna se descarta):
+  · entrada en la apertura siguiente a la señal;
+  · stop inicial: el estructural (al otro lado de la figura) si queda entre MIN_STOP y MAX_RISK_ATR ATR de la entrada; si está más lejos se acorta a MAX_RISK_ATR ATR;
+  · asegurar: cuando una sesión cierra a LOCK_PCT % o más a favor (+4 %), el stop sube a ese nivel (+4 %) y desde entonces persigue al mejor cierre a TRAIL_ATR ATR sin bajar nunca de él:
+    se asegura lo ganado y se deja correr el resto, sin objetivo fijo;
+  · como máximo HOLD_LOCK sesiones.
+El plan clásico (stop al otro lado de la figura sin límites y objetivo por la medida clásica) se conserva como referencia (`stop_s`, `target_c`, `rr_s`, `outcome`): daba stops del 10, 26 o 43 %.
+Los avisos (riesgo de más del MAX_RISK_PCT % del precio, stop más lejos que el nivel que se quiere asegurar) son informativos: no excluyen la señal."""
 from __future__ import annotations
 import math
 from typing import Dict, List, Optional, Tuple
@@ -17,14 +18,16 @@ from . import shapes
 from .catalog import CATALOG
 from .shapes import at
 
-HOLD = 40            # sesiones máximas del resultado simulado
-MIN_STOP = 1.0       # el stop nunca queda a menos de 1 ATR de la entrada (un stop pegado da R:R absurdos y salta con el ruido)
+HOLD = 40            # sesiones máximas del resultado simulado con el plan clásico
+HOLD_LOCK = 60       # sesiones máximas del plan del operador (hay que dejar correr)
+MIN_STOP = 1.0       # el stop nunca queda a menos de 1 ATR de la entrada (un stop pegado salta con el ruido)
 MAX_RISK_ATR = 2.0   # el stop nunca queda a más de 2 ATR de la entrada: ~5 % en una acción de volatilidad media (ATR del 2,6 %); el estructural más lejano se acorta
-MIN_RR = 1.5         # recompensa / riesgo mínima para que la señal sea operable
-MAX_RR = 3.0         # el objetivo no pasa de 3 veces el riesgo
-MAX_RISK_PCT = 8.0   # riesgo máximo (% del precio) para que la señal sea operable: en un valor con ATR de más del 4 % hasta el stop de 2 ATR es demasiado lejos
+LOCK_PCT = 4.0       # rentabilidad (%) que se quiere asegurar: al cerrar una sesión por encima, el stop sube a ese nivel
+TRAIL_ATR = 3.0      # después el stop persigue al mejor cierre a 3 ATR (sin bajar del nivel asegurado)
+MAX_RISK_PCT = 8.0   # aviso: por encima de este riesgo (% del precio) el valor es muy volátil para un stop de 2 ATR
+MAX_RR = 3.0         # (plan clásico de referencia) el objetivo clásico se limita a 3 veces el riesgo
 TACT = 1.5           # (estudio del plan) stop táctico de referencia
-SPENT = 1.0          # si la medida clásica deja menos de 1 ATR hasta el objetivo, la ruptura ya la consumió: no hay recorrido que operar
+SPENT = 1.0          # si la medida clásica deja menos de 1 ATR hasta el objetivo, la ruptura ya la consumió (solo informativo)
 
 
 def r(x: float) -> float:
@@ -111,10 +114,10 @@ def rule(name: str, g: Dict, F: Dict[str, np.ndarray], i: int, d: int, entry: Op
 
 
 def box(F: Dict[str, np.ndarray], i: int, d: int, entry: float, stop: float, target: float) -> Dict:
-    """Plan operable a partir del stop estructural y el objetivo clásico: riesgo entre MIN_STOP y MAX_RISK_ATR ATR, objetivo a lo sumo MAX_RR veces el riesgo y marca de operable
-    (recompensa / riesgo ≥ MIN_RR y objetivo no consumido). Devuelve también el plan clásico sin límites (`stop_s`, `target_c`, `rr_s`)."""
+    """Plan del operador a partir del stop estructural y el objetivo clásico: stop acotado a [MIN_STOP, MAX_RISK_ATR] ATR y nivel de aseguramiento a LOCK_PCT % a favor
+    (`target` es ese nivel; sin objetivo fijo). Devuelve también el plan clásico sin límites (`stop_s`, `target_c`, `rr_s`) y avisos informativos."""
     a = float(F['atr'][i])
-    spent = bool(d * (target - entry) < SPENT * a)                  # medido antes de corregir: un objetivo que la ruptura ya superó no se disfraza de 2R
+    spent = bool(d * (target - entry) < SPENT * a)                  # medida clásica ya consumida (solo informativo)
     if d > 0 and not (stop < entry < target):
         stop, target = generic(entry, a, 1, max(abs(entry - stop), 0.6 * a))
     if d < 0 and not (target < entry < stop):
@@ -122,17 +125,16 @@ def box(F: Dict[str, np.ndarray], i: int, d: int, entry: float, stop: float, tar
     stop_s, target_c = stop, target
     risk_s, reward_c = abs(entry - stop_s), abs(target_c - entry)
     risk = min(max(risk_s, MIN_STOP * a), MAX_RISK_ATR * a)
-    reward = min(reward_c, MAX_RR * risk)
     stop = entry - d * risk
-    target = entry + d * reward
-    rr = reward / max(risk, 1e-9)
+    lock = entry * (1.0 + d * LOCK_PCT / 100.0)
     risk_pct = risk / entry * 100
-    ok = bool(not spent and rr >= MIN_RR - 1e-9 and risk_pct <= MAX_RISK_PCT)
-    return {'entry': r(entry), 'stop': r(stop), 'target': r(target), 't1': r(entry + d * 0.5 * reward), 'rr': float(round(rr, 2)), 'spent': spent, 'ok': ok,
-            'risk_pct': float(round(risk_pct, 2)), 'risk_hi': bool(risk_pct > MAX_RISK_PCT), 'reward_pct': float(round(reward / entry * 100, 2)), 'risk_atr': float(round(risk / a, 2)),
-            'stop_cap': bool(risk_s > MAX_RISK_ATR * a), 'stop_min': bool(risk_s < MIN_STOP * a), 'tgt_cap': bool(reward_c > MAX_RR * risk + 1e-9),
+    rr = LOCK_PCT / max(risk_pct, 1e-9)                              # lo que se asegura frente a lo que se arriesga
+    return {'entry': r(entry), 'stop': r(stop), 'target': r(lock), 't1': None, 'lock_pct': LOCK_PCT, 'rr': float(round(rr, 2)), 'spent': spent, 'ok': True,
+            'risk_pct': float(round(risk_pct, 2)), 'risk_atr': float(round(risk / a, 2)), 'risk_hi': bool(risk_pct > MAX_RISK_PCT), 'rr_low': bool(rr < 1.0),
+            'stop_cap': bool(risk_s > MAX_RISK_ATR * a), 'stop_min': bool(risk_s < MIN_STOP * a),
             'stop_s': r(stop_s), 'target_c': r(target_c), 'rr_s': float(round(reward_c / max(risk_s, 1e-9), 2)), 'risk_s_pct': float(round(risk_s / entry * 100, 2)),
-            '_stop': stop, '_target': target, '_stop_s': stop_s, '_target_c': target_c}
+            'reward_c_pct': float(round(reward_c / entry * 100, 2)),
+            '_stop': stop, '_target': lock, '_stop_s': stop_s, '_target_c': target_c}
 
 
 COST = 0.15          # coste de ida y vuelta (%) que descuenta también el estudio: el resultado «neto» de la web es comparable con el de las estadísticas
@@ -185,36 +187,38 @@ def outcome(F: Dict[str, np.ndarray], i: int, d: int, stop: float, target: float
     return _finish(F, d, e, k, entry, stop, target, t1, res, float(c[k]), k - e + 1, touched)
 
 
-def managed(F: Dict[str, np.ndarray], i: int, d: int, stop: float, target: float, t1: float, maxb: int = HOLD) -> Optional[float]:
-    """Rentabilidad (%, bruta) de la misma operación con parcial: la mitad se vende en T1, el stop del resto sube a la entrada y se espera el objetivo (o el cierre a las `maxb` sesiones).
-    Si se toca el stop antes de T1 se pierde todo; el stop gana si se tocan ambos el mismo día. None si no hay entrada o aún no se ha podido resolver."""
-    o, h, l, c = F['o'], F['h'], F['l'], F['c']
+def outcome_lock(F: Dict[str, np.ndarray], i: int, d: int, stop: float, lock_pct: float = LOCK_PCT, trail: float = TRAIL_ATR, maxb: int = HOLD_LOCK) -> Dict:
+    """Plan del operador: entrada en la apertura siguiente con `stop`; cuando una sesión cierra a `lock_pct` % o más a favor, el stop sube a ese nivel y desde entonces persigue al mejor cierre
+    a `trail` ATR (nunca por debajo del nivel asegurado). El stop de cada sesión se fija con los cierres anteriores; el stop gana si se toca el mismo día que cualquier otra cosa; un hueco
+    más allá del stop sale a la apertura. `res`: 'target' = se llegó a asegurar (sale con ≥ lo asegurado salvo hueco), 'stop' = saltó el stop inicial, 'timeout' = cierre por tiempo sin asegurar."""
+    o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
     n = len(c)
     e = i + 1
     if e >= n:
-        return None
+        return {'res': 'open', 'bars': 0, 'ret': None}
     entry = float(o[e])
-    if (d > 0 and (entry <= stop or entry >= target)) or (d < 0 and (entry >= stop or entry <= target)):
-        return None
-    pct = lambda px: d * (px / entry - 1.0) * 100.0
-    half, st = None, stop
+    a = float(atr[i])
+    if (d > 0 and entry <= stop) or (d < 0 and entry >= stop):
+        return {'res': 'na', 'bars': 0, 'ret': None}
+    lock = entry * (1.0 + d * lock_pct / 100.0)
+    st, locked, best = stop, False, entry
     for k in range(e, min(n, e + maxb)):
-        hit_stop = l[k] <= st if d > 0 else h[k] >= st
-        if hit_stop:
+        if (l[k] <= st) if d > 0 else (h[k] >= st):
             gap = (o[k] <= st) if d > 0 else (o[k] >= st)
             px = float(o[k]) if gap else st
-            return pct(px) if half is None else 0.5 * half + 0.5 * pct(px)
-        if half is None and ((h[k] >= t1) if d > 0 else (l[k] <= t1)):
-            gap = (o[k] >= t1) if d > 0 else (o[k] <= t1)
-            half = pct(float(o[k]) if gap else t1)
-            st = entry
-        if (h[k] >= target) if d > 0 else (l[k] <= target):
-            gap = (o[k] >= target) if d > 0 else (o[k] <= target)
-            return 0.5 * half + 0.5 * pct(float(o[k]) if gap else target)
-    if e + maxb > n:
-        return None
-    k = e + maxb - 1
-    return pct(float(c[k])) if half is None else 0.5 * half + 0.5 * pct(float(c[k]))
+            out = _finish(F, d, e, k, entry, stop, lock, entry, 'target' if locked else 'stop', px, k - e + 1, locked)
+            out['locked'] = locked
+            return out
+        best = max(best, float(c[k])) if d > 0 else min(best, float(c[k]))
+        if not locked and ((c[k] >= lock) if d > 0 else (c[k] <= lock)):
+            locked = True
+        if locked:
+            st = max(lock, best - trail * a) if d > 0 else min(lock, best + trail * a)
+    k = min(n, e + maxb) - 1
+    res = 'open' if k >= n - 1 and e + maxb > n else ('target' if locked else 'timeout')
+    out = _finish(F, d, e, k, entry, stop, lock, entry, res, float(c[k]), k - e + 1, locked)
+    out['locked'] = locked
+    return out
 
 
 def zones(F: Dict[str, np.ndarray], s0: int, k: int = 5, max_levels: int = 10) -> List[Dict]:
