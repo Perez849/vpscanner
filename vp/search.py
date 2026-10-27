@@ -39,6 +39,7 @@ MIN_COVER = 0.6            # fracción mínima de los periodos (grupos de error)
 MIN_GROUPS = 8             # periodos mínimos del entrenamiento con operaciones: con menos, el t agrupado no es fiable
 MIN_DAY = 30               # valores mínimos del universo ese día para que exista referencia del día
 DEV_END = 2022
+MIN_SHIFT = 300            # desplazamiento mínimo del calendario en los nulos (sesiones): las variables de 12 meses tienen memoria de ~250 sesiones y un desplazamiento menor no rompe su relación con el resultado
 # nombre, stop inicial (ATR), asegurar (% a favor, None = no asegura), persigue (ATR del mejor cierre), sesiones máximas
 EXITS = (('op4a', 1.5, 4.0, 3.0, 60), ('op4b', 2.5, 4.0, 3.0, 60), ('op6a', 1.5, 6.0, 4.0, 60), ('op6b', 2.5, 6.0, 4.0, 60), ('run5', 5.0, None, 5.0, 60), ('h10', None, None, None, 10))
 EXIT_TXT = {'op4a': 'stop 1,5 ATR · asegura +4 % · persigue 3 ATR', 'op4b': 'stop 2,5 ATR · asegura +4 % · persigue 3 ATR', 'op6a': 'stop 1,5 ATR · asegura +6 % · persigue 4 ATR',
@@ -426,7 +427,7 @@ def null_runs(P: Panel, test_years: List[int], reps: int, seed: int = 13, verbos
     out = {s: {'exceso': [], 't': []} for s in SUBSETS}
     t0 = time.time()
     for q in range(reps):
-        sh = int(rng.integers(120, max(P.nd - 120, 121)))
+        sh = int(rng.integers(MIN_SHIFT, max(P.nd - MIN_SHIFT, MIN_SHIFT + 1)))
         rel = P.R[(P.D.dcode + sh) % P.nd, P.D.sym]
         T = P.tables(rel)
         for s in SUBSETS:
@@ -513,7 +514,7 @@ def report(ev: Dict) -> str:
     L = [f"BÚSQUEDA DE LA REGLA QUE MÁS GANA SOBRE EL AZAR · {m['universe']} acciones · {m['filas']:,} filas (las {m['k']} más negociadas) · {m['from']} → {m['to']}",
          f"{m['combinaciones']} combinaciones de condiciones × 2 sentidos × {len(m['salidas'])} salidas = {m['pruebas']:,} reglas. Exceso = neto de costes menos la media de todas las filas de ese día (mismo sentido y salida). "
          f"Selección hacia delante: cada año de prueba se elige con lo anterior (menos {PURGE} sesiones) y se mide en el año; solo son elegibles reglas con ≥ {MIN_TRAIN_N:,} operaciones y operaciones en al menos el {int(MIN_COVER * 100)} % de los periodos del entrenamiento. "
-         f"t con errores agrupados en bloques de {BLOCK} sesiones (cierre a 10) o de {BLOCK * LONG_BLOCKS} (salidas de hasta 60). Nulo: todo el procedimiento con los resultados desplazados ({m['reps']} repeticiones).",
+         f"t con errores agrupados en bloques de {BLOCK} sesiones (cierre a 10) o de {BLOCK * LONG_BLOCKS} (salidas de hasta 60). Nulo: todo el procedimiento con los resultados desplazados en el calendario (al menos {MIN_SHIFT} sesiones; {m['reps']} repeticiones).",
          f"Universo: {'miembros ACTUALES de los índices' if m.get('miembros') == 'actuales' else 'miembros actuales, pero cada valor del S&P 500 solo desde su fecha de incorporación (' + str(m.get('valores_con_fecha')) + ' valores con fecha; ' + format(m.get('barras_quitadas', 0), ',') + ' barras-valor quitadas)'} (sesgo de supervivencia: los que salieron del índice no están).",
          'Salidas: ' + ' · '.join(f'{k} = {v}' for k, v in m['salidas'].items()), '']
     for s, titulo in (('todo', 'TODAS LAS REGLAS'), ('contexto', 'SOLO CONTEXTO (sin patrones)'), ('patrones', 'CON PATRÓN (al menos una condición de patrón)')):
@@ -574,7 +575,7 @@ def evaluate_rules(P: Panel, rules: Tuple[Dict, ...], reps: int = 300, seed: int
     cond = conditions(D)
     exn = [e[0] for e in EXITS]
     rng = np.random.default_rng(seed)
-    shifts = rng.integers(120, max(P.nd - 120, 121), size=reps)
+    shifts = rng.integers(MIN_SHIFT, max(P.nd - MIN_SHIFT, MIN_SHIFT + 1), size=reps)
     out = []
     for r in rules:
         m = np.ones(len(D.sym), bool)
@@ -619,7 +620,7 @@ def confirm(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
 def confirm_report(ev: Dict, titulo: str = '') -> str:
     m = ev['meta']
     L = [f"CONFIRMACIÓN DE LAS REGLAS CANDIDATAS{' · ' + titulo if titulo else ''} · {m['universe']} acciones · {m['filas']:,} filas (las {m['k']} más negociadas) · {m['from']} → {m['to']} · coste {m['coste']} %",
-         'Reglas fijadas antes de mirar estas acciones (una hipótesis cada una, no se elige nada). Exceso = neto menos la media de todas las filas de ese día. p = fracción de repeticiones con los resultados desplazados en el calendario que igualan o superan lo observado.',
+         f'Reglas fijadas antes de mirar estas acciones (una hipótesis cada una, no se elige nada). Exceso = neto menos la media de todas las filas de ese día. p = fracción de repeticiones con los resultados desplazados en el calendario (al menos {MIN_SHIFT} sesiones) que igualan o superan lo observado.',
          f"Universo: {'miembros actuales' if m['miembros'] == 'actuales' else 'miembros actuales desde su incorporación al S&P 500'}. Salidas: " + ' · '.join(f'{k} = {v}' for k, v in m['salidas'].items()), '']
     for r in ev['reglas']:
         ys = ' '.join(f"{str(y)[2:]}:{v:+.1f}" for y, v in r['por_año'].items())
