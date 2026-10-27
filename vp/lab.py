@@ -351,7 +351,6 @@ def index_row(res: Dict) -> Dict:
     return {'sym': res['sym'], 'name': res['name'], 'close': res['summary']['close'], 'chg': round((c[-1] / c[-2] - 1) * 100, 2) if len(c) > 1 else 0.0, 'atrp': res['summary']['atrp'],
             'rsi2': res['summary']['rsi2'], 'n': len(res['patterns']), 'spark': c[-SPARK:],
             'new': sum(1 for p in act if p.get('new')),
-            'mix': bool(any(p['dir'] > 0 for p in act if p['state'] == 'done') and any(p['dir'] < 0 for p in act if p['state'] == 'done')),     # señales alcistas y bajistas vigentes a la vez
             'active': [{'id': p['id'], 'label': p['label'], 'dir': p['dir'], 'fam': p['fam'], 'q': p['q'], 'st': p['state'], 'rr': (p['plan'] or {}).get('rr'), 'new': bool(p.get('new')),
                         'dist': (p.get('trig') or {}).get('dist')} for p in act[:12]]}
 

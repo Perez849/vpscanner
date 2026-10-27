@@ -466,7 +466,7 @@ def test_lab_json(tmp='/tmp/vp_lab_test'):
         for pt in p['pts']:
             assert 0 <= pt[0] < n + 60
     row = lab.index_row(res)
-    assert row['sym'] == 'RW' and len(row['spark']) == lab.SPARK and isinstance(row['mix'], bool)
+    assert row['sym'] == 'RW' and len(row['spark']) == lab.SPARK
     T = res['trades']
     done = [p for p in res['patterns'] if p['state'] == 'done']
     assert len(T['list']) < len(done) and T['all']['n'] <= len(T['list']) and all(p['trade']['role'] in ('lider', 'confirma', 'contraria', 'na') for p in done)     # las señales solapadas no se cuentan una a una
