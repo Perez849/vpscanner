@@ -74,7 +74,9 @@ El plan que se dibuja, se simula y se cuenta es **el plan del operador** (el que
 - **¿Ayuda dibujar mejor la figura?** Las señales de calidad ≥ 75 no mejoran de forma consistente el exceso (compatible con ruido).
 - Una versión anterior del estudio (otro código y un universo con pertenencia histórica a índices) llegó a cifras casi idénticas en lo que no ha cambiado: el resultado no depende de la implementación.
 
-**Qué es entonces esta herramienta**: una forma rigurosa de *leer* el gráfico (qué figura hay, dónde está el stop, cuánto hay hasta el objetivo, qué barreras hay en medio) y de ver, con datos, que las figuras clásicas por sí solas no baten al mercado. No es un generador de señales.
+**Qué es entonces esta herramienta**: una forma rigurosa de *leer* el gráfico (qué figura hay, dónde está el stop inicial, dónde se asegura el +4 %, qué barreras hay en medio) y de ver, con datos, qué aporta cada patrón. No es un generador de señales.
+
+**Sobre «el chartismo tiene evidencia estadística»**: la literatura es mixta, no vacía. Lo, Mamaysky y Wang (2000) encontraron que algunas figuras aportan información incremental pequeña sobre la distribución de rendimientos; otros trabajos que corrigen por el sesgo de probar muchas reglas y por costes (por ejemplo Bajgrowicz y Scaillet, 2012) concluyen que el beneficio neto desaparece en gran parte. Este laboratorio mide una pregunta concreta y acotada: con detectores automáticos fijados de antemano, en acciones grandes de EE.UU. de 2016 a 2026, con costes y frente a entrar sin patrón, ¿añaden algo las figuras, velas y rupturas? Su respuesta es que no se distingue de cero (potencia: se detectaría un efecto medio de ~0,1–0,2 % por familia, no uno menor). No mide la **habilidad discrecional** (elegir qué figuras valen, cuándo y con qué contexto, gestionar la posición), y esa no se puede descartar ni demostrar con un detector.
 
 ### ¿Y si el método fuera demasiado exigente? Potencia, controles y el conjunto de cada familia
 
@@ -116,26 +118,31 @@ Resultado en los **años finales (2024–2026)**:
 - El contexto sí da una señal pequeña (IC ≈ 0,02 positivo los 7 años; el 10 % mejor rinde entre +0,3 % y +0,8 % más que el resto a 10 sesiones y gana en 6 de 7 años), pero **no mejora a un ranking por impulso** y 2022 salió plano. Con t entre 2 y 3 y varios modelos probados, es una pista, no una conclusión.
 - No hay puntuación de aprendizaje automático en la web: no hay mejora demostrada que justifique enseñarla. El informe completo está en `data/ml_report.txt`.
 
-## ¿Los stops y objetivos grandes explican el mal resultado? (`vp/planstudy.py`)
+## Tu regla de salida frente al azar: ¿asegurar +4 % y dejar correr cambia algo? (`vp/planstudy.py`)
 
-Una objeción razonable, y con razón por cómo era el plan clásico (stops del 10, 26 o 43 %): «quizá no funcionan porque el stop y el objetivo son enormes». `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop y objetivo del plan, el stop gana si se tocan el mismo día, cierre a las 40 sesiones, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor con el mismo sentido y las mismas distancias de stop y objetivo en ATR** (y volatilidad relativa parecida). Cinco geometrías: el **plan operable** de la web (stop acotado a 2 ATR, objetivo ≤ 3R, solo señales con R:R ≥ 1,5 y riesgo ≤ 8 %: 154.000 de las 219.000 señales), el **plan clásico sin límites** (referencia), una **fija igual para todos** (stop 1,5 ATR, objetivo 3 ATR) y dos con **stop que persigue** (3 y 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones). Informe en `data/plan_report.txt`.
+La regla de muchos operadores («con un 4–5 % soy feliz; si sube más lo dejo correr, pero pasado el 4 % pongo un stop para asegurarlo») es razonable y es la que usa la web. Falta saber si, **aplicada a todas las señales sin descartar ninguna**, el patrón aporta algo frente a entrar sin patrón con esa misma regla. `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop inicial acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR, hasta 60 sesiones, el stop gana si se tocan el mismo día, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor y sentido, con las mismas distancias de stop en ATR** (y volatilidad relativa parecida) y **exactamente la misma regla de salida**.
 
-**Cómo se cuenta aquí el éxito**: por la ganancia media neta y por el **% de operaciones ganadoras** (las que terminan con ganancia neta, lleguen o no al objetivo); el reparto objetivo / stop / cierre por tiempo es solo descriptivo.
+**Cómo se cuenta el éxito**: por la ganancia media neta y por el **% de operaciones ganadoras** (las que terminan con ganancia neta, lleguen o no a asegurar). El reparto asegurado / stop inicial / tiempo es solo descriptivo.
 
-Con las 300 más negociadas, sobre todas las operaciones:
+Resultado con todas las señales, estudio del 27-oct-2026 (`data/plan_report.txt`):
 
-| geometría | n | media neta | azar con las mismas distancias | exceso (t, bloques de 40–60 sesiones) | % ganadoras señal / azar |
-|---|---|---|---|---|---|
-| **plan operable** (stop 1,7 ATR, objetivo 3,3 ATR de mediana) | 154.264 | −0,19 % | −0,01 % | **−0,18 % (t −2,5)** | 35 / 36 % |
-| plan clásico sin límites | 218.458 | −0,24 % | −0,09 % | −0,15 % (t −1,9) | 39 / 40 % |
-| fijo 1,5 / 3 ATR | 219.795 | −0,24 % | −0,13 % | −0,12 % (t −2,1) | 34 / 35 % |
-| stop que persigue 3 ATR | 220.333 | −0,31 % | −0,11 % | −0,20 % (t −1,4) | 36 / 37 % |
-| stop que persigue 5 ATR | 220.333 | −0,33 % | +0,01 % | −0,34 % (t −1,8) | 41 / 42 % |
+| regla de salida | universo | n | media neta | azar con la misma regla | exceso (t, bloques de 40–60 sesiones) | % ganadoras señal / azar |
+|---|---|---|---|---|---|---|
+| **asegurar +4 %** (stop inicial 1–2 ATR) | 300 más negociadas | 218.700 | −0,23 % | −0,04 % | **−0,18 % (t −2,8)** | 42 / 44 % |
+| **asegurar +4 %** (stop inicial 1–2 ATR) | 50 más negociadas | 36.640 | −0,17 % | +0,13 % | **−0,30 % (t −3,8)** | 43 / 45 % |
+| asegurar +5 % | 300 | 218.700 | −0,24 % | −0,04 % | −0,20 % (t −2,8) | 38 / 40 % |
+| asegurar +4 % con stop inicial de 1,5 ATR para todos | 300 | 218.897 | −0,23 % | −0,07 % | −0,17 % (t −2,7) | 41 / 42 % |
+| plan clásico sin límites (stops del 10–40 %) | 300 | 218.458 | −0,24 % | −0,09 % | −0,15 % (t −1,9) | 39 / 40 % |
+| fijo 1,5 / 3 ATR | 300 | 219.795 | −0,24 % | −0,13 % | −0,12 % (t −2,1) | 34 / 35 % |
+| stop que persigue 3 ATR (sin asegurar) | 300 | 220.333 | −0,31 % | −0,11 % | −0,20 % (t −1,4) | 36 / 37 % |
+| stop que persigue 5 ATR (sin asegurar) | 300 | 220.333 | −0,33 % | +0,01 % | −0,34 % (t −1,8) | 41 / 42 % |
 
-- **La media neta es negativa con cualquier geometría porque entrar al azar con ella rinde entre −0,13 % y +0,01 % neto y el patrón no añade nada (exceso −0,12 a −0,34 %)**; el tamaño del stop y del objetivo cambia la forma de la distribución (cuántas veces se gana y cuánto), no el valor esperado de entrar al azar. Los stops enormes del plan clásico eran absurdos para operar, pero no son la causa del resultado: el plan con riesgo de 1,7 ATR y objetivo de 3,3 ATR sale igual de plano.
-- Calibrado sobre paseos aleatorios, donde no puede haber ventaja, el método sesga el exceso en −0,05 a −0,17 %.
-- **Rupturas alcistas** (compra a máximos): −0,48 % (t −2,8) con el plan operable y −0,85 % (t −3,0) con el stop que persigue 3 ATR, **pero este control (el mismo valor en cualquier fecha) no separa el momento del mercado**; el estudio de evidencia, que compara con el mismo día, no ve diferencia (−0,06 %).
-- Las **velas alcistas y bajistas** (+0,05 % y +0,07 %) y las **directrices alcistas** (+0,13 %) no pasan de ruido.
+- **La regla en sí no es el problema ni la solución**: entrando al azar con ella también se gana el 44 % de las veces y se asegura el +4 % el 44 % (los patrones: 42 % y 43 %). Lo que da esa regla es una forma concreta de distribución (muchas pequeñas ganancias de ~+4 % y pérdidas de ~−3 a −5 %), no un valor esperado positivo: la media neta es ≈ 0 con o sin patrón, en torno al coste.
+- **El patrón no mejora la entrada al azar con la misma regla** (exceso −0,18 % con t −2,8 en las 300, −0,30 % con t −3,8 en las 50). Calibrado sobre paseos aleatorios, donde no puede haber ventaja, el método sesga el exceso en −0,07 %; descontado, quedan −0,11 % (300) y −0,23 % (50): ligeramente peor que azar, no mejor.
+- **Por familia (300 más negociadas, asegurar +4 %)**: figuras alcistas +0,34 % (azar +0,57 %, t −1,2), figuras bajistas −0,80 % (azar −0,84 %), velas alcistas +0,49 % (azar +0,50 %), velas bajistas −0,60 % (azar −0,65 %), directrices alcistas +0,63 % (azar +0,47 %, t +0,7), rebotes bajistas −0,42 % (azar −0,59 %, t +0,8). Ninguna familia supera al azar de forma distinguible del ruido. La excepción es negativa: las **rupturas alcistas** (compra a máximos) rinden **−0,53 % menos** que entrar sin patrón (t −3,7 en las 300 y −3,3 en las 50, con la misma regla de salida); el control es el mismo valor en cualquier fecha y no separa el momento del mercado (el estudio de evidencia, que compara con el mismo día, ve una diferencia mucho menor a 10 sesiones), así que es un aviso sobre comprar a máximos con esta salida, no una prueba firme.
+- Los **«rebotes bajistas»** salen +1,14 % mejores que el azar en las 50 (t +2,4, n = 250) pero +0,17 % (t +0,8) en las 300: con 11 grupos por 7 reglas es lo que sale por azar.
+- **Hueco de apertura**: de cada 100 operaciones que aseguran +4 %, unas 2 acaban con pérdida (un hueco contra la posición abre por debajo del stop, p. ej. −11 % de un día a otro tras resultados). Es un riesgo real de la regla y la simulación lo cuenta como pérdida.
+- **Los stops enormes del plan clásico eran absurdos para operar, pero no eran la causa**: con un stop de 1–2 ATR el resultado frente al azar es el mismo.
 
 ### Stop que persigue (trailing) en lugar de objetivo fijo
 
