@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, context, data, engine, lab, ml, plan, planstudy, search, shapes, study, ta, universe
+from vp import breakouts, candles, context, data, engine, lab, ml, plan, planstudy, screen, search, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -962,10 +962,66 @@ def test_search_confirm():
     print(f'ok · confirmación: reglas fijas (T1 exceso {r1["exceso"]:+.2f} %, t {r1["t"]:.0f}; T2 {r2["exceso"]:+.2f} %) y nada en paseos aleatorios')
 
 
+def test_screen():
+    """El cribador del último cierre da las mismas acciones que el panel completo en esa fecha (sin mirar el futuro), el plan sale del cierre y el ATR, y el registro no repite días."""
+    bars = {f'S{j}': _walk_ar(1500, 2000 + j, 0.0) for j in range(40)}
+    rules = search.CANDIDATAS
+    work = {s: ml._work((s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}))[1] for s, b in bars.items()}
+    Df = ml.Data(work, k=40)
+    ff = screen._flags(Df, rules)
+    total = 0
+    last_ev = None
+    for cut in (800, 950, 1100, 1250, 1400):
+        sub = {s: {a: v[:cut + 1] for a, v in b.items()} for s, b in bars.items()}
+        ev = screen.screen(sub, k=40, rules=rules)
+        rows = Df.bar == cut                                                 # el mismo día en el panel con todo el futuro
+        assert ev['meta']['asof'] == str(Df.date[Df.dcode[np.flatnonzero(rows)[0]]]) and ev['meta']['en_universo'] == int(rows.sum()), ev['meta']
+        for r in rules:
+            want = {Df.syms[j] for j in Df.sym[ff[r['nombre']] & rows]}
+            got = {p['sym'] for p in ev['picks'] if r['nombre'] in p['reglas']}
+            assert got == want, (cut, r['nombre'], got ^ want)
+            assert ev['resumen'][r['nombre']]['hoy'] == len(want)
+            total += len(want)
+        for p in ev['picks']:
+            F = ta.prepare(bars[p['sym']])
+            c, a = float(F['c'][cut]), float(F['atr'][cut])
+            assert abs(p['close'] - c) < 1e-3 and abs(p['atr'] - a) < 1e-3 * c and abs(p['plan']['stop'] - (c - 2.5 * a)) < 2e-3 * c and abs(p['plan']['asegura4'] - c * 1.04) < 1e-3 * c, (p, c, a)
+            assert 0 <= p['mom121'] <= 1 and set(p['nuevas']) <= set(p['reglas']) and p['bajistas'] >= 0
+        last_ev = ev if ev['picks'] else last_ev
+    assert total >= 3 and last_ev, total                                       # el control no es vacío: hubo acciones que cumplían alguna regla
+    import tempfile
+    path = os.path.join(tempfile.mkdtemp(), 'h.json')
+    h1 = screen.update_history(path, last_ev)
+    json.dump(h1, open(path, 'w'))
+    h2 = screen.update_history(path, last_ev)
+    assert len(h1) == 1 and len(h2) == 1 and h2[0]['date'] == last_ev['meta']['asof'] and set(h2[0]['reglas']) == {r['nombre'] for r in rules}
+    ev2 = dict(last_ev, meta=dict(last_ev['meta'], asof='2099-01-01'))
+    json.dump(h2, open(path, 'w'))
+    h3 = screen.update_history(path, ev2)
+    assert [h['date'] for h in h3] == [last_ev['meta']['asof'], '2099-01-01']
+    print(f'ok · cribador: coincide con el panel completo en 5 fechas ({total} acciones-regla) y el registro no repite días')
+
+
+def test_web_impulso_constants():
+    """La web copia las condiciones y las salidas de la regla de impulso: tienen que ser exactamente las de vp/search.py, y las dos partes (figuras / impulso) tienen sus propias rutas y pestañas."""
+    import re
+    html = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'index.html'), encoding='utf-8').read()
+    cond = json.loads(re.search(r'const COND = (\{.*?\});\n', html).group(1))
+    exits = json.loads(re.search(r'const EXITS = (\{.*?\});\n', html).group(1))
+    assert cond == search.DESC and exits == search.EXIT_TXT, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT))
+    for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "['imp', 'Hoy'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1'):
+        assert needle in html, needle
+    for f in ('impulso.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json'):
+        assert f"'{f}'" in html, f
+    print('ok · web: condiciones y salidas de la regla de impulso idénticas a las del código; dos partes con rutas y pestañas propias')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_web_impulso_constants]
 
 if __name__ == '__main__':
+    only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»
     for fn in ALL:
-        fn()
+        if not only or any(w in fn.__name__ for w in only):
+            fn()
     print('TODO OK')

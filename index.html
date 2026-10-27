@@ -39,6 +39,21 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-text);-webkit-fon
 button,input,select{font:inherit;color:inherit}
 a{color:inherit}
 
+/* sección: dos partes grandes (figuras y velas · regla de impulso) */
+.sec{display:flex;gap:6px;flex-wrap:wrap}
+.sec button{font-family:var(--f-display);font-size:15px;font-weight:700;padding:8px 16px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer;line-height:1.1}
+.sec button small{display:block;font-family:var(--f-mono);font-size:9px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;opacity:.75;margin-top:3px}
+.sec button.on{background:var(--ink);color:var(--bg)}
+.sec button.i{border-color:var(--violet)}.sec button.i.on{background:var(--violet);color:#fff}
+body.imp .top{border-bottom-color:var(--violet)}
+body.imp .nav button.on{background:var(--violet);color:#fff}
+.sumry.w .stat{flex:1 1 150px}
+.part.f{background:var(--ink);color:var(--bg)}
+.part{display:inline-block;font-family:var(--f-mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:5px;background:var(--violet);color:#fff;margin-right:8px;vertical-align:middle}
+table.ev td.l,table.ev th.l{text-align:left;white-space:normal}
+.yb{display:inline-block;vertical-align:middle}
+.cond{font-size:11.5px;color:var(--sub);line-height:1.5}
+.pos{color:var(--emerald);font-weight:700}.neg{color:var(--ember);font-weight:700}
 /* cabecera */
 .top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:4px 0 12px;border-bottom:2px solid var(--ink)}
 .brand{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.015em;text-decoration:none;line-height:1}
@@ -155,7 +170,8 @@ table.ev tr:hover td{background:var(--ink2)}
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="#radar" id="brand">VP<b>Scanner</b><small>laboratorio de chartismo</small></a>
+    <a class="brand" href="#radar" id="brand">VP<b>Scanner</b><small>laboratorio de chartismo y reglas</small></a>
+    <nav class="sec" id="sec"></nav>
     <nav class="nav" id="nav"></nav>
     <div class="asof" id="asof"></div>
   </header>
@@ -179,7 +195,8 @@ const S = {
   rv: {mode: 'all', dir: 0, q: 60, all: 0, text: '', fav: 0},                                   // filtros del radar
   f: {figuras: 1, rupturas: 1, velas: 1, directrices: 0, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'a', q: 60},   // filtros del gráfico
   view_: {start: 0, ppb: 6}, hits: [], W: 0, H: 0, dpr: 1,
-  evK: 'K300', evFam: 'all', evSort: 't', evDir: -1, evText: ''
+  evK: 'K300', evFam: 'all', evSort: 't', evDir: -1, evText: '',
+  imp: null, srch: null, cf: null, cfm: null, iv: {rule: 'all', fresh: 0, text: ''}                                   // parte 2: cribador, búsqueda y confirmaciones
 };
 
 /* favoritos: solo viven en este navegador (localStorage) */
@@ -193,7 +210,7 @@ const distTxt = d => d == null ? '' : d < 0.1 ? 'en el disparo' : `a ${d.toFixed
 
 /* ───────────────────────── datos ───────────────────────── */
 async function J(path) {
-  if (window.VP) { const k = path.replace(/\.json$/, ''); return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
+  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['impulso', 'search', 'search_confirm', 'search_confirm_smallmid'].includes(k)) return VP[k]; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
   if (S.cache[path]) return S.cache[path];
   const r = await fetch(BASE + path + '?v=' + Math.floor(Date.now() / 3600000));
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -221,11 +238,9 @@ const thr = () => (S.ev && S.ev.meta.thr[S.evK].p95) || 3.3;
 /* ───────────────────────── arranque y rutas ───────────────────────── */
 async function init() {
   buildNav();
-  try { S.idx = await J('index.json'); S.cat = await J('catalog.json'); } catch (e) { $('#view').innerHTML = '<div class="empty">No hay datos todavía. Ejecuta <code>python -m vp lab</code> o lanza el flujo «Escaneo diario».</div>'; return; }
+  try { S.idx = await J('index.json'); S.cat = await J('catalog.json'); } catch (e) { S.idx = null; }
   try { S.ev = await J('evidence.json'); } catch (e) { S.ev = null; }
-  $('#asof').innerHTML = `datos hasta <b>${dstr(S.idx.asof)}</b><br>${S.idx.symbols.length} valores`;
-  $('#foot').innerHTML = 'VP Scanner dibuja y mide patrones chartistas. No es una recomendación de inversión: el estudio de la pestaña Evidencia muestra qué han aportado de verdad. ' +
-    (S.ev ? `Evidencia: ${S.ev.meta.universe} acciones, ${S.ev.meta.from} → ${S.ev.meta.to}. ${esc(S.ev.meta.note)}` : '');
+  for (const [k, f] of [['imp', 'impulso.json'], ['srch', 'search.json'], ['cf', 'search_confirm.json'], ['cfm', 'search_confirm_smallmid.json']]) { try { S[k] = (await J(f)) || null; } catch (e) { S[k] = null; } }
   window.addEventListener('resize', () => { if (S.view === 'chart') resize(); else if (S.view === 'ev') drawStrip(); });
   window.addEventListener('keydown', onKey);
   window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (h) go(h); });                 // atrás/adelante del navegador y enlaces con #VALOR
@@ -235,22 +250,45 @@ async function init() {
   await go(h || 'radar', null, true);
 }
 function rerender() { if (S.view === 'chart') { draw(); renderPane(); } else if (S.view === 'ev') drawStrip(); }
+const IMPV = ['imp', 'impev', 'impguide'];
 function buildNav() {
-  $('#nav').innerHTML = [['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']].map(([k, t]) => `<button data-v="${k}" class="${S.view === k ? 'on' : ''}">${t}</button>`).join('');
-  $('#nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.v === 'chart' ? (S.sym || S.idx.symbols[0].sym) : b.dataset.v));
+  const imp = IMPV.includes(S.view);
+  $('#sec').innerHTML = `<button data-s="fig" class="${imp ? '' : 'on'}">Figuras y velas<small>chartismo · parte 1</small></button><button data-s="imp" class="i ${imp ? 'on' : ''}">Regla de impulso<small>sin figuras ni velas · parte 2</small></button>`;
+  $('#sec').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.s === 'imp' ? 'impulso' : 'radar'));
+  const items = imp ? [['imp', 'Hoy'], ['impev', 'Evidencia'], ['impguide', 'Guía']] : [['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']];
+  $('#nav').innerHTML = items.map(([k, t]) => `<button data-v="${k}" class="${S.view === k ? 'on' : ''}">${t}</button>`).join('');
+  $('#nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.v === 'chart' ? (S.sym || (S.idx && S.idx.symbols[0].sym) || 'radar') : b.dataset.v));
   $('#brand').onclick = e => { e.preventDefault(); go('radar'); };
+  document.body.classList.toggle('imp', imp);
 }
+const VIEWS = {radar: 'radar', evidencia: 'ev', ev: 'ev', guia: 'guide', guide: 'guide', chart: 'chart', impulso: 'imp', imp: 'imp', 'impulso-evidencia': 'impev', impev: 'impev', 'impulso-guia': 'impguide', impguide: 'impguide'};
+const HASH = {ev: 'evidencia', guide: 'guia', imp: 'impulso', impev: 'impulso-evidencia', impguide: 'impulso-guia'};
 async function go(where, selId, first) {
+  const w = (where || '').toLowerCase();
   const sym = S.idx && S.idx.symbols.find(s => s.sym === (where || '').toUpperCase());
-  const view = sym ? 'chart' : ({radar: 'radar', evidencia: 'ev', ev: 'ev', guia: 'guide', guide: 'guide', chart: 'chart'}[where] || 'radar');
+  const view = sym ? 'chart' : (VIEWS[w] || 'radar');
   S.view = view;
-  try { history.replaceState(null, '', '#' + (sym ? sym.sym : ({ev: 'evidencia', guide: 'guia'}[view] || view))); } catch (e) { /* el visor puede bloquearlo */ }
+  try { history.replaceState(null, '', '#' + (sym ? sym.sym : (HASH[view] || view))); } catch (e) { /* el visor puede bloquearlo */ }
   buildNav();
-  if (view === 'radar') renderRadar();
+  setChrome(view);
+  if (IMPV.includes(view)) { ({imp: renderImp, impev: renderImpEv, impguide: renderImpGuide})[view](); }
+  else if (!S.idx) $('#view').innerHTML = '<div class="empty">No hay datos de figuras todavía. Ejecuta <code>python -m vp lab</code> o lanza el flujo «Escaneo diario».</div>';
+  else if (view === 'radar') renderRadar();
   else if (view === 'ev') renderEvidence();
   else if (view === 'guide') renderGuide();
   else await renderChartView(sym ? sym.sym : (S.sym || S.idx.symbols[0].sym), selId);
   if (!first) window.scrollTo({top: 0});
+}
+function setChrome(view) {                                                   // fecha de los datos y pie de página: cada parte lleva los suyos
+  if (IMPV.includes(view)) {
+    const m = S.imp && S.imp.meta;
+    $('#asof').innerHTML = m ? `cierre del <b>${esc(m.asof)}</b><br>${m.en_universo} acciones en el universo` : 'sin datos del cribador';
+    $('#foot').innerHTML = 'La regla de impulso es la parte 2 del laboratorio y no usa figuras ni velas. Es una candidata con una ventaja pequeña y no una recomendación de inversión: las cifras, con sus cautelas, están en la pestaña Evidencia.';
+  } else {
+    $('#asof').innerHTML = S.idx ? `datos hasta <b>${dstr(S.idx.asof)}</b><br>${S.idx.symbols.length} valores` : '';
+    $('#foot').innerHTML = 'VP Scanner dibuja y mide patrones chartistas. No es una recomendación de inversión: el estudio de la pestaña Evidencia muestra qué han aportado de verdad. ' +
+      (S.ev ? `Evidencia: ${S.ev.meta.universe} acciones, ${S.ev.meta.from} → ${S.ev.meta.to}. ${esc(S.ev.meta.note)}` : '');
+  }
 }
 
 /* ───────────────────────── radar ───────────────────────── */
@@ -281,7 +319,7 @@ function renderRadar() {
   const na = all.reduce((s, x) => s + x.active.filter(q => q.st !== 'forming' && (q.fam === 'figuras' || q.fam === 'directrices') && (q.q == null || q.q >= R.q)).length, 0);
   const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, t]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
   const miss = (S.idx.missing || []).length ? `<div class="warn">Sin datos de Yahoo en el último escaneo: <b>${S.idx.missing.map(esc).join(', ')}</b>. Revisa el símbolo en <code>watchlist.txt</code> (por ejemplo BRK-B, no BRK.B) o si tiene menos de 400 sesiones de historial.</div>` : '';
-  $('#view').innerHTML = `<h2>Radar</h2><p class="lead">Qué figuras se están formando o se han completado en las últimas sesiones. <b>Formándose</b>: la figura ya está dibujada pero no ha roto; se indica el nivel que la activa y a cuántos ATR está el precio. <b>Nuevas hoy</b>: se completaron en la última sesión.</p>${miss}
+  $('#view').innerHTML = `<h2><span class="part f">Parte 1</span>Radar</h2><p class="lead">Qué figuras se están formando o se han completado en las últimas sesiones. <b>Formándose</b>: la figura ya está dibujada pero no ha roto; se indica el nivel que la activa y a cuántos ATR está el precio. <b>Nuevas hoy</b>: se completaron en la última sesión.</p>${miss}
     <div class="sumry"><div class="stat"><b>${all.length}</b><span>valores vigilados</span></div><div class="stat"><b>${nf}</b><span>con figura formándose</span></div><div class="stat"><b>${nnear}</b><span>a ≤ ${NEAR} ATR del disparo</span></div><div class="stat"><b>${nnew}</b><span>figuras nuevas hoy</span></div><div class="stat"><b>${na}</b><span>figuras activas (Q ≥ ${R.q})</span></div></div>
     <div class="bar">${seg('r-mode', [['all', 'Todas'], ['near', 'Cerca del disparo'], ['forming', 'Formándose'], ['new', 'Nuevas hoy'], ['done', 'Completadas']], R.mode)}${seg('r-dir', [[0, 'Ambos'], [1, 'Alcistas'], [-1, 'Bajistas']], R.dir)}
       ${seg('r-q', [[0, 'Q: todas'], [60, '≥ 60'], [75, '≥ 75']], R.q)}<span class="tg ${R.all ? 'on' : ''}" id="r-all"><i></i>Incluir velas y rupturas</span><span class="tg ${R.fav ? 'on' : ''}" id="r-fav"><i></i>★ Favoritos (${favs.size})</span><input type="search" id="r-t" placeholder="Buscar valor" value="${esc(R.text)}" size="14"></div>
@@ -336,11 +374,11 @@ function evRows() {
   return out;
 }
 function renderEvidence() {
-  if (!S.ev) { $('#view').innerHTML = '<h2>Evidencia</h2><div class="empty">Todavía no hay estudio. Lanza el flujo «Estudio» (<code>python -m vp study</code>).</div>'; return; }
+  if (!S.ev) { $('#view').innerHTML = '<h2><span class="part f">Parte 1</span>Evidencia de las figuras y velas</h2><div class="empty">Todavía no hay estudio. Lanza el flujo «Estudio» (<code>python -m vp study</code>).</div>'; return; }
   const m = S.ev.meta, K = S.evK, T = m.thr[K], E = evSummary(K);
   const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, t]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
   const lab = k => esc((catOf(k.split(':')[0]).label || k) + (k.endsWith(':hq') ? ' (Q≥75)' : ''));
-  $('#view').innerHTML = `<h2>Evidencia</h2><p class="lead">¿Baten los patrones a entrar al azar? Cada señal se opera en la apertura siguiente y se cierra a ${m.primary} sesiones (coste ${m.cost} %); los bajistas se miden en corto. «Exceso» es el rendimiento menos el de entrar al azar ese mismo día en el mismo universo (así que lo que haga el mercado en bloque no cuenta como ventaja). «% ganadoras» es la parte de operaciones con ganancia neta, llegue o no a ningún objetivo. El umbral del mejor de N corrige que, al probar ${E.nAll} patrones, alguno saldrá «significativo» por casualidad.</p>
+  $('#view').innerHTML = `<h2><span class="part f">Parte 1</span>Evidencia de las figuras y velas</h2><p class="lead">¿Baten los patrones a entrar al azar? Cada señal se opera en la apertura siguiente y se cierra a ${m.primary} sesiones (coste ${m.cost} %); los bajistas se miden en corto. «Exceso» es el rendimiento menos el de entrar al azar ese mismo día en el mismo universo (así que lo que haga el mercado en bloque no cuenta como ventaja). «% ganadoras» es la parte de operaciones con ganancia neta, llegue o no a ningún objetivo. El umbral del mejor de N corrige que, al probar ${E.nAll} patrones, alguno saldrá «significativo» por casualidad.</p>
     <div class="panel"><div class="verd"><div><div class="big">${E.pos.length} de ${E.nBase}</div><div class="small">patrones con ventaja positiva que supera el umbral<br>(|t| ≥ ${T.p95}, percentil 95 del mejor de ${E.nAll})</div></div>
       <div style="flex:1;min-width:240px"><div class="small"><b>Con ventaja positiva:</b> ${E.pos.length ? E.pos.map(lab).join(' · ') : 'ninguno'}.<br><b>Superan el umbral pero rinden PEOR que el azar:</b> ${E.neg.length ? E.neg.map(lab).join(' · ') : 'ninguno'}.<br>Variantes de calidad alta (Q ≥ 75) que superan el umbral: ${E.hqAbove.length ? E.hqAbove.map(lab).join(' · ') : 'ninguna'}.<br>Por puro azar se esperarían ≈ ${(0.05 * E.nAll).toFixed(1)} si se miraran sueltos. Universo: ${m.universe} acciones · ${m.bars.toLocaleString('es-ES')} barras · ${m.from} → ${m.to}.</div></div></div></div>
     <div class="bar">${seg('e-k', [['K50', '50 mayores'], ['K300', '300 mayores']], K)}${seg('e-f', [['all', 'Todas']].concat(Object.entries(FAMS)), S.evFam)}<input type="search" id="e-t" placeholder="Buscar patrón" value="${esc(S.evText)}" size="16"></div>
@@ -432,7 +470,7 @@ function renderGuide() {
   const fam = S.gfam || 'all', t = (S.gtext || '').toLowerCase();
   const seg = `<div class="seg" id="g-f">${[['all', 'Todas']].concat(Object.entries(FAMS)).map(([v, l]) => `<button data-v="${v}" class="${fam === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const items = Object.entries(S.cat.patterns).filter(([k, p]) => (fam === 'all' || p.fam === fam) && (!t || (p.label + ' ' + p.desc).toLowerCase().includes(t)));
-  $('#view').innerHTML = `<h2>Guía de patrones</h2><p class="lead">Qué es cada patrón, cómo se calcula su plan (entrada, stop y objetivo) y qué ha demostrado en el estudio. Las reglas son las clásicas de manual: no están optimizadas contra los datos.</p>
+  $('#view').innerHTML = `<h2><span class="part f">Parte 1</span>Guía de patrones</h2><p class="lead">Qué es cada patrón, cómo se calcula su plan (entrada, stop y objetivo) y qué ha demostrado en el estudio. Las reglas son las clásicas de manual: no están optimizadas contra los datos.</p>
     <div class="panel"><h3>Cómo leer los estados</h3><div class="small"><b>◐ Formándose</b>: la figura ya está dibujada con los datos del último cierre pero no ha roto. Se indica el nivel que la activa (línea discontinua), a cuántos ATR está el precio y el plan si rompe. Una compresión (triángulo, cuña, canal, rectángulo) tiene dos escenarios; el resto (doble suelo, hombro-cabeza-hombro, bandera, taza, VCP…) uno.<br>
       <b>NUEVO</b>: se completó en la última sesión. <b>ACTIVO</b>: se completó en las últimas 12 sesiones, no ha saltado el stop ni se ha cerrado todavía. <b>CONSUMIDO</b>: la ruptura ya recorrió la medida clásica y no queda recorrido hasta el objetivo. <b>MEDIDA RECORRIDA</b>: aviso informativo, no excluye la señal.<br>
       <b>Plan del operador</b> (el que se dibuja y se cuenta, con todas las señales): stop inicial estructural acotado a 2 ATR (nunca menos de 1); cuando una sesión cierra a +4 % el stop sube a +4 % y desde ahí persigue al mejor cierre a 3 ATR, sin objetivo fijo. El plan clásico (stop al otro lado de la figura y objetivo por la medida clásica), sin límites, se ve con el interruptor del gráfico: da stops del 10, 26 o 43 %.<br>
@@ -445,6 +483,91 @@ function renderGuide() {
         <p>${esc(p.desc)}</p><p class="rl">${esc(p.rule)}</p>${S.ev ? `<div class="verdict ${vc}" style="margin:6px 0 0">${esc(vt)}</div>` : ''}${S.ev ? pathSvg(pathOf(k)) : ''}${hqv ? `<p>Solo con calidad ≥ 75: exceso ${pc(hqv.ex, 2)} (t ${hqv.t.toFixed(1)}, n ${hqv.n}).</p>` : ''}</div>`; }).join('')}</div>`;
   $('#g-f').querySelectorAll('button').forEach(b => b.onclick = () => { S.gfam = b.dataset.v; renderGuide(); });
   $('#g-t').oninput = e => { S.gtext = e.target.value; renderGuide(); const i = $('#g-t'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
+}
+
+/* ───────────────────────── PARTE 2 · regla de impulso (sin figuras ni velas; estadísticas propias) ───────────────────────── */
+const nf = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');                       // miles con punto también en cifras de 4 dígitos
+const COND = {"sobre_200": "precio sobre su media de 200", "bajo_200": "precio bajo su media de 200", "impulso_alto": "impulso a 120 sesiones en el 20 % mejor del día", "impulso_bajo": "impulso a 120 sesiones en el 20 % peor", "impulso12_alto": "impulso 12-1 meses en el 20 % mejor", "impulso12_bajo": "impulso 12-1 meses en el 20 % peor", "cae5": "caída a 5 sesiones entre el 10 % mayor del día", "sube5": "subida a 5 sesiones entre el 10 % mayor del día", "rsi2_bajo": "RSI(2) ≤ 10", "rsi2_alto": "RSI(2) ≥ 90", "rsi14_bajo": "RSI(14) en el 30 % más bajo", "rsi14_alto": "RSI(14) en el 30 % más alto", "max52": "a ≤ 10 % del máximo de 52 semanas (posición ≥ 0,9)", "min52": "cerca del mínimo de 52 semanas (posición ≤ 0,1)", "vol_baja": "volatilidad (ATR/precio) en el 40 % más bajo", "vol_alta": "volatilidad en el 40 % más alto", "volumen": "volumen ≥ 1,5 veces su media de 20", "hueco_abajo": "hueco de apertura ≤ −2 %", "hueco_arriba": "hueco de apertura ≥ +2 %", "mercado_alza": "más del 55 % de las acciones sobre su media de 200", "mercado_baja": "menos del 45 % de las acciones sobre su media de 200", "bajo_media20": "bajo su media de 20 (20 % más alejado)", "sobre_media20": "sobre su media de 20 (20 % más alejado)", "liquido": "entre el 30 % más líquido del día", "velas_alcistas": "formación de vela alcista hoy", "velas_bajistas": "formación de vela bajista hoy", "figuras_alcistas": "figura alcista en las últimas 5 sesiones", "figuras_bajistas": "figura bajista en las últimas 5 sesiones", "rupturas_alcistas": "ruptura alcista en las últimas 5 sesiones", "rupturas_bajistas": "ruptura bajista en las últimas 5 sesiones", "confluencia_alcista": "2 o más patrones alcistas a la vez", "confluencia_bajista": "2 o más patrones bajistas a la vez"};
+const EXITS = {"op4a": "stop 1,5 ATR · asegura +4 % · persigue 3 ATR", "op4b": "stop 2,5 ATR · asegura +4 % · persigue 3 ATR", "op6a": "stop 1,5 ATR · asegura +6 % · persigue 4 ATR", "op6b": "stop 2,5 ATR · asegura +6 % · persigue 4 ATR", "run5": "stop que persigue 5 ATR sin asegurar", "h10": "cierre a 10 sesiones sin stop"};
+const ruleTxt = (nm, sentido) => (nm.length ? nm.map(k => COND[k] || k).join(' Y ') : 'cualquier fila') + (sentido ? ' → ' + sentido : '');
+const sg = x => x == null || !isFinite(x) ? 'neu' : x > 0 ? 'pos' : x < 0 ? 'neg' : 'neu';
+const pv = (p, reps) => p == null ? '—' : p === 0 ? '< ' + (1 / reps).toFixed(3) : p.toFixed(3);
+function yrBars(por) {                                                       // exceso medio por año de una regla (barras: verde positivo, rojo negativo)
+  const ys = Object.keys(por || {}).sort(); if (!ys.length) return '';
+  const v = ys.map(y => por[y]), mx = Math.max(1, ...v.map(Math.abs)), W = 11, H = 26, mid = H / 2;
+  return `<svg class="yb" width="${ys.length * W}" height="${H}" viewBox="0 0 ${ys.length * W} ${H}" role="img" aria-label="Exceso por año">${v.map((x, i) => { const h = Math.max(1, Math.abs(x) / mx * (mid - 1)); return `<rect x="${i * W + 1}" y="${x >= 0 ? mid - h : mid}" width="${W - 2}" height="${h}" rx="1" fill="${x >= 0 ? 'var(--emerald)' : 'var(--ember)'}"><title>${ys[i]}: ${pc(x, 2)}</title></rect>`; }).join('')}<line x1="0" x2="${ys.length * W}" y1="${mid}" y2="${mid}" stroke="var(--dim)" stroke-width=".6"/></svg>`;
+}
+const impHead = (t, lead) => `<h2><span class="part">Parte 2</span>${t}</h2><p class="lead">${lead}</p>`;
+
+function renderImp() {
+  const I = S.imp, R = S.iv;
+  if (!I) { $('#view').innerHTML = impHead('Regla de impulso con caída', 'Qué acciones cumplen hoy la regla.') + '<div class="empty">El cribador todavía no ha generado datos. Lanza el flujo «Cribador de la regla de impulso» o ejecuta <code>python -m vp screen</code>.</div>'; return; }
+  const m = I.meta, rules = m.reglas, t = R.text.trim().toUpperCase();
+  const rows = I.picks.filter(p => (R.rule === 'all' || p.reglas.includes(R.rule)) && (!R.fresh || p.nuevas.length) && (!t || p.sym.includes(t)));
+  const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, tx]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${tx}</button>`).join('')}</div>`;
+  const stats = rules.map(r => `<div class="stat" title="${esc(r.texto + ' · ' + (EXITS[r.salida] || r.salida))}"><b>${I.resumen[r.nombre].hoy}</b><span>${r.nombre} · ${r.salida === 'h10' ? '10 sesiones' : r.salida === 'op4b' ? 'asegura +4 %' : 'asegura +6 %'} (${I.resumen[r.nombre].nuevas} nuevas)</span></div>`).join('');
+  const exitOf = n => (rules.find(r => r.nombre === n) || {}).salida;
+  $('#view').innerHTML = impHead('Regla de impulso con caída', `Acciones del S&amp;P 500 y el Nasdaq-100 (las ${m.k} más negociadas) que están entre el 20 % mejor por <b>impulso a 12 meses</b> (sin el último mes) y <b>han caído</b>: bajo su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez. Se compra en largo. <b>No usa figuras ni velas</b>: es otra estrategia, con sus propias estadísticas (pestaña Evidencia).`) + `
+    <div class="warn"><b>Candidata, no recomendación.</b> En acciones que no se usaron para encontrarla gana al azar por unas décimas de punto por operación (más tras costes bajos, menos tras el sesgo de supervivencia). Ni asegura ganancias ni funciona todos los años. Léete la pestaña <b>Evidencia</b> antes de usarla.</div>
+    <div class="sumry w"><div class="stat"><b>${m.en_universo}</b><span>acciones en el universo</span></div><div class="stat"><b>${m.sobre_200.toFixed(0)} %</b><span>sobre su media de 200</span></div>${stats}</div>
+    <div class="bar">${seg('i-r', [['all', 'Todas']].concat(rules.map(r => [r.nombre, r.nombre])), R.rule)}<span class="tg ${R.fresh ? 'on' : ''}" id="i-n"><i></i>Solo nuevas hoy</span><input type="search" id="i-t" placeholder="Símbolo" value="${esc(R.text)}" size="10"></div>
+    <div class="panel"><div class="tw"><table class="ev"><thead><tr><th>Valor</th><th>Cierre</th><th title="Percentil del impulso a 12 meses (sin el último mes) entre las acciones del universo ese día">Impulso 12-1</th><th>vs media 200</th><th>RSI(2)</th><th>ATR %</th><th title="Formaciones de vela, figuras y rupturas bajistas vigentes (no es una señal: marca que ha caído)">Señales bajistas</th><th class="l">Reglas</th>
+      <th title="Cierre − 2,5 ATR. El stop inicial real se fija con el precio de apertura de la sesión siguiente">Stop inicial</th><th>Asegura +4 %</th><th>Asegura +6 %</th><th title="Posición (en % de la cuenta) con la que, si salta el stop inicial, se pierde el 1 % de la cuenta">Tamaño (riesgo 1 %)</th></tr></thead><tbody>${rows.length ? rows.map(p => `<tr><td><b>${S.idx && S.idx.symbols.some(x => x.sym === p.sym) ? `<a href="#${esc(p.sym)}" title="Ver su gráfico de figuras">${esc(p.sym)}</a>` : esc(p.sym)}</b></td><td>${fx(p.close)}</td><td>${(p.mom121 * 100).toFixed(0)}</td>
+      <td class="${sg(p.dist200)}">${pc(p.dist200)}</td><td>${p.rsi2.toFixed(0)}</td><td>${p.atrp.toFixed(1)}</td><td>${p.bajistas}</td><td class="l"><div class="chips">${p.reglas.map(n => `<span class="chip ${p.nuevas.includes(n) ? 'n' : 'u'}" title="${esc(((rules.find(r => r.nombre === n) || {}).texto || n) + ' · ' + (EXITS[exitOf(n)] || ''))}${p.nuevas.includes(n) ? ' · nueva hoy' : ''}">${n}${p.nuevas.includes(n) ? ' ★' : ''}</span>`).join('')}</div></td>
+      <td>${fx(p.plan.stop)} <span class="neg">(${pc(p.plan.stop_pct)})</span></td><td>${fx(p.plan.asegura4)}</td><td>${fx(p.plan.asegura6)}</td><td>${p.plan.tam1.toFixed(0)} %${p.plan.stop_pct < -10 ? ' <span class="neg" title="Stop a más del 10 %: valor muy volátil; el tamaño ya lo compensa">⚠</span>' : ''}</td></tr>`).join('') : '<tr><td class="l" colspan="12"><span class="empty">Ninguna acción cumple estas condiciones hoy.</span></td></tr>'}</tbody></table></div>
+      <div class="small" style="margin-top:6px">★ = cumple la regla hoy y no la cumplía en la sesión anterior. La referencia es el último cierre; se entra en la apertura siguiente.</div></div>
+    <div class="panel"><h3>Cómo se opera (las salidas validadas)</h3><div class="small"><b>C1 y C2 (las del operador)</b>: entrada en la apertura siguiente; stop inicial a 2,5 ATR; si una sesión cierra a <b>+4 %</b> (C1) o <b>+6 %</b> (C2) el stop sube a ese nivel y desde ahí persigue al mejor cierre a 3 ATR (C1) o 4 ATR (C2), sin objetivo fijo (máximo 60 sesiones). <b>C3, C4 y C5</b>: cierre a 10 sesiones, sin stop. Las cinco se midieron con las mismas condiciones que usa este cribador, así que una acción de la tabla es exactamente una fila de la estadística. Cada una se mide por separado en la pestaña Evidencia: no se suman.</div></div>`;
+  $('#i-r').querySelectorAll('button').forEach(b => b.onclick = () => { R.rule = b.dataset.v; renderImp(); });
+  $('#i-n').onclick = () => { R.fresh = R.fresh ? 0 : 1; renderImp(); };
+  $('#i-t').oninput = e => { R.text = e.target.value; renderImp(); const i = $('#i-t'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
+}
+
+function confTable(E, title, note) {
+  if (!E) return `<div class="panel"><h3>${esc(title)}</h3><div class="empty">Sin datos.</div></div>`;
+  const m = E.meta;
+  return `<div class="panel"><h3>${esc(title)}</h3><div class="small" style="margin-bottom:6px">${esc(note)} ${m.universe} acciones, las ${m.k} más negociadas, ${m.from} → ${m.to}, coste ${m.coste} %. Reglas fijadas antes de mirar estas acciones: no se eligió nada. <b>p</b> = fracción de ${m.reps} repeticiones con los resultados desplazados en el calendario que igualan lo observado.</div>
+    <div class="tw"><table class="ev"><thead><tr><th class="l">Regla (largo)</th><th>Salida</th><th>n</th><th>Exceso · t</th><th>Neto (azar mismas fechas)</th><th>% ganadoras (todas las filas)</th><th>p exceso / p t</th><th>Exceso por año</th></tr></thead><tbody>${E.reglas.map(r => {
+      const pos = Object.values(r.por_año).filter(v => v > 0).length, tot = Object.keys(r.por_año).length;
+      return `<tr><td class="l"><b>${esc(r.nombre)}</b> ${esc(ruleTxt(r.regla, ''))}</td><td>${esc(r.salida)}</td><td>${nf(r.n)}</td><td class="${sg(r.exceso)}">${pc(r.exceso, 2)} · t ${r.t.toFixed(1)}</td><td>${pc(r.neto, 2)} (${pc(r.azar_neto, 2)})</td><td>${r.ganan.toFixed(1)} % (${r.ganan_todas.toFixed(1)} %)</td><td>${pv(r.p_exceso, r.reps)} / ${pv(r.p_t, r.reps)}</td><td>${yrBars(r.por_año)} <span class="small">${pos}/${tot}</span></td></tr>`; }).join('')}</tbody></table></div></div>`;
+}
+
+function renderImpEv() {
+  const W = S.srch;
+  if (!W || !S.cfm) { $('#view').innerHTML = impHead('Evidencia de la regla de impulso', 'Estadísticas de la parte 2.') + '<div class="empty">Todavía no hay estudio de la regla. Lanza el flujo «Laboratorio y estudio» con <code>cmd = search</code> y <code>cmd = confirm</code>.</div>'; return; }
+  const m = W.meta, wf = W.walk_forward, nl = W.nulo, ys = wf.todo['años'];
+  const sub = [['todo', 'Todas las reglas'], ['contexto', 'Solo contexto (sin patrones)'], ['patrones', 'Con patrón (al menos una condición de patrón)']];
+  const f = (x, d = 2) => x == null ? '—' : pc(x, d);
+  const dfm = (W.dev_final.todo || {}).mejores || [], posF = dfm.filter(r => r.final_exceso != null && r.final_exceso > 0).length;
+  $('#view').innerHTML = impHead('Evidencia de la regla de impulso', `Estadísticas <b>propias de esta parte</b>, separadas de las de las figuras. Exceso = rendimiento neto de costes menos el de todas las acciones del universo ese mismo día, con el mismo sentido y la misma salida. Los resultados de cada regla son por operación (una fila = una acción y un día).`) + `
+    <div class="verdict a"><b>Resumen honesto.</b> Hay una idea que se repite y se confirma en acciones distintas: <b>valores de impulso alto a 12 meses que han caído → largo</b>. El exceso estimado es de <b>+0,3 a +0,5 % por operación</b> tras descontar el sesgo de supervivencia (más en bruto), con 8 o 9 de 10 años positivos. La búsqueda completa está <b>en el límite de la significación</b>: es una candidata razonable, no una prueba firme. Las figuras y las velas no aportan nada a esta regla (ver Guía).</div>
+    <div class="panel"><h3>1. Búsqueda con selección hacia delante (${m.test_years[0]}–${m.test_years[m.test_years.length - 1]})</h3><div class="small" style="margin-bottom:6px">${nf(m.pruebas)} reglas (${m.combinaciones} combinaciones de ${m.condiciones} condiciones × 2 sentidos × ${Object.keys(m.salidas).length} salidas) sobre ${nf(m.filas)} filas (acciones-días de las ${m.k} más negociadas, ${m.from} → ${m.to}). Cada año se elige la mejor regla <b>solo con lo anterior</b> (menos 60 sesiones) y se mide en ese año sin tocarla: lo que se muestra es el resultado del procedimiento completo de buscar y elegir. Control: se repite todo con los resultados desplazados en el calendario (al menos 300 sesiones; ${nl.todo.reps} repeticiones). Universo: ${m.miembros === 'en la fecha' ? 'miembros actuales, cada valor del S&amp;P 500 solo desde su incorporación al índice (' + nf(m.barras_quitadas) + ' barras quitadas por el sesgo de supervivencia)' : 'miembros actuales de los índices'}.</div>
+      <div class="tw"><table class="ev"><thead><tr><th class="l">Conjunto de reglas</th><th>Operaciones</th><th>Exceso · t</th><th>Neto (azar mismas fechas)</th><th>% ganadoras (todas las filas)</th><th>Control: exceso p95 · p</th><th>Control: t p95 · p</th></tr></thead><tbody>${sub.map(([k, t]) => { const w = wf[k], n = nl[k]; return `<tr><td class="l">${t}</td><td>${nf(w.n)}</td><td class="${sg(w.exceso)}">${f(w.exceso)} · t ${w.t.toFixed(1)}</td><td>${f(w.neto)} (${f(w.neto_azar_mismas_fechas)})</td><td>${w.ganan.toFixed(1)} % (${w.ganan_todas_las_filas.toFixed(1)} %)</td><td>${f(n.exceso_p95)} · ${pv(n.p_exceso, n.reps)}</td><td>${n.t_p95.toFixed(1)} · ${pv(n.p_t, n.reps)}</td></tr>`; }).join('')}</tbody></table></div>
+      <div class="small" style="margin-top:6px">El exceso supera el p95 del control en las tres versiones, pero la t no (p entre 0,1 y 0,4): compatible con una ventaja real pequeña, sin ser una prueba firme.</div></div>
+    <div class="panel"><h3>2. Año a año: la regla que se habría elegido con lo anterior</h3><div class="tw"><table class="ev"><thead><tr><th>Año</th><th>Operaciones</th><th>Exceso</th><th>Neto</th><th>Azar</th><th>% ganadoras</th><th class="l">Regla elegida (t de entrenamiento)</th></tr></thead><tbody>${ys.map(r => `<tr><td>${r['año']}</td><td>${nf(r.n)}</td><td class="${sg(r.exceso)}">${f(r.exceso)}</td><td>${f(r.neto)}</td><td>${f(r.azar_neto)}</td><td>${r.ganan.toFixed(1)} %</td><td class="l">${esc(ruleTxt(r.regla, r.sentido))} · ${esc(r.salida)} <span class="small">(t ${r.train_t.toFixed(1)})</span></td></tr>`).join('')}</tbody></table></div></div>
+    <div class="panel"><h3>3. Elegidas con los años ≤ ${W.dev_final.todo.dev_end} y miradas una sola vez después</h3><div class="small" style="margin-bottom:6px">De las ${dfm.length} mejores reglas del entrenamiento, <b>${posF}</b> mantienen exceso positivo en el final (exceso medio final ${f(dfm.filter(r => r.final_exceso != null).reduce((a, r) => a + r.final_exceso, 0) / Math.max(1, dfm.filter(r => r.final_exceso != null).length))}, de ${f(dfm.reduce((a, r) => a + r.train_exceso, 0) / Math.max(1, dfm.length))} en el entrenamiento).</div>
+      <div class="tw"><table class="ev"><thead><tr><th>Entrenamiento: n</th><th>Exceso · t</th><th>Final: n</th><th>Exceso · t</th><th class="l">Regla</th></tr></thead><tbody>${dfm.map(r => `<tr><td>${nf(r.train_n)}</td><td>${f(r.train_exceso)} · ${r.train_t.toFixed(1)}</td><td>${nf(r.final_n)}</td><td class="${sg(r.final_exceso)}">${f(r.final_exceso)}${r.final_t != null ? ' · ' + r.final_t.toFixed(1) : ''}</td><td class="l">${esc(ruleTxt(r.regla, r.sentido))} · ${esc(r.salida)}</td></tr>`).join('')}</tbody></table></div></div>
+    ${confTable(S.cfm, '4. Confirmación en acciones distintas: S&P 400 y S&P 600', 'Las cinco candidatas se fijaron con la búsqueda anterior y se evalúan en otras acciones (mismo método, coste más alto).')}
+    ${confTable(S.cf, '5. Las mismas candidatas en el universo de la búsqueda', 'Misma muestra que la búsqueda (no es independiente): sirve para comparar con las cifras anteriores.')}
+    <div class="panel"><h3>Cautelas que estos datos no pueden quitar</h3><div class="small"><ul style="margin:0;padding-left:18px">
+      <li><b>Sesgo de supervivencia</b>: el universo son los miembros actuales de los índices; los que cayeron y salieron no están. Comprar caídas de valores fuertes es justo lo que más se infla con eso (quitando las filas anteriores a la incorporación al S&amp;P 500 la ventaja se reduce a menos de la mitad). En el S&amp;P 400 y 600 ni siquiera se puede quitar. Descuenta la mitad: unos <b>+0,3 a +0,5 % por operación</b> sobre el azar.</li>
+      <li><b>Es pequeña</b>: con costes reales (comisión, deslizamiento en valores menos líquidos, impuestos) y operaciones simultáneas sobre el mismo mercado, la ganancia real será menor y variable. Hay años con −1 %.</li>
+      <li><b>Son medias</b>: una operación suelta pierde casi un tercio de las veces con la mejor salida.</li>
+      <li><b>Solo largos</b>: la mejor regla en corto no se sostuvo en el final. Las reglas de huecos de apertura y las de un solo régimen de mercado tampoco.</li>
+      <li><b>No es chartismo</b>: con patrón o sin él da lo mismo; el patrón solo marca que el valor ha caído.</li></ul></div></div>`;
+}
+
+function renderImpGuide() {
+  const cd = k => `<li><b>${esc(COND[k] || k)}</b></li>`;
+  $('#view').innerHTML = impHead('Guía de la regla de impulso', 'Qué es, cómo se encontró, cómo se opera y qué límites tiene.') + `
+    <div class="panel"><h3>La idea</h3><div class="small">Entre las acciones grandes de EE.UU., las que llevan 12 meses subiendo más que las demás (el 20 % mejor, sin contar el último mes) suelen seguir ganando a las demás; cuando además <b>caen un poco</b> (por debajo de su media de 200 sesiones, con RSI(2) muy bajo o con varias señales bajistas a la vez) rebotan mejor que la media del mercado ese día. La regla compra esas acciones en largo. Es un efecto conocido en la literatura (impulso más rebote a corto plazo); aquí se ha medido con las salidas de un operador y con control del sesgo de buscar entre miles de reglas.</div></div>
+    <div class="panel"><h3>Las cinco reglas (candidatas fijadas de antemano)</h3><div class="small"><b>C1 · C2 · C3</b>: ${esc(ruleTxt(['bajo_200', 'impulso12_alto'], ''))}. Salidas: C1 = stop 2,5 ATR + asegura +4 % + persigue a 3 ATR · C2 = stop 2,5 ATR + asegura +6 % + persigue a 4 ATR · C3 = cierre a 10 sesiones sin stop.<br><b>C4</b>: ${esc(ruleTxt(['impulso12_alto', 'confluencia_bajista'], ''))} · cierre a 10 sesiones.<br><b>C5</b>: ${esc(ruleTxt(['impulso12_alto', 'rsi2_bajo'], ''))} · cierre a 10 sesiones.</div></div>
+    <div class="panel"><h3>Cómo se encontró sin engañarse</h3><div class="small"><ul style="margin:0;padding-left:18px"><li>Se probaron ${S.srch ? nf(S.srch.meta.pruebas) : '4.800'} reglas (combinaciones de 32 condiciones fijadas de antemano, en largo y corto, con 6 salidas). Si se prueban miles de reglas, la mejor siempre parece buena.</li>
+      <li><b>Selección hacia delante</b>: cada año se elige la mejor regla con los datos anteriores y se mide en ese año; el resultado «fuera de muestra» es el del procedimiento completo.</li>
+      <li><b>Control del procedimiento</b>: se repite todo con los resultados desplazados en el calendario; lo que «encuentra» así es lo que da el azar al buscar.</li>
+      <li><b>Confirmación en acciones distintas</b> (S&amp;P 400 y 600) con cinco hipótesis fijadas antes de mirarlas.</li>
+      <li><b>Sesgo de supervivencia parcialmente corregido</b>: cada valor del S&amp;P 500 solo cuenta desde su fecha de incorporación al índice.</li></ul></div></div>
+    <div class="panel"><h3>Condiciones usadas (todas con datos hasta el cierre del día; los percentiles son del día)</h3><div class="small"><ul style="margin:0;padding-left:18px;columns:2;column-gap:28px">${Object.keys(COND).map(cd).join('')}</ul></div></div>
+    <div class="panel"><h3>Qué no es</h3><div class="small"><b>No es chartismo.</b> Los patrones (velas, figuras, rupturas) solo entran como una condición más («2 o más señales bajistas a la vez») y no añaden nada: con patrón o sin él la ventaja es la misma. Las estadísticas de las figuras están en la otra parte del laboratorio (Figuras y velas → Evidencia) y no se mezclan con estas.<br><b>No es una recomendación de inversión</b>: la ventaja estimada es pequeña, depende del sesgo de supervivencia que no se pudo quitar del todo y varía de un año a otro.<br><b>Seguimiento hacia delante</b>: el cribador guarda cada día qué acciones cumplían cada regla (<code>data/impulso_hist.json</code>) para medir, sin posibilidad de ajustar nada, qué pasó con ellas.</div></div>`;
 }
 
 /* ───────────────────────── gráfico: vista ───────────────────────── */

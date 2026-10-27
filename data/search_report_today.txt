@@ -1,11 +1,11 @@
 BÚSQUEDA DE LA REGLA QUE MÁS GANA SOBRE EL AZAR · 500 acciones · 711,762 filas (las 300 más negociadas) · 2017-05-01 → 2026-10-12
-402 combinaciones de condiciones × 2 sentidos × 6 salidas = 4,824 reglas. Exceso = neto de costes menos la media de todas las filas de ese día (mismo sentido y salida). Selección hacia delante: cada año de prueba se elige con lo anterior (menos 60 sesiones) y se mide en el año; solo son elegibles reglas con ≥ 2,000 operaciones y operaciones en al menos el 60 % de los periodos del entrenamiento. t con errores agrupados en bloques de 10 sesiones (cierre a 10) o de 60 (salidas de hasta 60). Nulo: todo el procedimiento con los resultados desplazados (40 repeticiones).
+402 combinaciones de condiciones × 2 sentidos × 6 salidas = 4,824 reglas. Exceso = neto de costes menos la media de todas las filas de ese día (mismo sentido y salida). Selección hacia delante: cada año de prueba se elige con lo anterior (menos 60 sesiones) y se mide en el año; solo son elegibles reglas con ≥ 2,000 operaciones y operaciones en al menos el 60 % de los periodos del entrenamiento. t con errores agrupados en bloques de 10 sesiones (cierre a 10) o de 60 (salidas de hasta 60). Nulo: todo el procedimiento con los resultados desplazados en el calendario (al menos 300 sesiones; 40 repeticiones).
 Universo: miembros ACTUALES de los índices (sesgo de supervivencia: los que salieron del índice no están).
 Salidas: op4a = stop 1,5 ATR · asegura +4 % · persigue 3 ATR · op4b = stop 2,5 ATR · asegura +4 % · persigue 3 ATR · op6a = stop 1,5 ATR · asegura +6 % · persigue 4 ATR · op6b = stop 2,5 ATR · asegura +6 % · persigue 4 ATR · run5 = stop que persigue 5 ATR sin asegurar · h10 = cierre a 10 sesiones sin stop
 
 === TODAS LAS REGLAS · selección hacia delante, años 2020–2026 ===
   FUERA DE MUESTRA: 11,917 operaciones · exceso +1.218 % por operación (t +2.8) · neto +2.131 % (azar en las mismas fechas +0.913 %) · ganan 58.8 % (todas las filas 52.3 %)
-  Nulo del procedimiento: exceso mediano +0.279 %, p95 +2.012 %, máximo +2.776 %; t p95 +5.0 · p-valor del exceso 0.15 y de la t 0.125
+  Nulo del procedimiento: exceso mediano +0.287 %, p95 +0.879 %, máximo +1.422 %; t p95 +3.6 · p-valor del exceso 0.025 y de la t 0.15
     año        n   exceso     neto     azar  ganan  regla elegida con el pasado (t de entrenamiento)
    2020    1,713   +1.239   +2.324   +1.051   53.4  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · op4a (t 10.0, exceso +0.58 %)
    2021    1,730   -0.101   +1.040   +0.593   56.4  impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · h10 (t 5.0, exceso +1.12 %)
@@ -17,7 +17,7 @@ Salidas: op4a = stop 1,5 ATR · asegura +4 % · persigue 3 ATR · op4b = stop 2,
 
 === SOLO CONTEXTO (sin patrones) · selección hacia delante, años 2020–2026 ===
   FUERA DE MUESTRA: 15,625 operaciones · exceso +2.034 % por operación (t +4.1) · neto +1.923 % (azar en las mismas fechas -0.111 %) · ganan 57.1 % (todas las filas 50.1 %)
-  Nulo del procedimiento: exceso mediano +0.306 %, p95 +2.338 %, máximo +2.832 %; t p95 +5.0 · p-valor del exceso 0.075 y de la t 0.1
+  Nulo del procedimiento: exceso mediano +0.305 %, p95 +1.002 %, máximo +1.399 %; t p95 +3.7 · p-valor del exceso 0.0 y de la t 0.05
     año        n   exceso     neto     azar  ganan  regla elegida con el pasado (t de entrenamiento)
    2020    3,894   +1.212   -2.602   -1.472   58.0  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · op4b (t 6.0, exceso +0.74 %)
    2021    1,730   -0.101   +1.040   +0.593   56.4  impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · h10 (t 5.0, exceso +1.12 %)
@@ -29,7 +29,7 @@ Salidas: op4a = stop 1,5 ATR · asegura +4 % · persigue 3 ATR · op4b = stop 2,
 
 === CON PATRÓN (al menos una condición de patrón) · selección hacia delante, años 2020–2026 ===
   FUERA DE MUESTRA: 10,458 operaciones · exceso +0.747 % por operación (t +2.8) · neto +1.441 % (azar en las mismas fechas +0.693 %) · ganan 55.9 % (todas las filas 51.8 %)
-  Nulo del procedimiento: exceso mediano +0.268 %, p95 +1.108 %, máximo +2.253 %; t p95 +3.0 · p-valor del exceso 0.15 y de la t 0.075
+  Nulo del procedimiento: exceso mediano +0.141 %, p95 +0.719 %, máximo +0.899 %; t p95 +2.6 · p-valor del exceso 0.05 y de la t 0.05
     año        n   exceso     neto     azar  ganan  regla elegida con el pasado (t de entrenamiento)
    2020    1,713   +1.239   +2.324   +1.051   53.4  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · op4a (t 10.0, exceso +0.58 %)
    2021    1,813   +0.420   +1.398   +0.593   57.9  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · h10 (t 4.8, exceso +1.15 %)
