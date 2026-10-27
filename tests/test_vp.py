@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, context, data, engine, lab, ml, plan, planstudy, screen, search, shapes, study, ta, universe
+from vp import breakouts, candles, context, data, engine, fiab, lab, ml, plan, planstudy, screen, search, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -330,9 +330,9 @@ def test_plan():
     assert abs(rr['target_c'] - (neck + (neck - low))) < 0.02, (rr, neck, low)        # objetivo clásico = cuello + altura de la figura
     assert rr['stop_s'] < low                                                         # stop clásico bajo el mínimo más bajo
     assert rr['stop'] > rr['stop_s'] and rr['stop_cap']                               # ese stop está lejísimos en ATR: el plan del operador lo acorta
-    assert abs(rr['target'] - rr['entry'] * 1.04) < 0.02                              # nivel que se asegura: +4 %
+    assert abs(rr['target'] - rr['entry'] * 1.04) < 0.02 and abs(rr['target2'] - rr['entry'] * 1.10) < 0.02      # niveles que se aseguran: +4 % y +10 %
     assert p['out_s']['res'] == 'target' and p['out_s']['ret'] > 0 and p['out_s']['xi'] > p['i']          # el plan clásico llega al objetivo
-    assert p['out']['res'] in ('target', 'open') and p['out']['locked'] and p['out']['ret'] >= 3.9 and p['out']['xi'] > p['i']      # y el del operador asegura el +4 % (la serie acaba con la operación en curso)
+    assert p['out']['res'] in ('target', 'open') and p['out']['locked'] and p['out']['level'] >= 1 and p['out']['ret'] >= 3.9 and p['out']['xi'] > p['i']      # y la escalera asegura al menos el +4 % (la serie acaba con la operación en curso)
     res2, dbs2 = run([(56, 70)])
     assert dbs2 and dbs2[-1]['out']['res'] == 'stop' and dbs2[-1]['out']['ret'] < 0
     # invariantes de todos los patrones del valor: stop a ≥ 1 ATR, T1 intermedio, lados correctos
@@ -771,7 +771,20 @@ def test_outcome_counts_real_result():
     l3 = l.copy(); l3[1] = 94.0                                                                       # antes de asegurar toca el stop inicial: pierde
     lk3 = plan.outcome_lock(dict(F2, l=l3), 0, 1, 95.0)
     assert lk3['res'] == 'stop' and not lk3['locked'] and lk3['ret'] < 0, lk3
-    print('ok · resultado de cada operación: ganancia neta, múltiplo del riesgo, recorrido máximo; plan clásico y plan del operador (asegurar +4 % y dejar correr)')
+    # la escalera: +4 % → stop plano a +4 % (una corrección hasta 104,1 no saca); +10 % → stop a +10 % que persigue a 2 ATR
+    o5 = np.array([100, 100, 103, 105, 104.5, 106, 111, 113, 114.0]); h5 = np.array([101, 102, 105, 106, 105, 108, 112, 114, 115.0]); l5 = np.array([99, 99, 101, 104.1, 102.5, 105, 110, 112, 108.0]); c5 = np.array([100, 101, 105, 105.5, 104.2, 107, 111, 113, 109.0])
+    F5 = dict(o=o5, h=h5, l=l5, c=c5, atr=np.full(9, 1.0))
+    e1 = plan.outcome_ladder(F5, 0, 1, 95.0)
+    # barra 2 cierra 105 ≥ 104: nivel 1 (stop 104 plano); barra 4 mínimo 102,5 < 104 → sale a 104 (+4 %) aunque antes de asegurar habría seguido
+    assert e1['level'] == 1 and e1['res'] == 'target' and abs(e1['ret'] - 4.0) < 1e-6 and e1['bars'] == 4, e1
+    l6 = l5.copy(); l6[4] = 104.2                                                                  # sin esa corrección: barra 6 cierra 111 ≥ 110 → nivel 2; stop = max(110, 113 − 2) = 111 tras la barra 7; barra 8 mínimo 108 → sale a 111
+    e2 = plan.outcome_ladder(dict(F5, l=l6), 0, 1, 95.0)
+    assert e2['level'] == 2 and e2['res'] == 'target' and abs(e2['ret'] - 11.0) < 1e-6 and e2['bars'] == 8, e2
+    e3 = plan.outcome_ladder(dict(F5, l=np.array([99, 94, 101, 104.1, 102.5, 105, 110, 112, 108.0])), 0, 1, 95.0)
+    assert e3['level'] == 0 and e3['res'] == 'stop' and e3['ret'] < 0, e3
+    sh5 = plan.outcome_ladder(dict(o=200 - o5, h=200 - l6, l=200 - h5, c=200 - c5, atr=np.full(9, 1.0)), 0, -1, 105.0)      # corto espejo
+    assert sh5['level'] == 2 and sh5['res'] == 'target' and abs(sh5['ret'] - 11.0) < 1e-6, sh5
+    print('ok · resultado de cada operación: ganancia neta, múltiplo del riesgo, recorrido máximo; plan clásico, plan de un nivel y escalera del operador (+4 % plano, +10 % persiguiendo)')
 
 
 def test_group_trades():
@@ -820,28 +833,48 @@ def test_combos_unique_valuedays():
 
 
 def test_search_sim():
-    """La salida del operador vectorizada para todas las barras coincide con plan.outcome_lock y con el stop que persigue del estudio del plan; el cierre a 10 sesiones es el del panel."""
+    """La salida vectorizada para todas las barras coincide con plan.outcome_lock, con plan.outcome_ladder (la escalera +4 → +10) y con los simuladores del estudio del plan; el cierre a 10 es el del panel."""
     from vp import plan as P_
     rng = np.random.default_rng(3)
-    tot = 0
+    tot, lv2 = 0, 0
     for seed in range(3):
         b = walk(900, seed=70 + seed, sig=0.02)
         F = ta.prepare(b)
         o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
         for d in (1, -1):
             for stop_atr, lock, trail in ((1.5, 4.0, 3.0), (2.5, 6.0, 4.0)):
-                net = search.sim_all(o, h, l, c, atr, d, stop_atr, lock, trail, 60)
+                net, code = search.sim_all(o, h, l, c, atr, d, stop_atr, lock, trail, 60)
                 for _ in range(60):
                     i = int(rng.integers(60, 820))
                     entry = float(o[i + 1])
                     r = P_.outcome_lock(F, i, d, entry - d * stop_atr * float(atr[i]), lock, trail, 60)
                     assert r['res'] != 'na'
                     if r['res'] == 'open':
-                        assert np.isnan(net[i])
+                        assert np.isnan(net[i]) and code[i] == -1
                         continue
                     tot += 1
                     assert abs(net[i] - r['net']) < 2e-2, (seed, d, i, net[i], r['net'], r['res'])
-            tr = search.sim_all(o, h, l, c, atr, d, 5.0, None, 5.0, 60)
+                    assert code[i] == (1 if r['locked'] else (3 if r['res'] == 'timeout' else 0)), (code[i], r)
+            # la escalera: con stop en ATR y con stop en % del precio; códigos 0 stop, 1 aseguró +4, 2 aseguró +10, 3 tiempo
+            for kw in ({'stop_atr': 2.5}, {'stop_pct': 6.0}):
+                net, code = search.sim_all(o, h, l, c, atr, d, maxb=60, ladder=search.LADDER, **kw)
+                for _ in range(80):
+                    i = int(rng.integers(60, 820))
+                    entry = float(o[i + 1])
+                    stop = entry - d * (kw['stop_atr'] * float(atr[i]) if 'stop_atr' in kw else kw['stop_pct'] / 100 * entry)
+                    r = P_.outcome_ladder(F, i, d, stop)
+                    if r['res'] == 'open':
+                        assert np.isnan(net[i]); continue
+                    tot += 1
+                    assert abs(net[i] - r['net']) < 2e-2, (kw, d, i, net[i], r)
+                    assert code[i] == (r['level'] if r['level'] else (3 if r['res'] == 'timeout' else 0)), (code[i], r)
+                    lv2 += r['level'] == 2
+                    s2 = planstudy.sim_ladder(o, h, l, c, i, d, stop, float(atr[i]))
+                    assert s2 is not None and abs(s2[1] - 0.15 - r['net']) < 2e-2 and s2[0] == (0 if r['level'] else (2 if r['res'] == 'timeout' else 1)), (s2, r)
+                    if r['level'] >= 1:                                                            # asegurado: no se sale por debajo de +4 % salvo que un hueco abra por debajo del stop
+                        gapped = (o[r['xi']] <= entry * 1.04 + 1e-9) if d > 0 else (o[r['xi']] >= entry * 0.96 - 1e-9)
+                        assert r['ret'] >= 4 - 1e-6 or gapped, (r, o[r['xi']], entry)
+            tr, _ = search.sim_all(o, h, l, c, atr, d, 5.0, None, 5.0, 60)
             for _ in range(40):
                 i = int(rng.integers(60, 820))
                 s1 = planstudy.sim_trail(o, h, l, c, i, d, 5.0, float(atr[i]), 60)
@@ -849,10 +882,11 @@ def test_search_sim():
                     continue
                 tot += 1
                 assert abs(tr[i] - (s1[1] - 0.15)) < 1e-6, (d, i, tr[i], s1)
-            h10 = search.hold_all(o, c, d, 10)
+            h10, c10 = search.hold_all(o, c, d, 10)
             i = 100
-            assert abs(h10[i] - (d * (c[i + 10] / o[i + 1] - 1) * 100 - 0.15)) < 1e-9
-    print(f'ok · búsqueda: la salida del operador por barras coincide con la simulación de la web ({tot} casos)')
+            assert abs(h10[i] - (d * (c[i + 10] / o[i + 1] - 1) * 100 - 0.15)) < 1e-9 and c10[i] == 3
+    assert lv2 > 10, lv2                                                          # en un paseo del 2 % diario el +10 % se alcanza a menudo
+    print(f'ok · búsqueda: salidas vectorizadas (un nivel, escalera +4 → +10 con stop en ATR o en %, persigue, cierre a 10) idénticas a la simulación de la web ({tot} casos, {lv2} con +10 % asegurado)')
 
 
 def test_search_procedure():
@@ -867,6 +901,8 @@ def test_search_procedure():
     nl = ev['nulo']['contexto']
     assert nl['t_p95'] < w['t'] and nl['p_t'] <= 0.2, (nl, w['t'])
     assert 'FUERA DE MUESTRA' in search.report(ev) and ev['meta']['pruebas'] == ev['meta']['combinaciones'] * 2 * len(search.EXITS)
+    wfb = ev['walk_forward_fiab']['contexto']
+    assert wfb['n'] > 1000 and wfb['fiab'] > 3 and wfb['fiab_t'] > 2 and ev['nulo_fiab']['contexto']['reps'] == kw['reps'] and all('asegura4' in r for r in wfb['años']), wfb   # por fiabilidad también encuentra la reversión
     ev0 = search.analyze({f'S{j}': _walk_ar(1500, 900 + j, 0.0) for j in range(40)}, **kw)
     w0 = ev0['walk_forward']['todo']
     assert abs(w0['t']) < 4 and abs(w0['exceso']) < 0.8, w0                         # sin efecto: lo que se «encuentra» buscando entre cientos de reglas no se sostiene fuera de muestra
@@ -952,7 +988,7 @@ def test_search_confirm():
     r1, r2, r3 = ev['reglas']
     assert r1['exceso'] > 0.8 and r1['t'] > 5 and r1['p_exceso'] <= 0.05 and r1['p_t'] <= 0.05 and r1['n'] > 2000 and sum(v > 0 for v in r1['por_año'].values()) >= len(r1['por_año']) - 1, r1
     assert r2['exceso'] < -0.5 and r2['t'] < -4 and r2['p_exceso'] > 0.9, r2
-    assert r3['n'] > 500 and r3['exceso'] > 0.3 and 'neto' in r3 and 'ganan' in r3, r3
+    assert r3['n'] > 500 and r3['exceso'] > 0.3 and 'neto' in r3 and 'ganan' in r3 and r3['asegura4'] >= 0 and r1['fiab'] > 5 and r1['p_fiab'] <= 0.05 and r1['factor'] > 1, r3
     rob = ({'nombre': 'V1', 'regla': ['cae5', 'vol_baja'], 'sentido': 'largo', 'salida': 'h10'}, {'nombre': 'V2', 'regla': ['cae5', 'vol_alta'], 'sentido': 'largo', 'salida': 'h10'})
     ev_r = search.confirm({f'S{j}': _walk_ar(1500, 1500 + j, 0.25) for j in range(40)}, **dict(kw, rules=rules[:1], robustez=rob))
     assert [r['nombre'] for r in ev_r['robustez']] == ['V1', 'V2'] and all(r['n'] > 300 and 'p_exceso' in r for r in ev_r['robustez']), ev_r['robustez']
@@ -962,22 +998,22 @@ def test_search_confirm():
     ev0 = search.confirm({f'S{j}': _walk_ar(1500, 1700 + j, 0.0) for j in range(40)}, **kw)
     for r in ev0['reglas']:
         assert abs(r['t']) < 4 and r['p_exceso'] > 0.01 and r['p_exceso'] < 0.99, r
-    assert all(r['nombre'] in {c['nombre'] for c in search.CANDIDATAS} or r['nombre'].startswith('T') for r in ev0['reglas']) and len(search.CANDIDATAS) == 5
+    assert all(r['nombre'] in {c['nombre'] for c in search.CANDIDATAS} or r['nombre'].startswith('T') for r in ev0['reglas']) and len(search.CANDIDATAS) == 8 and all(c['salida'] in search.EXN for c in search.CANDIDATAS)
     print(f'ok · confirmación: reglas fijas (T1 exceso {r1["exceso"]:+.2f} %, t {r1["t"]:.0f}; T2 {r2["exceso"]:+.2f} %) y nada en paseos aleatorios')
 
 
 def test_screen():
-    """El cribador del último cierre da las mismas acciones que el panel completo en esa fecha (sin mirar el futuro), el plan sale del cierre y el ATR, y el registro no repite días."""
+    """El cribador del último cierre da las mismas acciones que el panel completo en esa fecha (sin mirar el futuro), el plan de la escalera sale del cierre y el ATR, y el registro no repite días."""
     bars = {f'S{j}': _walk_ar(1500, 2000 + j, 0.0) for j in range(40)}
     rules = search.CANDIDATAS
-    work = {s: ml._work((s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}))[1] for s, b in bars.items()}
+    work = {s: search._work((s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}))[1] for s, b in bars.items()}
     Df = ml.Data(work, k=40)
     ff = screen._flags(Df, rules)
     total = 0
     last_ev = None
     for cut in (800, 950, 1100, 1250, 1400):
         sub = {s: {a: v[:cut + 1] for a, v in b.items()} for s, b in bars.items()}
-        ev = screen.screen(sub, k=40, rules=rules)
+        ev = screen.screen(sub, k=40, rules=rules, model=False)
         rows = Df.bar == cut                                                 # el mismo día en el panel con todo el futuro
         assert ev['meta']['asof'] == str(Df.date[Df.dcode[np.flatnonzero(rows)[0]]]) and ev['meta']['en_universo'] == int(rows.sum()), ev['meta']
         for r in rules:
@@ -989,8 +1025,11 @@ def test_screen():
         for p in ev['picks']:
             F = ta.prepare(bars[p['sym']])
             c, a = float(F['c'][cut]), float(F['atr'][cut])
-            assert abs(p['close'] - c) < 1e-3 and abs(p['atr'] - a) < 1e-3 * c and abs(p['plan']['stop'] - (c - 2.5 * a)) < 2e-3 * c and abs(p['plan']['asegura4'] - c * 1.04) < 1e-3 * c, (p, c, a)
-            assert 0 <= p['mom121'] <= 1 and 0 <= p['vol'] <= 1 and set(p['nuevas']) <= set(p['reglas']) and p['bajistas'] >= 0
+            pl = p['plan']
+            assert abs(p['close'] - c) < 1e-3 and abs(p['atr'] - a) < 1e-3 * c and abs(pl['stop'] - (c - 2.5 * a)) < 2e-3 * c and abs(pl['asegura4'] - c * 1.04) < 1e-3 * c and abs(pl['asegura10'] - c * 1.10) < 1e-3 * c, (p, c, a)
+            assert abs(pl['tam1'] * abs(pl['stop_pct']) / 100 - 1.0) < 0.02 and abs(pl['rr4'] * abs(pl['stop_pct']) - 4) < 0.05 and pl['tam1_s6'] > 0, pl
+            assert 0 <= p['mom121'] <= 1 and 0 <= p['vol'] <= 1 and set(p['nuevas']) <= set(p['reglas']) and p['bajistas'] >= 0 and p['grupo'] is not None and p['fiab'] is None
+        assert set(ev['plan_hoy']['posiciones']) <= {p['sym'] for p in ev['picks']} and len(ev['plan_hoy']['posiciones']) <= screen.MAX_POS
         last_ev = ev if ev['picks'] else last_ev
     assert total >= 3 and last_ev, total                                       # el control no es vacío: hubo acciones que cumplían alguna regla
     import tempfile
@@ -998,12 +1037,63 @@ def test_screen():
     h1 = screen.update_history(path, last_ev)
     json.dump(h1, open(path, 'w'))
     h2 = screen.update_history(path, last_ev)
-    assert len(h1) == 1 and len(h2) == 1 and h2[0]['date'] == last_ev['meta']['asof'] and set(h2[0]['reglas']) == {r['nombre'] for r in rules}
+    assert len(h1) == 1 and len(h2) == 1 and h2[0]['date'] == last_ev['meta']['asof'] and set(h2[0]['reglas']) == {r['nombre'] for r in rules} and set(h2[0]['picks']) == {p['sym'] for p in last_ev['picks']}
     ev2 = dict(last_ev, meta=dict(last_ev['meta'], asof='2099-01-01'))
     json.dump(h2, open(path, 'w'))
     h3 = screen.update_history(path, ev2)
     assert [h['date'] for h in h3] == [last_ev['meta']['asof'], '2099-01-01']
-    print(f'ok · cribador: coincide con el panel completo en 5 fechas ({total} acciones-regla) y el registro no repite días')
+    print(f'ok · cribador: coincide con el panel completo en 5 fechas ({total} acciones-regla), plan de la escalera y tamaño correctos, registro sin días repetidos')
+
+
+def test_track_and_clusters():
+    """El seguimiento hacia delante simula cada acción del registro con la escalera y los precios posteriores (idéntico a plan.outcome_ladder), no abre dos veces el mismo valor
+    mientras hay una abierta, y los grupos de correlación juntan los valores que se mueven igual."""
+    bars = {f'S{j}': _walk_ar(700, 3000 + j, 0.0) for j in range(6)}
+    # S5 = copia ruidosa de S0 (correlación alta); el resto, independientes
+    b0 = bars['S0']
+    rng = np.random.default_rng(9)
+    c5 = b0['c'] * np.exp(rng.normal(0, 0.002, 700))
+    bars['S5'] = {'t': b0['t'].copy(), 'o': b0['o'] * c5 / b0['c'], 'h': b0['h'] * c5 / b0['c'], 'l': b0['l'] * c5 / b0['c'], 'c': c5, 'v': b0['v'].copy()}
+    g = screen.clusters(bars, list(bars))
+    assert g['S0'] == g['S5'] and len({g[s] for s in ('S0', 'S1', 'S2', 'S3', 'S4')}) == 5, g
+    days = lambda i: str(np.datetime64(int((b0['t'][i] + 5 * 3600) // 86400), 'D'))
+    hist = [{'date': days(500), 'reglas': {'C6': ['S0', 'S1'], 'C1': ['S1']}, 'picks': {'S0': {'fiab': 70.0, 'vol': 0.8, 'reglas': ['C6']}, 'S1': {'fiab': 55.0, 'vol': 0.3, 'reglas': ['C6', 'C1']}}, 'plan_hoy': ['S0']},
+            {'date': days(505), 'reglas': {'C6': ['S0', 'S2']}, 'picks': {}, 'plan_hoy': []},                     # S0 sigue abierta: no se abre otra; S2 sí
+            {'date': days(690), 'reglas': {'C6': ['S3']}, 'picks': {}, 'plan_hoy': []}]                              # S3 sin salida todavía: en curso
+    tr = screen.track(hist, bars)
+    ops = {(r['fecha'], r['sym']): r for r in tr['operaciones']}
+    assert set(ops) == {(days(500), 'S0'), (days(500), 'S1'), (days(505), 'S2'), (days(690), 'S3')}, set(ops)
+    for (dt, sym), r in ops.items():
+        F = ta.prepare(bars[sym])
+        i = int(np.flatnonzero(((bars[sym]['t'] + 5 * 3600) // 86400).astype(np.int64) == np.datetime64(dt, 'D').astype(np.int64))[0])
+        o = plan.outcome_ladder(F, i, 1, float(F['c'][i]) - 2.5 * float(F['atr'][i]))
+        assert r['res'] == o['res'] and (o['res'] == 'open' or abs(r['net'] - o['net']) < 1e-9) and r['level'] == o.get('level', 0), (r, o)
+    assert ops[(days(690), 'S3')]['res'] == 'open' and ops[(days(690), 'S3')]['ahora'] is not None
+    assert ops[(days(500), 'S0')]['plan_hoy'] and not ops[(days(500), 'S1')]['plan_hoy'] and ops[(days(500), 'S1')]['fiab'] == 55.0
+    T = tr['todas']
+    assert T['n'] == 4 and T['cerradas'] + T['abiertas'] == 4 and tr['plan_hoy']['n'] == 1 and tr['por_regla']['C1']['n'] == 1 and tr['vol_alta']['n'] == 1
+    print(f"ok · seguimiento hacia delante: {T['cerradas']} cerradas y {T['abiertas']} abiertas, idéntico a la escalera de la web; grupos de correlación correctos")
+
+
+def test_fiab_model():
+    """El modelo de fiabilidad aprende fuera de muestra un efecto plantado (reversión: tras caer, la escalera gana más), está calibrado y supera al control de solo volatilidad; en paseos aleatorios no inventa nada."""
+    try:
+        import sklearn  # noqa: F401
+    except ImportError:
+        print('omitida · modelo de fiabilidad: falta scikit-learn')
+        return
+    kw = dict(workers=1, k=40, test_years=[2019, 2020, 2021], min_train=3000, params=dict(fiab.PARAMS, max_iter=60, min_samples_leaf=200))
+    ev = fiab.analyze({f'S{j}': _walk_ar(1500, 4000 + j, 0.25) for j in range(40)}, **kw)
+    m, v = ev['modelo']['todo'], ev['solo_volatilidad']['todo']
+    assert m['n'] > 10000 and m['auc'] > 0.58 and m['auc'] > v['auc'] + 0.03, (m['auc'], v['auc'])
+    assert m['top']['real'] > m['bot']['real'] + 8 and m['top']['fiab'] > 4 and m['top']['fiab_t'] > 3, m['top']
+    cal = m['calibracion']
+    assert len(cal) >= 3 and all(abs(c['predicho'] - c['real']) < 12 for c in cal), cal                       # calibrado: lo predicho se parece a lo real en cada tramo
+    assert all('auc' in r for r in ev['modelo']['por_año'].values()) and 'FIABILIDAD' in fiab.report(ev)
+    ev0 = fiab.analyze({f'S{j}': _walk_ar(1500, 4100 + j, 0.0) for j in range(40)}, **kw)
+    m0 = ev0['modelo']['todo']
+    assert m0['auc'] < 0.56 and abs(m0['top']['fiab']) < 4, m0                                                  # sin efecto: ni AUC ni fiabilidad
+    print(f"ok · modelo de fiabilidad: AUC {m['auc']:.2f} fuera de muestra con reversión plantada (control solo volatilidad {v['auc']:.2f}), calibrado, y {m0['auc']:.2f} en paseos aleatorios")
 
 
 def test_web_impulso_constants():
@@ -1013,15 +1103,15 @@ def test_web_impulso_constants():
     cond = json.loads(re.search(r'const COND = (\{.*?\});\n', html).group(1))
     exits = json.loads(re.search(r'const EXITS = (\{.*?\});\n', html).group(1))
     assert cond == search.DESC and exits == search.EXIT_TXT, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT))
-    for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "['imp', 'Hoy'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1'):
+    for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "'impulso-seguimiento': 'imptrack'", "['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1', 'Asegurar +10 %', 'Plan de hoy'):
         assert needle in html, needle
-    for f in ('impulso.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json'):
+    for f in ('impulso.json', 'impulso_track.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json', 'fiab.json'):
         assert f"'{f}'" in html, f
     print('ok · web: condiciones y salidas de la regla de impulso idénticas a las del código; dos partes con rutas y pestañas propias')
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_web_impulso_constants]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_web_impulso_constants]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»

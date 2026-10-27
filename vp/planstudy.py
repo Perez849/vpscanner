@@ -9,7 +9,9 @@ y, sobre todo, evalúa la forma de operar de un discrecional: stop inicial razon
     y con una volatilidad relativa parecida (así la volatilidad del momento no cuenta como ventaja). «Exceso» = resultado de la señal − media de sus M entradas al azar.
     No se usa «el mismo año»: la referencia de ese año contendría la tendencia que provocó la señal y sesgaría el exceso hacia abajo (comprobado con paseos aleatorios).
   · Geometrías:
-      «lock4» y «lock5» (el plan del operador de la web): stop inicial = el estructural acotado a 1–2 ATR; cuando una sesión cierra a +4 % (o +5 %) a favor el stop sube a ese nivel y persigue al mejor
+      «esc» (la escalera del operador, la de la web): stop inicial = el estructural acotado a 1–2 ATR; al cerrar a +4 % el stop sube a +4 % y se queda (se deja correr); al cerrar a +10 % sube a +10 % y
+        persigue al mejor cierre a 2 ATR, hasta 60 sesiones; «escf»: lo mismo con el stop inicial a 1,5 ATR para todos;
+      «lock4» y «lock5» (un solo nivel): stop inicial = el estructural acotado a 1–2 ATR; cuando una sesión cierra a +4 % (o +5 %) a favor el stop sube a ese nivel y persigue al mejor
         cierre a 3 ATR, sin objetivo, hasta 60 sesiones;
       «lock4f»: lo mismo con el stop inicial a 1,5 ATR para todos los patrones (idéntico en todos: lo que quede es la dirección que aporta el patrón);
       «struct»: el plan clásico sin límites (stop al otro lado de la figura y objetivo por la medida clásica), que daba stops del 10–40 %, solo como referencia;
@@ -32,7 +34,8 @@ import numpy as np
 from . import engine, plan as P, study, ta
 from .catalog import CATALOG, HQ
 
-VARIANTS = ('lock4', 'lock5', 'lock4f', 'struct', 'fix', 'trail3', 'trail5')
+VARIANTS = ('esc', 'escf', 'lock4', 'lock5', 'lock4f', 'struct', 'fix', 'trail3', 'trail5')
+LADDER_V = {'esc': None, 'escf': 1.5}    # la escalera del operador (+4 % → stop plano a +4 %; +10 % → stop a +10 % que persigue a 2 ATR): stop inicial estructural acotado o fijo en ATR
 LOCK = {'lock4': (4.0, None), 'lock5': (5.0, None), 'lock4f': (4.0, 1.5)}   # (nivel que se asegura en %, stop inicial fijo en ATR; None = el estructural acotado)
 LOCK_TRAIL = 3.0
 TRAIL = {'trail3': 3.0, 'trail5': 5.0}      # stop que persigue al cierre más alto (o bajo) a N ATR, sin objetivo
@@ -133,6 +136,38 @@ def sim_lock(o, h, l, c, i: int, d: int, stop: float, lock_pct: float, a: float,
     return 0, pct(float(cc[-1]))
 
 
+def sim_ladder(o, h, l, c, i: int, d: int, stop: float, a: float, levels=P.LADDER, maxb: int = TRAIL_HOLD) -> Optional[Tuple[int, float]]:
+    """Mismo resultado que plan.outcome_ladder con cortes de NumPy: (0 = aseguró algún nivel, 1 = stop inicial, 2 = cierre por tiempo sin asegurar, rentabilidad % antes de costes)."""
+    n = len(c)
+    e = i + 1
+    if e + maxb > n:
+        return None
+    entry = float(o[e])
+    if (d > 0 and entry <= stop) or (d < 0 and entry >= stop):
+        return None
+    hh, ll, cc, oo = h[e:e + maxb], l[e:e + maxb], c[e:e + maxb], o[e:e + maxb]
+    pct = lambda px: d * (px / entry - 1.0) * 100.0
+    lv_px = [entry * (1.0 + d * p / 100.0) for p, _ in levels]
+    lvl = np.zeros(maxb, np.int64)
+    for q, px in enumerate(lv_px):                                             # nivel asegurado tras cada barra (el más alto que el cierre haya pasado)
+        lvl = np.where(np.maximum.accumulate((cc >= px) if d > 0 else (cc <= px)), q + 1, lvl)
+    best = np.maximum.accumulate(cc) if d > 0 else np.minimum.accumulate(cc)
+    plv, pbest = np.concatenate([[0], lvl[:-1]]), np.concatenate([[entry], best[:-1]])     # el stop de cada barra lo fija el estado tras la anterior
+    st = np.full(maxb, float(stop))
+    for q, (_, tr) in enumerate(levels):
+        at = plv == q + 1
+        if tr is None:
+            st = np.where(at, lv_px[q], st)
+        else:
+            st = np.where(at, np.maximum(lv_px[q], pbest - tr * a) if d > 0 else np.minimum(lv_px[q], pbest + tr * a), st)
+    hit = (ll <= st) if d > 0 else (hh >= st)
+    if hit.any():
+        k = int(np.argmax(hit))
+        gap = (oo[k] <= st[k]) if d > 0 else (oo[k] >= st[k])
+        return (0 if plv[k] >= 1 else 1), pct(float(oo[k]) if gap else float(st[k]))
+    return (0 if lvl[-1] >= 1 else 2), pct(float(cc[-1]))
+
+
 def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict]:
     """Por evento: (stop, objetivo) del plan clásico («struct») y de «fix», y el stop inicial del plan del operador («lock»: el estructural acotado a 1–2 ATR). None si no se puede calcular."""
     i, name = e['i'], e['name']
@@ -197,7 +232,30 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
             t['bt'].append(0.0); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
             t['ra'].append(m_); t['rw'].append(0.0)
             t['win'].append(float(r0[1] - COST > 0)); t['bwin'].append(float(np.mean([x[1] - COST > 0 for x in rs])))
-        for v, (lp, fixed) in LOCK.items():                         # plan del operador: se asegura a +lp % y se deja correr; todas las señales
+        for v, fixed in LADDER_V.items():                           # la escalera del operador: +4 % plano, +10 % persiguiendo a 2 ATR; todas las señales
+            stop0 = gm['lock'] if fixed is None else entry - d * fixed * a
+            ra = abs(entry - stop0) / a
+            if not ra > 0:
+                continue
+            r0 = sim_ladder(o, h, l, c, i, d, stop0, a)
+            if r0 is None:
+                continue
+            rs = []
+            for j in js:
+                j = int(j)
+                rj = sim_ladder(o, h, l, c, j, d, float(c[j]) - d * ra * float(atr[j]), float(atr[j]))
+                if rj is not None:
+                    rs.append(rj)
+            if len(rs) < M // 2:
+                continue
+            res = np.array([x[0] for x in rs])
+            t = out[v]
+            t['i'].append(i); t['pid'].append(pid); t['hq'].append(hq); t['ret'].append(r0[1] - COST); t['res'].append(r0[0])
+            t['base'].append(float(np.mean([x[1] for x in rs])) - COST)
+            t['bt'].append(float((res == 0).mean())); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
+            t['ra'].append(ra); t['rw'].append(P.LOCK_PCT / (a / entry * 100.0))
+            t['win'].append(float(r0[1] - COST > 0)); t['bwin'].append(float(np.mean([x[1] - COST > 0 for x in rs])))
+        for v, (lp, fixed) in LOCK.items():                         # plan de un solo nivel: se asegura a +lp % y persigue a 3 ATR; todas las señales
             stop0 = gm['lock'] if fixed is None else entry - d * fixed * a
             ra = abs(entry - stop0) / a
             if not ra > 0:
@@ -297,7 +355,7 @@ def analyze_plan(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = s
         gi, hq, pid = np.concatenate(gi), np.concatenate(hq).astype(bool), np.concatenate(pid)
         t = {k: np.concatenate(x) for k, x in cols.items()}
         fam = np.array([CATALOG[x].fam for x in pid])
-        blk = TRAIL_HOLD if (v in TRAIL or v in LOCK) else HOLD      # bloque de los errores estándar = duración de la operación
+        blk = TRAIL_HOLD if (v in TRAIL or v in LOCK or v in LADDER_V) else HOLD      # bloque de los errores estándar = duración de la operación
         dr = np.array([CATALOG[x].dir for x in pid])
         for K in ks:
             for nm in np.unique(pid):
@@ -340,7 +398,9 @@ def report(ev: Dict) -> str:
         L.append('CALIBRACIÓN con paseos aleatorios (sin ventaja posible; el exceso que salga aquí es sesgo del método y hay que descontarlo): ' +
                  ' · '.join(f"{v}: {c['ex']:+.2f} % (t {c['t']:+.1f}, n {c['n']})" for v, c in ev['calibration'].items()))
     L.append(f"ESTUDIO DEL PLAN · {m['universe']} acciones · {m['bars']:,} barras · {m['from']} → {m['to']} · coste {m['cost']} % · cierre a {m['hold']} sesiones · {m['random_entries']} entradas al azar por señal")
-    desc = {'lock4': 'PLAN DEL OPERADOR: stop inicial estructural acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR (todas las señales, hasta 60 sesiones)',
+    desc = {'esc': 'ESCALERA DEL OPERADOR: stop inicial estructural acotado a 1–2 ATR; al cerrar a +4 % el stop sube a +4 % y se deja correr; al cerrar a +10 % sube a +10 % y persigue a 2 ATR (todas las señales, hasta 60 sesiones)',
+            'escf': 'ESCALERA DEL OPERADOR con stop inicial de 1,5 ATR para todos los patrones',
+            'lock4': 'PLAN DE UN NIVEL: stop inicial estructural acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR (todas las señales, hasta 60 sesiones)',
             'lock5': 'PLAN DEL OPERADOR con +5 %: al cerrar a +5 % el stop sube a +5 % y persigue a 3 ATR',
             'lock4f': 'PLAN DEL OPERADOR con stop inicial de 1,5 ATR para todos los patrones y aseguramiento a +4 %',
             'struct': 'PLAN CLÁSICO sin límites: stop al otro lado de la figura y objetivo por la medida clásica (referencia: da stops del 10–40 %)',

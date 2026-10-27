@@ -3,9 +3,11 @@
 Plan del operador (el que se muestra, se simula y se cuenta con TODAS las señales: ninguna se descarta):
   · entrada en la apertura siguiente a la señal;
   · stop inicial: el estructural (al otro lado de la figura) si queda entre MIN_STOP y MAX_RISK_ATR ATR de la entrada; si está más lejos se acorta a MAX_RISK_ATR ATR;
-  · asegurar: cuando una sesión cierra a LOCK_PCT % o más a favor (+4 %), el stop sube a ese nivel (+4 %) y desde entonces persigue al mejor cierre a TRAIL_ATR ATR sin bajar nunca de él:
-    se asegura lo ganado y se deja correr el resto, sin objetivo fijo;
+  · escalera (la regla del operador): cuando una sesión cierra a LOCK_PCT % o más a favor (+4 %), el stop sube a ese nivel (+4 %) y se deja correr SIN perseguir (así una corrección normal
+    no saca de la operación antes de llegar al segundo nivel); cuando una sesión cierra a LOCK2_PCT % o más (+10 %), el stop sube a +10 % y desde ahí persigue al mejor cierre a TRAIL2_ATR ATR
+    sin bajar nunca de lo asegurado. Sin objetivo fijo: se asegura al menos +4 %, y +10 % si se llega;
   · como máximo HOLD_LOCK sesiones.
+`outcome_lock` (un solo nivel, +4 % y perseguir a 3 ATR) se conserva para el estudio del plan y como referencia.
 El plan clásico (stop al otro lado de la figura sin límites y objetivo por la medida clásica) se conserva como referencia (`stop_s`, `target_c`, `rr_s`, `outcome`): daba stops del 10, 26 o 43 %.
 Los avisos (riesgo de más del MAX_RISK_PCT % del precio, stop más lejos que el nivel que se quiere asegurar) son informativos: no excluyen la señal."""
 from __future__ import annotations
@@ -23,7 +25,10 @@ HOLD_LOCK = 60       # sesiones máximas del plan del operador (hay que dejar co
 MIN_STOP = 1.0       # el stop nunca queda a menos de 1 ATR de la entrada (un stop pegado salta con el ruido)
 MAX_RISK_ATR = 2.0   # el stop nunca queda a más de 2 ATR de la entrada: ~5 % en una acción de volatilidad media (ATR del 2,6 %); el estructural más lejano se acorta
 LOCK_PCT = 4.0       # rentabilidad (%) que se quiere asegurar: al cerrar una sesión por encima, el stop sube a ese nivel
-TRAIL_ATR = 3.0      # después el stop persigue al mejor cierre a 3 ATR (sin bajar del nivel asegurado)
+TRAIL_ATR = 3.0      # (outcome_lock) después el stop persigue al mejor cierre a 3 ATR (sin bajar del nivel asegurado)
+LOCK2_PCT = 10.0     # segundo nivel de la escalera: al cerrar una sesión por encima de +10 % el stop sube a +10 %
+TRAIL2_ATR = 2.0     # y desde el segundo nivel persigue al mejor cierre a 2 ATR (nunca por debajo de +10 %)
+LADDER = ((LOCK_PCT, None), (LOCK2_PCT, TRAIL2_ATR))   # (nivel %, ATR a los que persigue desde ese nivel; None = stop plano en el nivel)
 MAX_RISK_PCT = 8.0   # aviso: por encima de este riesgo (% del precio) el valor es muy volátil para un stop de 2 ATR
 MAX_RR = 3.0         # (plan clásico de referencia) el objetivo clásico se limita a 3 veces el riesgo
 TACT = 1.5           # (estudio del plan) stop táctico de referencia
@@ -129,7 +134,7 @@ def box(F: Dict[str, np.ndarray], i: int, d: int, entry: float, stop: float, tar
     lock = entry * (1.0 + d * LOCK_PCT / 100.0)
     risk_pct = risk / entry * 100
     rr = LOCK_PCT / max(risk_pct, 1e-9)                              # lo que se asegura frente a lo que se arriesga
-    return {'entry': r(entry), 'stop': r(stop), 'target': r(lock), 't1': None, 'lock_pct': LOCK_PCT, 'rr': float(round(rr, 2)), 'spent': spent, 'ok': True,
+    return {'entry': r(entry), 'stop': r(stop), 'target': r(lock), 'target2': r(entry * (1.0 + d * LOCK2_PCT / 100.0)), 't1': None, 'lock_pct': LOCK_PCT, 'lock2_pct': LOCK2_PCT, 'rr': float(round(rr, 2)), 'spent': spent, 'ok': True,
             'risk_pct': float(round(risk_pct, 2)), 'risk_atr': float(round(risk / a, 2)), 'risk_hi': bool(risk_pct > MAX_RISK_PCT), 'rr_low': bool(rr < 1.0),
             'stop_cap': bool(risk_s > MAX_RISK_ATR * a), 'stop_min': bool(risk_s < MIN_STOP * a),
             'stop_s': r(stop_s), 'target_c': r(target_c), 'rr_s': float(round(reward_c / max(risk_s, 1e-9), 2)), 'risk_s_pct': float(round(risk_s / entry * 100, 2)),
@@ -218,6 +223,43 @@ def outcome_lock(F: Dict[str, np.ndarray], i: int, d: int, stop: float, lock_pct
     res = 'open' if k >= n - 1 and e + maxb > n else ('target' if locked else 'timeout')
     out = _finish(F, d, e, k, entry, stop, lock, entry, res, float(c[k]), k - e + 1, locked)
     out['locked'] = locked
+    return out
+
+
+def outcome_ladder(F: Dict[str, np.ndarray], i: int, d: int, stop: float, levels: Tuple[Tuple[float, Optional[float]], ...] = LADDER, maxb: int = HOLD_LOCK) -> Dict:
+    """La escalera del operador: entrada en la apertura siguiente con `stop`; cada nivel de `levels` es (porcentaje a favor, ATR a los que persigue desde ese nivel o None = stop plano).
+    Con LADDER: al cerrar a +4 % el stop sube a +4 % y se queda ahí; al cerrar a +10 % sube a +10 % y persigue al mejor cierre a 2 ATR. El stop de cada sesión se fija con los cierres
+    anteriores; el stop gana si se toca el mismo día que cualquier otra cosa; un hueco más allá del stop sale a la apertura. `res`: 'target' = se llegó a asegurar algún nivel,
+    'stop' = saltó el stop inicial, 'timeout' = cierre por tiempo sin asegurar. `level` = nivel más alto asegurado (0, 1, 2); `locked` = level ≥ 1."""
+    o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
+    n = len(c)
+    e = i + 1
+    if e >= n:
+        return {'res': 'open', 'bars': 0, 'ret': None}
+    entry = float(o[e])
+    a = float(atr[i])
+    if (d > 0 and entry <= stop) or (d < 0 and entry >= stop):
+        return {'res': 'na', 'bars': 0, 'ret': None}
+    lv_px = [entry * (1.0 + d * pct / 100.0) for pct, _ in levels]
+    st, level, best = stop, 0, entry
+    for k in range(e, min(n, e + maxb)):
+        if (l[k] <= st) if d > 0 else (h[k] >= st):
+            gap = (o[k] <= st) if d > 0 else (o[k] >= st)
+            px = float(o[k]) if gap else st
+            out = _finish(F, d, e, k, entry, stop, lv_px[0], entry, 'target' if level else 'stop', px, k - e + 1, level >= 1)
+            out['locked'], out['level'] = level >= 1, level
+            return out
+        best = max(best, float(c[k])) if d > 0 else min(best, float(c[k]))
+        while level < len(levels) and ((c[k] >= lv_px[level]) if d > 0 else (c[k] <= lv_px[level])):
+            level += 1
+        if level:
+            tr = levels[level - 1][1]
+            base = lv_px[level - 1]
+            st = base if tr is None else (max(base, best - tr * a) if d > 0 else min(base, best + tr * a))
+    k = min(n, e + maxb) - 1
+    res = 'open' if k >= n - 1 and e + maxb > n else ('target' if level else 'timeout')
+    out = _finish(F, d, e, k, entry, stop, lv_px[0], entry, res, float(c[k]), k - e + 1, level >= 1)
+    out['locked'], out['level'] = level >= 1, level
     return out
 
 

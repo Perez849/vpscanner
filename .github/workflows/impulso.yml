@@ -1,7 +1,8 @@
 name: Cribador de la regla de impulso (diario)
 
 # Parte 2 del laboratorio (separada del chartismo): tras el cierre de Wall Street calcula qué acciones del S&P 500 y el Nasdaq-100 cumplen hoy cada una de las 5 reglas candidatas
-# (impulso alto a 12 meses que ha caído) y lo guarda en data/impulso.json; data/impulso_hist.json acumula cada día las que cumplían, para medir hacia delante qué pasó con ellas.
+# (impulso alto a 12 meses que ha caído), con el plan de la escalera (+4 % → +10 %), la fiabilidad del modelo y el plan de hoy, y lo guarda en data/impulso.json; data/impulso_hist.json acumula
+# cada día las que cumplían y data/impulso_track.json simula con precios reales lo que pasó con cada una (track record hacia delante).
 on:
   schedule:
     - cron: '30 23 * * 1-5'
@@ -17,7 +18,7 @@ concurrency:
 jobs:
   screen:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,7 +40,7 @@ jobs:
         run: |
           git config user.name  "vp-scanner-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/impulso.json data/impulso_hist.json
+          git add data/impulso.json data/impulso_hist.json data/impulso_track.json
           if git diff --staged --quiet; then
             echo "Sin cambios."
           else

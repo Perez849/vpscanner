@@ -209,7 +209,7 @@ def group_trades(items: List[Dict], last: int) -> Dict:
         nets = [t['net'] for t in ts]
         rs = [t['r'] for t in ts if t['r'] is not None]
         return {'n': len(ts), 'won': sum(1 for x in nets if x > 0), 'lost': sum(1 for x in nets if x <= 0), 'tgt': sum(1 for t in ts if t['res'] == 'target'), 'stp': sum(1 for t in ts if t['res'] == 'stop'),
-                'tmo': sum(1 for t in ts if t['res'] == 'timeout'), 'tmo_won': sum(1 for t in ts if t['res'] == 'timeout' and t['net'] > 0), 'mean_net': round(float(np.mean(nets)), 3) if nets else None,
+                'tmo': sum(1 for t in ts if t['res'] == 'timeout'), 'tmo_won': sum(1 for t in ts if t['res'] == 'timeout' and t['net'] > 0), 'lk2': sum(1 for t in ts if t.get('level', 0) >= 2), 'mean_net': round(float(np.mean(nets)), 3) if nets else None,
                 'sum_net': round(float(np.sum(nets)), 2) if nets else 0.0, 'mean_r': round(float(np.mean(rs)), 3) if rs else None,
                 'avg_win': round(float(np.mean([x for x in nets if x > 0])), 3) if any(x > 0 for x in nets) else None,
                 'avg_loss': round(float(np.mean([x for x in nets if x <= 0])), 3) if any(x <= 0 for x in nets) else None}
@@ -248,14 +248,14 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
             note += f' El stop estructural quedaba a {bx["risk_s_pct"]:.1f} % de la entrada (más de {P.MAX_RISK_ATR:g} ATR): se ha acortado a {bx["risk_pct"]:.1f} %.'
         if bx['stop_min']:
             note += f' El stop estructural quedaba a menos de {P.MIN_STOP:g} ATR: se ha ampliado a {P.MIN_STOP:g} ATR.'
-        note += f' Plan del operador: al cerrar una sesión por encima de +{P.LOCK_PCT:g} % el stop sube a ese nivel y persigue al mejor cierre a {P.TRAIL_ATR:g} ATR; sin objetivo fijo (la medida clásica daba +{bx["reward_c_pct"]:.1f} %).'
+        note += f' Escalera del operador: al cerrar una sesión por encima de +{P.LOCK_PCT:g} % el stop sube a +{P.LOCK_PCT:g} % y se deja correr; al cerrar por encima de +{P.LOCK2_PCT:g} % el stop sube a +{P.LOCK2_PCT:g} % y persigue al mejor cierre a {P.TRAIL2_ATR:g} ATR; sin objetivo fijo (la medida clásica daba +{bx["reward_c_pct"]:.1f} %).'
         if bx['risk_hi']:
             note += f' Aviso: el stop queda a {bx["risk_pct"]:.1f} % del precio, más de {P.MAX_RISK_PCT:g} %: valor muy volátil.'
         elif bx['rr_low']:
             note += f' Aviso: el stop ({bx["risk_pct"]:.1f} %) está más lejos que el +{P.LOCK_PCT:g} % que se quiere asegurar.'
         if bx['spent']:
             note += ' Aviso: la ruptura ya recorrió casi toda la medida clásica de la figura (el objetivo clásico queda a menos de 1 ATR).'
-        out = P.outcome_lock(F, i, d, stop)
+        out = P.outcome_ladder(F, i, d, stop)
         out_s = P.outcome(F, i, d, stop_s, tgt_c)                                  # el plan clásico sin límites, solo como referencia
         active = (n - 1 - i) <= ACTIVE and out['res'] == 'open'
         if active:

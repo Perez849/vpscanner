@@ -4,11 +4,11 @@ El laboratorio tiene **dos partes separadas**, cada una con su sección en la we
 
 | | **Parte 1 · Figuras, velas y rupturas** | **Parte 2 · Regla de impulso con caída** |
 |---|---|---|
-| Qué es | Detecta **110 patrones chartistas**, los **dibuja** con su plan (entrada, stop, plan del operador) y **mide si funcionan** | Una **regla sin figuras ni velas**: comprar acciones de impulso alto a 12 meses que han caído, con las salidas del operador |
-| Web | «Figuras y velas»: Radar · Gráfico · Evidencia · Guía | «Regla de impulso»: Hoy (cribador diario) · Evidencia · Guía |
+| Qué es | Detecta **110 patrones chartistas**, los **dibuja** con su plan (entrada, stop inicial, escalera +4 % → +10 %) y **mide si funcionan** | Una **regla sin figuras ni velas**: comprar acciones de impulso alto a 12 meses que han caído, con la escalera del operador, un modelo de fiabilidad, disciplina de cartera y track record hacia delante |
+| Web | «Figuras y velas»: Radar · Gráfico · Evidencia · Guía | «Regla de impulso»: Hoy (cribador y plan de hoy) · Seguimiento (track record) · Evidencia · Guía |
 | Veredicto | Ningún patrón bate a entrar al azar con el mismo riesgo | Candidata con una ventaja **pequeña** que se repite en acciones distintas |
-| Estadísticas | `data/evidence*.json`, `plan_report`, `ml_report`, `context_report` | `data/search*.json`, `search_confirm*.json`, `impulso.json` |
-| Comandos | `lab`, `study`, `plan`, `ml`, `context` | `search`, `search --confirm`, `screen` |
+| Estadísticas | `data/evidence*.json`, `plan_report`, `ml_report`, `context_report` | `data/search*.json`, `search_confirm*.json`, `fiab.json`, `impulso.json`, `impulso_track.json` |
+| Comandos | `lab`, `study`, `plan`, `ml`, `context` | `search`, `search --confirm`, `fiab`, `screen` |
 
 > No es una recomendación de inversión. Dibujar bien una figura no demuestra que funcione, y una ventaja estadística pequeña no es una promesa de ganar: las dos partes dicen, con sus cifras, qué ha aportado de verdad cada cosa.
 
@@ -19,7 +19,7 @@ El laboratorio tiene **dos partes separadas**, cada una con su sección en la we
 Detecta **figuras, velas y rupturas** en acciones grandes de EE.UU., las **dibuja** sobre el gráfico con su plan y **mide si funcionan**.
 
 - **Radar**: qué figuras se están **formando** (con el nivel que las activa y a cuántos ATR está el precio), cuáles son **nuevas hoy** y cuáles se completaron hace poco; filtros «cerca del disparo», sentido, calidad y ★ favoritos.
-- **Gráfico**: velas con las figuras dibujadas (rectas con sus toques, ápice, medida), plan por patrón (el del operador: stop inicial razonable, asegurar +4 % y dejar correr; el clásico como referencia), resultado simulado y evidencia del estudio.
+- **Gráfico**: velas con las figuras dibujadas (rectas con sus toques, ápice, medida), plan por patrón (la escalera del operador: stop inicial razonable, asegurar +4 % y dejar correr, asegurar +10 % si llega; el clásico como referencia), resultado simulado y evidencia del estudio.
 - **Evidencia**: ¿baten los patrones a entrar al azar? Estudio con corrección por probar muchos patrones.
 - **Guía**: qué es cada patrón y cómo se calcula su plan.
 
@@ -44,16 +44,16 @@ Además, **61 formaciones de vela** (30 clásicas y 31 más: cinturón, kicker, 
 
 ### El plan de cada patrón (`vp/plan.py`)
 
-El plan que se dibuja, se simula y se cuenta es **el plan del operador** (el que describe quien opera chartismo con ganancias modestas: «con un 4–5 % soy feliz; si sube más lo dejo correr, pero pasado el 4 % pongo un stop para asegurarlo»). Las reglas están fijadas de antemano, no optimizadas con los resultados:
+El plan que se dibuja, se simula y se cuenta es **la escalera del operador** (la regla de quien opera chartismo con ganancias modestas: «con un 4 % soy feliz; si sigue subiendo lo dejo correr hasta +10 %; si pasa de ahí me lo aseguro, y si no, al menos el 4 %»). Las reglas están fijadas de antemano, no optimizadas con los resultados:
 
 - **Entrada**: apertura de la sesión siguiente a la que completa el patrón.
 - **Stop inicial**: el estructural (0,25 ATR al otro lado de la figura) si queda entre **1 y 2 ATR** de la entrada; si está más lejos se **acorta a 2 ATR** (en una acción de volatilidad media, ~5 %); nunca a menos de 1 ATR. El plan clásico daba stops del 10, 26 o 43 %.
-- **Asegurar +4 %**: cuando una sesión **cierra a +4 % o más** a favor, el stop sube a **+4 %** (el nivel asegurado) y desde ahí **persigue al mejor cierre a 3 ATR**, sin bajar nunca de lo asegurado. No hay objetivo fijo: si sigue subiendo se deja correr. Máximo 60 sesiones; el stop gana si se tocan ambos el mismo día y un hueco de apertura sale a la apertura.
+- **Escalera**: cuando una sesión **cierra a +4 % o más** a favor, el stop sube a **+4 %** y **se queda ahí** (no persigue: una corrección normal no saca de la operación antes del segundo nivel). Cuando una sesión **cierra a +10 % o más**, el stop sube a **+10 %** y desde ahí **persigue al mejor cierre a 2 ATR**, sin bajar nunca de lo asegurado. No hay objetivo fijo: se asegura al menos +4 %, y +10 % si se llega. Máximo 60 sesiones; el stop gana si se tocan ambos el mismo día y un hueco de apertura sale a la apertura. (`plan.outcome_ladder`; el plan de un solo nivel, +4 % persiguiendo a 3 ATR, se conserva en `plan.outcome_lock` para el estudio del plan.)
 - **Ninguna señal se descarta**. Antes había un estado «no operable» (recompensa menor de 1,5 veces el riesgo, riesgo de más del 8 % del precio, medida consumida) que quitaba señales de la cuenta; era un error de planteamiento: un umbral de calidad estadística sirve para **graduar** cuánta evidencia hay, no para tirar operaciones. Ahora el riesgo alto (> 8 % del precio), un stop más lejos que el +4 % y la medida ya recorrida son **avisos informativos** en la ficha («la señal sigue contando»).
 - **Tamaño**: la ficha dice cuánta posición corresponde a arriesgar el 1 % de la cuenta con ese stop (1 / riesgo %): lo que importa para el riesgo no es la distancia del stop sino el tamaño de la posición.
 - El **plan clásico sin límites** (stop al otro lado de la figura y objetivo por la medida clásica, T1 al 50 %) se conserva como referencia y se ve con el interruptor «Plan clásico» del gráfico.
 - **Obstáculos**: soportes y resistencias fuertes en el camino.
-- **Quién gana y quién pierde**: gana la operación que **termina con ganancia neta** (después del 0,15 % de costes del estudio), llegue o no a asegurar. Asegurar +4 %, saltar el stop inicial o cerrar por tiempo es solo cómo terminó. De cada operación se guardan la ganancia neta, el **múltiplo del riesgo (R)**, el recorrido máximo a favor y en contra y si llegó a asegurar. La Lectura de cada valor da el porcentaje de ganadoras, las veces que se aseguró, la **ganancia media de las ganadoras y la pérdida media de las perdedoras**.
+- **Quién gana y quién pierde**: gana la operación que **termina con ganancia neta** (después del 0,15 % de costes del estudio), llegue o no a asegurar. Asegurar +4 % o +10 %, saltar el stop inicial o cerrar por tiempo es solo cómo terminó. De cada operación se guardan la ganancia neta, el **múltiplo del riesgo (R)**, el recorrido máximo a favor y en contra y el nivel asegurado. La Lectura de cada valor da el porcentaje de ganadoras, las veces que se aseguró, la **ganancia media de las ganadoras y la pérdida media de las perdedoras**.
 - **Una operación por valor** (`group_trades` en `vp/lab.py`): cuando varias señales saltan a la vez (velas y figuras, o varias velas) **no se cuenta cada una**. La primera señal (si coinciden varias en la misma barra, la de mayor rango: figura > ruptura > directriz > rebote > vela, y a igualdad la de mayor calidad) abre la operación y su plan es el que se simula; las del mismo sentido mientras está abierta son **confirmaciones** y las del sentido contrario son **contrarias** (aviso de conflicto, tampoco son operación propia). No se descarta ninguna señal: las confirmaciones y contrarias se muestran, pero no abren una segunda operación sobre el mismo valor.
 
 ### Estudio de evidencia (`vp/study.py`)
@@ -136,7 +136,7 @@ Resultado en los **años finales (2024–2026)**:
 
 ### Tu regla de salida frente al azar: ¿asegurar +4 % y dejar correr cambia algo? (`vp/planstudy.py`)
 
-La regla de muchos operadores («con un 4–5 % soy feliz; si sube más lo dejo correr, pero pasado el 4 % pongo un stop para asegurarlo») es razonable y es la que usa la web. Falta saber si, **aplicada a todas las señales sin descartar ninguna**, el patrón aporta algo frente a entrar sin patrón con esa misma regla. `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop inicial acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR, hasta 60 sesiones, el stop gana si se tocan el mismo día, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor y sentido, con las mismas distancias de stop en ATR** (y volatilidad relativa parecida) y **exactamente la misma regla de salida**.
+La regla de muchos operadores («con un 4–5 % soy feliz; si sube más lo dejo correr, pero pasado el 4 % pongo un stop para asegurarlo») es razonable y es la que usa la web (ahora como escalera: +4 % plano y +10 % persiguiendo a 2 ATR; `python -m vp plan` incluye las variantes `esc` y `escf`, pendientes de recalcular en Actions). Falta saber si, **aplicada a todas las señales sin descartar ninguna**, el patrón aporta algo frente a entrar sin patrón con esa misma regla. `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop inicial acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR, hasta 60 sesiones, el stop gana si se tocan el mismo día, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor y sentido, con las mismas distancias de stop en ATR** (y volatilidad relativa parecida) y **exactamente la misma regla de salida**.
 
 **Cómo se cuenta el éxito**: por la ganancia media neta y por el **% de operaciones ganadoras** (las que terminan con ganancia neta, lleguen o no a asegurar). El reparto asegurado / stop inicial / tiempo es solo descriptivo.
 
@@ -191,7 +191,7 @@ En la **Guía** y en el panel de cada gráfico se dibuja la **trayectoria media*
 
 ## PARTE 2 · Regla de impulso con caída (sin figuras ni velas)
 
-Estadísticas **separadas** de las de la parte 1. Resumen: probando 4.800 reglas con selección hacia delante y control del procedimiento, y confirmando cinco candidatas fijadas de antemano en acciones distintas (S&P 400 y 600), la idea que se repite es **comprar acciones de impulso alto a 12 meses que han caído** (por debajo de su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez), en largo y con las salidas del operador. Exceso estimado de **+0,3 a +0,5 % por operación** sobre el azar tras descontar el sesgo de supervivencia, **concentrado en el 40 % más volátil** (en las acciones tranquilas la ventaja es cero o negativa). En la web: «Regla de impulso» → Hoy · Evidencia · Guía.
+Estadísticas **separadas** de las de la parte 1. Resumen: probando miles de reglas con selección hacia delante y control del procedimiento, y confirmando cinco candidatas fijadas de antemano en acciones distintas (S&P 400 y 600), la idea que se repite es **comprar acciones de impulso alto a 12 meses que han caído** (por debajo de su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez), en largo y con las salidas del operador. Exceso estimado de **+0,3 a +0,5 % por operación** sobre el azar tras descontar el sesgo de supervivencia, **concentrado en el 40 % más volátil** (en las acciones tranquilas la ventaja es cero o negativa). Encima de la regla van **la escalera del operador** (+4 % plano → +10 % persiguiendo), la **búsqueda por fiabilidad**, un **modelo de fiabilidad** calibrado y validado hacia delante, la **disciplina del plan de hoy** y el **seguimiento con precios reales**. En la web: «Regla de impulso» → Hoy · Seguimiento · Evidencia · Guía.
 
 ### ¿Existe alguna regla que gane de verdad al azar? Búsqueda con selección hacia delante (`vp/search.py`)
 
@@ -263,17 +263,21 @@ La búsqueda no distinguía por volatilidad, y el cribador real enseñó el moti
 - Son rendimientos medios sobre muchas operaciones: una operación suelta pierde casi un tercio de las veces incluso con la mejor salida (C1: 71 % ganadoras).
 
 
-### El cribador diario (`vp/screen.py`)
+### La escalera del operador y la fiabilidad
 
-`python -m vp screen` (o el flujo «Cribador de la regla de impulso», de lunes a viernes a las 23:30 UTC, tras el cierre y el escaneo de la parte 1) aplica al **último cierre** del universo (S&P 500 + Nasdaq-100, las 300 más negociadas ese día) las cinco reglas candidatas con **exactamente las mismas condiciones y los mismos percentiles del día** que la búsqueda y la confirmación (`search.conditions`), de modo que una acción de la tabla es exactamente una fila de la estadística. Una prueba comprueba que da las mismas acciones que el panel completo en 5 fechas distintas, sin mirar el futuro.
+- **Salidas de la búsqueda** (`search.EXITS`, fijadas de antemano): a las seis anteriores se añaden cuatro con la **escalera** (`esc`: stop inicial 2,5 ATR; `esca`: 1,5 ATR; `esc6`: stop al 6 % del precio; `esc10`: al 10 %): al cerrar a +4 % el stop sube a +4 % y se queda; al cerrar a +10 % sube a +10 % y persigue a 2 ATR; 60 sesiones. La simulación vectorizada es idéntica a la de la web (`plan.outcome_ladder`) y se comprueba en las pruebas, incluidos los códigos de salida (stop inicial / aseguró +4 / aseguró +10 / tiempo).
+- **Búsqueda por fiabilidad** (`search.walk_forward(mode='fiab')`): además de elegir cada año la regla de mayor t de exceso, se elige la de mayor **t de ganancia relativa** («gana» menos la fracción de filas del día que gana con esa salida), exigiendo exceso positivo. Es la pregunta del operador: cuántas veces sale bien, frente al azar del mismo día. Tiene su propio control del procedimiento.
+- **Candidatas con la escalera** (`C6`, `C7`, `C8`) y robustez por volatilidad (`V5`, `V6`), que se confirman en el S&P 400 y 600 como las anteriores; la confirmación da ahora también fiabilidad (puntos y p), % que aseguró +4 % y +10 %, % de stops iniciales, ganancia y pérdida medias y factor de beneficio.
+- **Modelo de fiabilidad** (`vp/fiab.py`, `python -m vp fiab`): un gradient boosting con parámetros fijados de antemano predice la probabilidad de que la escalera acabe con ganancia a partir del contexto del valor (percentiles del día), sus patrones recientes y la amplitud del mercado. **Walk-forward por años**: para cada año se entrena solo con operaciones cerradas al menos 95 días antes. Se juzga por AUC fuera de muestra, por **calibración** (si dice 70 %, ¿gana el 70 %?), por el decil más fiable de cada día (ganan, fiabilidad, neto, exceso, con t agrupada) y, sobre todo, frente a un **control «solo volatilidad»** (el mismo modelo con una sola variable, el percentil de ATR/precio): si no lo supera, la «fiabilidad» es solo que el valor se mueve. Con una reversión plantada el modelo la aprende fuera de muestra y está calibrado; en paseos aleatorios no inventa nada (pruebas).
 
-- **Salida**: `data/impulso.json` (acciones que cumplen cada regla hoy, cuáles son nuevas respecto a la sesión anterior, percentiles de impulso, distancia a la media de 200, RSI(2), ATR, señales bajistas, y el plan: stop inicial a 2,5 ATR del cierre, niveles donde se asegura +4 % o +6 %, y el **tamaño de posición con el que perder el stop inicial cuesta el 1 % de la cuenta**) y la pestaña **Hoy** de la web.
-- **Ninguna acción se descarta** por tener un stop lejano (en valores muy volátiles llega al 15–25 %): se marca con ⚠ y el tamaño de posición ya lo compensa. Por defecto la tabla muestra solo las de **volatilidad alta** (percentil ≥ 60 de ATR/precio del día), que es donde se midió la ventaja (ver robustez); las de volatilidad baja se pueden ver quitando el filtro y salen con un aviso.
-- **Hipótesis a medir hacia delante**: «solo volatilidad alta» se formuló después de ver los resultados; `impulso_hist.json` guarda también la volatilidad de cada acción para evaluarla más adelante con datos que no se han mirado.
-- **Seguimiento hacia delante**: cada día se añade a `data/impulso_hist.json` qué acciones cumplían cada regla. Sirve para medir más adelante, sin posibilidad de ajustar nada, qué pasó con las que salieron: es la prueba que no se puede trucar con datos pasados.
+### El cribador diario, el plan de hoy y el seguimiento (`vp/screen.py`)
 
+`python -m vp screen` (o el flujo «Cribador de la regla de impulso», de lunes a viernes a las 23:30 UTC) aplica al **último cierre** del universo (S&P 500 + Nasdaq-100, las 300 más negociadas ese día, 10 años de historia) las reglas candidatas con **exactamente las mismas condiciones y los mismos percentiles del día** que la búsqueda y la confirmación (`search.conditions`), de modo que una acción de la tabla es exactamente una fila de la estadística. Una prueba comprueba que da las mismas acciones que el panel completo en 5 fechas distintas, sin mirar el futuro.
 
----
+- **Por acción**: cierre, impulso, distancia a la media de 200, RSI(2), ATR, percentil de volatilidad, señales bajistas, reglas que cumple (y cuáles son nuevas), **fiabilidad** (probabilidad de ganar con la escalera, con el modelo entrenado con todo lo cerrado hasta ayer; se lee frente a la media del universo ese día), **grupo de correlación** (valores con correlación de rendimientos ≥ 0,6 en 60 sesiones: comprar varios es repetir la apuesta) y el plan: stop inicial a 2,5 ATR (y al 6 % del precio como alternativa), niveles de +4 % y +10 %, R:R hasta +4 % y **tamaño con el que perder el stop inicial cuesta el 1 % de la cuenta**.
+- **Plan de hoy (disciplina)**: como mucho 5 posiciones, una por grupo de correlación, por orden de fiabilidad, solo volatilidad alta (donde se midió la ventaja), riesgo del 1 % cada una: el riesgo total de la cartera queda acotado aunque salten todos los stops. En la web se puede cambiar el riesgo por operación y poner el tamaño de la cuenta para ver importes (se guardan solo en el navegador).
+- **Ninguna acción se descarta** por tener un stop lejano (en valores muy volátiles llega al 15–25 %): se marca con ⚠ y el tamaño de posición ya lo compensa. Por defecto la tabla muestra solo las de **volatilidad alta** (percentil ≥ 60 de ATR/precio del día); las de volatilidad baja se pueden ver quitando el filtro y salen con un aviso.
+- **Seguimiento hacia delante** (`data/impulso_track.json`, pestaña Seguimiento): cada día se añade al registro (`impulso_hist.json`) qué acciones cumplían cada regla, con su cierre, ATR, fiabilidad y grupo, y se simula con los **precios reales posteriores** lo que pasó con cada una con la escalera (entrada en la apertura siguiente, stop 2,5 ATR del día de la señal, una operación por valor y día; si ya había una abierta no se abre otra). Da operaciones abiertas y cerradas, % que ganan, aseguradas +4 % / +10 %, neto medio, ganancia y pérdida medias, por regla, para el plan de hoy y para volatilidad alta. **Es el track record de la regla: no se puede ajustar a posteriori** y crece cada día. Mientras sea corto (semanas) no demuestra nada; con cientos de operaciones será la prueba definitiva, para bien o para mal.
 
 ## Común a las dos partes
 
@@ -302,10 +306,11 @@ vp/
   ml.py               aprendizaje automático fuera de muestra (contexto, velas, figuras)
   context.py          filtros de contexto, confluencia y meta-etiquetado
   search.py           (parte 2) búsqueda de la mejor regla con selección hacia delante, nulo del procedimiento y confirmación
-  screen.py           (parte 2) cribador diario: qué acciones cumplen hoy cada regla candidata
+  fiab.py             (parte 2) modelo de fiabilidad walk-forward (probabilidad de ganar con la escalera) con control de solo volatilidad
+  screen.py           (parte 2) cribador diario: acciones que cumplen cada regla, plan de la escalera, fiabilidad, grupos de correlación, plan de hoy y seguimiento con precios reales
   data.py, universe.py   descarga de Yahoo y universos (watchlist.txt)
 data/                 parte 1: charts/<VALOR>.json, index.json, catalog.json, evidence.json, informes (evidence_report*, plan_report, ml_report, context_report)
-                      parte 2: impulso.json, impulso_hist.json, search.json, search_confirm*.json, informes (search_report*, search_confirm*)
+                      parte 2: impulso.json, impulso_hist.json, impulso_track.json, search.json, search_confirm*.json, fiab.json, informes (search_report*, search_confirm*, fiab_report)
 tests/test_vp.py      pruebas (sin red)
 .github/workflows/    scan.yml (L–V 22:45 UTC) · impulso.yml (L–V 23:30 UTC) · evidence.yml (domingos) · research.yml (manual)
 ```
@@ -324,7 +329,8 @@ python -m vp context                          # filtros de contexto, confluencia
 python -m vp study --universe smallmid        # otros mercados: smallmid (S&P 400 + 600) o mixed (cripto, divisas, materias primas, índices)
 python -m vp search                           # parte 2: búsqueda de la mejor regla (selección hacia delante + nulo)
 python -m vp search --confirm --universe smallmid   # parte 2: confirmación de las 5 candidatas en otras acciones
-python -m vp screen                           # parte 2: cribador de hoy → data/impulso.json
+python -m vp fiab                             # parte 2: modelo de fiabilidad walk-forward → data/fiab.json
+python -m vp screen                           # parte 2: cribador de hoy, plan de hoy y seguimiento → data/impulso*.json
 python -m http.server                         # abrir http://localhost:8000
 ```
 
