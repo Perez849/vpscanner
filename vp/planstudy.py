@@ -9,7 +9,9 @@ El estudio de evidencia (study.py) mide salidas a tiempo fijo, sin stop ni objet
     No se usa «el mismo año»: la referencia de ese año contendría la tendencia que provocó la señal y sesgaría el exceso hacia abajo (comprobado con paseos aleatorios).
   · Tres geometrías: «plan» (stop estructural y objetivo clásico, lo que dibuja la web), «tact» (stop táctico de 1,5 ATR con el mismo objetivo) y «fix» (stop 1,5 ATR y objetivo 3 ATR para todos).
     Con «fix» el tamaño de stop y objetivo es idéntico en todos los patrones: lo que quede es la dirección que aporta el patrón.
-  · t con errores estándar agrupados por día; universo y miembros móviles como en study.py (las 50 y las 300 más negociadas).
+  · t con errores estándar agrupados en bloques de tantas sesiones como dura la operación (40 y 60): las operaciones de días vecinos comparten casi todo su recorrido y agrupar solo por día
+    no lo recoge. Universo y miembros móviles como en study.py (las 50 y las 300 más negociadas).
+  · «Ganan» = parte de las operaciones que terminan con ganancia neta (después de costes), llegue o no al objetivo; el reparto objetivo / stop / cierre por tiempo es solo descriptivo.
 """
 from __future__ import annotations
 import json
@@ -119,7 +121,7 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
     lat = np.log(np.where(atr > 0, atr, np.nan) / c)
     pool = np.flatnonzero((np.arange(n) >= 60) & (np.arange(n) < n - HOLD - 2) & np.isfinite(atr) & (atr > 0))
     names: List[str] = []
-    out = {v: {k: [] for k in ('i', 'pid', 'hq', 'ret', 'base', 'res', 'bt', 'bs', 'bo', 'ra', 'rw')} for v in VARIANTS}
+    out = {v: {k: [] for k in ('i', 'pid', 'hq', 'ret', 'base', 'res', 'bt', 'bs', 'bo', 'ra', 'rw', 'win', 'bwin')} for v in VARIANTS}
     for e in events:
         i = e['i']
         if i < 60 or i >= n - HOLD - 2 or e['name'] not in CATALOG:
@@ -154,6 +156,7 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
             t['base'].append(float(np.mean([x[1] for x in rs])) - COST)
             t['bt'].append(0.0); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
             t['ra'].append(m_); t['rw'].append(0.0)
+            t['win'].append(float(r0[1] - COST > 0)); t['bwin'].append(float(np.mean([x[1] - COST > 0 for x in rs])))
         for v, (stop, tgt) in gm.items():
             r0 = sim(o, h, l, c, i, d, stop, tgt)
             if r0 is None:
@@ -175,18 +178,20 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
             t['base'].append(float(np.mean([x[1] for x in rs])) - COST)
             t['bt'].append(float((res == 0).mean())); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
             t['ra'].append(ra); t['rw'].append(rw)
+            t['win'].append(float(r0[1] - COST > 0)); t['bwin'].append(float(np.mean([x[1] - COST > 0 for x in rs])))
     w['names'] = names
-    w['pl'] = {v: {k: np.array(x, dtype=np.float64 if k in ('ret', 'base', 'bt', 'bs', 'bo', 'ra', 'rw') else np.int64) for k, x in t.items()} for v, t in out.items()}
+    w['pl'] = {v: {k: np.array(x, dtype=np.float64 if k in ('ret', 'base', 'bt', 'bs', 'bo', 'ra', 'rw', 'win', 'bwin') else np.int64) for k, x in t.items()} for v, t in out.items()}
     return sym, w
 
 
-def _stat(P_: study.Panel, K: int, gi: np.ndarray, t: Dict[str, np.ndarray], m: np.ndarray) -> Dict:
+def _stat(P_: study.Panel, K: int, gi: np.ndarray, t: Dict[str, np.ndarray], m: np.ndarray, block: int = HOLD) -> Dict:
     ok = m & P_.mem[K][gi]
     if ok.sum() < 5:
         return {'n': int(ok.sum())}
     ex = t['ret'][ok] - t['base'][ok]
     res = t['res'][ok]
-    return {'n': int(ok.sum()), 'mean': float(t['ret'][ok].mean()), 'base': float(t['base'][ok].mean()), 'ex': float(ex.mean()), 't': P_.t_cluster(ex, P_.dcode[gi[ok]]),
+    return {'n': int(ok.sum()), 'mean': float(t['ret'][ok].mean()), 'base': float(t['base'][ok].mean()), 'ex': float(ex.mean()), 't': P_.t_cluster(ex, P_.blocks(gi[ok], block)),
+            'win': float(t['win'][ok].mean() * 100), 'bwin': float(t['bwin'][ok].mean() * 100),
             'tgt': float((res == 0).mean() * 100), 'stp': float((res == 1).mean() * 100), 'tmo': float((res == 2).mean() * 100),
             'btgt': float(t['bt'][ok].mean() * 100), 'bstp': float(t['bs'][ok].mean() * 100), 'btmo': float(t['bo'][ok].mean() * 100),
             'ra': float(np.median(t['ra'][ok])), 'rw': float(np.median(t['rw'][ok]))}
@@ -208,10 +213,10 @@ def analyze_plan(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = s
             work[s] = w
     P_ = study.Panel(work, ks)
     out: Dict = {'meta': {'generated': int(time.time()), 'universe': len(P_.syms), 'bars': int(len(P_.dayv)), 'from': str(np.datetime64(int(P_.dayv.min()), 'D')), 'to': str(np.datetime64(int(P_.dayv.max()), 'D')),
-                          'cost': COST, 'hold': HOLD, 'random_entries': M, 'ks': list(ks), 'variants': list(VARIANTS), 'fix': [FIX_STOP, FIX_TARGET], 'min_events': MIN_EVENTS},
+                          'cost': COST, 'hold': HOLD, 'trail_hold': TRAIL_HOLD, 'random_entries': M, 'ks': list(ks), 'variants': list(VARIANTS), 'fix': [FIX_STOP, FIX_TARGET], 'min_events': MIN_EVENTS},
                  'patterns': {}, 'pooled': {}}
     for v in VARIANTS:
-        gi, pid, hq, cols = [], [], [], {k: [] for k in ('ret', 'base', 'res', 'bt', 'bs', 'bo', 'ra', 'rw')}
+        gi, pid, hq, cols = [], [], [], {k: [] for k in ('ret', 'base', 'res', 'bt', 'bs', 'bo', 'ra', 'rw', 'win', 'bwin')}
         pname: List[str] = []
         for j, s in enumerate(P_.syms):
             w = work[s]
@@ -228,19 +233,20 @@ def analyze_plan(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = s
         gi, hq, pid = np.concatenate(gi), np.concatenate(hq).astype(bool), np.concatenate(pid)
         t = {k: np.concatenate(x) for k, x in cols.items()}
         fam = np.array([CATALOG[x].fam for x in pid])
+        blk = TRAIL_HOLD if v in TRAIL else HOLD                      # bloque de los errores estándar = duración de la operación
         dr = np.array([CATALOG[x].dir for x in pid])
         for K in ks:
             for nm in np.unique(pid):
                 for hqf in (False, True):
                     m = (pid == nm) & (hq if hqf else True)
-                    st = _stat(P_, K, gi, t, m)
+                    st = _stat(P_, K, gi, t, m, blk)
                     if st.get('n', 0) >= 1:
                         out['patterns'].setdefault(nm + (':hq' if hqf else ''), {'dir': CATALOG[nm].dir, 'fam': CATALOG[nm].fam, 'hq': hqf}).setdefault(v, {})[f'K{K}'] = {a: (round(b, 3) if isinstance(b, float) else b) for a, b in st.items()}
             pooled = {}
-            pooled['todos'] = _stat(P_, K, gi, t, np.ones(len(gi), bool))
+            pooled['todos'] = _stat(P_, K, gi, t, np.ones(len(gi), bool), blk)
             for f in ('figuras', 'rupturas', 'velas', 'directrices', 'rebotes'):
                 for d, dn in ((1, 'alcistas'), (-1, 'bajistas')):
-                    pooled[f'{f} {dn}'] = _stat(P_, K, gi, t, (fam == f) & (dr == d))
+                    pooled[f'{f} {dn}'] = _stat(P_, K, gi, t, (fam == f) & (dr == d), blk)
             out['pooled'].setdefault(v, {})[f'K{K}'] = {k: {a: (round(b, 3) if isinstance(b, float) else b) for a, b in s_.items()} for k, s_ in pooled.items()}
     if verbose:
         print(f'  estudio del plan: {len(P_.syms)} valores, {len(P_.dayv):,} barras · {time.time() - t0:.0f}s', flush=True)
@@ -277,19 +283,19 @@ def report(ev: Dict) -> str:
             if v not in ev['pooled']:
                 continue
             L.append(f"\n=== {desc[v]} · las {K} más negociadas ===")
-            L.append('  grupo'.ljust(26) + 'n'.rjust(8) + 'media'.rjust(8) + 'azar'.rjust(8) + 'exceso'.rjust(8) + 't'.rjust(7) + ' | objetivo/stop/sin resolver señal vs azar'.rjust(46) + '   stop/obj (ATR)')
+            L.append('  grupo'.ljust(26) + 'n'.rjust(8) + 'media'.rjust(8) + 'azar'.rjust(8) + 'exceso'.rjust(8) + 't'.rjust(7) + '  ganan señal/azar'.rjust(19) + ' | objetivo/stop/tiempo señal vs azar'.rjust(40) + '   stop/obj (ATR)')
             for g, s in ev['pooled'][v][f'K{K}'].items():
                 if s.get('n', 0) < 20 or 'ex' not in s:
                     continue
-                L.append(('  ' + g).ljust(26) + f"{s['n']:8d}{s['mean']:+7.2f}%{s['base']:+7.2f}%{s['ex']:+7.2f}%{s['t']:+7.1f}" +
-                         f"  | {s['tgt']:3.0f}/{s['stp']:3.0f}/{s['tmo']:3.0f}  vs  {s['btgt']:3.0f}/{s['bstp']:3.0f}/{s['btmo']:3.0f}".rjust(42) + f"   {s['ra']:.1f}/{s['rw']:.1f}")
+                L.append(('  ' + g).ljust(26) + f"{s['n']:8d}{s['mean']:+7.2f}%{s['base']:+7.2f}%{s['ex']:+7.2f}%{s['t']:+7.1f}" + f"  {s['win']:3.0f}/{s['bwin']:3.0f} %".rjust(15) +
+                         f"  | {s['tgt']:3.0f}/{s['stp']:3.0f}/{s['tmo']:3.0f}  vs  {s['btgt']:3.0f}/{s['bstp']:3.0f}/{s['btmo']:3.0f}".rjust(40) + f"   {s['ra']:.1f}/{s['rw']:.1f}")
             rows = [(k, r[v][f'K{K}']) for k, r in ev['patterns'].items() if not r['hq'] and v in r and f'K{K}' in r[v] and r[v][f'K{K}'].get('n', 0) >= MIN_EVENTS and 'ex' in r[v][f'K{K}']]
             rows.sort(key=lambda x: -abs(x[1]['t']))
             L.append('  los 10 patrones de mayor |t|:')
             for k, s in rows[:10]:
-                L.append(('    ' + ('▲ ' if CATALOG[k].dir > 0 else '▼ ') + k).ljust(30) + f"{s['n']:7d}{s['mean']:+7.2f}%{s['base']:+7.2f}%{s['ex']:+7.2f}%{s['t']:+7.1f}   acierto {s['tgt']:3.0f} % (azar {s['btgt']:3.0f} %)")
+                L.append(('    ' + ('▲ ' if CATALOG[k].dir > 0 else '▼ ') + k).ljust(30) + f"{s['n']:7d}{s['mean']:+7.2f}%{s['base']:+7.2f}%{s['ex']:+7.2f}%{s['t']:+7.1f}   ganan {s['win']:3.0f} % (azar {s['bwin']:3.0f} %)")
             pos = [s['ex'] for _, s in rows]
-            L.append(f"  patrones con n ≥ {MIN_EVENTS}: {len(rows)} · exceso medio {np.mean(pos):+.3f} % · con exceso positivo {np.mean([x > 0 for x in pos]) * 100:.0f} % · |t| ≥ 3,35: {sum(abs(s['t']) >= 3.35 for _, s in rows)}")
+            L.append(f"  patrones con n ≥ {MIN_EVENTS}: {len(rows)} · exceso medio {np.mean(pos):+.3f} % · con exceso positivo {np.mean([x > 0 for x in pos]) * 100:.0f} % · |t| ≥ 3,35: {sum(abs(s['t']) >= 3.35 for _, s in rows)} (umbral orientativo; el del mejor de N está en el estudio de evidencia)")
     return '\n'.join(L)
 
 

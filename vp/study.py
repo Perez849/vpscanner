@@ -3,8 +3,10 @@ Estudio de evidencia: ¿baten los patrones a entrar al azar?
 
   · Universo móvil: las K acciones más negociadas en cada fecha (dinero medio de 60 sesiones con datos hasta ese día), K = 50 y 300.
   · Cada señal se opera en la apertura siguiente y se cierra a 5, 10 (principal) y 20 sesiones; los patrones bajistas se miden en corto. Coste de ida y vuelta del 0,15 %.
-  · Referencia: entrar al azar en el mismo universo el mismo año («exceso» = rendimiento del patrón − media del año).
-  · t con errores estándar agrupados por día (las señales de un mismo día no son independientes).
+  · Referencia: entrar al azar en el mismo universo EL MISMO DÍA («exceso» = rendimiento del patrón − media de todas las acciones del universo ese día, en el mismo sentido): así el momento
+    del mercado (un patrón que salta justo antes de un rebote general) no cuenta como ventaja. También se guarda el exceso frente a la media del año (`exy`, `ty`).
+  · t con errores estándar agrupados en BLOQUES de 10 sesiones (antes, por día): los rendimientos a 10 sesiones de días contiguos se solapan y las señales de un mismo valor o de un mismo
+    régimen de mercado vienen en rachas. Con señales colocadas al azar ambas agrupaciones salen igual de bien calibradas (simulación: 4,5–6 % de |t| > 1,96); el bloque protege cuando las señales se pegan en el tiempo.
   · Umbral del mejor de N: se desplaza en el tiempo, al azar, las señales de cada valor (conservando su agrupación) y se anota el mayor |t| entre TODOS los patrones;
     un patrón solo «supera el azar» si su |t| pasa el percentil 95 de ese máximo. Se estudian también las señales de calidad alta (≥ 75) de cada figura.
   · Limitación: el universo son los miembros ACTUALES del S&P 500 y el Nasdaq-100 (sesgo de supervivencia que favorece a los largos).
@@ -29,6 +31,8 @@ COST = 0.15
 MEM_WINDOW = 60
 MIN_EVENTS = 20
 PATH = 20                  # sesiones de la trayectoria media que se dibuja tras cada patrón
+BLOCK = 10                 # sesiones por bloque en los errores estándar agrupados (= el horizonte principal: los rendimientos de dentro de un bloque se solapan y los de bloques distintos, no)
+DAY_SHIFT = 5 * 3600       # una barra pertenece al día en que cierra el mercado: 14:30 UTC (bolsa) y 00:00 UTC (cripto) caen el mismo día; el cierre de las divisas (22:00–23:00 UTC) cae al siguiente
 
 
 def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
@@ -62,7 +66,7 @@ def work_from(F: Dict[str, np.ndarray], events: List[Dict], paths: bool = True) 
         idx.setdefault(e['name'], []).append(e['i'])
         if e['q'] is not None and e['q'] >= HQ:
             idx.setdefault(e['name'] + ':hq', []).append(e['i'])
-    out = {'t': (F['t'] // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
+    out = {'t': ((F['t'] + DAY_SHIFT) // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
     if paths:                                                   # rendimiento acumulado de 1 a PATH sesiones desde la apertura siguiente (para dibujar qué pasa después)
         pa = np.full((n, PATH), np.nan, dtype=np.float32)
         for k in range(1, PATH + 1):
@@ -95,6 +99,7 @@ class Panel:
         rank = np.argsort(np.argsort(-np.nan_to_num(dvm, nan=-1.0), axis=1), axis=1)
         okd = np.isfinite(dvm)
         self.mem = {K: np.concatenate([(rank[np.searchsorted(days, work[s]['t']), j] < K) & okd[np.searchsorted(days, work[s]['t']), j] for j, s in enumerate(self.syms)]) for K in ks}
+        self.min_day = {K: max(3, min(10, K // 3)) for K in ks}          # mínimo de valores del universo ese día para que exista referencia
         self.ret = {}
         for hz in HORIZONS:
             r = np.concatenate([work[s]['ret'][hz] for s in self.syms])
@@ -107,25 +112,35 @@ class Panel:
                 self.ev.setdefault(k, []).append(ix + self.off[j])                           # type: ignore[arg-type]
         self.ev = {k: np.concatenate(v) for k, v in self.ev.items()}
         ny = int(self.year.max()) - self.y0 + 1
-        self.pbase: Dict[int, np.ndarray] = {}                      # trayectoria media de las barras del universo móvil por año
+        self.pbase: Dict[int, np.ndarray] = {}                      # trayectoria media de las barras del universo móvil por día
         if self.path is not None:
             for K in ks:
-                pb = np.full((ny, PATH), np.nan)
-                for y in range(ny):
-                    m = self.mem[K] & (self.year - self.y0 == y)
-                    if m.sum() > 20:
-                        pb[y] = np.nanmean(self.path[m], axis=0)
+                pb = np.full((self.ndays, PATH), np.nan)
+                m = self.mem[K]
+                for k in range(PATH):
+                    f = m & np.isfinite(self.path[:, k])
+                    sd = np.bincount(self.dcode[f], weights=self.path[f, k], minlength=self.ndays)
+                    cd = np.bincount(self.dcode[f], minlength=self.ndays)
+                    pb[:, k] = np.where(cd >= self.min_day[K], sd / np.maximum(cd, 1), np.nan)
                 self.pbase[K] = pb
-        self.base: Dict[Tuple, np.ndarray] = {}
+        self.base: Dict[Tuple, np.ndarray] = {}                     # media de entrar al azar por año (referencia secundaria)
+        self.bday: Dict[Tuple, np.ndarray] = {}                     # media de entrar al azar por día (referencia principal; NaN si ese día hay pocos valores en el universo)
         for K in ks:
             for key, r in self.ret.items():
                 ok = self.mem[K] & np.isfinite(r)
                 s_ = np.bincount(self.year[ok] - self.y0, weights=r[ok], minlength=ny)
                 c_ = np.bincount(self.year[ok] - self.y0, minlength=ny)
                 self.base[(K,) + key] = np.where(c_ > 0, s_ / np.maximum(c_, 1), np.nan)
+                sd = np.bincount(self.dcode[ok], weights=r[ok], minlength=self.ndays)
+                cd = np.bincount(self.dcode[ok], minlength=self.ndays)
+                self.bday[(K,) + key] = np.where(cd >= self.min_day[K], sd / np.maximum(cd, 1), np.nan)
+
+    def blocks(self, rows: np.ndarray, block: int = BLOCK) -> np.ndarray:
+        """Bloque de `block` sesiones al que pertenece cada fila del panel (los códigos de día son consecutivos entre sesiones de mercado)."""
+        return self.dcode[rows] // block
 
     def t_cluster(self, ex: np.ndarray, code: np.ndarray) -> float:
-        """t de la media con errores estándar agrupados por día."""
+        """t de la media con errores estándar agrupados por el código que se pase (bloques de sesiones, ver `blocks`)."""
         n = len(ex)
         if n < 5:
             return float('nan')
@@ -137,23 +152,26 @@ class Panel:
 
     def stat(self, idx: np.ndarray, K: int, side: str, hz: int) -> Dict:
         r = self.ret[(side, hz)][idx]
-        ok = self.mem[K][idx] & np.isfinite(r)
+        bd = self.bday[(K, side, hz)][self.dcode[idx]]
+        ok = self.mem[K][idx] & np.isfinite(r) & np.isfinite(bd)
         if ok.sum() < 5:
             return {'n': int(ok.sum())}
         i2, x = idx[ok], r[ok]
-        ex = x - self.base[(K, side, hz)][self.year[i2] - self.y0]
+        ex = x - bd[ok]
+        exy = x - self.base[(K, side, hz)][self.year[i2] - self.y0]
         yrs = self.year[i2]
+        bl = self.blocks(i2, max(BLOCK, hz))
         pos = tot = 0
         for Y in np.unique(yrs):
             m = yrs == Y
             if m.sum() >= 8:
                 tot += 1
                 pos += int(ex[m].mean() > 0)
-        return {'n': int(ok.sum()), 'wr': float((x > 0).mean() * 100), 'mean': float(x.mean()), 'med': float(np.median(x)), 'ex': float(ex.mean()),
-                't': self.t_cluster(ex, self.dcode[i2]), 'pos': pos, 'tot': tot}
+        return {'n': int(ok.sum()), 'wr': float((x > 0).mean() * 100), 'mean': float(x.mean()), 'med': float(np.median(x)), 'ex': float(ex.mean()), 't': self.t_cluster(ex, bl),
+                'exy': float(exy.mean()), 'ty': self.t_cluster(exy, bl), 'pos': pos, 'tot': tot}
 
     def se_cluster(self, ex: np.ndarray, code: np.ndarray) -> float:
-        """Error estándar de la media con agrupación por día (el denominador de t_cluster)."""
+        """Error estándar de la media con la agrupación que se pase (el denominador de t_cluster)."""
         n = len(ex)
         if n < 5:
             return float('nan')
@@ -163,7 +181,7 @@ class Panel:
         return float(np.sqrt(((s - m * k) ** 2).sum()) / n)
 
     def path_stat(self, idx: np.ndarray, K: int, side: str) -> Optional[Dict]:
-        """Trayectoria media (sesiones 1..PATH, %) del lado operado menos la del universo ese año, con su error estándar agrupado por día."""
+        """Trayectoria media (sesiones 1..PATH, %) del lado operado menos la del universo ese mismo día, con su error estándar agrupado por bloques de PATH sesiones."""
         if self.path is None or K not in self.pbase:
             return None
         sg = 1.0 if side == 'long' else -1.0
@@ -171,13 +189,14 @@ class Panel:
         if ok.sum() < 5:
             return None
         i2 = idx[ok]
-        ex = sg * (self.path[i2] - self.pbase[K][self.year[i2] - self.y0])
+        ex = sg * (self.path[i2] - self.pbase[K][self.dcode[i2]])
+        bl = self.blocks(i2, PATH)
         mean, se = np.full(PATH, np.nan), np.full(PATH, np.nan)
         for k in range(PATH):
             f = np.isfinite(ex[:, k])
             if f.sum() >= 5:
                 mean[k] = ex[f, k].mean()
-                se[k] = self.se_cluster(ex[f, k], self.dcode[i2][f])
+                se[k] = self.se_cluster(ex[f, k], bl[f])
         return {'m': [round(float(x), 3) for x in mean], 'se': [round(float(x), 3) for x in se], 'n': int(ok.sum())}
 
     def null_max_t(self, K: int, reps: int, seed: int = 5) -> np.ndarray:
@@ -197,15 +216,51 @@ class Panel:
                 o, nb = self.off[sv], self.nbar[sv]
                 j = o + ((v - o + sh[sv]) % nb)
                 r = self.ret[(side, PRIMARY)][j]
-                ok = self.mem[K][j] & np.isfinite(r)
+                bd = self.bday[(K, side, PRIMARY)][self.dcode[j]]
+                ok = self.mem[K][j] & np.isfinite(r) & np.isfinite(bd)
                 if ok.sum() < MIN_EVENTS:
                     continue
-                ex = r[ok] - self.base[(K, side, PRIMARY)][self.year[j[ok]] - self.y0]
-                t = abs(self.t_cluster(ex, self.dcode[j[ok]]))
+                ex = r[ok] - bd[ok]
+                t = abs(self.t_cluster(ex, self.blocks(j[ok])))
                 if t > best:
                     best = t
             out[q] = best
         return out
+
+
+def combos(P: 'Panel', ks: Tuple[int, ...]) -> Dict:
+    """Qué pasa cuando varios patrones saltan a la vez en el mismo valor y la misma sesión. Cada «valor-día» se cuenta UNA vez, no una por patrón.
+    Clases (solo valor-días con alguna señal del sentido analizado y ninguna contraria): solo velas, solo estructura (figuras, rupturas, directrices, rebotes) o ambas juntas;
+    y los valor-días contradictorios (señales alcistas y bajistas a la vez), que se miden en largo y en corto. Los patrones de consenso no cuentan (son las propias velas)."""
+    n = len(P.dayv)
+    cnt = {(d, c): np.zeros(n, dtype=np.int16) for d in (1, -1) for c in ('v', 'e')}
+    for k, rows in P.ev.items():
+        if k.endswith(':hq') or k.startswith('consenso'):
+            continue
+        pat = CATALOG[k]
+        if pat.dir == 0:
+            continue
+        cnt[(pat.dir, 'v' if pat.fam == 'velas' else 'e')][rows] += 1
+    up_v, up_e, dn_v, dn_e = cnt[(1, 'v')] > 0, cnt[(1, 'e')] > 0, cnt[(-1, 'v')] > 0, cnt[(-1, 'e')] > 0
+    up, dn = up_v | up_e, dn_v | dn_e
+    classes = {
+        'alcistas': {'solo velas': up_v & ~up_e & ~dn, 'solo estructura': up_e & ~up_v & ~dn, 'velas y estructura juntas': up_v & up_e & ~dn, 'todas (cada valor-día una vez)': up & ~dn},
+        'bajistas': {'solo velas': dn_v & ~dn_e & ~up, 'solo estructura': dn_e & ~dn_v & ~up, 'velas y estructura juntas': dn_v & dn_e & ~up, 'todas (cada valor-día una vez)': dn & ~up},
+    }
+    out: Dict = {}
+    for K in ks:
+        rec: Dict = {}
+        for sent, side in (('alcistas', 'long'), ('bajistas', 'short')):
+            rec[sent] = {}
+            for name, m in classes[sent].items():
+                st = P.stat(np.flatnonzero(m), K, side, PRIMARY)
+                rec[sent][name] = {a: (round(b, 3) if isinstance(b, float) else b) for a, b in st.items()}
+        both = np.flatnonzero(up & dn)
+        rec['contradictorias'] = {side: {a: (round(b, 3) if isinstance(b, float) else b) for a, b in P.stat(both, K, side, PRIMARY).items()} for side in ('long', 'short')}
+        tot_up, tot_dn = int(up.sum()), int(dn.sum())
+        rec['valor_dias'] = {'alcistas': tot_up, 'bajistas': tot_dn, 'contradictorios': int((up & dn).sum()), 'con_varias': int(((cnt[(1, 'v')] + cnt[(1, 'e')] + cnt[(-1, 'v')] + cnt[(-1, 'e')]) > 1).sum())}
+        out[f'K{K}'] = rec
+    return out
 
 
 def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = KS, reps: int = 150, workers: int = 1, verbose: bool = False, cost: float = COST) -> Dict:
@@ -225,9 +280,10 @@ def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = 
             work[s] = w
     P = Panel(work, ks, cost)
     out: Dict = {'meta': {'generated': int(time.time()), 'universe': len(P.syms), 'bars': int(len(P.dayv)), 'from': str(np.datetime64(int(P.dayv.min()), 'D')), 'to': str(np.datetime64(int(P.dayv.max()), 'D')),
-                          'cost': P.cost, 'primary': PRIMARY, 'horizons': list(HORIZONS), 'ks': list(ks), 'hq': HQ, 'thr': {}, 'tested': {}, 'min_events': MIN_EVENTS,
+                          'cost': P.cost, 'primary': PRIMARY, 'horizons': list(HORIZONS), 'ks': list(ks), 'hq': HQ, 'thr': {}, 'tested': {}, 'min_events': MIN_EVENTS, 'block': BLOCK, 'reference': 'day',
                           'note': 'Universo = miembros actuales del S&P 500 y del Nasdaq-100: sesgo de supervivencia que favorece a los largos.'},
                  'baseline': {}, 'patterns': {}, 'paths': {}}
+    out['combos'] = combos(P, ks)
     for K in ks:
         null = P.null_max_t(K, reps)
         out['meta']['thr'][f'K{K}'] = {'p95': round(float(np.quantile(null, 0.95)), 2), 'p99': round(float(np.quantile(null, 0.99)), 2), 'bars': int(P.mem[K].sum())}
@@ -271,16 +327,27 @@ def report(ev: Dict) -> str:
         L.append(f"\n=== Las {K} acciones más negociadas en cada fecha ({thr['bars']:,} barras) · umbral del mejor de {t_['n']}: |t| ≥ {thr['p95']} (p95) / {thr['p99']} (p99) ===")
         rows = [(k, r[f'K{K}']) for k, r in ev['patterns'].items() if f'K{K}' in r and r[f'K{K}'].get('n', 0) >= MIN_EVENTS and 'ex' in r[f'K{K}']]
         rows.sort(key=lambda x: -abs(x[1]['t']))
-        L.append('  patrón'.ljust(30) + 'n'.rjust(7) + 'acierto'.rjust(9) + 'media'.rjust(8) + 'exceso'.rjust(8) + 't'.rjust(7) + 'años+'.rjust(7))
+        L.append('  patrón'.ljust(30) + 'n'.rjust(7) + 'ganan'.rjust(9) + 'media'.rjust(8) + 'exceso'.rjust(8) + 't'.rjust(7) + 'años+'.rjust(7) + 'vs año'.rjust(9) + 't'.rjust(6))
         for k, s in rows[:25]:
             star = '★' if abs(s['t']) >= thr['p95'] else ' '
-            L.append(('  ' + ('▲ ' if CATALOG[k.split(':')[0]].dir > 0 else '▼ ') + k + star).ljust(30) + f"{s['n']:7d}{s['wr']:8.1f}%{s['mean']:+7.2f}%{s['ex']:+7.2f}%{s['t']:+7.1f}{s['pos']:4d}/{s['tot']:<2d}")
+            L.append(('  ' + ('▲ ' if CATALOG[k.split(':')[0]].dir > 0 else '▼ ') + k + star).ljust(30) + f"{s['n']:7d}{s['wr']:8.1f}%{s['mean']:+7.2f}%{s['ex']:+7.2f}%{s['t']:+7.1f}{s['pos']:4d}/{s['tot']:<2d}{s.get('exy', float('nan')):+8.2f}%{s.get('ty', float('nan')):+6.1f}")
         L.append(f"  superan el umbral del mejor de {t_['n']}: {len(t_['above'])} ({', '.join(t_['above']) or 'ninguno'}); por azar se esperarían ≈ {0.05 * t_['n']:.1f} si se miraran sueltos")
         for fam in ('figuras', 'rupturas', 'velas', 'directrices', 'rebotes'):
             for d, dn in ((1, 'alcistas'), (-1, 'bajistas')):
                 sel = [s for k, s in rows if ev['patterns'][k]['fam'] == fam and ev['patterns'][k]['dir'] == d and not ev['patterns'][k]['hq']]
                 if sel:
-                    L.append(f"  {fam:12s} {dn:9s} {len(sel):2d} patrones · exceso medio {np.mean([s['ex'] for s in sel]):+.3f} % · positivos {np.mean([s['ex'] > 0 for s in sel]) * 100:.0f} %")
+                    L.append(f"  {fam:12s} {dn:9s} {len(sel):2d} patrones · exceso medio {np.mean([s['ex'] for s in sel]):+.3f} % · mediano {np.median([s['ex'] for s in sel]):+.3f} % · positivos {np.mean([s['ex'] > 0 for s in sel]) * 100:.0f} %")
+        cb = ev.get('combos', {}).get(f'K{K}')
+        if cb:
+            vd = cb['valor_dias']
+            L.append(f"  coincidencias (cada valor-día cuenta una vez; {vd['alcistas']:,} con señal alcista, {vd['bajistas']:,} con señal bajista, {vd['contradictorios']:,} contradictorios, {vd['con_varias']:,} con varias señales):")
+            for sent in ('alcistas', 'bajistas'):
+                for name, st in cb[sent].items():
+                    if 'ex' in st:
+                        L.append(f"    {sent:9s} {name:32s} n {st['n']:7,} · ganan {st['wr']:4.1f} % · exceso {st['ex']:+.3f} % (t {st['t']:+.1f}) · vs año {st['exy']:+.3f} % (t {st['ty']:+.1f})")
+            for side, st in cb['contradictorias'].items():
+                if 'ex' in st:
+                    L.append(f"    contradictorias, medidas en {'largo' if side == 'long' else 'corto'}: n {st['n']:,} · exceso {st['ex']:+.3f} % (t {st['t']:+.1f})")
     return '\n'.join(L)
 
 

@@ -119,8 +119,27 @@ def box(F: Dict[str, np.ndarray], i: int, d: int, entry: float, stop: float, tar
             '_stop': stop, '_stop_t': stop_t, '_target': target}
 
 
-def outcome(F: Dict[str, np.ndarray], i: int, d: int, stop: float, target: float, maxb: int = HOLD) -> Dict:
-    """Qué pasó: entrada en la apertura siguiente; el stop gana si se tocan ambos el mismo día; cierre a las `maxb` sesiones."""
+COST = 0.15          # coste de ida y vuelta (%) que descuenta también el estudio: el resultado «neto» de la web es comparable con el de las estadísticas
+
+
+def _finish(F: Dict[str, np.ndarray], d: int, e: int, k: int, entry: float, stop: float, target: float, t1: float, res: str, px: float, bars: int, touched_t1: bool) -> Dict:
+    """Resultado de una operación ya cerrada en la barra k con todo lo que importa además de «llegó o no al objetivo»: ganancia neta, múltiplo del riesgo (R), recorrido máximo a favor/en contra
+    y qué parte del camino hasta el objetivo se llegó a recorrer."""
+    h, l = F['h'], F['l']
+    gross = d * (px / entry - 1.0) * 100.0
+    best = float(h[e:k + 1].max()) if d > 0 else float(l[e:k + 1].min())
+    worst = float(l[e:k + 1].min()) if d > 0 else float(h[e:k + 1].max())
+    mfe = max(d * (best / entry - 1.0) * 100.0, 0.0) + 0.0                  # + 0.0: sin «-0.0»
+    mae = max(-d * (worst / entry - 1.0) * 100.0, 0.0) + 0.0
+    risk, dist = abs(entry - stop), abs(target - entry)
+    return {'res': res, 'bars': bars, 'ret': r(gross), 'net': r(gross - COST), 'r': r(d * (px - entry) / risk) if risk > 0 else None, 'mfe': r(mfe), 'mae': r(mae),
+            'prog': r(min(max(d * (best - entry) / dist, 0.0), 9.99) + 0.0) if dist > 0 else None, 't1': bool(touched_t1), 'xi': k, 'xp': r(px)}
+
+
+def outcome(F: Dict[str, np.ndarray], i: int, d: int, stop: float, target: float, maxb: int = HOLD, t1: Optional[float] = None) -> Dict:
+    """Qué pasó: entrada en la apertura siguiente; el stop gana si se tocan ambos el mismo día; cierre a las `maxb` sesiones.
+    Además del resultado (objetivo / stop / cierre por tiempo / en curso) devuelve la ganancia neta, el múltiplo del riesgo, el recorrido máximo y, con el parcial T1 (50 % en T1 y stop a la entrada
+    para el resto), lo que habría dado esa gestión (`ret_m`). Quién gana o pierde lo decide el signo de `net`, no el haber llegado al objetivo."""
     o, h, l, c = F['o'], F['h'], F['l'], F['c']
     n = len(c)
     e = i + 1
@@ -129,20 +148,57 @@ def outcome(F: Dict[str, np.ndarray], i: int, d: int, stop: float, target: float
     entry = float(o[e])
     if (d > 0 and (entry <= stop or entry >= target)) or (d < 0 and (entry >= stop or entry <= target)):
         return {'res': 'na', 'bars': 0, 'ret': None}
+    if t1 is None:
+        t1 = entry + d * 0.5 * abs(target - entry)
+    touched = False
     for k in range(e, min(n, e + maxb)):
         hit_stop = l[k] <= stop if d > 0 else h[k] >= stop
         hit_tgt = h[k] >= target if d > 0 else l[k] <= target
         if hit_stop:
             gap = (o[k] <= stop) if d > 0 else (o[k] >= stop)
             px = float(o[k]) if gap else stop
-            return {'res': 'stop', 'bars': k - e + 1, 'ret': r(d * (px / entry - 1) * 100), 'xi': k, 'xp': r(px)}
+            return _finish(F, d, e, k, entry, stop, target, t1, 'stop', px, k - e + 1, touched)
         if hit_tgt:
             gap = (o[k] >= target) if d > 0 else (o[k] <= target)
             px = float(o[k]) if gap else target
-            return {'res': 'target', 'bars': k - e + 1, 'ret': r(d * (px / entry - 1) * 100), 'xi': k, 'xp': r(px)}
+            return _finish(F, d, e, k, entry, stop, target, t1, 'target', px, k - e + 1, True)
+        if (h[k] >= t1) if d > 0 else (l[k] <= t1):
+            touched = True
     k = min(n, e + maxb) - 1
     res = 'open' if k >= n - 1 and e + maxb > n else 'timeout'
-    return {'res': res, 'bars': k - e + 1, 'ret': r(d * (float(c[k]) / entry - 1) * 100), 'xi': k, 'xp': r(c[k])}
+    return _finish(F, d, e, k, entry, stop, target, t1, res, float(c[k]), k - e + 1, touched)
+
+
+def managed(F: Dict[str, np.ndarray], i: int, d: int, stop: float, target: float, t1: float, maxb: int = HOLD) -> Optional[float]:
+    """Rentabilidad (%, bruta) de la misma operación con parcial: la mitad se vende en T1, el stop del resto sube a la entrada y se espera el objetivo (o el cierre a las `maxb` sesiones).
+    Si se toca el stop antes de T1 se pierde todo; el stop gana si se tocan ambos el mismo día. None si no hay entrada o aún no se ha podido resolver."""
+    o, h, l, c = F['o'], F['h'], F['l'], F['c']
+    n = len(c)
+    e = i + 1
+    if e >= n:
+        return None
+    entry = float(o[e])
+    if (d > 0 and (entry <= stop or entry >= target)) or (d < 0 and (entry >= stop or entry <= target)):
+        return None
+    pct = lambda px: d * (px / entry - 1.0) * 100.0
+    half, st = None, stop
+    for k in range(e, min(n, e + maxb)):
+        hit_stop = l[k] <= st if d > 0 else h[k] >= st
+        if hit_stop:
+            gap = (o[k] <= st) if d > 0 else (o[k] >= st)
+            px = float(o[k]) if gap else st
+            return pct(px) if half is None else 0.5 * half + 0.5 * pct(px)
+        if half is None and ((h[k] >= t1) if d > 0 else (l[k] <= t1)):
+            gap = (o[k] >= t1) if d > 0 else (o[k] <= t1)
+            half = pct(float(o[k]) if gap else t1)
+            st = entry
+        if (h[k] >= target) if d > 0 else (l[k] <= target):
+            gap = (o[k] >= target) if d > 0 else (o[k] <= target)
+            return 0.5 * half + 0.5 * pct(float(o[k]) if gap else target)
+    if e + maxb > n:
+        return None
+    k = e + maxb - 1
+    return pct(float(c[k])) if half is None else 0.5 * half + 0.5 * pct(float(c[k]))
 
 
 def zones(F: Dict[str, np.ndarray], s0: int, k: int = 5, max_levels: int = 10) -> List[Dict]:

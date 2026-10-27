@@ -173,6 +173,50 @@ def _shift(geo: Dict, s0: int) -> None:
         a['x'] -= s0
 
 
+FAM_RANK = {'figuras': 0, 'rupturas': 1, 'directrices': 2, 'rebotes': 3, 'velas': 4}
+
+
+def group_trades(items: List[Dict], last: int) -> Dict:
+    """Una operación por valor: las señales de un mismo valor se agrupan en operaciones para no contar varias veces el mismo movimiento.
+    · La primera señal (si coinciden varias en la misma barra, la de mayor rango: figura > ruptura > directriz > rebote > vela, y a igualdad la de mayor calidad) abre la operación
+      y su plan es el que se simula. Si la señal queda fuera de niveles en la apertura siguiente (resultado «na») no abre nada.
+    · Mientras esa operación sigue abierta, las señales del mismo sentido son «confirmaciones» (no suman otra operación) y las del sentido contrario «contrarias» (aviso de conflicto).
+    · Cada operación se cuenta una sola vez, gane o pierda; gana quien termina con ganancia neta, llegue o no al objetivo.
+    `last` es la última barra (relativa) de la ventana exportada; una operación aún abierta bloquea hasta ahí."""
+    done = [it for it in items if it['state'] == 'done' and it.get('out') and it['dir'] != 0]
+    done.sort(key=lambda it: (it['i'], 1 if it['key'].startswith('consenso') else 0, FAM_RANK.get(it['fam'], 9), -(it['q'] if it['q'] is not None else -1), it['key']))
+    out: List[Dict] = []
+    cur: Optional[Dict] = None
+    for it in done:
+        o = it['out']
+        if o['res'] == 'na':
+            it['trade'] = {'role': 'na'}
+            continue
+        e = it['i'] + 1
+        if cur is not None and e <= cur['exit']:
+            same = it['dir'] == cur['dir']
+            cur['conf' if same else 'contra'].append(it['label'])
+            it['trade'] = {'role': 'confirma' if same else 'contraria', 'with': cur['id']}
+            continue
+        exit_ = o['xi'] if o['res'] in ('target', 'stop', 'timeout') and o.get('xi') is not None else last
+        cur = {'id': it['id'], 'key': it['key'], 'label': it['label'], 'dir': it['dir'], 'fam': it['fam'], 'i': it['i'], 'res': o['res'], 'net': o.get('net'), 'r': o.get('r'), 'ret_m': o.get('ret_m'),
+               'mfe': o.get('mfe'), 'prog': o.get('prog'), 'exit': int(exit_), 'conf': [], 'contra': []}
+        out.append(cur)
+        it['trade'] = {'role': 'lider'}
+    closed = [t for t in out if t['res'] in ('target', 'stop', 'timeout') and t['net'] is not None]
+
+    def tally(ts: List[Dict]) -> Dict:
+        nets = [t['net'] for t in ts]
+        rs = [t['r'] for t in ts if t['r'] is not None]
+        return {'n': len(ts), 'won': sum(1 for x in nets if x > 0), 'lost': sum(1 for x in nets if x <= 0), 'tgt': sum(1 for t in ts if t['res'] == 'target'), 'stp': sum(1 for t in ts if t['res'] == 'stop'),
+                'tmo': sum(1 for t in ts if t['res'] == 'timeout'), 'tmo_won': sum(1 for t in ts if t['res'] == 'timeout' and t['net'] > 0), 'mean_net': round(float(np.mean(nets)), 3) if nets else None,
+                'sum_net': round(float(np.sum(nets)), 2) if nets else 0.0, 'mean_r': round(float(np.mean(rs)), 3) if rs else None,
+                'mean_m': round(float(np.mean([t['ret_m'] for t in ts if t.get('ret_m') is not None])), 3) if any(t.get('ret_m') is not None for t in ts) else None}
+
+    return {'list': out, 'open': sum(1 for t in out if t['res'] == 'open'), 'conflicts': sum(1 for t in out if t['contra']), 'all': tally(closed),
+            'by_fam': {f: tally([t for t in closed if t['fam'] == f]) for f in sorted({t['fam'] for t in closed})}}
+
+
 # ── análisis de un valor ──────────────────────────────────────────────────
 def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB) -> Dict:
     F = ta.prepare(bars)
@@ -201,6 +245,11 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
         note = pat.rule + (' El stop estructural quedaba a menos de 1 ATR: se ha ampliado a 1 ATR.' if bx['stop_min'] else '')
         out = P.outcome(F, i, d, stop, tgt)
         out_t = P.outcome(F, i, d, stop_t, tgt) if stop_t is not None else None
+        for o_, st_ in ((out, stop), (out_t, stop_t)):                         # con parcial: la mitad en T1 y el stop del resto a la entrada
+            if o_ and o_.get('res') in ('target', 'stop', 'timeout'):
+                eo = float(F['o'][i + 1])
+                m_ = P.managed(F, i, d, st_, tgt, eo + d * 0.5 * abs(tgt - eo))
+                o_['ret_m'] = None if m_ is None else P.r(m_ - P.COST)
         active = (n - 1 - i) <= ACTIVE and out['res'] == 'open' and not bx['spent']
         if bx['spent']:
             note += ' La ruptura ya recorrió casi toda la medida clásica: el objetivo queda a menos de 1 ATR de la entrada, así que no hay recorrido que operar.'
@@ -222,6 +271,7 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
     items = [it for it in items if not it['key'].startswith('donch') or seen[(it['i'], it['dir'])][1] is it]
     for it in items:                                      # otros patrones del mismo sentido que saltan en las 3 barras vecinas (no son confirmaciones independientes)
         it['conf'] = [o['label'] for o in items if o is not it and o['dir'] == it['dir'] and it['dir'] != 0 and abs(o['i'] - it['i']) <= 3 and o['key'] != it['key']][:4]
+    trades = group_trades(items, n - s0 - 1)
     last = float(F['c'][-1])
     for st in forming:
         a_ = float(F['atr'][n - 1])
@@ -291,7 +341,7 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
             'bars': {'t': [day(x) for x in bars['t'][sl]], 'o': [P.r(x) for x in bars['o'][sl]], 'h': [P.r(x) for x in bars['h'][sl]], 'l': [P.r(x) for x in bars['l'][sl]],
                      'c': [P.r(x) for x in bars['c'][sl]], 'v': [int(x) for x in bars['v'][sl]]},
             'sma50': [None if not np.isfinite(x) else P.r(x) for x in F['sma50'][sl]], 'sma200': [None if not np.isfinite(x) else P.r(x) for x in F['sma200'][sl]],
-            'zones': zs, 'patterns': items, 'summary': summ}
+            'zones': zs, 'patterns': items, 'summary': summ, 'trades': trades}
 
 
 def index_row(res: Dict) -> Dict:

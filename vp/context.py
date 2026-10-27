@@ -6,7 +6,8 @@ tendencia o del mercado, con volumen, en un valor líder, con varias señales a 
 
   · Señal = cada evento de patrón (velas, figuras, rupturas, directrices, rebotes) de las 300 acciones más negociadas, con su sentido. Resultado = rendimiento a 10 sesiones del valor
     menos el del conjunto ese día, con el signo del sentido (en corto cuenta al revés): es «exceso», no depende de si el mercado sube.
-  · Doce filtros definidos de antemano (abajo). Para cada grupo (familia y sentido) y cada filtro: exceso medio de las señales que lo cumplen y t con errores estándar agrupados por día.
+  · Doce filtros definidos de antemano (abajo). Para cada grupo (familia y sentido) y cada filtro: exceso medio de las señales que lo cumplen y t con errores estándar agrupados en bloques de 10 sesiones
+    (los rendimientos a 10 sesiones de días vecinos se solapan y agrupar solo por día no lo recoge).
   · Umbral del mejor de N: las señales de cada valor se desplazan en el tiempo al azar (conservando su agrupación) y se anota el mayor |t| entre TODAS las combinaciones grupo × filtro.
     Solo cuenta lo que lo supera.
   · Desarrollo (≤ 2022) y final (≥ 2023) por separado: un hallazgo del desarrollo que no se repite en el final no vale.
@@ -28,6 +29,7 @@ from .ml import CTX, COST
 ALL = sorted(CATALOG)
 FAMS = ('velas', 'figuras', 'rupturas', 'directrices', 'rebotes')
 DEV_END = 2022
+BLOCK = 10                 # sesiones por bloque en los errores estándar agrupados (los rendimientos a 10 sesiones de días vecinos se solapan)
 FILTERS = {
     'tendencia': 'a favor de la tendencia: precio sobre su media de 200 sesiones si es alcista (bajo si es bajista)',
     'contra': 'contra la tendencia (giro): el patrón va en sentido contrario al de la media de 200',
@@ -136,7 +138,7 @@ def _grid_t(D: ml.Data, E: Dict[str, np.ndarray], row: np.ndarray, groups) -> np
     ok = row >= 0
     r = np.where(ok, row, 0)
     x = d * D.rel[r]
-    code = D.dcode[r]
+    code = D.dcode[r] // BLOCK
     out = []
     for _, gm in groups:
         for fm in [None] + list(FILTERS):
@@ -166,7 +168,7 @@ def experiment(D: ml.Data, E: Dict[str, np.ndarray], reps: int = 100, verbose: b
     ok = row >= 0
     r = np.where(ok, row, 0)
     x = d * D.rel[r]
-    code = D.dcode[r]
+    code = D.dcode[r] // BLOCK
     dev = D.year[r] <= dev_end
     F = filters(D, row, E['conf'], d)
     res: Dict = {}
@@ -256,7 +258,7 @@ def _decile_stats(D, E, pred, y, years_mask, cost: float = COST, frac: float = 0
         lo, hi = np.quantile(pred[m], [frac, 1 - frac])
         top |= m & (pred >= hi)
         bot |= m & (pred <= lo)
-    code = D.dcode[r]
+    code = D.dcode[r] // BLOCK
     ic = float(np.corrcoef(np.argsort(np.argsort(pred[ok])), np.argsort(np.argsort(y[ok])))[0, 1])
     return {'n': int(ok.sum()), 'todas': float(y[ok].mean()), 'mejor': float(y[top].mean()), 'mejor_t': t_cluster(y[top], code[top], D.nd), 'mejor_neto': float(y[top].mean() - cost), 'mejor_n': int(top.sum()),
             'peor': float(y[bot].mean()), 'peor_t': t_cluster(y[bot], code[bot], D.nd), 'ic': ic, 'ic_t': t_cluster(_zs(pred[ok]) * _zs(y[ok]), code[ok], D.nd)}

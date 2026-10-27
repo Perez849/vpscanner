@@ -345,7 +345,7 @@ function renderEvidence() {
     <div class="bar">${seg('e-k', [['K50', '50 mayores'], ['K300', '300 mayores']], K)}${seg('e-f', [['all', 'Todas']].concat(Object.entries(FAMS)), S.evFam)}<input type="search" id="e-t" placeholder="Buscar patrón" value="${esc(S.evText)}" size="16"></div>
     <div class="panel"><h3>Resumen por familia</h3><div class="small" style="margin-bottom:6px">Exceso mediano sobre entrar al azar (a ${m.primary} sesiones) de los patrones de cada familia y sentido, y qué parte de ellos queda por encima del azar.</div><div id="e-fam"></div></div>
     <div class="panel"><h3>t de cada patrón frente al azar</h3><div class="small" style="margin-bottom:4px">Cada punto es un patrón (verde alcista, rojo bajista; el anillo marca los de calidad alta). La banda sombreada es lo que se esperaría por azar para el mejor de ${E.nAll}: casi todo cae dentro.</div><canvas id="strip"></canvas></div>
-    <div class="tw"><table class="ev"><thead><tr>${[['label', 'Patrón'], ['n', 'n'], ['wr', 'Acierto'], ['mean', 'Media'], ['t', 'Exceso · t'], ['hq', 'Calidad ≥ 75']].map(([k, t]) => `<th data-k="${k}">${t}${S.evSort === k ? (S.evDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}<th>Años +</th><th></th></tr></thead><tbody id="e-body"></tbody></table></div>`;
+    <div class="tw"><table class="ev"><thead><tr>${[['label', 'Patrón'], ['n', 'n'], ['wr', '% ganadoras'], ['mean', 'Media'], ['t', 'Exceso · t'], ['hq', 'Calidad ≥ 75']].map(([k, t]) => `<th data-k="${k}"${k === 'wr' ? ' title="Parte de las operaciones que terminan con ganancia neta (después de costes) a la salida a tiempo fijo; no cuenta si llegan o no a ningún objetivo"' : ''}>${t}${S.evSort === k ? (S.evDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}<th>Años +</th><th></th></tr></thead><tbody id="e-body"></tbody></table></div>`;
   $('#e-k').querySelectorAll('button').forEach(b => b.onclick = () => { S.evK = b.dataset.v; renderEvidence(); });
   $('#e-f').querySelectorAll('button').forEach(b => b.onclick = () => { S.evFam = b.dataset.v; renderEvidence(); });
   $('#e-t').oninput = e => { S.evText = e.target.value; fillEvTable(); drawStrip(); };
@@ -492,13 +492,17 @@ function boxesOf(p) {
   return [{k: 'x', d: p.dir, entry: p.plan.entry, target: p.plan.target, stop: t ? p.plan.stop_t : p.plan.stop, t1: p.plan.t1, rr: t ? p.plan.rr_t : p.plan.rr, out: t ? p.out_t : p.out, tact: t}];
 }
 const rrOf = p => boxesOf(p)[0];
+const isClosed = o => !!o && (o.res === 'target' || o.res === 'stop' || o.res === 'timeout') && o.xi != null;   // operación terminada (llegó al objetivo, saltó el stop o se cerró por tiempo)
+const isWin = o => !!o && o.net != null && o.net > 0;                                                              // gana quien termina con ganancia neta, llegue o no al objetivo
+const glyph = o => o.res === 'target' ? '✓' : o.res === 'stop' ? '✗' : isWin(o) ? '+' : '−';
+const rTxt = o => o.r == null ? '' : ` · ${o.r > 0 ? '+' : ''}${o.r.toFixed(1).replace('-', '−')} R`;
 function resTxt(o) {
   if (!o) return ['x', 'sin simular'];
   if (o.res === 'forming') return ['f', 'sin romper todavía'];
-  if (o.res === 'target') return ['t', `✓ objetivo en ${o.bars} ses. (${pc(o.ret)})`];
-  if (o.res === 'stop') return ['s', `✗ stop en ${o.bars} ses. (${pc(o.ret)})`];
-  if (o.res === 'open') return ['o', o.ret == null ? 'recién completado' : `en curso (${pc(o.ret)})`];
-  if (o.res === 'timeout') return ['x', `sin resolver en 40 ses. (${pc(o.ret)})`];
+  if (o.res === 'target') return ['t', `✓ objetivo en ${o.bars} ses.: ganó ${pc(o.net, 2)} neto${rTxt(o)}`];
+  if (o.res === 'stop') return ['s', `✗ stop en ${o.bars} ses.: ${o.net > 0 ? 'ganó' : 'perdió'} ${pc(o.net, 2)} neto${rTxt(o)}`];
+  if (o.res === 'timeout') return [isWin(o) ? 't' : 's', `${isWin(o) ? '✓ ganó' : '✗ perdió'} ${pc(o.net, 2)} neto${rTxt(o)}: cerrada a las ${o.bars} ses. sin tocar stop ni objetivo${o.prog != null ? ` (recorrió el ${Math.round(o.prog * 100)} % del camino al objetivo)` : ''}`];
+  if (o.res === 'open') return ['o', o.ret == null ? 'recién completado' : `en curso (${pc(o.ret)} ahora, sin cerrar)`];
   return ['x', 'entrada ya fuera de niveles'];
 }
 const status = p => p.state === 'forming' ? ['f', 'sin romper todavía'] : resTxt(rrOf(p).out);
@@ -506,9 +510,9 @@ const qcls = q => q >= 75 ? 'qh' : q >= 60 ? 'qm' : 'ql';
 const qtag = p => p.q == null ? '' : `<span class="tag ${qcls(p.q)}" title="Calidad de la figura (0–100)">Q ${p.q}</span>`;
 function evLines(e) {
   if (!e || !e.all) return '';
-  const row = (k, lab) => e.all[k] && e.all[k].n ? `<span>${lab}</span><span>n=${e.all[k].n} · acierto ${e.all[k].wr.toFixed(0)} % · media ${pc(e.all[k].mean, 2)} · exceso ${pc(e.all[k].ex, 2)} (t ${e.all[k].t.toFixed(1)}) · años+ ${e.all[k].pos}/${e.all[k].tot}</span>` : '';
+  const row = (k, lab) => e.all[k] && e.all[k].n ? `<span>${lab}</span><span>n=${e.all[k].n} · ganadoras ${e.all[k].wr.toFixed(0)} % · media ${pc(e.all[k].mean, 2)} · exceso ${pc(e.all[k].ex, 2)} (t ${e.all[k].t.toFixed(1)}) · años+ ${e.all[k].pos}/${e.all[k].tot}</span>` : '';
   const hq = e.hq && (e.hq.K300 && e.hq.K300.n >= 30 ? e.hq.K300 : e.hq.K50);
-  return `<div class="kv">${row('K50', '50 mayores')}${row('K300', '300 mayores')}</div>` + (hq && hq.ex != null ? `<div class="small" style="margin-top:4px"><b>Solo con calidad ≥ 75:</b> n=${hq.n} · acierto ${hq.wr.toFixed(0)} % · exceso ${pc(hq.ex, 2)} (t ${hq.t.toFixed(1)}). ${Math.abs(hq.t) >= 2 ? '' : 'Sin diferencia apreciable: dibujar mejor la figura no la hace más fiable.'}</div>` : '');
+  return `<div class="kv">${row('K50', '50 mayores')}${row('K300', '300 mayores')}</div>` + (hq && hq.ex != null ? `<div class="small" style="margin-top:4px"><b>Solo con calidad ≥ 75:</b> n=${hq.n} · ganadoras ${hq.wr.toFixed(0)} % · exceso ${pc(hq.ex, 2)} (t ${hq.t.toFixed(1)}). ${Math.abs(hq.t) >= 2 ? '' : 'Sin diferencia apreciable: dibujar mejor la figura no la hace más fiable.'}</div>` : '');
 }
 
 /* ───────────────────────── gráfico: geometría ───────────────────────── */
@@ -656,7 +660,7 @@ function draw() {
     for (const r of bxs) {
       const x0 = X(p.i + (forming ? 1 : 0)), o = r.out, dd = forming ? r.d : p.dir;
       let x1 = X(p.i + (forming ? 24 : 26));
-      if (o && o.xi != null && (o.res === 'target' || o.res === 'stop')) x1 = X(o.xi);
+      if (isClosed(o)) x1 = X(o.xi);
       x1 = Math.max(x1, x0 + 60); xr = Math.max(xr, x1);
       const ye = Y(r.entry), yt = Y(r.target), ys = Y(r.stop);
       cx.save(); cx.globalAlpha = a;
@@ -669,9 +673,9 @@ function draw() {
       labs.push([yt, `${arrow}Objetivo ${fx(r.target)}  ${pcs(r.target)}`, css('--emerald')], [ys, `${arrow}Stop ${fx(r.stop)}  ${pcs(r.stop)}${r.tact ? ' (táctico)' : ''}`, css('--ember')],
         [ye, forming ? `${arrow}Rompe ${dd > 0 ? '>' : '<'} ${fx(r.entry)} · R:R ${r.rr != null ? r.rr.toFixed(1) : '—'}` : `Entrada ${fx(r.entry)} · R:R ${r.rr != null ? r.rr.toFixed(1) : '—'}`, css('--sapphire')]);
       if (r.t1 != null && sel) labs.push([Y(r.t1), `${arrow}T1 (50 %) ${fx(r.t1)}`, css('--emerald'), 1]);
-      if (o && o.xi != null && (o.res === 'target' || o.res === 'stop')) {
-        const ok = o.res === 'target', xx = X(o.xi), yy = Y(o.xp);
-        cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 8, 0, 7); cx.fill(); cx.fillStyle = '#fff'; cx.font = '700 12px ' + css('--f-text'); cx.textAlign = 'center'; cx.fillText(ok ? '✓' : '✗', xx, yy + .5);
+      if (isClosed(o)) {
+        const ok = isWin(o), xx = X(o.xi), yy = Y(o.xp);
+        cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 8, 0, 7); cx.fill(); cx.fillStyle = '#fff'; cx.font = '700 12px ' + css('--f-text'); cx.textAlign = 'center'; cx.fillText(glyph(o), xx, yy + .5);
       }
       cx.restore();
     }
@@ -682,7 +686,7 @@ function draw() {
     for (const [y, t, c, soft] of labs) pill(t, outside ? xr + 8 : Math.min(xr - 4, L.x1 - 4), y, c, {size: 10, align: outside ? 'l' : 'r', alpha: soft ? .75 : 1});
     cx.restore();
   }
-  if (S.f.hist) for (const p of pats) { const o = p.state === 'forming' ? null : rrOf(p).out; if (p === S.sel || !o || o.xi == null || !(o.res === 'target' || o.res === 'stop')) continue; const ok = o.res === 'target', xx = X(o.xi), yy = Y(o.xp); cx.globalAlpha = .85; cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 4.5, 0, 7); cx.fill(); cx.globalAlpha = 1; }
+  if (S.f.hist) for (const p of pats) { const o = p.state === 'forming' ? null : rrOf(p).out; if (p === S.sel || !isClosed(o)) continue; const ok = isWin(o), xx = X(o.xi), yy = Y(o.xp); cx.globalAlpha = .85; cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 4.5, 0, 7); cx.fill(); cx.globalAlpha = 1; }
   // etiquetas: pastilla con nombre para las figuras; marcador pequeño para velas, rupturas y rebotes
   const stackUp = {}, stackDn = {};
   const pri = p => (p.state === 'forming') * 4 + major(p) * 3 + p.active * 2 + (p.q || 0) / 100;
@@ -751,15 +755,33 @@ function cardFull(p) {
     (one ? `<div class="small" style="margin-top:8px">El disparador es el nivel de la línea discontinua (cuello, borde o techo de la figura); la entrada supone un cierre 0,15 ATR más allá. Si el precio pierde antes la base de la figura, queda invalidada. La evidencia de abajo es la de la figura ya rota: el estudio no mide figuras en formación.</div></div>`
       : `<div class="small" style="margin-top:8px">Las dos rectas se ajustan con los pivotes que el precio respeta; la entrada es el valor de cada recta en la próxima sesión (+0,15 ATR). Si el cierre sale por un lado, el otro escenario queda anulado.${p.trig && p.trig.dist != null ? ` Hoy el cierre está ${distTxt(p.trig.dist)} de la recta más cercana.` : ''}</div></div>`);
   const r = rrOf(p), [rc, rt] = resTxt(r.out), e = evOf(p.key), [vc, vt] = verdictOf(e.all);
-  const same = S.D.patterns.filter(q => q.key === p.key && q !== p && q.out && (q.out.res === 'target' || q.out.res === 'stop')), w = same.filter(q => q.out.res === 'target').length;
+  const same = S.D.patterns.filter(q => q.key === p.key && q !== p && isClosed(q.out)), w = same.filter(q => isWin(q.out)).length, tg = same.filter(q => q.out.res === 'target').length;
   return hd + `<div class="small" style="margin-top:3px">${esc(desc)} · ${p.dir > 0 ? 'sesgo alcista' : p.dir < 0 ? 'sesgo bajista' : 'neutral'} · completado el ${dstr(S.D.bars.t[p.i])}</div>
     <table class="lv"><tr><td>Entrada</td><td>${fx(r.entry)}</td></tr><tr><td style="color:var(--emerald)">Objetivo</td><td>${fx(r.target)} (${pc((r.target / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(r.t1)} (${pc((r.t1 / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--ember)">Stop${r.tact ? ' táctico' : ' estructural'}</td><td>${fx(r.stop)} (${pc((r.stop / r.entry - 1) * 100 * p.dir)})</td></tr><tr><td>Recompensa / riesgo</td><td>${r.rr != null ? r.rr.toFixed(2) : '—'}</td></tr></table>
-    ${p.plan.spent ? '<div class="verdict r" style="margin:6px 0"><b>Objetivo consumido:</b> la ruptura ya recorrió casi toda la medida clásica de la figura, así que no queda recorrido hasta el objetivo. No se cuenta como activa.</div>' : ''}<div class="small">${esc(p.note)}</div>${p.conf && p.conf.length ? `<div class="small" style="margin-top:4px"><b>También saltan en esas sesiones</b> (mismo sentido, ±3): ${p.conf.map(esc).join(' · ')}. Suelen medir casi lo mismo: no son confirmaciones independientes.</div>` : ''}${obsTxt(p.plan.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
+    ${p.plan.spent ? '<div class="verdict r" style="margin:6px 0"><b>Objetivo consumido:</b> la ruptura ya recorrió casi toda la medida clásica de la figura, así que no queda recorrido hasta el objetivo. No se cuenta como activa.</div>' : ''}<div class="small">${esc(p.note)}</div>${obsTxt(p.plan.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>Qué pasó aquí:</b> ${rt}</div>
-    ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'llegó' : 'llegaron'} al objetivo y ${same.length - w} al stop.</div>` : ''}
+    ${moveTxt(r.out)}${tradeTxt(p)}
+    ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'terminó' : 'terminaron'} con ganancia neta (${tg} llegando al objetivo) y ${same.length - w} con pérdida.</div>` : ''}
     <div class="verdict ${vc}">${S.ev ? 'Estudio: ' + esc(vt) : 'Sin estudio cargado.'}</div>${S.ev ? pathSvg(pathOf(p.key)) : ''}${evLines(e)}</div>`;
+}
+function moveTxt(o) {
+  if (!o || !(isClosed(o) || (o.res === 'open' && o.ret != null)) || o.mfe == null) return '';
+  const parc = o.ret_m != null ? ` Con parcial (la mitad en T1 y el stop del resto a la entrada) habría dado <b>${pc(o.ret_m, 2)}</b> neto.` : '';
+  return `<div class="small" style="margin-top:4px">Recorrido máximo a favor ${pc(o.mfe, 1)}${o.prog != null ? ` (el ${Math.round(o.prog * 100)} % del camino al objetivo)` : ''}, máximo en contra −${o.mae.toFixed(1)} %. Resultado neto de ${S.ev ? S.ev.meta.cost : 0.15} % de costes.${parc}</div>`;
+}
+function tradeTxt(p) {
+  const t = p.trade; if (!t || !S.D.trades) return '';
+  const lead = id => S.D.trades.list.find(x => x.id === id);
+  if (t.role === 'lider') {
+    const x = lead(p.id); if (!x) return '';
+    return `<div class="small" style="margin-top:4px"><b>Operación única:</b> esta señal abre la operación; ${x.conf.length ? `mientras duró ${x.conf.length === 1 ? 'confirmó otra señal' : 'confirmaron otras ' + x.conf.length + ' señales'} del mismo sentido (${[...new Set(x.conf)].slice(0, 5).map(esc).join(', ')}) que no suman otra operación` : 'no saltó ninguna otra señal del mismo sentido'}${x.contra.length ? ` y ${x.contra.length === 1 ? 'una fue' : x.contra.length + ' fueron'} <b>contraria${x.contra.length === 1 ? '' : 's'}</b> (${[...new Set(x.contra)].slice(0, 4).map(esc).join(', ')}): conflicto` : ''}.</div>`;
+  }
+  const l = t.with && lead(t.with);
+  if (t.role === 'confirma') return `<div class="small" style="margin-top:4px"><b>Operación única:</b> salta con la operación de «${esc(l ? l.label : '—')}» ya abierta y en el mismo sentido: es una confirmación y no suma otra operación ni otro acierto.</div>`;
+  if (t.role === 'contraria') return `<div class="small" style="margin-top:4px;color:var(--ember)"><b>Señal contraria:</b> salta con la operación de «${esc(l ? l.label : '—')}» abierta en el sentido opuesto. No se cuenta como operación propia.</div>`;
+  return '';
 }
 function candlesToday() {
   const n = S.D.n, t = S.D.patterns.filter(p => p.fam === 'velas' && p.i === n - 1 && !p.key.startsWith('consenso')), u = t.filter(p => p.dir > 0), d = t.filter(p => p.dir < 0);
@@ -767,21 +789,29 @@ function candlesToday() {
   const nm = a => a.map(p => esc(p.label)).join(', ');
   return `${u.length ? `<span style="color:var(--emerald)">▲ ${u.length}: ${nm(u)}</span>` : ''}${u.length && d.length ? '<br>' : ''}${d.length ? `<span style="color:var(--ember)">▼ ${d.length}: ${nm(d)}</span>` : ''}<br><span class="small">${u.length >= 2 && !d.length ? 'Consenso alcista' : d.length >= 2 && !u.length ? 'Consenso bajista' : u.length && d.length ? 'Señales contrarias: sin consenso' : 'Una sola formación'}</span>`;
 }
+function signalsNow() {
+  const act = S.D.patterns.filter(p => p.active && p.state === 'done' && p.dir !== 0), est = act.filter(p => p.fam !== 'velas'), vel = act.filter(p => p.fam === 'velas' && !p.key.startsWith('consenso'));
+  const c = (a, d) => a.filter(p => p.dir === d).length, up = c(act, 1), dn = c(act, -1), sy = (a) => `<span style="color:var(--emerald)">▲ ${c(a, 1)}</span> <span style="color:var(--ember)">▼ ${c(a, -1)}</span>`;
+  if (!act.length) return 'ninguna activa';
+  const v = up && dn ? '<span style="color:var(--ember)">contradictorias: hay señales alcistas y bajistas a la vez</span>' : up ? 'todas alcistas' : 'todas bajistas';
+  const al = est.length && vel.length ? (est.every(p => p.dir > 0) && vel.every(p => p.dir > 0)) || (est.every(p => p.dir < 0) && vel.every(p => p.dir < 0)) ? ' Figura y velas coinciden.' : ' Figura y velas no coinciden.' : '';
+  return `figuras y rupturas ${sy(est)} · velas ${sy(vel)}<br><span class="small">${v}.${al} Cuentan como una sola operación (la primera que saltó); el estudio no ve ventaja por sumar señales (pestaña Evidencia).</span>`;
+}
 function reading() {
   const D = S.D, sm = D.summary, c = sm.close, n = D.n, s50 = D.sma50[n - 1], s200 = D.sma200[n - 1];
   const trend = s50 == null ? '—' : (c > s50 && s50 > (s200 ?? 0)) ? 'alcista (precio sobre la media de 50 y esta sobre la de 200)' : c < s50 && s50 < (s200 ?? 1e9) ? 'bajista (precio bajo la media de 50 y esta bajo la de 200)' : 'mixta';
   const up = D.zones.filter(z => z.p > c).sort((a, b) => a.p - b.p)[0], dn = D.zones.filter(z => z.p < c).sort((a, b) => b.p - a.p)[0];
-  const done = D.patterns.filter(p => p.out && (p.out.res === 'target' || p.out.res === 'stop')), won = done.filter(p => p.out.res === 'target').length;
-  const byFam = {}; for (const p of done) { (byFam[p.fam] = byFam[p.fam] || [0, 0])[p.out.res === 'target' ? 0 : 1]++; }
+  const T = D.trades || {list: [], all: {n: 0}, by_fam: {}, conflicts: 0}, A = T.all, roles = {confirma: 0, contraria: 0}; for (const p of D.patterns) if (p.trade && roles[p.trade.role] != null) roles[p.trade.role]++;
   return `<h3>${S.sym} · lectura</h3><div class="kv"><span>Tendencia</span><span>${trend}</span><span>Cierre</span><span>${fx(c)}</span><span>Media 50 / 200</span><span>${fx(s50)} / ${fx(s200)}</span>
     <span>Distancia a la media 200</span><span>${sm.dist200 == null ? '—' : pc(sm.dist200)}</span><span>Rango anual</span><span>${sm.pos52 == null ? '—' : (sm.pos52 * 100).toFixed(0) + ' % (0 = mínimo, 100 = máximo)'}</span>
     <span>RSI(14) / RSI(2)</span><span>${sm.rsi14} / ${sm.rsi2}</span><span>ATR (14)</span><span>${fx(sm.atr)} · ${sm.atrp} % del precio</span>
-    <span>Velas de la última sesión</span><span>${candlesToday()}</span>
+    <span>Velas de la última sesión</span><span>${candlesToday()}</span><span>Señales vigentes</span><span>${signalsNow()}</span>
     <span>Resistencia más cercana</span><span>${up ? fx(up.p) + ' (' + pc((up.p / c - 1) * 100) + ', ' + up.touches + ' toques)' : '—'}</span><span>Soporte más cercano</span><span>${dn ? fx(dn.p) + ' (' + pc((dn.p / c - 1) * 100) + ', ' + dn.touches + ' toques)' : '—'}</span></div>
-    <h3 style="margin-top:12px">Qué pasó con los patrones de este valor</h3>
-    <div class="small">${done.length} patrones llegaron a su objetivo o a su stop en los últimos ${n} días: <b>${won}</b> al objetivo y <b>${done.length - won}</b> al stop (${done.length ? (won / done.length * 100).toFixed(0) : '—'} %). Con un R:R de 2 hace falta acertar más del 33 % para no perder, pero hay que descontar costes y el sesgo de elegir qué patrones mirar a posteriori.</div>
-    <div class="kv" style="margin-top:6px">${Object.entries(byFam).map(([k, v]) => `<span>${FAMS[k] || k}</span><span>${v[0]} objetivo · ${v[1]} stop</span>`).join('')}</div>
-    <div class="small" style="margin-top:10px">Cómo se calcula: entrada en el cierre de la barra que completa el patrón; objetivo por la medida clásica de cada figura; stop estructural al otro lado de la figura (nunca a menos de 1 ATR) o táctico a 1,5 ATR; el resultado se simula entrando en la apertura siguiente, el stop gana si se tocan ambos el mismo día y se cierra a los 40 días.</div>`;
+    <h3 style="margin-top:12px">Qué pasó con las operaciones de este valor</h3>
+    <div class="small">${A.n ? `${A.n} operaciones cerradas en los últimos ${n} días: <b>${A.won}</b> terminaron con ganancia neta y <b>${A.lost}</b> con pérdida (${(A.won / A.n * 100).toFixed(0)} % ganadoras). Media ${pc(A.mean_net, 2)} neto por operación${A.mean_r != null ? ` (${A.mean_r > 0 ? '+' : ''}${A.mean_r.toFixed(2).replace('-', '−')} R)` : ''}, suma ${pc(A.sum_net, 1)}. Llegaron al objetivo ${A.tgt}, saltó el stop en ${A.stp} y ${A.tmo} se cerraron por tiempo (${A.tmo_won} con ganancia).${A.mean_m != null ? ` Con parcial en T1: media ${pc(A.mean_m, 2)}.` : ''}` : 'Ninguna operación cerrada en la ventana.'}
+      Una operación por valor: las ${roles.confirma + roles.contraria} señales que saltaron con otra operación ya abierta no suman${T.conflicts ? ` (${roles.contraria} eran contrarias a la operación abierta, en ${T.conflicts} operaciones: conflicto)` : ''}. Gana quien termina con ganancia neta, llegue o no al objetivo. Es la historia de un solo valor: sirve para mirar, no demuestra nada (eso es la pestaña Evidencia).</div>
+    <div class="kv" style="margin-top:6px">${Object.entries(T.by_fam).map(([k, v]) => `<span>${FAMS[k] || k} (primera señal)</span><span>${v.n} op. · ${v.won} ganaron · ${pc(v.mean_net, 2)} de media</span>`).join('')}</div>
+    <div class="small" style="margin-top:10px">Cómo se calcula: entrada en el cierre de la barra que completa el patrón; objetivo por la medida clásica de cada figura; stop estructural al otro lado de la figura (nunca a menos de 1 ATR) o táctico a 1,5 ATR; el resultado se simula entrando en la apertura siguiente, el stop gana si se tocan ambos el mismo día y se cierra a los 40 días; se descuenta el 0,15 % de costes del estudio.</div>`;
 }
 function renderPane() {
   if (!S.D || S.view !== 'chart') return;

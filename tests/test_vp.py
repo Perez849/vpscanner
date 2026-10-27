@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, context, data, engine, lab, ml, planstudy, shapes, study, ta, universe
+from vp import breakouts, candles, context, data, engine, lab, ml, plan, planstudy, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -471,7 +471,7 @@ def test_lab_json(tmp='/tmp/vp_lab_test'):
 
 # ── 5. estudio ────────────────────────────────────────────────────────────
 def test_study_mechanics():
-    # t con clústeres de día: coincide con la fórmula a mano
+    # t con clústeres: coincide con la fórmula a mano
     work = {f'S{j}': study._work((f'S{j}', walk(1200, seed=10 + j, t0=1500000000)))[1] for j in range(6)}
     P = study.Panel(work, ks=(3, 6))
     rng = np.random.default_rng(0)
@@ -485,7 +485,7 @@ def test_study_mechanics():
     for j in range(8):
         b = walk(1200, seed=30 + j)
         _, w = study._work((f'S{j}', b))
-        idx = np.arange(100, 1100, 9)
+        idx = np.arange(100 + j, 1100, 9)                       # cada valor en días distintos: la referencia del mismo día no absorbe el efecto (si todos saltaran a la vez, sería cosa del mercado)
         w['idx'] = {'hammer': idx}
         r = w['ret'][10].copy()
         r[idx] += 3.0
@@ -496,11 +496,11 @@ def test_study_mechanics():
         work2[f'S{j}'] = w
     P2 = study.Panel(work2, ks=(8,))
     st = P2.stat(P2.ev['hammer'], 8, 'long', 10)
-    assert st['n'] > 500 and st['ex'] > 2.5 and st['t'] > 10, st
+    assert st['n'] > 500 and st['ex'] > 2.3 and st['t'] > 8 and st['exy'] > 2.5 and st['ty'] > 8, st
     ps = P2.path_stat(P2.ev['hammer'], 8, 'long')
-    assert abs(ps['m'][9] - 3.0) < 0.4 and abs(ps['m'][0]) < 0.4 and ps['se'][9] > 0 and len(ps['m']) == study.PATH, ps
+    assert abs(ps['m'][9] - 3.0) < 0.9 and abs(ps['m'][0]) < 0.4 and ps['se'][9] > 0 and len(ps['m']) == study.PATH, ps
     ps_s = P2.path_stat(P2.ev['hammer'], 8, 'short')
-    assert ps_s['m'][9] < -2.5                                  # en corto el mismo efecto cuenta al revés
+    assert ps_s['m'][9] < -2.0                                  # en corto el mismo efecto cuenta al revés
     print(f'ok · estudio: t por clústeres exacta y ventaja plantada de +3 % detectada (t = {st["t"]:.0f})')
 
 
@@ -673,8 +673,71 @@ def test_context_experiment():
     print(f'ok · contexto y confluencia: efecto plantado en «velas alcistas con volumen» detectado (t {g["volumen"]["cumple"]["t"]:.0f}) y aprendido por el meta-etiquetado (IC {f_["ic"]:+.2f})')
 
 
+def test_outcome_counts_real_result():
+    """Gana quien termina con ganancia neta, llegue o no al objetivo: un cierre por tiempo con +7 % cuenta como ganado; el parcial en T1 y el recorrido máximo se calculan bien."""
+    o = np.array([100, 100, 101, 104, 106, 108, 109.0]); h = np.array([101, 102, 104, 106, 108, 109.5, 111.0]); l = np.array([99, 99, 100, 103, 105, 107, 108.0]); c = np.array([100, 101, 103, 105.5, 107, 109, 110.5])
+    F = dict(o=o, h=h, l=l, c=c)
+    a = plan.outcome(F, 0, 1, 95, 110)
+    assert a['res'] == 'target' and a['bars'] == 6 and abs(a['ret'] - 10) < 1e-6 and abs(a['net'] - (10 - plan.COST)) < 1e-6 and abs(a['r'] - 2.0) < 1e-6 and a['t1'] and a['mfe'] >= 10, a
+    assert abs(plan.managed(F, 0, 1, 95, 110, 105.0) - 7.5) < 1e-6                                   # mitad en T1 (+5 %) y mitad en el objetivo (+10 %)
+    b = plan.outcome(F, 0, 1, 95, 120, maxb=4)                                                       # objetivo +20 %: no llega, cierra a las 4 sesiones con +7 %
+    assert b['res'] == 'timeout' and abs(b['ret'] - 7.0) < 1e-6 and b['net'] > 0 and abs(b['prog'] - 0.4) < 1e-6 and not b['t1'], b          # prog = 8 % de recorrido máximo sobre el 20 % del objetivo
+    d = plan.outcome(F, 0, 1, 99.5, 110)                                                              # stop pegado: salta en la primera sesión (mínimo 99) y pierde
+    assert d['res'] == 'stop' and d['net'] < 0 and d['r'] < 0 and d['xi'] == 1, d
+    assert plan.outcome(F, 0, 1, 100, 110)['res'] == 'na'                                             # abre en el stop: no se opera
+    # corto: espejo del largo
+    sh = plan.outcome(dict(o=200 - o, h=200 - l, l=200 - h, c=200 - c), 0, -1, 105, 90)
+    assert sh['res'] == 'target' and abs(sh['ret'] - 10) < 0.6 and sh['r'] > 1.5, sh
+    print('ok · resultado de cada operación: ganancia neta, múltiplo del riesgo, recorrido máximo y parcial en T1; un cierre por tiempo con ganancia cuenta como ganado')
+
+
+def test_group_trades():
+    """Una operación por valor: velas y figuras que saltan a la vez no se cuentan dos veces, las contrarias avisan del conflicto y tras cerrar se abre otra."""
+    def it(key, fam, i, d, res, net, xi=None, q=None, label=None):
+        return {'id': f'{key}@{i}', 'key': key, 'label': label or key, 'fam': fam, 'i': i, 'dir': d, 'state': 'done', 'q': q, 'out': {'res': res, 'net': net, 'r': None if net is None else net / 2.0, 'xi': xi, 'ret_m': net, 'mfe': 1.0, 'prog': 0.5}}
+    items = [it('hammer', 'velas', 10, 1, 'target', 5.0, xi=18), it('double_bottom', 'figuras', 10, 1, 'target', 7.0, xi=25, q=80),         # misma barra: manda la figura
+             it('bull_engulf', 'velas', 12, 1, 'target', 3.0, xi=16),                                                                              # con la operación abierta: confirma
+             it('shooting_star', 'velas', 14, -1, 'stop', -2.0, xi=15),                                                                            # contraria
+             it('marubozu_bull', 'velas', 30, 1, 'timeout', 4.0, xi=45),                                                                           # operación nueva: cerrada por tiempo con ganancia
+             it('hs_top', 'figuras', 31, -1, 'na', None),                                                                                          # fuera de niveles: no abre nada
+             it('donch55_dn', 'rupturas', 60, -1, 'stop', -3.0, xi=62)]
+    tr = lab.group_trades(items, 100)
+    assert [t['key'] for t in tr['list']] == ['double_bottom', 'marubozu_bull', 'donch55_dn'], [t['key'] for t in tr['list']]
+    first = tr['list'][0]
+    assert first['conf'] == ['hammer', 'bull_engulf'] or sorted(first['conf']) == ['bull_engulf', 'hammer'], first
+    assert first['contra'] == ['shooting_star'] and tr['conflicts'] == 1
+    roles = {x['key']: x['trade']['role'] for x in items}
+    assert roles == {'hammer': 'confirma', 'double_bottom': 'lider', 'bull_engulf': 'confirma', 'shooting_star': 'contraria', 'marubozu_bull': 'lider', 'hs_top': 'na', 'donch55_dn': 'lider'}, roles
+    A = tr['all']
+    assert A['n'] == 3 and A['won'] == 2 and A['lost'] == 1 and A['tmo'] == 1 and A['tmo_won'] == 1 and abs(A['mean_net'] - (7.0 + 4.0 - 3.0) / 3) < 1e-3, A
+    print('ok · operaciones únicas: 7 señales solapadas = 3 operaciones, con las contrarias avisadas y el cierre por tiempo con ganancia contado como ganado')
+
+
+def test_combos_unique_valuedays():
+    """Coincidencias: un valor-día con varias señales cuenta una sola vez y se separa solo-velas / solo-estructura / juntas / contradictorias."""
+    work = {f'S{j}': study._work((f'S{j}', walk(700, seed=60 + j, t0=1500000000)))[1] for j in range(8)}
+    for j, w in enumerate(work.values()):
+        base = np.arange(100 + j, 650, 7)
+        w['idx'] = {'hammer': base, 'double_bottom': base[::2], 'bull_engulf': base[::3], 'shooting_star': base[1::5], 'consenso_alcista_2': base[::4]}
+        w['path'] = np.full_like(w['path'], np.nan)
+    P = study.Panel(work, ks=(8,))
+    cb = study.combos(P, (8,))['K8']
+    all_up = cb['alcistas']['todas (cada valor-día una vez)']['n'] + 0
+    rows = set(np.concatenate([P.ev['hammer'], P.ev['double_bottom'], P.ev['bull_engulf']]).tolist())
+    contra = set(P.ev['shooting_star'].tolist())
+    n_unique = len([r for r in rows if r not in contra and np.isfinite(P.ret[('long', 10)][r]) and np.isfinite(P.bday[(8, 'long', 10)][P.dcode[r]])])
+    assert all_up == n_unique, (all_up, n_unique)
+    a = cb['alcistas']
+    assert a['solo velas']['n'] + a['solo estructura']['n'] + a['velas y estructura juntas']['n'] == all_up and a['velas y estructura juntas']['n'] > 0 and a['solo velas']['n'] > 0
+    assert cb['valor_dias']['con_varias'] > 0 and 'long' in cb['contradictorias']
+    txt = study.report({'meta': {'universe': 8, 'bars': 1, 'from': 'a', 'to': 'b', 'cost': 0.15, 'primary': 10, 'ks': [8], 'thr': {'K8': {'p95': 3.0, 'p99': 4.0, 'bars': 1}}, 'tested': {'K8': {'n': 0, 'above': [], 'above_positive': []}}},
+                        'patterns': {}, 'combos': {'K8': cb}})
+    assert 'coincidencias' in txt and 'solo velas' in txt
+    print(f'ok · coincidencias: {all_up} valor-días alcistas contados una vez ({a["solo velas"]["n"]} solo velas, {a["solo estructura"]["n"]} solo estructura, {a["velas y estructura juntas"]["n"]} juntas)')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment]
 
 if __name__ == '__main__':
     for fn in ALL:
