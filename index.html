@@ -532,7 +532,7 @@ const rTxt = o => o.r == null ? '' : ` · ${o.r > 0 ? '+' : ''}${o.r.toFixed(1).
 function resTxt(o) {
   if (!o) return ['x', 'sin simular'];
   if (o.res === 'forming') return ['f', 'sin romper todavía'];
-  if (o.res === 'target' && o.locked) return ['t', `✓ aseguró +4 % y salió en ${o.bars} ses. con ${pc(o.net, 2)} neto${rTxt(o)}`];
+  if (o.res === 'target' && o.locked) return isWin(o) ? ['t', `✓ aseguró +4 % y salió en ${o.bars} ses. con ${pc(o.net, 2)} neto${rTxt(o)}`] : ['s', `✗ aseguró +4 % pero un hueco de apertura lo sacó por debajo del stop en ${o.bars} ses.: ${pc(o.net, 2)} neto${rTxt(o)}`];
   if (o.res === 'target') return ['t', `✓ objetivo en ${o.bars} ses.: ganó ${pc(o.net, 2)} neto${rTxt(o)}`];
   if (o.res === 'stop') return ['s', `✗ stop en ${o.bars} ses.: ${o.net > 0 ? 'ganó' : 'perdió'} ${pc(o.net, 2)} neto${rTxt(o)}`];
   if (o.res === 'timeout') return [isWin(o) ? 't' : 's', `${isWin(o) ? '✓ ganó' : '✗ perdió'} ${pc(o.net, 2)} neto${rTxt(o)}: cerrada a las ${o.bars} ses. sin tocar el stop ni asegurar${o.prog != null && !o.locked ? ` (recorrió el ${Math.round(o.prog * 100)} % del camino)` : ''}`];
