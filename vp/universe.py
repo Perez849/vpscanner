@@ -57,16 +57,34 @@ def sp500() -> List[str]:
     return _clean(t['Symbol'])
 
 
-def parse_sp500_changes(t) -> Dict[str, str]:
-    """Tabla «Selected changes to the list of S&P 500 components» de Wikipedia → fecha (AAAA-MM-DD) de la ÚLTIMA incorporación de cada valor que no ha salido después.
-    Los valores que no aparecen como incorporados están en el índice desde antes del primer cambio de la tabla."""
+def _flat_cols(t) -> List[str]:
+    return [' '.join(str(x) for x in (c if isinstance(c, tuple) else (c,)) if 'unnamed' not in str(x).lower()).strip().lower() for c in t.columns]
+
+
+def _changes_cols(cols: List[str]):
+    """Columnas (fecha, ticker añadido, ticker retirado) de una tabla de cambios de Wikipedia, o None si no lo es. Se ignoran mayúsculas; vale «ticker» o «symbol»."""
+    dcol = next((c for c in cols if 'date' in c), None)
+    acol = next((c for c in cols if 'added' in c and ('ticker' in c or 'symbol' in c)), None)
+    rcol = next((c for c in cols if 'removed' in c and ('ticker' in c or 'symbol' in c)), None)
+    return (dcol, acol, rcol) if dcol and acol and rcol else None
+
+
+def parse_sp500_changes(tables) -> Dict[str, str]:
+    """Tablas de la página del S&P 500 de Wikipedia (o una sola) → fecha (AAAA-MM-DD) de la ÚLTIMA incorporación de cada valor que no ha salido después, leída de la tabla de cambios
+    («Selected changes to the list of S&P 500 components»). Los valores que no aparecen como incorporados están en el índice desde antes del primer cambio de la tabla."""
     import pandas as pd
-    cols = [' '.join(str(x) for x in (c if isinstance(c, tuple) else (c,)) if 'Unnamed' not in str(x)).strip() for c in t.columns]
-    t = t.copy()
+    tables = tables if isinstance(tables, (list, tuple)) else [tables]
+    found = None
+    for t in tables:
+        cols = _flat_cols(t)
+        m = _changes_cols(cols)
+        if m:
+            found = (t.copy(), cols, m)
+            break
+    if found is None:
+        raise ValueError('ninguna tabla tiene columnas de fecha, añadido y retirado: ' + ' | '.join(str(_flat_cols(t))[:160] for t in tables[:6]))
+    t, cols, (dcol, acol, rcol) = found
     t.columns = cols
-    dcol = next(c for c in cols if 'Date' in c)
-    acol = next(c for c in cols if c.startswith('Added') and 'Ticker' in c)
-    rcol = next(c for c in cols if c.startswith('Removed') and 'Ticker' in c)
     ev = []
     for _, r in t.iterrows():
         d = pd.to_datetime(r[dcol], errors='coerce')
@@ -83,12 +101,14 @@ def parse_sp500_changes(t) -> Dict[str, str]:
             state[tk] = d.strftime('%Y-%m-%d')
         else:
             state.pop(tk, None)
+    if not state:
+        raise ValueError('la tabla de cambios no dio ninguna incorporación')
     return state
 
 
 def sp500_join_dates() -> Dict[str, str]:
     """Fecha de la última incorporación al S&P 500 de cada miembro actual que entró en algún momento de los cambios de la tabla."""
-    return parse_sp500_changes(_read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[1])
+    return parse_sp500_changes(_read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'))
 
 
 def nasdaq100() -> List[str]:

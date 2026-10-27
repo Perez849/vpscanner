@@ -911,6 +911,15 @@ def test_universe_changes_and_survivorship():
             ['January 10, 2023', 'ABC', 'Abc Inc.', None, None, 'x'], ['September 20, 2021', 'DEF', 'Def Ltd.', None, None, 'x'], ['not a date', 'ZZZ', 'z', None, None, 'x'], ['2019-05-05', 'BRK.B', 'b', None, None, 'x']]
     got = universe.parse_sp500_changes(pd.DataFrame(rows, columns=cols))
     assert got == {'ABC': '2023-01-10', 'DEF': '2021-09-20', 'BRK-B': '2019-05-05'}, got                  # XYZ salió en 2020 (ya no es miembro) y ABC volvió a entrar en 2023
+    # otras cabeceras posibles: «Effective date» en minúsculas, «Symbol» en lugar de «Ticker», con la tabla de miembros delante
+    cols2 = pd.MultiIndex.from_tuples([('Effective date', 'Effective date'), ('Added', 'Symbol'), ('Added', 'Security'), ('Removed', 'Symbol'), ('Removed', 'Security'), ('Reason', 'Reason')])
+    members = pd.DataFrame({'Symbol': ['ABC', 'DEF'], 'Security': ['a', 'b']})
+    assert universe.parse_sp500_changes([members, pd.DataFrame(rows, columns=cols2)]) == got
+    try:
+        universe.parse_sp500_changes([members])
+        raise AssertionError('debía fallar sin tabla de cambios')
+    except ValueError as exc:
+        assert 'ninguna tabla' in str(exc)
     work = {'ABC': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}, 'DEF': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}, 'GHI': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}}
     n = search.apply_join(work, {'ABC': str(np.datetime64(18004, 'D')), 'DEF': '2000-01-01'})
     assert n == 4 and np.isnan(work['ABC']['dv'][:4]).all() and np.isfinite(work['ABC']['dv'][4:]).all() and np.isfinite(work['DEF']['dv']).all() and np.isfinite(work['GHI']['dv']).all(), (n, work['ABC']['dv'])
