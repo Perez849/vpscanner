@@ -136,7 +136,7 @@ Resultado en los **años finales (2024–2026)**:
 
 ### Tu regla de salida frente al azar: ¿asegurar +4 % y dejar correr cambia algo? (`vp/planstudy.py`)
 
-La regla de muchos operadores («con un 4–5 % soy feliz; si sube más lo dejo correr, pero pasado el 4 % pongo un stop para asegurarlo») es razonable y es la que usa la web (ahora como escalera: +4 % plano y +10 % persiguiendo a 2 ATR; `python -m vp plan` incluye las variantes `esc` y `escf`, pendientes de recalcular en Actions). Falta saber si, **aplicada a todas las señales sin descartar ninguna**, el patrón aporta algo frente a entrar sin patrón con esa misma regla. `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop inicial acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR, hasta 60 sesiones, el stop gana si se tocan el mismo día, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor y sentido, con las mismas distancias de stop en ATR** (y volatilidad relativa parecida) y **exactamente la misma regla de salida**.
+La regla de muchos operadores («con un 4–5 % soy feliz; si sube más lo dejo correr, pero pasado el 4 % pongo un stop para asegurarlo») es razonable y es la que usa la web (ahora como escalera: +4 % plano y +10 % persiguiendo a 2 ATR). **Con la escalera** (`esc`, estudio del 27-oct-2026, 300 más negociadas, 218.700 señales): media neta −0,23 % frente a −0,06 % de entrar al azar con la misma escalera, **exceso −0,17 % (t −3,3)**; ganan el 42 % (azar 44 %); figuras alcistas −0,22 % (t −1,3), velas alcistas −0,05 %, velas bajistas +0,07 %, rupturas alcistas −0,45 % (t −3,3). El resultado de la parte 1 no cambia con la escalera: el patrón no mejora a entrar al azar con la misma regla de salida. Falta saber si, **aplicada a todas las señales sin descartar ninguna**, el patrón aporta algo frente a entrar sin patrón con esa misma regla. `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop inicial acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR, hasta 60 sesiones, el stop gana si se tocan el mismo día, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor y sentido, con las mismas distancias de stop en ATR** (y volatilidad relativa parecida) y **exactamente la misma regla de salida**.
 
 **Cómo se cuenta el éxito**: por la ganancia media neta y por el **% de operaciones ganadoras** (las que terminan con ganancia neta, lleguen o no a asegurar). El reparto asegurado / stop inicial / tiempo es solo descriptivo.
 
@@ -269,6 +269,42 @@ La búsqueda no distinguía por volatilidad, y el cribador real enseñó el moti
 - **Búsqueda por fiabilidad** (`search.walk_forward(mode='fiab')`): además de elegir cada año la regla de mayor t de exceso, se elige la de mayor **t de ganancia relativa** («gana» menos la fracción de filas del día que gana con esa salida), exigiendo exceso positivo. Es la pregunta del operador: cuántas veces sale bien, frente al azar del mismo día. Tiene su propio control del procedimiento.
 - **Candidatas con la escalera** (`C6`, `C7`, `C8`) y robustez por volatilidad (`V5`, `V6`), que se confirman en el S&P 400 y 600 como las anteriores; la confirmación da ahora también fiabilidad (puntos y p), % que aseguró +4 % y +10 %, % de stops iniciales, ganancia y pérdida medias y factor de beneficio.
 - **Modelo de fiabilidad** (`vp/fiab.py`, `python -m vp fiab`): un gradient boosting con parámetros fijados de antemano predice la probabilidad de que la escalera acabe con ganancia a partir del contexto del valor (percentiles del día), sus patrones recientes y la amplitud del mercado. **Walk-forward por años**: para cada año se entrena solo con operaciones cerradas al menos 95 días antes. Se juzga por AUC fuera de muestra, por **calibración** (si dice 70 %, ¿gana el 70 %?), por el decil más fiable de cada día (ganan, fiabilidad, neto, exceso, con t agrupada) y, sobre todo, frente a un **control «solo volatilidad»** (el mismo modelo con una sola variable, el percentil de ATR/precio): si no lo supera, la «fiabilidad» es solo que el valor se mueve. Con una reversión plantada el modelo la aprende fuera de muestra y está calibrado; en paseos aleatorios no inventa nada (pruebas).
+
+#### Resultados con la escalera (confirmación del 27-oct-2026, 300 repeticiones del control)
+
+La escalera (`esc`: stop inicial 2,5 ATR; al cerrar a +4 % stop plano a +4 %; al cerrar a +10 % stop a +10 % que persigue a 2 ATR) sobre la regla base, en los dos universos:
+
+| | universo | n | ganan (todas las filas) | aseguró +4 % / +10 % / stop | gana media / pierde media · factor | exceso (t) | fiabilidad (puntos, t) | años + |
+|---|---|---|---|---|---|---|---|---|
+| **C6** impulso 12-1 alto Y bajo su media de 200 · esc | S&P 500 + N-100 (desde incorporación) | 13.702 | **72,2 %** (58,6 %) | 73 / 21 / 26 % | +6,2 % / −9,1 % · 1,78 | +0,84 % (3,8) | +7,6 (6,4) | 9/10 |
+| **C6** ídem | **S&P 400 y 600** (acciones distintas) | 18.614 | **71,6 %** (60,8 %) | 73 / 21 / 27 % | +6,4 % / −12,1 % · 1,32 | +0,47 % (2,2; p 0,06) | +6,8 (6,1) | 9/10 |
+| **C8** impulso 12-1 alto Y 2+ señales bajistas · esc | S&P 500 + N-100 | 10.252 | 66,8 % (58,6 %) | 68 / 17 / 32 % | +6,0 % / −7,8 % · 1,57 | +0,75 % (3,4) | +6,1 (6,4) | 9/10 |
+| **C8** ídem | S&P 400 y 600 | 10.749 | 68,6 % (60,8 %) | 70 / 19 / 30 % | +6,4 % / −11,1 % · 1,25 | +0,75 % (3,9; p 0,003) | +6,8 (7,6) | 8/10 |
+| C7 ídem que C6 con stop al 6 % del precio | S&P 500 + N-100 | 13.715 | 60,0 % (58,2 %) | 61 / 17 / 39 % | +6,1 % / −6,4 % · 1,44 | +0,50 % (3,0) | +1,5 (1,7) | 8/10 |
+| C7 ídem | S&P 400 y 600 | 18.626 | 54,0 % (53,1 %) | 55 / 15 / 45 % | +6,1 % / −6,6 % · 1,08 | +0,21 % (1,6; p 0,11) | +0,7 (0,8) | 9/10 |
+| V6 = C6 solo volatilidad alta | S&P 500 + N-100 | 9.254 | 73,0 % | — | — | +1,20 % (4,2) | — | 9/10 |
+| V6 | S&P 400 y 600 | 12.707 | 72,2 % | — | — | +0,80 % (2,5) | — | 9/10 |
+| V5 = C6 solo volatilidad baja | S&P 500 + N-100 | 2.385 | 70,5 % | — | — | −0,03 % (−0,1) | — | 2/6 |
+| V5 | S&P 400 y 600 | 3.274 | 71,9 % | — | — | −0,81 % (−2,2) | — | 0/6 |
+
+Lectura honesta, en el orden que importa a quien opera:
+
+1. **Con la escalera, la regla gana 7 de cada 10 operaciones, asegura el +4 % en el 73 % y el +10 % en 1 de cada 5**, en acciones distintas de las que sirvieron para encontrarla y en 9 de 10 años. Eso es lo que pide un operador y está medido.
+2. **Pero entrar al azar el mismo día con la misma escalera también gana el 59–61 %**: con un stop a 2,5 ATR y un primer nivel a solo +4 %, en una década alcista casi cualquier acción volátil llega antes a +4 % que a −2,5 ATR. La parte que pone la regla son **+7 a +8 puntos de acierto y +0,5 a +0,8 % de exceso por operación**, con t entre 2 y 4 y p-valores del control por debajo de 0,05 (C6 en el S&P 400/600 queda en el borde: p 0,06 del exceso, 0,047 de la t).
+3. **La pérdida media es mayor que la ganancia media** (−9 a −12 % frente a +6 %): el R:R por operación es malo y lo compensa la tasa de acierto. Factor de beneficio 1,3 (acciones medianas) a 1,8 (grandes). **Un stop al 6 % del precio (C7) destroza la regla**: salta el 39–45 % de las veces y la ventaja desaparece. El stop tiene que ser ancho (2,5 ATR, del 10 al 25 % en estos valores) y el riesgo se controla con el tamaño de la posición, no con el stop.
+4. **Solo en acciones volátiles** (V6 contra V5): en las tranquilas la escalera no aporta nada o resta. El plan de hoy solo las toma del 40 % más volátil.
+5. El sesgo de supervivencia (los que salieron del índice no están) infla estas cifras, sobre todo en valores volátiles que cayeron. Lo prudente es contar con la mitad del exceso. El **seguimiento hacia delante** dirá si se sostiene.
+
+#### Resultados del modelo de fiabilidad (27-oct-2026, 509.000 operaciones fuera de muestra, 2020–2026)
+
+| modelo · filas | AUC | ganan (todas) | decil más fiable del día: ganan · fiabilidad (t) · neto · exceso | decil menos fiable: ganan |
+|---|---|---|---|---|
+| completo · todas | 0,564 | 58,8 % | 67,0 % · +8,1 (6,9) · +0,74 % · +0,29 % | 51,4 % |
+| **solo volatilidad** · todas | 0,560 | 58,8 % | 68,3 % · +9,4 (8,1) · +0,85 % · +0,41 % | 49,2 % |
+| completo · dentro de C6 | 0,603 | 72,8 % | 75,5 % · +13,9 (7,4) · +2,04 % · +1,25 % (t 3,7) | 69,6 % |
+| solo volatilidad · dentro de C6 | 0,530 | 72,8 % | 75,6 % · +14,0 (6,4) · +2,28 % · +1,48 % | 68,2 % |
+
+**Veredicto**: el modelo completo **no supera al control de solo volatilidad** en el conjunto (AUC 0,564 frente a 0,560; el decil más fiable gana lo mismo con una cosa que con la otra). Dentro de la regla separa algo más por AUC (0,603 frente a 0,530) pero no en el decil más fiable. Es decir: **la «fiabilidad» que se puede predecir es, casi toda, que el valor se mueve mucho**. Además el modelo es optimista en los extremos (cuando dice 88 % gana el 77 %; cuando dice 24 % gana el 56 %): la web muestra la probabilidad **calibrada** con lo que ganó de verdad cada tramo fuera de muestra. La columna sirve para ordenar candidatas, no como promesa. Esto es lo que había que encontrar, aunque no sea lo que se querría oír: con datos de precio y volumen no hay una señal fuerte de «este trade va a salir bien» más allá de la volatilidad y de la regla misma.
 
 ### El cribador diario, el plan de hoy y el seguimiento (`vp/screen.py`)
 
