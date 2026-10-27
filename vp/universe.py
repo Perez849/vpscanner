@@ -4,7 +4,7 @@ import io
 import os
 import re
 import urllib.request
-from typing import List
+from typing import Dict, List
 
 WATCHLIST = ('AAPL MSFT NVDA AMZN GOOGL META TSLA AVGO AMD NFLX ORCL CRM ADBE QCOM INTC MU PLTR COIN SMCI ARM UBER DIS BA CAT GE JPM BAC GS V MA LLY UNH XOM CVX COST WMT HD KO PEP PFE MRK ABBV '
              'NKE SBUX SPY QQQ IWM GLD TLT XLE XLF SMH').split()
@@ -55,6 +55,40 @@ def _clean(xs) -> List[str]:
 def sp500() -> List[str]:
     t = _read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0]
     return _clean(t['Symbol'])
+
+
+def parse_sp500_changes(t) -> Dict[str, str]:
+    """Tabla «Selected changes to the list of S&P 500 components» de Wikipedia → fecha (AAAA-MM-DD) de la ÚLTIMA incorporación de cada valor que no ha salido después.
+    Los valores que no aparecen como incorporados están en el índice desde antes del primer cambio de la tabla."""
+    import pandas as pd
+    cols = [' '.join(str(x) for x in (c if isinstance(c, tuple) else (c,)) if 'Unnamed' not in str(x)).strip() for c in t.columns]
+    t = t.copy()
+    t.columns = cols
+    dcol = next(c for c in cols if 'Date' in c)
+    acol = next(c for c in cols if c.startswith('Added') and 'Ticker' in c)
+    rcol = next(c for c in cols if c.startswith('Removed') and 'Ticker' in c)
+    ev = []
+    for _, r in t.iterrows():
+        d = pd.to_datetime(r[dcol], errors='coerce')
+        if pd.isna(d):
+            continue
+        for col, kind in ((acol, 'add'), (rcol, 'rem')):
+            v = r[col]
+            if isinstance(v, str) and v.strip():
+                ev.append((d, kind, v.strip().upper().replace('.', '-')))
+    ev.sort(key=lambda x: (x[0], 0 if x[1] == 'rem' else 1))           # el mismo día: primero salidas, luego entradas
+    state: Dict[str, str] = {}
+    for d, kind, tk in ev:
+        if kind == 'add':
+            state[tk] = d.strftime('%Y-%m-%d')
+        else:
+            state.pop(tk, None)
+    return state
+
+
+def sp500_join_dates() -> Dict[str, str]:
+    """Fecha de la última incorporación al S&P 500 de cada miembro actual que entró en algún momento de los cambios de la tabla."""
+    return parse_sp500_changes(_read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[1])
 
 
 def nasdaq100() -> List[str]:

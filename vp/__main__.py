@@ -18,6 +18,7 @@ def main() -> None:
     ap.add_argument('--max', type=int, default=0, help='study: máximo de valores (0 = todos)')
     ap.add_argument('--universe', default='large', choices=['large', 'smallmid', 'mixed'], help='study: large = S&P 500 + Nasdaq-100 · smallmid = S&P 400 + 600 · mixed = cripto, divisas, materias primas e índices')
     ap.add_argument('--ks', default='', help='study: tamaños del universo móvil por dinero negociado, separados por comas (por defecto 50,300; smallmid 100,500; mixed todos)')
+    ap.add_argument('--members', default='asof', choices=['asof', 'today'], help='search: asof = cada valor del S&P 500 solo desde su fecha de incorporación · today = miembros actuales en todo el periodo (sesgo de supervivencia)')
     ap.add_argument('--cost', type=float, default=-1.0, help='study: coste de ida y vuelta en % (por defecto 0,15; smallmid 0,30)')
     a = ap.parse_args()
     syms = [s.strip().upper() for s in a.symbols.replace(',', ' ').split() if s.strip()]
@@ -33,7 +34,7 @@ def main() -> None:
         uni = syms or universe.study_universe()
         if a.max:
             uni = uni[:a.max]
-        search.run(uni, a.out, cache_dir=a.cache, workers=a.workers or max(1, (os.cpu_count() or 2) - 0), reps=a.reps or 30)
+        search.run(uni, a.out, cache_dir=a.cache, workers=a.workers or max(1, (os.cpu_count() or 2) - 0), reps=a.reps or 30, members=a.members)
     elif a.cmd == 'ml':
         uni = syms or universe.study_universe()
         if a.max:

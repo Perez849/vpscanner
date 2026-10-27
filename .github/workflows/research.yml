@@ -14,6 +14,9 @@ on:
       reps:
         description: 'study, context y search: desplazamientos temporales del umbral del mejor de N (search: repeticiones del nulo del procedimiento, 30 por defecto)'
         default: '150'
+      members:
+        description: 'search: asof (cada valor del S&P 500 solo desde su incorporación al índice) | today (miembros actuales en todo el periodo: con sesgo de supervivencia)'
+        default: 'asof'
       universe:
         description: 'study: large (S&P 500 + Nasdaq-100) | smallmid (S&P 400 + 600) | mixed (cripto, divisas, materias primas, índices)'
         default: 'large'
@@ -46,6 +49,7 @@ jobs:
           INPUT_SYMBOLS: ${{ github.event.inputs.symbols }}
           INPUT_REPS: ${{ github.event.inputs.reps }}
           INPUT_UNIVERSE: ${{ github.event.inputs.universe }}
+          INPUT_MEMBERS: ${{ github.event.inputs.members }}
         run: |
           set -o pipefail
           mkdir -p /tmp/out
@@ -55,7 +59,7 @@ jobs:
           elif [ "$CMD" = "context" ]; then
             python -u -m vp context --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-100}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "search" ]; then
-            python -u -m vp search --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-30}" 2>&1 | tee /tmp/out/log.txt
+            python -u -m vp search --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-30}" --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "ml" ]; then
             python -u -m vp ml --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "plan" ]; then
@@ -68,9 +72,11 @@ jobs:
         env:
           INPUT_CMD: ${{ github.event.inputs.cmd }}
           INPUT_UNIVERSE: ${{ github.event.inputs.universe }}
+          INPUT_MEMBERS: ${{ github.event.inputs.members }}
         run: |
           cd /tmp/out
           BR="${INPUT_CMD:-lab}"
+          if [ "$BR" = "search" ] && [ -n "$INPUT_MEMBERS" ] && [ "$INPUT_MEMBERS" != "asof" ]; then BR="search-$INPUT_MEMBERS"; fi
           if [ "$BR" = "study" ] && [ -n "$INPUT_UNIVERSE" ] && [ "$INPUT_UNIVERSE" != "large" ]; then BR="study-$INPUT_UNIVERSE"; fi
           git init -q && git checkout -q -b res
           git config user.name "vp-scanner-bot"; git config user.email "bot@users.noreply.github.com"

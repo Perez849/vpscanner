@@ -899,8 +899,44 @@ def test_search_no_lookahead():
     print('ok · búsqueda: la elección de cada año no mira ni el año de prueba ni los 60 días anteriores')
 
 
+def test_universe_changes_and_survivorship():
+    """La tabla de cambios del S&P 500 da la última incorporación de cada miembro actual; las barras anteriores salen del universo; una regla de un solo régimen no es elegible por muy alto que sea su t."""
+    try:
+        import pandas as pd
+    except ImportError:
+        print('omitida · cambios del S&P 500: falta pandas')
+        return
+    cols = pd.MultiIndex.from_tuples([('Effective Date', 'Effective Date'), ('Added', 'Ticker'), ('Added', 'Security'), ('Removed', 'Ticker'), ('Removed', 'Security'), ('Reason', 'Reason')])
+    rows = [['March 23, 2020', 'ABC', 'Abc Inc.', 'XYZ', 'Xyz Corp.', 'x'], ['May 1, 2018', 'XYZ', 'Xyz Corp.', 'OLD', 'Old Co.', 'x'], ['June 1, 2022', None, None, 'ABC', 'Abc Inc.', 'x'],
+            ['January 10, 2023', 'ABC', 'Abc Inc.', None, None, 'x'], ['September 20, 2021', 'DEF', 'Def Ltd.', None, None, 'x'], ['not a date', 'ZZZ', 'z', None, None, 'x'], ['2019-05-05', 'BRK.B', 'b', None, None, 'x']]
+    got = universe.parse_sp500_changes(pd.DataFrame(rows, columns=cols))
+    assert got == {'ABC': '2023-01-10', 'DEF': '2021-09-20', 'BRK-B': '2019-05-05'}, got                  # XYZ salió en 2020 (ya no es miembro) y ABC volvió a entrar en 2023
+    work = {'ABC': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}, 'DEF': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}, 'GHI': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}}
+    n = search.apply_join(work, {'ABC': str(np.datetime64(18004, 'D')), 'DEF': '2000-01-01'})
+    assert n == 4 and np.isnan(work['ABC']['dv'][:4]).all() and np.isfinite(work['ABC']['dv'][4:]).all() and np.isfinite(work['DEF']['dv']).all() and np.isfinite(work['GHI']['dv']).all(), (n, work['ABC']['dv'])
+    # cobertura: una regla que solo opera en 3 de 60 periodos no se elige aunque su t sea enorme; la estable sí
+    from types import SimpleNamespace
+    nb = 60
+    NE_ = len(search.EXITS)
+    S = np.zeros((3, 2, NE_, nb)); N = np.zeros((3, 2, NE_, nb))
+    N[0] = 400.0
+    N[1, :, :, :3] = 300.0
+    S[1, :, :, :3] = 300.0 * 2.0
+    rng = np.random.default_rng(0)
+    N[2] = 40.0
+    S[2] = 40.0 * 0.4 + rng.normal(0, 25, S[2].shape)
+    Pf = SimpleNamespace(G=[search.block_groups(nb, 1) for _ in range(NE_)])
+    sub = np.array([False, True, True])
+    tr = np.ones(nb, bool)
+    n_, m_, t_, cov = search.stats_by_exit(Pf, {'S': S, 'N': N}, tr)
+    assert cov[1].max() < 0.1 and cov[2].min() > 0.99
+    c, d, e, *_ = search.pick(Pf, {'S': S, 'N': N}, sub, tr, min_n=500)
+    assert c == 2, (c, t_[1].max(), t_[2].max())                                                   # la de un solo régimen (regla 1) queda fuera
+    print('ok · cambios del S&P 500 → fechas de incorporación; barras anteriores quitadas; reglas de un solo régimen no elegibles')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_universe_changes_and_survivorship]
 
 if __name__ == '__main__':
     for fn in ALL:

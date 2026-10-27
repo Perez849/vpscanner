@@ -35,6 +35,8 @@ LONG_BLOCKS = 6            # las salidas que duran hasta 60 sesiones agrupan sus
 PURGE = 60                 # sesiones: lo máximo que dura una operación; los años de entrenamiento terminan 60 sesiones antes del año de prueba
 MIN_COMBO = 5000           # filas mínimas para que una combinación entre en la biblioteca
 MIN_TRAIN_N = 2000         # operaciones mínimas en el entrenamiento para poder ser elegida
+MIN_COVER = 0.6            # fracción mínima de los periodos (grupos de error) del entrenamiento en los que la regla tiene operaciones: una regla de un solo régimen (p. ej. mercado bajista) no es elegible
+MIN_GROUPS = 8             # periodos mínimos del entrenamiento con operaciones: con menos, el t agrupado no es fiable
 MIN_DAY = 30               # valores mínimos del universo ese día para que exista referencia del día
 DEV_END = 2022
 # nombre, stop inicial (ATR), asegurar (% a favor, None = no asegura), persigue (ATR del mejor cierre), sesiones máximas
@@ -129,6 +131,19 @@ def ops_all(F: Dict[str, np.ndarray]) -> np.ndarray:
         for ei, (name, stop_atr, lock, trail, maxb) in enumerate(EXITS):
             out[:, di, ei] = hold_all(o, c, d, maxb) if stop_atr is None else sim_all(o, h, l, c, atr, d, stop_atr, lock, trail, maxb)
     return out
+
+
+def apply_join(work: Dict[str, Dict], join: Dict[str, str]) -> int:
+    """Sesgo de supervivencia: un valor solo entra en el universo desde su fecha de incorporación al índice (el dinero negociado de las barras anteriores pasa a NaN y no cuenta para el
+    ranking ni para la referencia del día). Devuelve las barras-valor quitadas."""
+    dropped = 0
+    for s_, w in work.items():
+        j = join.get(s_)
+        if j:
+            mask = w['t'] < int(np.datetime64(j, 'D').astype(np.int64))
+            dropped += int((mask & np.isfinite(w['dv'])).sum())
+            w['dv'][mask] = np.nan
+    return dropped
 
 
 def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
@@ -287,19 +302,26 @@ def t_blocks(S: np.ndarray, N: np.ndarray, G: Optional[np.ndarray] = None) -> Tu
     return n, m, t
 
 
-def stats_by_exit(P: Panel, T: Dict[str, np.ndarray], tr: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """n, media y t de exceso de todas las combinaciones (regla, sentido, salida) en los bloques `tr`, con los grupos de error de cada salida."""
+def stats_by_exit(P: Panel, T: Dict[str, np.ndarray], tr: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """n, media, t de exceso y cobertura de todas las combinaciones (regla, sentido, salida) en los bloques `tr`, con los grupos de error de cada salida.
+    Cobertura = fracción de los periodos (grupos) del universo en esos bloques en los que la regla tiene alguna operación; -1 en t si no hay suficientes periodos."""
     C = T['S'].shape[0]
-    n, m, t = np.zeros((C, 2, NE)), np.zeros((C, 2, NE)), np.zeros((C, 2, NE))
+    n, m, t, cov = (np.zeros((C, 2, NE)) for _ in range(4))
     for e in range(NE):
-        n[:, :, e], m[:, :, e], t[:, :, e] = t_blocks(T['S'][:, :, e, :][..., tr], T['N'][:, :, e, :][..., tr], P.G[e][tr])
-    return n, m, t
+        Ne = T['N'][:, :, e, :][..., tr]
+        G = P.G[e][tr]
+        n[:, :, e], m[:, :, e], t[:, :, e] = t_blocks(T['S'][:, :, e, :][..., tr], Ne, G)
+        tot = max(int(((T['N'][0, 0, e, :][tr] @ G) > 0).sum()), 1)              # periodos con alguna fila del universo (la combinación 0 = todas las filas)
+        has = ((Ne @ G) > 0).sum(-1)
+        cov[:, :, e] = has / tot
+        t[:, :, e] = np.where(has >= MIN_GROUPS, t[:, :, e], np.nan)
+    return n, m, t, cov
 
 
 def pick(P: Panel, T: Dict[str, np.ndarray], sub: np.ndarray, tr: np.ndarray, min_n: int = MIN_TRAIN_N) -> Optional[Tuple[int, int, int, float, float, float]]:
     """Combinación (regla, sentido, salida) de mayor t de exceso con exceso positivo en los bloques `tr`; solo entre las reglas de `sub`."""
-    n, m, t = stats_by_exit(P, T, tr)
-    t = np.where((n >= min_n) & (m > 0) & np.isfinite(t), t, -np.inf)
+    n, m, t, cov = stats_by_exit(P, T, tr)
+    t = np.where((n >= min_n) & (m > 0) & (cov >= MIN_COVER) & np.isfinite(t), t, -np.inf)
     t[~sub] = -np.inf
     k = int(np.argmax(t))
     if not np.isfinite(t.flat[k]):
@@ -359,8 +381,8 @@ def static_split(P: Panel, T: Dict[str, np.ndarray], sub: np.ndarray, dev_end: i
         return {}
     tr = ((np.arange(P.nb) + 1) * BLOCK <= d_end - PURGE)
     te = (np.arange(P.nb) * BLOCK >= d_end)
-    n, m, t = stats_by_exit(P, T, tr)
-    t = np.where((n >= MIN_TRAIN_N) & (m > 0) & np.isfinite(t), t, -np.inf)
+    n, m, t, cov = stats_by_exit(P, T, tr)
+    t = np.where((n >= MIN_TRAIN_N) & (m > 0) & (cov >= MIN_COVER) & np.isfinite(t), t, -np.inf)
     t[~sub] = -np.inf
     order = np.argsort(-t.ravel())[:top]
     out = []
@@ -376,8 +398,8 @@ def static_split(P: Panel, T: Dict[str, np.ndarray], sub: np.ndarray, dev_end: i
 
 def in_sample_best(P: Panel, T: Dict[str, np.ndarray], sub: np.ndarray, top: int = 10) -> List[Dict]:
     """Las mejores combinaciones mirando TODOS los años (descriptivo: está elegido con los mismos datos con los que se mide)."""
-    n, m, t = stats_by_exit(P, T, np.ones(P.nb, bool))
-    t = np.where((n >= MIN_TRAIN_N) & (m > 0) & np.isfinite(t), t, -np.inf)
+    n, m, t, cov = stats_by_exit(P, T, np.ones(P.nb, bool))
+    t = np.where((n >= MIN_TRAIN_N) & (m > 0) & (cov >= MIN_COVER) & np.isfinite(t), t, -np.inf)
     t[~sub] = -np.inf
     out = []
     years = sorted(int(y) for y in np.unique(P.byear) if y > 0)
@@ -417,7 +439,7 @@ def null_runs(P: Panel, test_years: List[int], reps: int, seed: int = 13, verbos
 
 # ── conjunto ──────────────────────────────────────────────────────────────
 def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = ml.K, reps: int = 30, test_years: Optional[List[int]] = None, dev_end: int = DEV_END, verbose: bool = False,
-            min_day: int = MIN_DAY, min_combo: int = MIN_COMBO) -> Dict:
+            min_day: int = MIN_DAY, min_combo: int = MIN_COMBO, join: Optional[Dict[str, str]] = None) -> Dict:
     from concurrent.futures import ProcessPoolExecutor
     t0 = time.time()
     jobs = [(s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}) for s, b in bars.items() if len(b['c']) > 400]
@@ -432,6 +454,7 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
         for jb in jobs:
             s, w = _work(jb)
             work[s] = w
+    dropped = apply_join(work, join) if join else 0
     D = ml.Data(work, k=k)
     P = Panel(D, work, min_day=min_day, min_combo=min_combo)
     years = sorted(int(y) for y in np.unique(D.year))
@@ -463,7 +486,8 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
             n = T['N'][0, di, ei].sum()
             base[f'{DIRS[di]} {EXITS[ei][0]}'] = {'n': int(n), 'neto': round(float(T['SA'][0, di, ei].sum() / n), 3), 'ganan': round(float(100 * T['SW'][0, di, ei].sum() / n), 1)}
     out = {'meta': {'generated': int(time.time()), 'universe': len(D.syms), 'filas': int(len(D.sym)), 'from': str(D.date[0]), 'to': str(D.date[-1]), 'k': k, 'combinaciones': len(P.combos) - 1,
-                    'pruebas': (len(P.combos) - 1) * 2 * NE, 'condiciones': len(P.cond_names), 'test_years': test_years, 'dev_end': dev_end, 'reps': reps, 'salidas': {e[0]: EXIT_TXT[e[0]] for e in EXITS}},
+                    'pruebas': (len(P.combos) - 1) * 2 * NE, 'condiciones': len(P.cond_names), 'test_years': test_years, 'dev_end': dev_end, 'reps': reps, 'salidas': {e[0]: EXIT_TXT[e[0]] for e in EXITS},
+                    'miembros': 'en la fecha' if join else 'actuales', 'valores_con_fecha': int(sum(1 for s_ in work if join and join.get(s_))), 'barras_quitadas': dropped},
            'walk_forward': wf, 'nulo': nl, 'dev_final': st, 'en_muestra': ins, 'azar_absoluto': base}
     if verbose:
         print(f'  búsqueda: {len(P.combos) - 1} combinaciones × 2 sentidos × {NE} salidas · {time.time() - t0:.0f}s', flush=True)
@@ -478,7 +502,9 @@ def report(ev: Dict) -> str:
     m = ev['meta']
     L = [f"BÚSQUEDA DE LA REGLA QUE MÁS GANA SOBRE EL AZAR · {m['universe']} acciones · {m['filas']:,} filas (las {m['k']} más negociadas) · {m['from']} → {m['to']}",
          f"{m['combinaciones']} combinaciones de condiciones × 2 sentidos × {len(m['salidas'])} salidas = {m['pruebas']:,} reglas. Exceso = neto de costes menos la media de todas las filas de ese día (mismo sentido y salida). "
-         f"Selección hacia delante: cada año de prueba se elige con lo anterior (menos {PURGE} sesiones) y se mide en el año. t con bloques de {BLOCK} sesiones. Nulo: todo el procedimiento con los resultados desplazados ({m['reps']} repeticiones).",
+         f"Selección hacia delante: cada año de prueba se elige con lo anterior (menos {PURGE} sesiones) y se mide en el año; solo son elegibles reglas con ≥ {MIN_TRAIN_N:,} operaciones y operaciones en al menos el {int(MIN_COVER * 100)} % de los periodos del entrenamiento. "
+         f"t con errores agrupados en bloques de {BLOCK} sesiones (cierre a 10) o de {BLOCK * LONG_BLOCKS} (salidas de hasta 60). Nulo: todo el procedimiento con los resultados desplazados ({m['reps']} repeticiones).",
+         f"Universo: {'miembros ACTUALES de los índices' if m.get('miembros') == 'actuales' else 'miembros actuales, pero cada valor del S&P 500 solo desde su fecha de incorporación (' + str(m.get('valores_con_fecha')) + ' valores con fecha; ' + format(m.get('barras_quitadas', 0), ',') + ' barras-valor quitadas)'} (sesgo de supervivencia: los que salieron del índice no están).",
          'Salidas: ' + ' · '.join(f'{k} = {v}' for k, v in m['salidas'].items()), '']
     for s, titulo in (('todo', 'TODAS LAS REGLAS'), ('contexto', 'SOLO CONTEXTO (sin patrones)'), ('patrones', 'CON PATRÓN (al menos una condición de patrón)')):
         w, nl = ev['walk_forward'][s], ev['nulo'].get(s)
@@ -520,16 +546,24 @@ def report(ev: Dict) -> str:
     return '\n'.join(L)
 
 
-def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2, reps: int = 30) -> Dict:
-    from . import data
+def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2, reps: int = 30, members: str = 'asof') -> Dict:
+    from . import data, universe
     bars, failed = data.fetch_many(symbols, rng=rng, workers=4, cache_dir=cache_dir, max_age_h=24 * 3, verbose=True)
     if len(bars) < 0.9 * len(symbols):
         raise SystemExit(f'solo {len(bars)} de {len(symbols)} valores descargados (Yahoo limita las peticiones): se detiene; lo ya descargado queda en la caché')
-    ev = analyze(bars, workers=workers, reps=reps, verbose=True)
+    join = None
+    if members == 'asof':
+        try:
+            join = universe.sp500_join_dates()
+            print(f'  fechas de incorporación al S&P 500: {len(join)} valores', flush=True)
+        except Exception as exc:
+            print(f'  no se pudo leer la tabla de cambios del S&P 500 ({type(exc).__name__}: {exc}): se usan los miembros actuales', flush=True)
+    ev = analyze(bars, workers=workers, reps=reps, verbose=True, join=join)
     os.makedirs(out_dir, exist_ok=True)
-    json.dump(ev, open(os.path.join(out_dir, 'search.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    tag = '' if members == 'asof' else '_' + members
+    json.dump(ev, open(os.path.join(out_dir, f'search{tag}.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     txt = report(ev)
-    open(os.path.join(out_dir, 'search_report.txt'), 'w', encoding='utf-8').write(txt)
+    open(os.path.join(out_dir, f'search_report{tag}.txt'), 'w', encoding='utf-8').write(txt)
     print(txt, flush=True)
     sys.stdout.flush()
     return ev
