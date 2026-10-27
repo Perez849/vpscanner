@@ -211,7 +211,7 @@ const distTxt = d => d == null ? '' : d < 0.1 ? 'en el disparo' : `a ${d.toFixed
 
 /* ───────────────────────── datos ───────────────────────── */
 async function J(path) {
-  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['impulso', 'impulso_track', 'search', 'search_confirm', 'search_confirm_smallmid', 'fiab'].includes(k)) return VP[k]; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
+  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['impulso', 'impulso_track', 'search', 'search_confirm', 'search_confirm_smallmid', 'fiab', 'cartera', 'plan_study'].includes(k)) return VP[k] || null; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
   if (S.cache[path]) return S.cache[path];
   const r = await fetch(BASE + path + '?v=' + Math.floor(Date.now() / 3600000));
   if (!r.ok) throw new Error(path + ' ' + r.status);
