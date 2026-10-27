@@ -74,7 +74,7 @@ def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int =
         close = float(bars[s]['c'][int(D.bar[row])])
         atrp = float(ctx('atrp')[row])
         atr = atrp * close / 100.0
-        picks.append({'sym': s, 'close': round(close, 4), 'atr': round(atr, 4), 'atrp': round(atrp, 2), 'dist200': round(float(ctx('dist200')[row]) * 100, 2), 'r120': round(float(pct('r120')[row]), 3),
+        picks.append({'sym': s, 'close': round(close, 4), 'atr': round(atr, 4), 'atrp': round(atrp, 2), 'vol': round(float(pct('atrp')[row]), 3), 'dist200': round(float(ctx('dist200')[row]) * 100, 2), 'r120': round(float(pct('r120')[row]), 3),
                       'mom121': round(float(pct('mom12_1')[row]), 3), 'rsi2': round(float(ctx('rsi2')[row]), 1), 'pos52': round(float(ctx('pos52')[row]), 3), 'volrel': round(float(D.volraw[row]), 2),
                       'bajistas': int(nbear[row]), 'reglas': names, 'nuevas': [n for n in names if j not in hit_before[n]],
                       'plan': {'stop': round(close - STOP_ATR * atr, 4), 'stop_pct': round(-STOP_ATR * atr / close * 100, 2), 'asegura4': round(close * 1.04, 4), 'asegura6': round(close * 1.06, 4),

@@ -990,7 +990,7 @@ def test_screen():
             F = ta.prepare(bars[p['sym']])
             c, a = float(F['c'][cut]), float(F['atr'][cut])
             assert abs(p['close'] - c) < 1e-3 and abs(p['atr'] - a) < 1e-3 * c and abs(p['plan']['stop'] - (c - 2.5 * a)) < 2e-3 * c and abs(p['plan']['asegura4'] - c * 1.04) < 1e-3 * c, (p, c, a)
-            assert 0 <= p['mom121'] <= 1 and set(p['nuevas']) <= set(p['reglas']) and p['bajistas'] >= 0
+            assert 0 <= p['mom121'] <= 1 and 0 <= p['vol'] <= 1 and set(p['nuevas']) <= set(p['reglas']) and p['bajistas'] >= 0
         last_ev = ev if ev['picks'] else last_ev
     assert total >= 3 and last_ev, total                                       # el control no es vacío: hubo acciones que cumplían alguna regla
     import tempfile
