@@ -1,0 +1,19 @@
+CONFIRMACIÓN DE LAS REGLAS CANDIDATAS · smallmid · 988 acciones · 710,411 filas (las 300 más negociadas) · 2017-04-26 → 2026-10-09 · coste 0.3 %
+Reglas fijadas antes de mirar estas acciones (una hipótesis cada una, no se elige nada). Exceso = neto menos la media de todas las filas de ese día. p = fracción de repeticiones con los resultados desplazados en el calendario (al menos 300 sesiones) que igualan o superan lo observado.
+Universo: miembros actuales. Salidas: op4a = stop 1,5 ATR · asegura +4 % · persigue 3 ATR · op4b = stop 2,5 ATR · asegura +4 % · persigue 3 ATR · op6a = stop 1,5 ATR · asegura +6 % · persigue 4 ATR · op6b = stop 2,5 ATR · asegura +6 % · persigue 4 ATR · run5 = stop que persigue 5 ATR sin asegurar · h10 = cierre a 10 sesiones sin stop
+
+C1 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op4b
+   n 18,612 (491 valores) · exceso +0.756 % (t +2.4; nulo p95 +0.641 % / t +2.3; p exceso 0.037, p t 0.047) · neto +1.657 % (azar mismas fechas +0.901 %) · ganan 71.3 % (todas las filas 60.6 %)
+   años positivos 9/10: 17:+2.0 18:-0.6 19:+1.0 20:+1.7 21:+0.9 22:+0.3 23:+1.9 24:+0.6 25:+0.2 26:+0.7
+C2 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op6b
+   n 18,608 (491 valores) · exceso +0.869 % (t +2.3; nulo p95 +0.995 % / t +2.2; p exceso 0.063, p t 0.04) · neto +1.856 % (azar mismas fechas +0.987 %) · ganan 65.5 % (todas las filas 53.5 %)
+   años positivos 8/10: 17:+2.6 18:-0.5 19:+1.4 20:+1.7 21:+2.1 22:+0.1 23:+2.5 24:+0.3 25:-0.0 26:+0.8
+C3 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10
+   n 18,627 (491 valores) · exceso +0.633 % (t +2.5; nulo p95 +0.487 % / t +2.3; p exceso 0.007, p t 0.023) · neto +1.173 % (azar mismas fechas +0.540 %) · ganan 54.6 % (todas las filas 49.9 %)
+   años positivos 8/10: 17:-1.1 18:-0.2 19:+0.4 20:+1.2 21:+1.6 22:+0.7 23:+0.4 24:+1.3 25:+0.2 26:+1.1
+C4 · impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10
+   n 10,775 (518 valores) · exceso +1.021 % (t +3.7; nulo p95 +0.465 % / t +1.8; p exceso 0.0, p t 0.0) · neto +1.105 % (azar mismas fechas +0.083 %) · ganan 53.8 % (todas las filas 49.9 %)
+   años positivos 8/10: 17:-1.0 18:+0.5 19:+1.0 20:+3.0 21:+1.6 22:+1.1 23:-0.0 24:+0.8 25:+0.3 26:+2.0
+C5 · impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · h10
+   n 16,211 (567 valores) · exceso +0.777 % (t +3.4; nulo p95 +0.320 % / t +1.8; p exceso 0.0, p t 0.0) · neto +0.809 % (azar mismas fechas +0.031 %) · ganan 52.9 % (todas las filas 49.9 %)
+   años positivos 9/10: 17:-0.3 18:+0.5 19:+1.0 20:+2.0 21:+0.8 22:+0.6 23:+0.1 24:+0.9 25:+0.2 26:+1.6

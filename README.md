@@ -148,6 +148,58 @@ Resultado con todas las señales, estudio del 27-oct-2026 (`data/plan_report.txt
 
 La idea de muchos operadores discrecionales es «dejar correr las ganancias»: sin objetivo, con un stop que sube a 3 o 5 ATR del mejor cierre. El stop que persigue **no rescata ninguna familia**: las rupturas alcistas siguen por debajo del azar (−0,85 % y −1,14 %) y lo poco positivo (directrices alcistas +0,62 % y +0,49 %, velas bajistas +0,18 % y +0,52 %, t entre +0,6 y +1,0) no se distingue del ruido. Con un stop de 5 ATR el 46 % de las operaciones de velas alcistas se cierra por tiempo sin saltar el stop y el 50 % termina con ganancia (el azar con la misma regla, también el 50 %): el recuento «objetivo contra stop» no habría visto nada de eso.
 
+## ¿Existe alguna regla que gane de verdad al azar? Búsqueda con selección hacia delante (`vp/search.py`)
+
+La pregunta de «maximiza la rentabilidad por encima del azar» tiene una trampa: si se prueban miles de reglas, la mejor siempre parece buena. `python -m vp search` busca igualmente, pero de forma que el resultado sea creíble:
+
+- **Panel**: cada fila es una acción y una fecha (las 300 más negociadas, 712.000 filas, 2017–2026). Para cada fila, en largo y en corto, se simula la entrada en la apertura siguiente con 6 salidas fijadas de antemano: 4 del operador (stop inicial de 1,5 o 2,5 ATR; al cerrar a +4 % o +6 % el stop sube a ese nivel y persigue al mejor cierre a 3 o 4 ATR), un stop que persigue a 5 ATR sin asegurar y el cierre a 10 sesiones. Idéntica a la simulación de la web (se comprueba en las pruebas). **Exceso** = neto de costes menos la media de todas las filas de ese día.
+- **Biblioteca de reglas fijada antes de mirar nada**: 32 condiciones (24 de contexto: tendencia, impulso, sobreventa, extremos anuales, volatilidad, volumen, huecos, mercado; 8 de patrón: velas, figuras y rupturas alcistas o bajistas y su confluencia), solas o de dos en dos: 400 combinaciones × 2 sentidos × 6 salidas = **4.800 reglas**.
+- **Selección hacia delante**: para cada año de prueba se elige la mejor regla con lo anterior a ese año (menos 60 sesiones, para que no se cuele ningún resultado sin cerrar) y se mide en el año sin tocarla. La cifra «fuera de muestra» es la del procedimiento completo de buscar y elegir. Solo son elegibles reglas con ≥ 2.000 operaciones y operaciones en al menos el 60 % de los periodos del entrenamiento (una versión anterior eligió una regla con t = 22 que solo operaba en cinco periodos de mercado bajista; ya no es posible).
+- **Control del procedimiento**: se repite TODO con los resultados desplazados en el calendario (al menos 300 sesiones, más que la memoria de las variables de 12 meses). Lo que «encuentra» así es lo que da el azar al buscar entre miles de reglas. Un primer control con desplazamientos desde 120 sesiones salía demasiado exigente (el 18 % de los desplazamientos caía dentro de la memoria de la condición y la igualaba por construcción: p idéntico de 0,067 en las cinco reglas); se corrigió y se explica aquí porque cambia los p-valores.
+- **Errores agrupados** en bloques de 10 sesiones (cierre a 10) o de 60 (salidas de hasta 60 sesiones: sus resultados se solapan hasta 60). Con bloques de 10 y salidas largas, el control daba «descubrimientos» enormes en datos sin ningún efecto.
+- **Sesgo de supervivencia parcialmente corregido**: el universo son los miembros ACTUALES del S&P 500 y el Nasdaq-100, y las acciones que cayeron y salieron del índice no están (Yahoo no las tiene). Cada valor del S&P 500 solo cuenta desde su **fecha de incorporación** al índice (columna «Date added» de Wikipedia): se quitan 153.000 barras-valor (21 %). Los que salieron siguen sin estar: el sesgo restante favorece a los largos.
+
+### Resultado de la búsqueda (fuera de muestra, 2020–2026)
+
+| conjunto de reglas | operaciones | exceso por operación (t) | neto (azar mismas fechas) | % ganadoras (todas las filas) | control: exceso p95 / p-valor |
+|---|---|---|---|---|---|
+| todas | 17.060 | **+0,54 %** (+2,1) | −0,61 % (−1,15 %) | 56,9 % (53,4 %) | +0,52 % / 0,05 |
+| solo contexto (sin patrones) | 17.095 | +0,62 % (+2,4) | −0,47 % (−1,09 %) | 57,6 % (53,4 %) | +0,47 % / 0,00 |
+| con patrón | 8.416 | +0,74 % (+3,0) | +1,42 % (+0,68 %) | 56,8 % (52,1 %) | +0,64 % / 0,00 |
+
+Lectura honesta: el exceso fuera de muestra está **en el límite de la significación** (supera el p95 del control en las tres versiones, pero la t no: p = 0,1 a 0,4), con 40 repeticiones del control. Es compatible con una ventaja real pequeña (+0,5 a +0,7 % por operación) y no es una prueba firme. Con los miembros actuales sin quitar el sesgo de supervivencia el mismo procedimiento daba +1,2 % (t 2,8), es decir, más del doble: la mitad de lo que parecía ventaja venía de ese sesgo.
+
+**Lo que se repite**: elegidas con los años ≤ 2022 y miradas una sola vez después, **12 de las 15 mejores reglas mantienen exceso positivo** (final medio +0,45 %), y las mejores de todas son siempre la misma idea: **valores de impulso alto a 12 meses (20 % mejor, sin el último mes) que han caído** (por debajo de su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez) → **largo**. Entrenamiento (≤ 2022) → final (2023–2026), con las salidas del operador:
+
+| regla (largo) | salida | entrenamiento: exceso (t) | final: exceso (t) |
+|---|---|---|---|
+| impulso 12-1 alto Y bajo su media de 200 | stop 2,5 ATR · asegura +4 % | +0,75 % (+4,2) | +1,55 % (+2,3) |
+| impulso 12-1 alto Y bajo su media de 200 | stop 2,5 ATR · asegura +6 % | +0,90 % (+4,1) | +1,62 % (+2,5) |
+| impulso 12-1 alto Y bajo su media de 200 | cierre a 10 sesiones | +0,61 % (+3,2) | +0,96 % (+2,7) |
+| impulso 12-1 alto Y 2+ patrones bajistas | cierre a 10 sesiones | +0,76 % (+3,5) | +0,76 % (+2,1) |
+
+Lo que **no** se sostiene: los cortos (la «mejor» regla en corto de entrenamiento, bajo la media de 200 con RSI(14) alto, da +0,10 % en el final), las reglas de huecos de apertura y las de un solo régimen de mercado.
+
+### Confirmación en acciones que no se usaron para encontrar la regla
+
+Las 5 mejores candidatas se fijaron **antes** de mirar otras acciones (`search.CANDIDATAS`: una hipótesis cada una, sin elegir nada). Se evalúan en el **S&P 400 y el S&P 600** (988 acciones distintas, las 300 más negociadas de ese universo, 2017–2026, coste 0,30 %), con el mismo control corregido (300 repeticiones):
+
+| candidata (largo) | salida | exceso (t) | neto (azar mismas fechas) | % ganadoras (todas las filas) | años + | p exceso / p t |
+|---|---|---|---|---|---|---|
+| C1 impulso 12-1 alto Y bajo su media de 200 | asegura +4 % | **+0,76 %** (+2,4) | +1,66 % (+0,90 %) | 71,3 % (60,6 %) | 9/10 | 0,037 / 0,047 |
+| C2 ídem | asegura +6 % | +0,87 % (+2,3) | +1,86 % (+0,99 %) | 65,5 % (53,5 %) | 8/10 | 0,063 / 0,040 |
+| C3 ídem | cierre a 10 ses. | +0,63 % (+2,5) | +1,17 % (+0,54 %) | 54,6 % (49,9 %) | 8/10 | 0,007 / 0,023 |
+| C4 impulso 12-1 alto Y 2+ patrones bajistas | cierre a 10 ses. | +1,02 % (+3,7) | +1,11 % (+0,08 %) | 53,8 % (49,9 %) | 8/10 | 0,000 / 0,000 |
+| C5 impulso 12-1 alto Y RSI(2) ≤ 10 | cierre a 10 ses. | +0,78 % (+3,4) | +0,81 % (+0,03 %) | 52,9 % (49,9 %) | 9/10 | 0,000 / 0,000 |
+
+Las cinco dan exceso positivo en acciones distintas, con 8 o 9 de 10 años positivos. Con 5 hipótesis (muy correlacionadas) y corrección de Bonferroni, **C4 y C5 siguen siendo significativas** (p < 0,017); C3 queda en 0,03–0,1 y C1 y C2 en el límite. En el universo grande, con los miembros desde su incorporación, las mismas reglas dan exceso de +0,68 a +1,10 % (t entre 3,4 y 4,2, p < 1/300) y 72 % de ganadoras con asegurar +4 % frente al 58,5 % de entrar al azar (`data/search_confirm.txt`, `data/search_confirm_smallmid.txt`).
+
+**Cautelas que no se pueden quitar con estos datos**
+- El sesgo de supervivencia no está del todo corregido (los que salieron del índice no están; en el S&P 400 y 600 ni siquiera se quita la incorporación): comprar caídas de valores fuertes es justo lo que más se infla con él. Es razonable descontar la mitad: unos **+0,3 a +0,5 % por operación** sobre el azar, no +1 %.
+- **No es chartismo**: la parte que aporta es el impulso y la caída previa. Con patrón o sin él da lo mismo (C3 sin patrón +0,63 % y C4 con patrón +1,02 % en el S&P 400/600; +0,74 % y +0,80 % en el universo grande): el patrón es un marcador de «ha caído», no una señal propia.
+- Un exceso de +0,5 a +1 % por operación es pequeño: con costes realistas (comisión, deslizamiento en valores menos líquidos, impuestos) y operaciones simultáneas sobre los mismos valores (las filas de una regla vienen en rachas y comparten mercado), la ganancia real será menor y variará mucho de un año a otro (años con −1 % existen).
+- Son rendimientos medios sobre muchas operaciones: una operación suelta pierde alrededor de un tercio de las veces con la mejor salida.
+
 ## Otros mercados: ¿es que las acciones grandes son demasiado eficientes?
 
 `python -m vp study --universe smallmid|mixed` repite el estudio de evidencia con las mismas reglas en mercados menos eficientes (informes `data/evidence_report_smallmid.txt` y `data/evidence_report_mixed.txt`). **En ninguno supera el umbral del mejor de N ni un solo patrón**:
