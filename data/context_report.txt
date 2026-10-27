@@ -1,5 +1,5 @@
 CONTEXTO Y CONFLUENCIA · 500 acciones · 219,123 señales de patrón (las 300 más negociadas) · 2017-05-01 → 2026-10-12 · exceso = rendimiento a 10 sesiones menos el del conjunto ese día, con el signo del sentido
-Umbral del mejor de 156 combinaciones (100 repeticiones, t con bloques de 10 sesiones): |t| ≥ 4.08 (p95) / 4.21 (p99, poco preciso con tan pocas repeticiones). Desarrollo ≤ 2022, final después. ★ = supera el umbral y mantiene el signo en el final.
+Umbral del mejor de 156 combinaciones (300 repeticiones, t con bloques de 10 sesiones): |t| ≥ 4.1 (p95) / 4.3 (p99, poco preciso con tan pocas repeticiones). Desarrollo ≤ 2022, final después. ★ = supera el umbral y mantiene el signo en el final.
 
 === velas alcistas · sin filtrar: n 34,247 · exceso -0.010 % (t -0.1) ===
     extremo52          cumple: n   6,153 exceso +0.228 % (t  +1.5)  desarrollo +0.141 %  final +0.350 % (n 2,545)   no cumple: -0.062 %
@@ -173,7 +173,7 @@ Umbral del mejor de 156 combinaciones (100 repeticiones, t con bloques de 10 ses
 
 --- final ---
                     n    todas | mejor 10%      t     neto |  peor 10%      t |       IC      t
-modelo         87,341  -0.033% |   +0.311%   +2.2  +0.161% |   -0.411%   -1.9 |  +0.0195   +1.9
+modelo         87,341  -0.033% |   +0.311%   +2.2  +0.161% |   -0.411%   -1.9 |  +0.0196   +1.9
 solo contexto   87,341  -0.033% |   +0.108%   +0.7  -0.042% |   -0.341%   -1.5 |  +0.0185   +1.8
 azar           87,341  -0.033% |   +0.038%   +0.4  -0.112% |   -0.073%   -0.9 |  +0.0078   +2.1
   alcistas     47,144  -0.062% |   +0.761%   +3.2  +0.611% |   +0.170%   +0.7 |  +0.0079   +0.7
