@@ -542,6 +542,25 @@ def test_study_mechanics():
     print(f'ok · estudio: t por clústeres exacta y ventaja plantada de +3 % detectada (t = {st["t"]:.0f})')
 
 
+def test_controls_detect_planted_momentum():
+    """Control positivo: un efecto plantado en el 10 % de mejor rendimiento a 120 sesiones de cada día lo ve el mismo motor; en paseos aleatorios no sale nada."""
+    work = {f'S{j}': study._work((f'S{j}', walk(1500, seed=900 + j, t0=1500000000)))[1] for j in range(30)}
+    P0 = study.Panel(work, ks=(30,))
+    cr = study.control_rows(P0, 30)
+    top = cr['momentum alto (10 % mejor a 120 sesiones)']
+    base = study.controls(P0, (30,))['K30']
+    assert all(abs(st['t']) < 3.6 for st in base.values() if 't' in st), base                       # sin efecto: ningún control sale significativo
+    for j, sym in enumerate(work):
+        rows = top[(top >= P0.off[j]) & (top < P0.off[j] + P0.nbar[j])] - P0.off[j]
+        r = work[sym]['ret'][10].copy()
+        r[rows] += 1.0
+        work[sym]['ret'][10] = r
+    P1 = study.Panel(work, ks=(30,))
+    st = study.controls(P1, (30,))['K30']['momentum alto (10 % mejor a 120 sesiones)']
+    assert st['n'] > 2000 and st['ex'] > 0.8 and st['t'] > 5 and st['se'] > 0, st
+    print(f'ok · controles positivos: el efecto plantado en el momentum alto sale con t = {st["t"]:.0f} y sin él ningún control pasa el umbral')
+
+
 def test_study_no_edge_on_random_walk():
     bars = {f'S{j}': walk(1500, seed=100 + j, t0=1500000000) for j in range(24)}
     ev = study.analyze_panel(bars, ks=(8, 24), reps=40, workers=1)
@@ -776,7 +795,7 @@ def test_combos_unique_valuedays():
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment]
 
 if __name__ == '__main__':
     for fn in ALL:

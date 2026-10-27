@@ -59,6 +59,9 @@ def work_from(F: Dict[str, np.ndarray], events: List[Dict], paths: bool = True) 
     if n >= MEM_WINDOW:
         cs = np.cumsum(np.insert(c * F['v'], 0, 0.0))
         dv[MEM_WINDOW - 1:] = (cs[MEM_WINDOW:] - cs[:-MEM_WINDOW]) / MEM_WINDOW
+    with np.errstate(invalid='ignore', divide='ignore'):
+        r120 = (c / ta.shift(c, 120) - 1.0) * 100.0
+    feat = {'r120': r120.astype(np.float32), 'rsi2': F['rsi2'].astype(np.float32), 'atrp': F['atrp'].astype(np.float32), 'a200': (c > F['sma200']).astype(np.float32)}
     idx: Dict[str, List[int]] = {}
     for e in events:
         if e['i'] < 60:
@@ -66,7 +69,7 @@ def work_from(F: Dict[str, np.ndarray], events: List[Dict], paths: bool = True) 
         idx.setdefault(e['name'], []).append(e['i'])
         if e['q'] is not None and e['q'] >= HQ:
             idx.setdefault(e['name'] + ':hq', []).append(e['i'])
-    out = {'t': ((F['t'] + DAY_SHIFT) // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
+    out = {'t': ((F['t'] + DAY_SHIFT) // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'feat': feat, 'idx': {k: np.array(v, dtype=np.int64) for k, v in idx.items()}}
     if paths:                                                   # rendimiento acumulado de 1 a PATH sesiones desde la apertura siguiente (para dibujar qué pasa después)
         pa = np.full((n, PATH), np.nan, dtype=np.float32)
         for k in range(1, PATH + 1):
@@ -106,6 +109,7 @@ class Panel:
             self.ret[('long', hz)] = r - cost
             self.ret[('short', hz)] = -r - cost
         self.path = np.vstack([work[s]['path'] for s in self.syms]) if all('path' in work[s] for s in self.syms) else None
+        self.feat = {k: np.concatenate([work[s]['feat'][k] for s in self.syms]) for k in ('r120', 'rsi2', 'atrp', 'a200')} if all('feat' in work[s] for s in self.syms) else None
         self.ev: Dict[str, np.ndarray] = {}
         for j, s in enumerate(self.syms):
             for k, ix in work[s]['idx'].items():
@@ -167,7 +171,7 @@ class Panel:
             if m.sum() >= 8:
                 tot += 1
                 pos += int(ex[m].mean() > 0)
-        return {'n': int(ok.sum()), 'wr': float((x > 0).mean() * 100), 'mean': float(x.mean()), 'med': float(np.median(x)), 'ex': float(ex.mean()), 't': self.t_cluster(ex, bl),
+        return {'n': int(ok.sum()), 'wr': float((x > 0).mean() * 100), 'mean': float(x.mean()), 'med': float(np.median(x)), 'ex': float(ex.mean()), 't': self.t_cluster(ex, bl), 'se': self.se_cluster(ex, bl),
                 'exy': float(exy.mean()), 'ty': self.t_cluster(exy, bl), 'pos': pos, 'tot': tot}
 
     def se_cluster(self, ex: np.ndarray, code: np.ndarray) -> float:
@@ -259,8 +263,48 @@ def combos(P: 'Panel', ks: Tuple[int, ...]) -> Dict:
         rec['contradictorias'] = {side: {a: (round(b, 3) if isinstance(b, float) else b) for a, b in P.stat(both, K, side, PRIMARY).items()} for side in ('long', 'short')}
         tot_up, tot_dn = int(up.sum()), int(dn.sum())
         rec['valor_dias'] = {'alcistas': tot_up, 'bajistas': tot_dn, 'contradictorios': int((up & dn).sum()), 'con_varias': int(((cnt[(1, 'v')] + cnt[(1, 'e')] + cnt[(-1, 'v')] + cnt[(-1, 'e')]) > 1).sum())}
+        rec['familias'] = {}
+        for fam in ('figuras', 'rupturas', 'velas', 'directrices', 'rebotes'):
+            for dd, side in ((1, 'long'), (-1, 'short')):
+                ks_ = [k for k in P.ev if not k.endswith(':hq') and not k.startswith('consenso') and CATALOG[k].fam == fam and CATALOG[k].dir == dd]
+                if not ks_:
+                    continue
+                rows = np.unique(np.concatenate([P.ev[k] for k in ks_]))
+                st = P.stat(rows, K, side, PRIMARY)
+                rec['familias'][f'{fam} {"alcistas" if dd > 0 else "bajistas"}'] = {**{a: (round(b, 3) if isinstance(b, float) else b) for a, b in st.items()}, 'patrones': len(ks_)}
         out[f'K{K}'] = rec
     return out
+
+
+def control_rows(P: 'Panel', K: int) -> Dict[str, np.ndarray]:
+    """Filas del panel (ordenadas) de cada señal de control; los percentiles son del mismo día entre los valores del universo móvil."""
+    m = P.mem[K]
+    sel: Dict[str, np.ndarray] = {}
+    for name, col in (('r120', 'r120'), ('atrp', 'atrp')):
+        v = P.feat[col]
+        rows = np.flatnonzero(m & np.isfinite(v))
+        order = np.lexsort((v[rows], P.dcode[rows]))
+        rows, dd = rows[order], P.dcode[rows][order]
+        cnt = np.bincount(dd, minlength=P.ndays)
+        start = np.concatenate([[0], np.cumsum(cnt)[:-1]])
+        pos = np.arange(len(rows)) - start[dd]
+        pct = pos / np.maximum(cnt[dd] - 1, 1)
+        ok = cnt[dd] >= P.min_day[K]
+        if name == 'r120':
+            sel['momentum alto (10 % mejor a 120 sesiones)'] = rows[ok & (pct >= 0.9)]
+            sel['momentum bajo (10 % peor a 120 sesiones)'] = rows[ok & (pct <= 0.1)]
+        else:
+            sel['volatilidad alta (10 % superior de ATR / precio)'] = rows[ok & (pct >= 0.9)]
+    sel['sobreventa a corto (RSI 2 < 10 sobre la media de 200)'] = np.flatnonzero(m & (P.feat['rsi2'] < 10) & (P.feat['a200'] > 0.5))
+    return {k: np.sort(v) for k, v in sel.items()}
+
+
+def controls(P: 'Panel', ks: Tuple[int, ...]) -> Dict:
+    """Controles positivos con el MISMO motor (referencia del mismo día, t por bloques, mismo umbral): anomalías documentadas de cartera que, si el método funciona, deben aparecer.
+    Momentum: el 10 % de valores con mejor / peor rendimiento a 120 sesiones ese día (largos); sobreventa a corto (RSI de 2 sesiones < 10 con el precio sobre su media de 200); volatilidad alta (10 % superior)."""
+    if P.feat is None:
+        return {}
+    return {f'K{K}': {nm: {a: (round(b, 3) if isinstance(b, float) else b) for a, b in P.stat(ix, K, 'long', PRIMARY).items()} for nm, ix in control_rows(P, K).items()} for K in ks}
 
 
 def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = KS, reps: int = 150, workers: int = 1, verbose: bool = False, cost: float = COST) -> Dict:
@@ -284,6 +328,7 @@ def analyze_panel(bars: Dict[str, Dict[str, np.ndarray]], ks: Tuple[int, ...] = 
                           'note': 'Universo = miembros actuales del S&P 500 y del Nasdaq-100: sesgo de supervivencia que favorece a los largos.'},
                  'baseline': {}, 'patterns': {}, 'paths': {}}
     out['combos'] = combos(P, ks)
+    out['controls'] = controls(P, ks)
     for K in ks:
         null = P.null_max_t(K, reps)
         out['meta']['thr'][f'K{K}'] = {'p95': round(float(np.quantile(null, 0.95)), 2), 'p99': round(float(np.quantile(null, 0.99)), 2), 'bars': int(P.mem[K].sum())}
@@ -331,12 +376,21 @@ def report(ev: Dict) -> str:
         for k, s in rows[:25]:
             star = '★' if abs(s['t']) >= thr['p95'] else ' '
             L.append(('  ' + ('▲ ' if CATALOG[k.split(':')[0]].dir > 0 else '▼ ') + k + star).ljust(30) + f"{s['n']:7d}{s['wr']:8.1f}%{s['mean']:+7.2f}%{s['ex']:+7.2f}%{s['t']:+7.1f}{s['pos']:4d}/{s['tot']:<2d}{s.get('exy', float('nan')):+8.2f}%{s.get('ty', float('nan')):+6.1f}")
+        ses = [s['se'] for k, s in rows if 'se' in s]
+        if ses:
+            L.append(f"  potencia: con el error estándar medio de estos patrones (mediana {np.median(ses):.2f} %, el de los 10 más raros {np.mean(sorted(ses)[-10:]):.2f} %) el estudio detecta con un 80 % de probabilidad efectos de ≥ {(thr['p95'] + 0.84) * np.median(ses):.2f} % en un patrón típico y de ≥ {(thr['p95'] + 0.84) * np.mean(sorted(ses)[-10:]):.2f} % en los más raros")
         L.append(f"  superan el umbral del mejor de {t_['n']}: {len(t_['above'])} ({', '.join(t_['above']) or 'ninguno'}); por azar se esperarían ≈ {0.05 * t_['n']:.1f} si se miraran sueltos")
         for fam in ('figuras', 'rupturas', 'velas', 'directrices', 'rebotes'):
             for d, dn in ((1, 'alcistas'), (-1, 'bajistas')):
                 sel = [s for k, s in rows if ev['patterns'][k]['fam'] == fam and ev['patterns'][k]['dir'] == d and not ev['patterns'][k]['hq']]
                 if sel:
                     L.append(f"  {fam:12s} {dn:9s} {len(sel):2d} patrones · exceso medio {np.mean([s['ex'] for s in sel]):+.3f} % · mediano {np.median([s['ex'] for s in sel]):+.3f} % · positivos {np.mean([s['ex'] > 0 for s in sel]) * 100:.0f} %")
+        ct = ev.get('controls', {}).get(f'K{K}')
+        if ct:
+            L.append('  controles positivos (anomalías documentadas medidas con el mismo método y el mismo umbral; si el método funciona deben aparecer):')
+            for nm, st in ct.items():
+                if 'ex' in st:
+                    L.append(f"    {nm:56s} n {st['n']:8,} · exceso {st['ex']:+.3f} % ± {1.96 * st['se']:.3f} (t {st['t']:+.1f}){' ← supera el umbral' if abs(st['t']) >= thr['p95'] else ''}")
         cb = ev.get('combos', {}).get(f'K{K}')
         if cb:
             vd = cb['valor_dias']
@@ -345,6 +399,10 @@ def report(ev: Dict) -> str:
                 for name, st in cb[sent].items():
                     if 'ex' in st:
                         L.append(f"    {sent:9s} {name:32s} n {st['n']:7,} · ganan {st['wr']:4.1f} % · exceso {st['ex']:+.3f} % (t {st['t']:+.1f}) · vs año {st['exy']:+.3f} % (t {st['ty']:+.1f})")
+            L.append('    por familia (todas las señales de la familia, cada valor-día una vez; 10 contrastes: umbral de Bonferroni |t| ≥ 2,8):')
+            for nm, st in cb.get('familias', {}).items():
+                if 'ex' in st:
+                    L.append(f"      {nm:22s} {st['patrones']:2d} patrones · n {st['n']:7,} · ganan {st['wr']:4.1f} % · exceso {st['ex']:+.3f} % ± {1.96 * st['se']:.3f} (t {st['t']:+.1f}){' ←' if abs(st['t']) >= 2.8 else ''}")
             for side, st in cb['contradictorias'].items():
                 if 'ex' in st:
                     L.append(f"    contradictorias, medidas en {'largo' if side == 'long' else 'corto'}: n {st['n']:,} · exceso {st['ex']:+.3f} % (t {st['t']:+.1f})")
