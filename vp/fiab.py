@@ -75,10 +75,12 @@ def walk_forward(D: ml.Data, X: np.ndarray, y: np.ndarray, ok: np.ndarray, test_
 
 
 def fit_final(D: ml.Data, P: search.Panel, params: Optional[Dict] = None):
-    """Modelo entrenado con todas las filas cerradas (para puntuar las de hoy)."""
+    """Modelo entrenado con las filas cerradas al menos PURGE_DAYS antes del último día (para puntuar las de hoy): en los últimos días solo están cerradas las operaciones que salieron pronto."""
     X = features(D)
     y, ok, _ = target(P)
-    return _fit(X[ok], y[ok], params or PARAMS)
+    dates = D.date[D.dcode]
+    tr = ok & (dates < dates.max() - np.timedelta64(PURGE_DAYS, 'D'))
+    return _fit(X[tr], y[tr], params or PARAMS)
 
 
 def _t_blocks(x: np.ndarray, grp: np.ndarray) -> float:

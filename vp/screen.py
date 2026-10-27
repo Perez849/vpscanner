@@ -96,7 +96,7 @@ def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int =
             X = fiab.features(D)
             y, ok, _ = fiab.target(Pn)
             dates = D.date[D.dcode]
-            tr = ok & (dates < D.date[last] - np.timedelta64(1, 'D'))
+            tr = ok & (dates < D.date[last] - np.timedelta64(fiab.PURGE_DAYS, 'D'))       # solo operaciones cerradas sin sesgo: las de los últimos 95 días solo están cerradas si salieron pronto
             if tr.sum() >= 20000:
                 m_ = fiab._fit(X[tr], y[tr], fiab.PARAMS)
                 prob[today] = m_.predict_proba(X[today])[:, 1]
