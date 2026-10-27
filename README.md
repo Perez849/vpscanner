@@ -53,7 +53,7 @@ El plan clásico (stop al otro lado de la figura y objetivo por la medida clási
 
 ## Resultados (estudio del 27-oct-2026: 500 acciones, 1,23 millones de barras, 2016–2026; se recalcula cada domingo)
 
-**Ningún patrón supera el umbral del mejor de N**, ni con las 300 más negociadas (130 variantes, |t| ≥ 3,51) ni con las 50 (102 variantes, |t| ≥ 3,52). La versión anterior del estudio decía que **6 lo superaban**; al corregir dos defectos del método, se quedan en cero. Así cambió cada uno de esos seis (300 más negociadas, exceso a 10 sesiones):
+**Ningún patrón supera el umbral del mejor de N**, ni con las 300 más negociadas (130 variantes, |t| ≥ 3,6) ni con las 50 (102 variantes, |t| ≥ 3,5). La versión anterior del estudio decía que **6 lo superaban**; al corregir dos defectos del método, se quedan en cero. Así cambió cada uno de esos seis (300 más negociadas, exceso a 10 sesiones):
 
 | patrón | antes (vs el año, t por día) | solo con t por bloques (vs el año) | ahora (vs el mismo día, t por bloques) |
 |---|---|---|---|
@@ -66,7 +66,7 @@ El plan clásico (stop al otro lado de la figura y objetivo por la medida clási
 
 - **La t estaba exagerada.** Agrupar por bloques de 10 sesiones en vez de por día (columna central) baja la t de las rupturas de −4,5 a −2,5 y la de la cuña de +4,6 a +3,2: los rendimientos a 10 sesiones de días vecinos se solapan y no son independientes.
 - **«Comprar rupturas pierde frente al azar» era sobre todo el momento del mercado.** Frente a entrar al azar en **el mismo año**, las rupturas alcistas rinden ~0,4 % menos; frente a entrar al azar **el mismo día** la diferencia es de ~0,06 % (t ≈ −0,6): saltan en días de mercado fuerte y justo después el mercado devuelve parte. Quien compra rupturas sin mirar el mercado lo sufre, pero no es que el valor que rompe rinda peor que otro cualquiera ese día.
-- **Las dos figuras bajistas** son lo que más se acerca: la cuña ascendente (+0,28 %, t +2,7, 8 años de 10) y el triángulo simétrico roto a la baja (+0,91 %, t +3,5 con umbral 3,51, 10 años de 10 pero solo 239 señales). Pasan casi el umbral, no lo superan: «para confirmar» con más datos. Y siguen sin ser rentables por sí solas en corto (+0,22 % y −0,11 % de media neta, sin coste de préstamo).
+- **Las dos figuras bajistas** son lo que más se acerca: la cuña ascendente (+0,28 %, t +2,7, 8 años de 10) y el triángulo simétrico roto a la baja (+0,91 %, t +3,5 con umbral 3,6, 10 años de 10 pero solo 239 señales). Pasan casi el umbral, no lo superan: «para confirmar» con más datos. Y siguen sin ser rentables por sí solas en corto (+0,22 % y −0,11 % de media neta, sin coste de préstamo).
 - **Triples y dobles con extremos realmente iguales** (n entre 200 y 1.600): triple suelo +0,57 % (t +1,3), triple techo −0,17 % (t −0,4), doble suelo +0,01 %, doble techo −0,12 %, H-C-H +0,10 % en corto y el invertido +0,48 % (t +1,3): indistinguibles del azar. Afinar la geometría deja la figura bien dibujada, no más fiable.
 - **VCP con techo plano**: −0,10 % (t −0,6, n 1.600).
 - Por familia (exceso **mediano** a 10 sesiones): figuras alcistas −0,07 %, figuras bajistas −0,12 %, rupturas alcistas −0,06 %, rupturas bajistas −0,15 %, velas alcistas −0,05 % y bajistas −0,03 %. **Ninguna vela (61 formaciones y 4 de consenso) supera el umbral.** El mejor caso aislado es el kicker alcista (+0,78 %, t +1,0, 78 señales).
@@ -76,6 +76,15 @@ El plan clásico (stop al otro lado de la figura y objetivo por la medida clási
 - Una versión anterior del estudio (otro código y un universo con pertenencia histórica a índices) llegó a cifras casi idénticas en lo que no ha cambiado: el resultado no depende de la implementación.
 
 **Qué es entonces esta herramienta**: una forma rigurosa de *leer* el gráfico (qué figura hay, dónde está el stop, cuánto hay hasta el objetivo, qué barreras hay en medio) y de ver, con datos, que las figuras clásicas por sí solas no baten al mercado. No es un generador de señales.
+
+### ¿Y si el método fuera demasiado exigente? Potencia, controles y el conjunto de cada familia
+
+«Ningún patrón supera el umbral» puede significar que no funcionan o que el estudio no tiene potencia para verlo. Se comprobó así (informe `data/evidence_report.txt`, 300 más negociadas):
+
+- **El umbral es exigente a propósito** (|t| ≥ 3,6: el del mejor de 130 patrones). Con el error estándar real de cada patrón (mediana 0,28 % por operación), el estudio detecta con un 80 % de probabilidad efectos de **≥ 1,25 %** por operación en un patrón típico y de **≥ 8 %** en los 10 más raros. **No puede ver ventajas pequeñas en patrones concretos**, y la web muestra el intervalo del 95 % de cada patrón además de la t.
+- **Control positivo con el mismo motor** (referencia del mismo día, bloques de 10 sesiones, mismo umbral): el 10 % de valores con mejor rendimiento a 120 sesiones (momentum) rinde **+0,54 % ± 0,32 (t +3,3, 71.580 señales)**: **tampoco supera el umbral** (con las 50 más negociadas, +1,01 % ± 0,56, t +3,5, queda justo en el umbral de 3,5). La volatilidad alta da +0,65 % (t +3,0), el momentum bajo +0,13 % y la sobreventa a corto +0,13 % (t +1,3). Un efecto real de ~0,5 % por operación queda en el límite: **«no supera el umbral» no significa «no funciona», significa «no se distingue del azar con estos datos»**.
+- **Lo que sí se puede afirmar con precisión es el conjunto de cada familia** (todas sus señales juntas, cada valor-día una vez; frente a un valor cualquiera ese día; intervalos del 95 %): figuras alcistas +0,01 % ± 0,14, bajistas −0,04 % ± 0,17; rupturas alcistas −0,06 % ± 0,13, bajistas −0,15 % ± 0,20; velas alcistas −0,03 % ± 0,14, bajistas −0,02 % ± 0,11; directrices alcistas +0,08 % ± 0,22, bajistas −0,11 % ± 0,18; rebotes bajistas +0,35 % ± 0,28 (t +2,4: no pasa el umbral de Bonferroni de 2,8). **Ninguna familia entera mueve el resultado más de unas décimas de punto por operación, y el coste de ida y vuelta (0,15 %) es del mismo tamaño**: si existe una ventaja media, es demasiado pequeña para sobrevivir a los costes.
+- **Lo que este estudio no puede probar**: que un operador con criterio añadido (qué patrones elige, contexto que no se puede escribir como regla, gestión de la posición) tenga ventaja. Mide reglas mecánicas.
 
 ### ¿Se fía uno de estas estadísticas? Comprobaciones del propio método
 
@@ -110,23 +119,24 @@ Resultado en los **años finales (2024–2026)**:
 
 ## ¿Los stops y objetivos grandes explican el mal resultado? (`vp/planstudy.py`)
 
-Una objeción razonable: «quizá no funcionan porque el stop y el objetivo son enormes». El estudio de evidencia no usa stops ni objetivos (salida a tiempo fijo), así que no puede ser la causa de su resultado; pero para comprobar el plan completo, `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop y objetivo del plan, el stop gana si se tocan el mismo día, cierre a las 40 sesiones, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor con el mismo sentido y las mismas distancias de stop y objetivo en ATR** (y volatilidad relativa parecida). Cinco geometrías: el plan de la web, stop táctico de 1,5 ATR con el mismo objetivo, una **fija igual para todos** (stop 1,5 ATR, objetivo 3 ATR) y dos con **stop que persigue** (3 y 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones). Informe en `data/plan_report.txt`.
+Una objeción razonable, y con razón por cómo era el plan clásico (stops del 10, 26 o 43 %): «quizá no funcionan porque el stop y el objetivo son enormes». `python -m vp plan` simula cada señal como la web (entrada en la apertura siguiente, stop y objetivo del plan, el stop gana si se tocan el mismo día, cierre a las 40 sesiones, coste del 0,15 %) y la compara con **8 entradas al azar en el mismo valor con el mismo sentido y las mismas distancias de stop y objetivo en ATR** (y volatilidad relativa parecida). Cinco geometrías: el **plan operable** de la web (stop acotado a 2 ATR, objetivo ≤ 3R, solo señales con R:R ≥ 1,5 y riesgo ≤ 8 %: 154.000 de las 219.000 señales), el **plan clásico sin límites** (referencia), una **fija igual para todos** (stop 1,5 ATR, objetivo 3 ATR) y dos con **stop que persigue** (3 y 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones). Informe en `data/plan_report.txt`.
 
-**Cómo se cuenta aquí el éxito**: por la ganancia media neta y por el **% de operaciones ganadoras** (las que terminan con ganancia neta, lleguen o no al objetivo); el reparto objetivo / stop / cierre por tiempo es solo descriptivo. La versión anterior del informe llamaba «acierto» a llegar al objetivo, y con el stop que persigue (que no tiene objetivo) salía un 0 % que no significaba nada.
+**Cómo se cuenta aquí el éxito**: por la ganancia media neta y por el **% de operaciones ganadoras** (las que terminan con ganancia neta, lleguen o no al objetivo); el reparto objetivo / stop / cierre por tiempo es solo descriptivo.
 
-Con las 300 más negociadas (220.000 señales, 2016–2026) el exceso medio sobre el azar con las mismas distancias es **−0,15 % con el plan de la web, −0,13 % con stop táctico, −0,12 % con la geometría fija y −0,20 % / −0,34 % con el stop que persigue a 3 y 5 ATR** (t entre −1,4 y −2,1, con errores estándar en bloques de 40 y 60 sesiones). Calibrado sobre paseos aleatorios, donde no puede haber ventaja, el método sesga el resultado en −0,05 a −0,17 %, así que lo que queda es una pérdida pequeña, no una ventaja escondida por el tamaño de los stops:
+Con las 300 más negociadas, sobre todas las operaciones:
 
-| grupo (300 más negociadas) | plan web | stop táctico | fijo 1,5/3 ATR | stop persigue 3 ATR |
-|---|---|---|---|---|
-| todos (% ganadoras señal / azar) | −0,15 % (t −2,0) · 40 / 41 % | −0,13 % (t −1,9) · 37 / 38 % | −0,12 % (t −2,1) · 34 / 35 % | −0,20 % (t −1,4) · 36 / 37 % |
-| figuras alcistas | −0,30 % (t −1,0) | −0,14 % | −0,12 % | −0,25 % |
-| rupturas alcistas | −0,49 % (t −2,5) · 44 / 48 % | −0,41 % (t −2,9) | −0,37 % (t −2,9) | −0,85 % (t −3,0) |
-| velas alcistas / bajistas | +0,10 % / +0,12 % | −0,05 % / +0,08 % | −0,09 % / +0,10 % | +0,34 % / +0,18 % |
-| directrices alcistas | +0,28 % (t +1,0) | +0,28 % | +0,28 % | +0,62 % (t +1,0) |
+| geometría | n | media neta | azar con las mismas distancias | exceso (t, bloques de 40–60 sesiones) | % ganadoras señal / azar |
+|---|---|---|---|---|---|
+| **plan operable** (stop 1,7 ATR, objetivo 3,3 ATR de mediana) | 154.264 | −0,19 % | −0,01 % | **−0,18 % (t −2,5)** | 35 / 36 % |
+| plan clásico sin límites | 218.458 | −0,24 % | −0,09 % | −0,15 % (t −1,9) | 39 / 40 % |
+| fijo 1,5 / 3 ATR | 219.795 | −0,24 % | −0,13 % | −0,12 % (t −2,1) | 34 / 35 % |
+| stop que persigue 3 ATR | 220.333 | −0,31 % | −0,11 % | −0,20 % (t −1,4) | 36 / 37 % |
+| stop que persigue 5 ATR | 220.333 | −0,33 % | +0,01 % | −0,34 % (t −1,8) | 41 / 42 % |
 
-- **Comprar rupturas a máximos** rinde menos que entrar al azar en el mismo valor con cualquier geometría (t entre −2,5 y −3,0), pero este control (el mismo valor en cualquier fecha) no separa el momento del mercado: el estudio de evidencia, que compara con el mismo día, no ve diferencia (−0,06 %). Es lo mismo que allí: el efecto es de mercado, no del valor.
-- **Las tasas de ganadoras casi no se distinguen de las del azar con las mismas distancias** (44 % frente a 48 % en rupturas alcistas con el plan de la web; 45 / 44 % en velas alcistas): la tasa la decide la geometría del plan, no el patrón. Con el plan de la web las figuras alcistas llegan al objetivo el 30 % de las veces y entrar al azar con las mismas distancias lo logra el 31 %.
-- Nada de lo positivo (directrices alcistas, rebotes bajistas, velas bajistas) pasa un umbral razonable con ~100 patrones probados (ninguno con |t| ≥ 3,35).
+- **La media neta es negativa con cualquier geometría porque entrar al azar con ella rinde entre −0,13 % y +0,01 % neto y el patrón no añade nada (exceso −0,12 a −0,34 %)**; el tamaño del stop y del objetivo cambia la forma de la distribución (cuántas veces se gana y cuánto), no el valor esperado de entrar al azar. Los stops enormes del plan clásico eran absurdos para operar, pero no son la causa del resultado: el plan con riesgo de 1,7 ATR y objetivo de 3,3 ATR sale igual de plano.
+- Calibrado sobre paseos aleatorios, donde no puede haber ventaja, el método sesga el exceso en −0,05 a −0,17 %.
+- **Rupturas alcistas** (compra a máximos): −0,48 % (t −2,8) con el plan operable y −0,85 % (t −3,0) con el stop que persigue 3 ATR, **pero este control (el mismo valor en cualquier fecha) no separa el momento del mercado**; el estudio de evidencia, que compara con el mismo día, no ve diferencia (−0,06 %).
+- Las **velas alcistas y bajistas** (+0,05 % y +0,07 %) y las **directrices alcistas** (+0,13 %) no pasan de ruido.
 
 ### Stop que persigue (trailing) en lugar de objetivo fijo
 
