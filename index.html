@@ -539,7 +539,7 @@ function resTxt(o) {
   return ['x', 'entrada ya fuera de niveles'];
 }
 const noOp = p => p.state !== 'forming' && p.plan && p.plan.ok === false;
-const noOpWhy = p => p.plan.spent ? 'objetivo consumido' : p.plan.risk_hi ? `riesgo ${p.plan.risk_pct.toFixed(1)} % del precio (más del 8 %)` : `R:R ${p.plan.rr.toFixed(1)} (mínimo 1,5)`;
+const noOpWhy = p => p.plan.spent ? 'objetivo consumido' : p.plan.risk_hi ? `riesgo ${p.plan.risk_pct.toFixed(1)} % del precio (más del 8 %)` : `R:R ${p.plan.rr.toFixed(2)} (mínimo 1,5)`;
 const status = p => p.state === 'forming' ? ['f', 'sin romper todavía'] : noOp(p) ? ['x', 'no operable: ' + noOpWhy(p)] : resTxt(rrOf(p).out);
 const qcls = q => q >= 75 ? 'qh' : q >= 60 ? 'qm' : 'ql';
 const qtag = p => p.q == null ? '' : `<span class="tag ${qcls(p.q)}" title="Calidad de la figura (0–100)">Q ${p.q}</span>`;
@@ -803,7 +803,7 @@ function cardFull(p) {
     <table class="lv"><tr><td>Entrada</td><td>${fx(r.entry)}</td></tr><tr><td style="color:var(--emerald)">Objetivo</td><td>${fx(r.target)} (${pc((r.target / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(r.t1)} (${pc((r.t1 / r.entry - 1) * 100 * p.dir)})</td></tr>
     <tr><td style="color:var(--ember)">Stop${r.cls ? ' clásico' : ''}</td><td>${fx(r.stop)} (${pc((r.stop / r.entry - 1) * 100 * p.dir)})</td></tr><tr><td>Recompensa / riesgo</td><td>${r.rr != null ? r.rr.toFixed(2) : '—'}</td></tr></table>
-    ${opBlock(p)}${sizeTxt(p)}<div class="small">${esc(p.note)}</div>${obsTxt(p.plan.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
+    ${opBlock(p)}${sizeTxt(p)}<div class="small">${esc(p.note)}</div>${obsTxt(p.plan.obs)}${r.cls && r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con el plan clásico el riesgo es mayor que la recompensa teórica.</div>' : ''}
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>${noOp(p) ? 'Si se hubiera operado' : 'Qué pasó aquí'}:</b> ${rt}</div>
     ${moveTxt(r.out)}${tradeTxt(p)}
     ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'terminó' : 'terminaron'} con ganancia neta (${tg} llegando al objetivo) y ${same.length - w} con pérdida.</div>` : ''}
@@ -844,7 +844,7 @@ function reading() {
   const D = S.D, sm = D.summary, c = sm.close, n = D.n, s50 = D.sma50[n - 1], s200 = D.sma200[n - 1];
   const trend = s50 == null ? '—' : (c > s50 && s50 > (s200 ?? 0)) ? 'alcista (precio sobre la media de 50 y esta sobre la de 200)' : c < s50 && s50 < (s200 ?? 1e9) ? 'bajista (precio bajo la media de 50 y esta bajo la de 200)' : 'mixta';
   const up = D.zones.filter(z => z.p > c).sort((a, b) => a.p - b.p)[0], dn = D.zones.filter(z => z.p < c).sort((a, b) => b.p - a.p)[0];
-  const T = D.trades || {list: [], all: {n: 0}, by_fam: {}, conflicts: 0}, A = T.all, roles = {confirma: 0, contraria: 0}; for (const p of D.patterns) if (p.trade && roles[p.trade.role] != null) roles[p.trade.role]++;
+  const T = D.trades || {list: [], all: {n: 0}, by_fam: {}, conflicts: 0}, A = T.all, roles = {confirma: 0, contraria: 0, no_operable: 0}; for (const p of D.patterns) if (p.trade && roles[p.trade.role] != null) roles[p.trade.role]++;
   return `<h3>${S.sym} · lectura</h3><div class="kv"><span>Tendencia</span><span>${trend}</span><span>Cierre</span><span>${fx(c)}</span><span>Media 50 / 200</span><span>${fx(s50)} / ${fx(s200)}</span>
     <span>Distancia a la media 200</span><span>${sm.dist200 == null ? '—' : pc(sm.dist200)}</span><span>Rango anual</span><span>${sm.pos52 == null ? '—' : (sm.pos52 * 100).toFixed(0) + ' % (0 = mínimo, 100 = máximo)'}</span>
     <span>RSI(14) / RSI(2)</span><span>${sm.rsi14} / ${sm.rsi2}</span><span>ATR (14)</span><span>${fx(sm.atr)} · ${sm.atrp} % del precio</span>
@@ -852,7 +852,7 @@ function reading() {
     <span>Resistencia más cercana</span><span>${up ? fx(up.p) + ' (' + pc((up.p / c - 1) * 100) + ', ' + up.touches + ' toques)' : '—'}</span><span>Soporte más cercano</span><span>${dn ? fx(dn.p) + ' (' + pc((dn.p / c - 1) * 100) + ', ' + dn.touches + ' toques)' : '—'}</span></div>
     <h3 style="margin-top:12px">Qué pasó con las operaciones de este valor</h3>
     <div class="small">${!D.trades ? 'Este gráfico se generó antes del recuento por operaciones: se actualiza en el próximo escaneo.' : A.n ? `${A.n} operaciones cerradas en los últimos ${n} días: <b>${A.won}</b> terminaron con ganancia neta y <b>${A.lost}</b> con pérdida (${(A.won / A.n * 100).toFixed(0)} % ganadoras). Media ${pc(A.mean_net, 2)} neto por operación${A.mean_r != null ? ` (${A.mean_r > 0 ? '+' : ''}${A.mean_r.toFixed(2).replace('-', '−')} R)` : ''}, suma ${pc(A.sum_net, 1)}. Llegaron al objetivo ${A.tgt}, saltó el stop en ${A.stp} y ${A.tmo} se cerraron por tiempo (${A.tmo_won} con ganancia).${A.mean_m != null ? ` Con parcial en T1: media ${pc(A.mean_m, 2)}.` : ''}` : 'Ninguna operación cerrada en la ventana.'}
-      Una operación por valor: las ${roles.confirma + roles.contraria} señales que saltaron con otra operación ya abierta no suman${T.conflicts ? ` (${roles.contraria} eran contrarias a la operación abierta, en ${T.conflicts} operaciones: conflicto)` : ''}. Gana quien termina con ganancia neta, llegue o no al objetivo. Es la historia de un solo valor: sirve para mirar, no demuestra nada (eso es la pestaña Evidencia).</div>
+      Solo cuentan las señales con plan operable (${roles.no_operable} no lo tenían: recompensa / riesgo bajo o riesgo de más del 8 % del precio). Una operación por valor: las ${roles.confirma + roles.contraria} señales que saltaron con otra operación ya abierta no suman${T.conflicts ? ` (${roles.contraria} eran contrarias a la operación abierta, en ${T.conflicts} operaciones: conflicto)` : ''}. Gana quien termina con ganancia neta, llegue o no al objetivo. Es la historia de un solo valor: sirve para mirar, no demuestra nada (eso es la pestaña Evidencia).</div>
     <div class="kv" style="margin-top:6px">${Object.entries(T.by_fam).map(([k, v]) => `<span>${FAMS[k] || k} (primera señal)</span><span>${v.n} op. · ${v.won} ganaron · ${pc(v.mean_net, 2)} de media</span>`).join('')}</div>
     <div class="small" style="margin-top:10px">Cómo se calcula: entrada en el cierre de la barra que completa el patrón. Stop: el estructural (al otro lado de la figura) si queda entre 1 y 2 ATR de la entrada; si está más lejos se acorta a 2 ATR. Objetivo: la medida clásica de cada figura, a lo sumo 3 veces el riesgo. <b>No operable</b> (no cuenta) si la recompensa no llega a 1,5 veces el riesgo, si el riesgo pasa del 8 % del precio o si la ruptura ya consumió el objetivo. El resultado se simula entrando en la apertura siguiente, el stop gana si se tocan ambos el mismo día y se cierra a los 40 días; se descuenta el 0,15 % de costes del estudio.</div>`;
 }

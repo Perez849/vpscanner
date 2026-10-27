@@ -263,10 +263,6 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
         active = (n - 1 - i) <= ACTIVE and out['res'] == 'open' and bx['ok']
         if bx['spent']:
             note += ' La ruptura ya recorrió casi toda la medida clásica: el objetivo queda a menos de 1 ATR de la entrada, así que no hay recorrido que operar.'
-        elif bx['risk_hi']:
-            note += f' No operable: el riesgo ({bx["risk_pct"]:.1f} % del precio) pasa del {P.MAX_RISK_PCT:g} %; el valor es demasiado volátil para este plan.'
-        elif not bx['ok']:
-            note += f' No operable: con ese riesgo el objetivo da {bx["rr"]:.1f} veces el riesgo (mínimo {P.MIN_RR:g}).'
         if active:
             bx['obs'] = P.obstacles(zs, entry, tgt)
         _shift(geo, s0)
