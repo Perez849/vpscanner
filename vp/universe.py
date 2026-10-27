@@ -57,58 +57,32 @@ def sp500() -> List[str]:
     return _clean(t['Symbol'])
 
 
-def _flat_cols(t) -> List[str]:
-    return [' '.join(str(x) for x in (c if isinstance(c, tuple) else (c,)) if 'unnamed' not in str(x).lower()).strip().lower() for c in t.columns]
-
-
-def _changes_cols(cols: List[str]):
-    """Columnas (fecha, ticker añadido, ticker retirado) de una tabla de cambios de Wikipedia, o None si no lo es. Se ignoran mayúsculas; vale «ticker» o «symbol»."""
-    dcol = next((c for c in cols if 'date' in c), None)
-    acol = next((c for c in cols if 'added' in c and ('ticker' in c or 'symbol' in c)), None)
-    rcol = next((c for c in cols if 'removed' in c and ('ticker' in c or 'symbol' in c)), None)
-    return (dcol, acol, rcol) if dcol and acol and rcol else None
-
-
-def parse_sp500_changes(tables) -> Dict[str, str]:
-    """Tablas de la página del S&P 500 de Wikipedia (o una sola) → fecha (AAAA-MM-DD) de la ÚLTIMA incorporación de cada valor que no ha salido después, leída de la tabla de cambios
-    («Selected changes to the list of S&P 500 components»). Los valores que no aparecen como incorporados están en el índice desde antes del primer cambio de la tabla."""
-    import pandas as pd
+def parse_sp500_join_dates(tables) -> Dict[str, str]:
+    """Tabla de miembros de la página del S&P 500 de Wikipedia (o una sola) → fecha de incorporación al índice (AAAA-MM-DD) de cada miembro actual, de su columna «Date added».
+    Las celdas sin fecha legible se ignoran (el valor cuenta como miembro desde siempre)."""
+    import re
     tables = tables if isinstance(tables, (list, tuple)) else [tables]
-    found = None
+    seen = []
     for t in tables:
-        cols = _flat_cols(t)
-        m = _changes_cols(cols)
-        if m:
-            found = (t.copy(), cols, m)
-            break
-    if found is None:
-        raise ValueError('ninguna tabla tiene columnas de fecha, añadido y retirado: ' + ' | '.join(str(_flat_cols(t))[:160] for t in tables[:6]))
-    t, cols, (dcol, acol, rcol) = found
-    t.columns = cols
-    ev = []
-    for _, r in t.iterrows():
-        d = pd.to_datetime(r[dcol], errors='coerce')
-        if pd.isna(d):
+        cols = [' '.join(dict.fromkeys(str(x).strip().lower() for x in (c if isinstance(c, tuple) else (c,)) if 'unnamed' not in str(x).lower())) for c in t.columns]     # niveles repetidos de la cabecera: una sola vez
+        seen.append(cols)
+        sc = next((c for c in cols if c in ('symbol', 'ticker')), None)
+        dc = next((c for c in cols if 'date' in c and 'added' in c), None)
+        if not (sc and dc):
             continue
-        for col, kind in ((acol, 'add'), (rcol, 'rem')):
-            v = r[col]
-            if isinstance(v, str) and v.strip():
-                ev.append((d, kind, v.strip().upper().replace('.', '-')))
-    ev.sort(key=lambda x: (x[0], 0 if x[1] == 'rem' else 1))           # el mismo día: primero salidas, luego entradas
-    state: Dict[str, str] = {}
-    for d, kind, tk in ev:
-        if kind == 'add':
-            state[tk] = d.strftime('%Y-%m-%d')
-        else:
-            state.pop(tk, None)
-    if not state:
-        raise ValueError('la tabla de cambios no dio ninguna incorporación')
-    return state
+        out: Dict[str, str] = {}
+        for sym, raw in zip(t.iloc[:, cols.index(sc)], t.iloc[:, cols.index(dc)]):
+            m = re.search(r'(\d{4})-(\d{2})-(\d{2})', str(raw))
+            if isinstance(sym, str) and sym.strip() and m:
+                out[sym.strip().upper().replace('.', '-')] = m.group(0)
+        if out:
+            return out
+    raise ValueError('ninguna tabla tiene símbolo y fecha de incorporación: ' + ' | '.join(str(c)[:160] for c in seen[:6]))
 
 
 def sp500_join_dates() -> Dict[str, str]:
-    """Fecha de la última incorporación al S&P 500 de cada miembro actual que entró en algún momento de los cambios de la tabla."""
-    return parse_sp500_changes(_read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'))
+    """Fecha de incorporación al S&P 500 de cada miembro actual (columna «Date added» de la tabla de miembros de Wikipedia)."""
+    return parse_sp500_join_dates(_read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'))
 
 
 def nasdaq100() -> List[str]:

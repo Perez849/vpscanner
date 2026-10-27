@@ -900,26 +900,25 @@ def test_search_no_lookahead():
 
 
 def test_universe_changes_and_survivorship():
-    """La tabla de cambios del S&P 500 da la última incorporación de cada miembro actual; las barras anteriores salen del universo; una regla de un solo régimen no es elegible por muy alto que sea su t."""
+    """La tabla de miembros del S&P 500 da la fecha de incorporación de cada valor; las barras anteriores salen del universo; una regla de un solo régimen no es elegible por muy alto que sea su t."""
     try:
         import pandas as pd
     except ImportError:
-        print('omitida · cambios del S&P 500: falta pandas')
+        print('omitida · fechas de incorporación al S&P 500: falta pandas')
         return
-    cols = pd.MultiIndex.from_tuples([('Effective Date', 'Effective Date'), ('Added', 'Ticker'), ('Added', 'Security'), ('Removed', 'Ticker'), ('Removed', 'Security'), ('Reason', 'Reason')])
-    rows = [['March 23, 2020', 'ABC', 'Abc Inc.', 'XYZ', 'Xyz Corp.', 'x'], ['May 1, 2018', 'XYZ', 'Xyz Corp.', 'OLD', 'Old Co.', 'x'], ['June 1, 2022', None, None, 'ABC', 'Abc Inc.', 'x'],
-            ['January 10, 2023', 'ABC', 'Abc Inc.', None, None, 'x'], ['September 20, 2021', 'DEF', 'Def Ltd.', None, None, 'x'], ['not a date', 'ZZZ', 'z', None, None, 'x'], ['2019-05-05', 'BRK.B', 'b', None, None, 'x']]
-    got = universe.parse_sp500_changes(pd.DataFrame(rows, columns=cols))
-    assert got == {'ABC': '2023-01-10', 'DEF': '2021-09-20', 'BRK-B': '2019-05-05'}, got                  # XYZ salió en 2020 (ya no es miembro) y ABC volvió a entrar en 2023
-    # otras cabeceras posibles: «Effective date» en minúsculas, «Symbol» en lugar de «Ticker», con la tabla de miembros delante
-    cols2 = pd.MultiIndex.from_tuples([('Effective date', 'Effective date'), ('Added', 'Symbol'), ('Added', 'Security'), ('Removed', 'Symbol'), ('Removed', 'Security'), ('Reason', 'Reason')])
-    members = pd.DataFrame({'Symbol': ['ABC', 'DEF'], 'Security': ['a', 'b']})
-    assert universe.parse_sp500_changes([members, pd.DataFrame(rows, columns=cols2)]) == got
+    members = pd.DataFrame({'Symbol': ['ABC', 'BRK.B', 'DEF', 'GHI', 'JKL'], 'Security': list('abcde'), 'GICS Sector': list('vwxyz'),
+                            'Date added': ['2023-01-10', '2010-02-16', '2021-09-20', 'n/a', '1976-06-30 (1957-03-04)']})
+    nav = pd.DataFrame({'vte S&P 500 companies': ['x'], 'vte S&P 500 companies.1': ['y']})
+    got = universe.parse_sp500_join_dates([nav, members])
+    assert got == {'ABC': '2023-01-10', 'BRK-B': '2010-02-16', 'DEF': '2021-09-20', 'JKL': '1976-06-30'}, got        # sin fecha legible → se ignora; punto → guion
+    assert universe.parse_sp500_join_dates(members) == got
+    cols = pd.MultiIndex.from_tuples([('Symbol', 'Symbol'), ('Date first added', 'Date first added')])
+    assert universe.parse_sp500_join_dates(pd.DataFrame([['ABC', '2020-03-23']], columns=cols)) == {'ABC': '2020-03-23'}
     try:
-        universe.parse_sp500_changes([members])
-        raise AssertionError('debía fallar sin tabla de cambios')
+        universe.parse_sp500_join_dates([nav])
+        raise AssertionError('debía fallar sin tabla de miembros')
     except ValueError as exc:
-        assert 'ninguna tabla' in str(exc)
+        assert 'ninguna tabla' in str(exc) and 'vte' in str(exc)
     work = {'ABC': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}, 'DEF': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}, 'GHI': {'t': np.arange(18000, 18010), 'dv': np.ones(10)}}
     n = search.apply_join(work, {'ABC': str(np.datetime64(18004, 'D')), 'DEF': '2000-01-01'})
     assert n == 4 and np.isnan(work['ABC']['dv'][:4]).all() and np.isfinite(work['ABC']['dv'][4:]).all() and np.isfinite(work['DEF']['dv']).all() and np.isfinite(work['GHI']['dv']).all(), (n, work['ABC']['dv'])
@@ -941,7 +940,7 @@ def test_universe_changes_and_survivorship():
     assert cov[1].max() < 0.1 and cov[2].min() > 0.99
     c, d, e, *_ = search.pick(Pf, {'S': S, 'N': N}, sub, tr, min_n=500)
     assert c == 2, (c, t_[1].max(), t_[2].max())                                                   # la de un solo régimen (regla 1) queda fuera
-    print('ok · cambios del S&P 500 → fechas de incorporación; barras anteriores quitadas; reglas de un solo régimen no elegibles')
+    print('ok · fechas de incorporación al S&P 500; barras anteriores quitadas; reglas de un solo régimen no elegibles')
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
