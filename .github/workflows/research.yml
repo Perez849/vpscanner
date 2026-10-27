@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado)'
+        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado) | search (búsqueda de la regla que más gana sobre el azar, con selección hacia delante)'
         default: 'lab'
       symbols:
         description: 'valores separados por comas (vacío = lista por defecto del lab o S&P 500 + Nasdaq-100 en el estudio)'
         default: ''
       reps:
-        description: 'study y context: desplazamientos temporales del umbral del mejor de N'
+        description: 'study, context y search: desplazamientos temporales del umbral del mejor de N (search: repeticiones del nulo del procedimiento, 30 por defecto)'
         default: '150'
       universe:
         description: 'study: large (S&P 500 + Nasdaq-100) | smallmid (S&P 400 + 600) | mixed (cripto, divisas, materias primas, índices)'
@@ -54,6 +54,8 @@ jobs:
             python -u -m vp lab --symbols "$INPUT_SYMBOLS" --out /tmp/out --raw /tmp/out/raw 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "context" ]; then
             python -u -m vp context --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-100}" 2>&1 | tee /tmp/out/log.txt
+          elif [ "$CMD" = "search" ]; then
+            python -u -m vp search --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-30}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "ml" ]; then
             python -u -m vp ml --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "plan" ]; then

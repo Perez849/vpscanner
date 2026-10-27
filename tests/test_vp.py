@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from vp import breakouts, candles, context, data, engine, lab, ml, plan, planstudy, shapes, study, ta, universe
+from vp import breakouts, candles, context, data, engine, lab, ml, plan, planstudy, search, shapes, study, ta, universe
 from vp.catalog import CATALOG
 
 
@@ -819,8 +819,88 @@ def test_combos_unique_valuedays():
     print(f'ok · coincidencias: {all_up} valor-días alcistas contados una vez ({a["solo velas"]["n"]} solo velas, {a["solo estructura"]["n"]} solo estructura, {a["velas y estructura juntas"]["n"]} juntas)')
 
 
+def test_search_sim():
+    """La salida del operador vectorizada para todas las barras coincide con plan.outcome_lock y con el stop que persigue del estudio del plan; el cierre a 10 sesiones es el del panel."""
+    from vp import plan as P_
+    rng = np.random.default_rng(3)
+    tot = 0
+    for seed in range(3):
+        b = walk(900, seed=70 + seed, sig=0.02)
+        F = ta.prepare(b)
+        o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
+        for d in (1, -1):
+            for stop_atr, lock, trail in ((1.5, 4.0, 3.0), (2.5, 6.0, 4.0)):
+                net = search.sim_all(o, h, l, c, atr, d, stop_atr, lock, trail, 60)
+                for _ in range(60):
+                    i = int(rng.integers(60, 820))
+                    entry = float(o[i + 1])
+                    r = P_.outcome_lock(F, i, d, entry - d * stop_atr * float(atr[i]), lock, trail, 60)
+                    assert r['res'] != 'na'
+                    if r['res'] == 'open':
+                        assert np.isnan(net[i])
+                        continue
+                    tot += 1
+                    assert abs(net[i] - r['net']) < 2e-2, (seed, d, i, net[i], r['net'], r['res'])
+            tr = search.sim_all(o, h, l, c, atr, d, 5.0, None, 5.0, 60)
+            for _ in range(40):
+                i = int(rng.integers(60, 820))
+                s1 = planstudy.sim_trail(o, h, l, c, i, d, 5.0, float(atr[i]), 60)
+                if s1 is None:
+                    continue
+                tot += 1
+                assert abs(tr[i] - (s1[1] - 0.15)) < 1e-6, (d, i, tr[i], s1)
+            h10 = search.hold_all(o, c, d, 10)
+            i = 100
+            assert abs(h10[i] - (d * (c[i + 10] / o[i + 1] - 1) * 100 - 0.15)) < 1e-9
+    print(f'ok · búsqueda: la salida del operador por barras coincide con la simulación de la web ({tot} casos)')
+
+
+def test_search_procedure():
+    """La búsqueda hacia delante encuentra una reversión plantada (y la elige con el pasado, no con el año que mide) y no inventa nada en paseos aleatorios; el nulo desplazado no la ve."""
+    kw = dict(workers=1, k=40, reps=8, min_day=15, min_combo=600, test_years=[2019, 2020, 2021])
+    bars = {f'S{j}': _walk_ar(1500, 800 + j, 0.25) for j in range(40)}
+    ev = search.analyze(bars, **kw)
+    w = ev['walk_forward']['contexto']
+    assert w['n'] > 2000 and w['exceso'] > 0.25 and w['t'] > 4, w
+    under, over = {'cae5', 'rsi2_bajo', 'bajo_media20', 'rsi14_bajo'}, {'sube5', 'rsi2_alto', 'sobre_media20', 'rsi14_alto'}       # reversión: largo tras caer, corto tras subir
+    assert len(w['años']) == 3 and all(r['train_exceso'] > 0 and (set(r['regla']) & (under if r['sentido'] == 'largo' else over)) for r in w['años']), w['años']
+    nl = ev['nulo']['contexto']
+    assert nl['t_p95'] < w['t'] and nl['p_t'] <= 0.2, (nl, w['t'])
+    assert 'FUERA DE MUESTRA' in search.report(ev) and ev['meta']['pruebas'] == ev['meta']['combinaciones'] * 2 * len(search.EXITS)
+    ev0 = search.analyze({f'S{j}': _walk_ar(1500, 900 + j, 0.0) for j in range(40)}, **kw)
+    w0 = ev0['walk_forward']['todo']
+    assert abs(w0['t']) < 4 and abs(w0['exceso']) < 0.8, w0                         # sin efecto: lo que se «encuentra» buscando entre cientos de reglas no se sostiene fuera de muestra
+    print(f'ok · búsqueda hacia delante: reversión plantada (exceso {w["exceso"]:+.2f} %, t {w["t"]:.0f}) y sin ventaja en paseos aleatorios (t {w0["t"]:+.1f})')
+
+
+def test_search_no_lookahead():
+    """La regla elegida para un año de prueba solo depende de datos anteriores a ese año menos 60 sesiones: cambiar lo que pasa en el año de prueba (o después) no la cambia."""
+    bars = {f'S{j}': _walk_ar(1500, 1200 + j, 0.25) for j in range(25)}
+    work = {}
+    for s_, b in bars.items():
+        work[s_] = search._work((s_, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}))[1]
+    D = ml.Data(work, k=25)
+    P = search.Panel(D, work, min_day=10, min_combo=500)
+    T = P.tables(P.rel, absolute=True)
+    yrs = [2019, 2020, 2021]
+    base = search.walk_forward(P, T, P.sub['todo'], yrs)
+    T2 = {k: v.copy() for k, v in T.items()}
+    mod = P.byear >= 2020                                                    # se cambia todo lo que ocurre desde 2020 (resultados y número de operaciones)
+    T2['S'][..., mod] = -T2['S'][..., mod] * 3.0 + 1.0
+    T2['SA'][..., mod] *= 0.5
+    alt = search.walk_forward(P, T2, P.sub['todo'], yrs)
+    f = lambda r: (r['regla'], r['sentido'], r['salida'], r['train_n'], r['train_t'])
+    assert f(base['años'][0]) == f(alt['años'][0]), (base['años'][0], alt['años'][0])                 # 2019 se elige con datos de antes de 2019
+    assert f(base['años'][1]) == f(alt['años'][1]), (base['años'][1], alt['años'][1])                 # 2020 se elige con datos de antes de 2020 (menos 60 sesiones): lo que cambia desde 2020 no cuenta
+    assert base['años'][1]['exceso'] != alt['años'][1]['exceso']                                    # y lo que se mide en 2020 sí cambia (la prueba de verdad toca los resultados del año)
+    d0 = P.ystart[2020]
+    tr = ((np.arange(P.nb) + 1) * search.BLOCK <= d0 - search.PURGE)
+    assert P.byear[tr].max() < 2020 and tr.sum() > 20 and (np.flatnonzero(tr).max() + 1) * search.BLOCK <= d0 - search.PURGE   # el entrenamiento acaba al menos PURGE sesiones antes
+    print('ok · búsqueda: la elección de cada año no mira ni el año de prueba ni los 60 días anteriores')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead]
 
 if __name__ == '__main__':
     for fn in ALL:
