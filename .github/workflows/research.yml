@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado) | search (búsqueda de la regla que más gana sobre el azar, con selección hacia delante) | confirm (evalúa en el universo elegido las reglas candidatas fijadas de antemano)'
+        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado) | search (búsqueda de la regla que más gana sobre el azar, con selección hacia delante) | confirm (evalúa en el universo elegido las reglas candidatas fijadas de antemano) | screen (cribador: qué acciones cumplen hoy las reglas candidatas)'
         default: 'lab'
       symbols:
         description: 'valores separados por comas (vacío = lista por defecto del lab o S&P 500 + Nasdaq-100 en el estudio)'
@@ -58,6 +58,8 @@ jobs:
             python -u -m vp lab --symbols "$INPUT_SYMBOLS" --out /tmp/out --raw /tmp/out/raw 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "context" ]; then
             python -u -m vp context --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-100}" 2>&1 | tee /tmp/out/log.txt
+          elif [ "$CMD" = "screen" ]; then
+            python -u -m vp screen --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "confirm" ]; then
             python -u -m vp search --confirm --symbols "$INPUT_SYMBOLS" --universe "${INPUT_UNIVERSE:-smallmid}" --out /tmp/out --reps "${INPUT_REPS:-300}" --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "search" ]; then
