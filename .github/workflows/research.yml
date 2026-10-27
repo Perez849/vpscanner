@@ -12,7 +12,7 @@ on:
         description: 'valores separados por comas (vacío = lista por defecto del lab o S&P 500 + Nasdaq-100 en el estudio)'
         default: ''
       reps:
-        description: 'study: desplazamientos temporales del umbral del mejor de N'
+        description: 'study y context: desplazamientos temporales del umbral del mejor de N'
         default: '150'
       universe:
         description: 'study: large (S&P 500 + Nasdaq-100) | smallmid (S&P 400 + 600) | mixed (cripto, divisas, materias primas, índices)'
@@ -53,7 +53,7 @@ jobs:
           if [ "$CMD" = "lab" ]; then
             python -u -m vp lab --symbols "$INPUT_SYMBOLS" --out /tmp/out --raw /tmp/out/raw 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "context" ]; then
-            python -u -m vp context --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
+            python -u -m vp context --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-100}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "ml" ]; then
             python -u -m vp ml --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "plan" ]; then
