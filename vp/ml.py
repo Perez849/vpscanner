@@ -71,6 +71,31 @@ def _ctx(F: Dict[str, np.ndarray]) -> np.ndarray:
     return np.column_stack([cols[k] for k in CTX]).astype(np.float32)
 
 
+def _levels(F: Dict[str, np.ndarray], k: int = 5, back: int = 120, gap: int = 8, m: int = 12) -> np.ndarray:
+    """Por barra, distancia (en ATR) del mínimo al soporte previo más cercano y del máximo a la resistencia previa más cercana. Los niveles son pivotes ya confirmados (k barras después)
+    de hace entre `gap` y `back` sesiones: así la figura que se está dibujando no cuenta como su propio nivel. NaN si no hay ninguno."""
+    from .shapes import pivot_flags
+    h, l, atr = F['h'], F['l'], F['atr']
+    n = len(h)
+    ph, pl = pivot_flags(h, l, k)
+    out = np.full((n, 2), np.nan, dtype=np.float32)
+    i = np.arange(n)
+    for col, flag, arr, price in ((0, pl, l, l), (1, ph, h, h)):
+        j = np.flatnonzero(flag)
+        if not len(j):
+            continue
+        cnt = np.searchsorted(j, i - gap, side='right')                            # pivotes con j ≤ i - gap
+        take = cnt[:, None] - 1 - np.arange(m)[None, :]
+        ok = take >= 0
+        jj = j[np.clip(take, 0, len(j) - 1)]
+        ok &= (i[:, None] - jj) <= back
+        d = np.abs(price[:, None] - arr[jj]) / atr[:, None]
+        d = np.where(ok, d, np.nan)
+        has = ok.any(axis=1)
+        out[has, col] = np.min(np.where(ok, d, np.inf)[has], axis=1)
+    return out
+
+
 def _patterns(F: Dict[str, np.ndarray], events: List[Dict]) -> Tuple[np.ndarray, List[str]]:
     """Variables de patrones por barra: formaciones de vela de hoy, figuras y rupturas de las últimas RECENT sesiones, recuentos de consenso y calidad."""
     n = len(F['c'])
@@ -118,7 +143,13 @@ def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
         cs = np.cumsum(np.insert(c * F['v'], 0, 0.0))
         dv[MEM_WINDOW - 1:] = (cs[MEM_WINDOW:] - cs[:-MEM_WINDOW]) / MEM_WINDOW
     P, pnames = _patterns(F, events)
-    return sym, {'t': (F['t'] // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'ctx': _ctx(F), 'pat': P, 'pnames': pnames}
+    allp = sorted(CATALOG)
+    pid = {k: j for j, k in enumerate(allp)}
+    ev = [(e['i'], pid[e['name']], -1 if e['q'] is None else int(e['q'])) for e in events if e['name'] in pid and e['i'] >= 60]
+    with np.errstate(invalid='ignore', divide='ignore'):
+        volraw = (F['v'] / ta.sma(F['v'], 20)).astype(np.float32)
+    return sym, {'t': (F['t'] // 86400).astype(np.int64), 'ret': ret, 'dv': dv, 'ctx': _ctx(F), 'pat': P, 'pnames': pnames, 'lvl': _levels(F), 'volraw': volraw,
+                 'ev': np.array(ev, dtype=np.int32).reshape(-1, 3)}
 
 
 class Data:
@@ -142,12 +173,26 @@ class Data:
             m = memb[di, j] & hist & np.isfinite(w['ret'])
             rows.append(np.flatnonzero(m))
         self.syms = syms
+        self.nbar = lens.astype(np.int64)
+        self.boff = np.concatenate([[0], np.cumsum(lens)[:-1]]).astype(np.int64)
         self.pnames = work[syms[0]]['pnames']
         self.sym = np.concatenate([np.full(len(r), j, np.int32) for j, r in enumerate(rows)])
         self.day = np.concatenate([work[s]['t'][r] for s, r in zip(syms, rows)])
         self.ret = np.concatenate([work[s]['ret'][r] for s, r in zip(syms, rows)]).astype(np.float64)
         self.ctx = np.vstack([work[s]['ctx'][r] for s, r in zip(syms, rows)])
         self.pat = np.vstack([work[s]['pat'][r] for s, r in zip(syms, rows)])
+        self.lvl = np.vstack([work[s]['lvl'][r] for s, r in zip(syms, rows)])
+        self.volraw = np.concatenate([work[s]['volraw'][r] for s, r in zip(syms, rows)])
+        self.bar = np.concatenate(rows)
+        self.symoff = np.concatenate([[0], np.cumsum([len(r) for r in rows])[:-1]]).astype(np.int64)
+        self.b2r = np.full(int(lens.sum()), -1, dtype=np.int64)                      # (valor, barra) → fila del panel (-1 si no está en el universo ese día)
+        for j, r in enumerate(rows):
+            self.b2r[self.boff[j] + r] = self.symoff[j] + np.arange(len(r))
+        evs = [work[s]['ev'] for s in syms]
+        self.ev_sym = np.concatenate([np.full(len(e), j, np.int32) for j, e in enumerate(evs)])
+        self.ev_bar = np.concatenate([e[:, 0] for e in evs]).astype(np.int64)
+        self.ev_pid = np.concatenate([e[:, 1] for e in evs]).astype(np.int32)
+        self.ev_q = np.concatenate([e[:, 2] for e in evs]).astype(np.int32)
         d_ = np.unique(self.day)
         self.dcode = np.searchsorted(d_, self.day)
         self.nd = len(d_)
@@ -159,6 +204,14 @@ class Data:
         cnt = np.bincount(self.dcode, minlength=self.nd)
         sm = np.bincount(self.dcode, weights=self.ret, minlength=self.nd)
         self.rel = self.ret - (sm / np.maximum(cnt, 1))[self.dcode]               # rendimiento relativo (bruto) al promedio del día
+        # variables de mercado por fecha: porcentaje de acciones sobre su media de 200 sesiones y rendimiento medio a 20 sesiones
+        d200, r20 = self.ctx[:, CTX.index('dist200')], self.ctx[:, CTX.index('r20')]
+        f1 = np.isfinite(d200)
+        c1 = np.bincount(self.dcode[f1], minlength=self.nd)
+        self.breadth_d = np.bincount(self.dcode[f1], weights=(d200[f1] > 0).astype(float), minlength=self.nd) / np.maximum(c1, 1)
+        f2 = np.isfinite(r20)
+        c2 = np.bincount(self.dcode[f2], minlength=self.nd)
+        self.mkt_r20_d = np.bincount(self.dcode[f2], weights=r20[f2].astype(float), minlength=self.nd) / np.maximum(c2, 1)
 
     def _rank_by_day(self, X: np.ndarray) -> np.ndarray:
         import pandas as pd

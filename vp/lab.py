@@ -173,6 +173,51 @@ def _shift(geo: Dict, s0: int) -> None:
         a['x'] -= s0
 
 
+FAM_RANK = {'figuras': 0, 'rupturas': 1, 'directrices': 2, 'rebotes': 3, 'velas': 4}
+
+
+def group_trades(items: List[Dict], last: int) -> Dict:
+    """Una operación por valor: las señales de un mismo valor se agrupan en operaciones para no contar varias veces el mismo movimiento.
+    · La primera señal (si coinciden varias en la misma barra, la de mayor rango: figura > ruptura > directriz > rebote > vela, y a igualdad la de mayor calidad) abre la operación
+      y su plan es el que se simula. Si la señal queda fuera de niveles en la apertura siguiente (resultado «na») no abre nada.
+    · Mientras esa operación sigue abierta, las señales del mismo sentido son «confirmaciones» (no suman otra operación) y las del sentido contrario «contrarias» (aviso de conflicto).
+    · Cada operación se cuenta una sola vez, gane o pierda; gana quien termina con ganancia neta, llegue o no al objetivo.
+    `last` es la última barra (relativa) de la ventana exportada; una operación aún abierta bloquea hasta ahí."""
+    done = [it for it in items if it['state'] == 'done' and it.get('out') and it['dir'] != 0]
+    done.sort(key=lambda it: (it['i'], 1 if it['key'].startswith('consenso') else 0, FAM_RANK.get(it['fam'], 9), -(it['q'] if it['q'] is not None else -1), it['key']))
+    out: List[Dict] = []
+    cur: Optional[Dict] = None
+    for it in done:
+        o = it['out']
+        if o['res'] == 'na':
+            it['trade'] = {'role': 'na'}
+            continue
+        e = it['i'] + 1
+        if cur is not None and e <= cur['exit']:
+            same = it['dir'] == cur['dir']
+            cur['conf' if same else 'contra'].append(it['label'])
+            it['trade'] = {'role': 'confirma' if same else 'contraria', 'with': cur['id']}
+            continue
+        exit_ = o['xi'] if o['res'] in ('target', 'stop', 'timeout') and o.get('xi') is not None else last
+        cur = {'id': it['id'], 'key': it['key'], 'label': it['label'], 'dir': it['dir'], 'fam': it['fam'], 'i': it['i'], 'res': o['res'], 'net': o.get('net'), 'r': o.get('r'), 
+               'mfe': o.get('mfe'), 'prog': o.get('prog'), 'exit': int(exit_), 'conf': [], 'contra': []}
+        out.append(cur)
+        it['trade'] = {'role': 'lider'}
+    closed = [t for t in out if t['res'] in ('target', 'stop', 'timeout') and t['net'] is not None]
+
+    def tally(ts: List[Dict]) -> Dict:
+        nets = [t['net'] for t in ts]
+        rs = [t['r'] for t in ts if t['r'] is not None]
+        return {'n': len(ts), 'won': sum(1 for x in nets if x > 0), 'lost': sum(1 for x in nets if x <= 0), 'tgt': sum(1 for t in ts if t['res'] == 'target'), 'stp': sum(1 for t in ts if t['res'] == 'stop'),
+                'tmo': sum(1 for t in ts if t['res'] == 'timeout'), 'tmo_won': sum(1 for t in ts if t['res'] == 'timeout' and t['net'] > 0), 'lk2': sum(1 for t in ts if t.get('level', 0) >= 2), 'mean_net': round(float(np.mean(nets)), 3) if nets else None,
+                'sum_net': round(float(np.sum(nets)), 2) if nets else 0.0, 'mean_r': round(float(np.mean(rs)), 3) if rs else None,
+                'avg_win': round(float(np.mean([x for x in nets if x > 0])), 3) if any(x > 0 for x in nets) else None,
+                'avg_loss': round(float(np.mean([x for x in nets if x <= 0])), 3) if any(x <= 0 for x in nets) else None}
+
+    return {'list': out, 'open': sum(1 for t in out if t['res'] == 'open'), 'conflicts': sum(1 for t in out if t['contra']), 'all': tally(closed),
+            'by_fam': {f: tally([t for t in closed if t['fam'] == f]) for f in sorted({t['fam'] for t in closed})}}
+
+
 # ── análisis de un valor ──────────────────────────────────────────────────
 def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB) -> Dict:
     F = ta.prepare(bars)
@@ -197,21 +242,30 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
             continue
         entry = float(F['c'][i])
         bx = P.box(F, i, d, entry, stop, tgt)
-        stop, tgt, stop_t = bx.pop('_stop'), bx.pop('_target'), bx.pop('_stop_t')
-        note = pat.rule + (' El stop estructural quedaba a menos de 1 ATR: se ha ampliado a 1 ATR.' if bx['stop_min'] else '')
-        out = P.outcome(F, i, d, stop, tgt)
-        out_t = P.outcome(F, i, d, stop_t, tgt) if stop_t is not None else None
-        active = (n - 1 - i) <= ACTIVE and out['res'] == 'open' and not bx['spent']
+        stop, lock, stop_s, tgt_c = bx.pop('_stop'), bx.pop('_target'), bx.pop('_stop_s'), bx.pop('_target_c')
+        note = pat.rule.replace('Objetivo genérico de 2R con stop de', 'Stop de').replace('Objetivo genérico de 2R. ', '')   # el objetivo del catálogo es del plan clásico
+        if bx['stop_cap']:
+            note += f' El stop estructural quedaba a {bx["risk_s_pct"]:.1f} % de la entrada (más de {P.MAX_RISK_ATR:g} ATR): se ha acortado a {bx["risk_pct"]:.1f} %.'
+        if bx['stop_min']:
+            note += f' El stop estructural quedaba a menos de {P.MIN_STOP:g} ATR: se ha ampliado a {P.MIN_STOP:g} ATR.'
+        note += f' Se opera con la escalera (+{P.LOCK_PCT:g} % → +{P.LOCK2_PCT:g} %), sin objetivo fijo; la medida clásica daba +{bx["reward_c_pct"]:.1f} %.'
+        if bx['risk_hi']:
+            note += f' Aviso: el stop queda a {bx["risk_pct"]:.1f} % del precio, más de {P.MAX_RISK_PCT:g} %: valor muy volátil.'
+        elif bx['rr_low']:
+            note += f' Aviso: el stop ({bx["risk_pct"]:.1f} %) está más lejos que el +{P.LOCK_PCT:g} % que se quiere asegurar.'
         if bx['spent']:
-            note += ' La ruptura ya recorrió casi toda la medida clásica: el objetivo queda a menos de 1 ATR de la entrada, así que no hay recorrido que operar.'
+            note += ' Aviso: la ruptura ya recorrió casi toda la medida clásica de la figura (el objetivo clásico queda a menos de 1 ATR).'
+        out = P.outcome_ladder(F, i, d, stop)
+        out_s = P.outcome(F, i, d, stop_s, tgt_c)                                  # el plan clásico sin límites, solo como referencia
+        active = (n - 1 - i) <= ACTIVE and out['res'] == 'open'
         if active:
-            bx['obs'] = P.obstacles(zs, entry, tgt)
+            bx['obs'] = P.obstacles(zs, entry, tgt_c)
         _shift(geo, s0)
-        for o_ in (out, out_t):
+        for o_ in (out, out_s):
             if o_ and 'xi' in o_:
                 o_['xi'] -= s0
         items.append({'id': f'{key}@{i - s0}', 'key': key, 'label': pat.label, 'dir': d, 'fam': pat.fam, 'i': i - s0, 'state': 'done', 'q': e['q'], 'new': bool(i == n - 1), **geo,
-                      'plan': bx, 'note': note, 'out': out, 'out_t': out_t, 'active': bool(active)})
+                      'plan': bx, 'note': note, 'out': out, 'out_s': out_s, 'active': bool(active)})
     seen = {}
     for it in items:                                      # varias rupturas de Donchian el mismo día y en el mismo sentido: se queda la de mayor periodo
         if it['key'].startswith('donch'):
@@ -222,6 +276,7 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
     items = [it for it in items if not it['key'].startswith('donch') or seen[(it['i'], it['dir'])][1] is it]
     for it in items:                                      # otros patrones del mismo sentido que saltan en las 3 barras vecinas (no son confirmaciones independientes)
         it['conf'] = [o['label'] for o in items if o is not it and o['dir'] == it['dir'] and it['dir'] != 0 and abs(o['i'] - it['i']) <= 3 and o['key'] != it['key']][:4]
+    trades = group_trades(items, n - s0 - 1)
     last = float(F['c'][-1])
     for st in forming:
         a_ = float(F['atr'][n - 1])
@@ -239,12 +294,12 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
             for side, d, key in (('up', 1, FORM_UP[st['kind']]), ('dn', -1, FORM_DN[st['kind']])):
                 stop, tgt = P.rule(key, g, F, i, d, entry=lv[side])
                 bx = P.box(F, i, d, lv[side], stop, tgt)
-                for k_ in ('_stop', '_target', '_stop_t'):
+                for k_ in ('_stop', '_target', '_stop_s', '_target_c'):
                     bx.pop(k_, None)
                 bx['key'] = key
                 bx['label'] = 'rompe contra el sesgo habitual de la figura' if bias * d < 0 else CATALOG[key].label
                 bx['note'] = CATALOG[key].rule
-                bx['obs'] = P.obstacles(zs, lv[side], tgt)
+                bx['obs'] = P.obstacles(zs, lv[side], bx['target'])
                 sc[side] = bx
             dist = min(lv['up'] - last, last - lv['dn']) / a_
             _shift(geo, s0)
@@ -253,7 +308,7 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
                           'trig': {'up': P.r(lv['up']), 'dn': P.r(lv['dn']), 'dist': round(max(dist, 0.0), 2), 'pct': round(max(dist, 0.0) * a_ / last * 100, 2)},
                           'note': 'Aún no ha roto: el cierre sigue dentro de las dos rectas. Se opera la ruptura (cierre fuera de la recta) y el sentido no está decidido.'
                                   + (' Sesgo habitual: ' + ('alcista' if bias > 0 else 'bajista') + '.' if bias else ''),
-                          'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_t': None, 'active': True, 'conf': []})
+                          'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_s': None, 'active': True, 'conf': []})
         else:
             fk, d, g = st['name'], st['d'], st['g']
             if any(it['key'] == fk and it['dir'] == d and it['active'] for it in items if it['state'] == 'done'):      # la misma figura ya rota y aún viva: no se anuncia otra igual
@@ -268,18 +323,18 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
                 geo['lines'].append({'a': [int(x_), P.r(trig)], 'b': [int(n), P.r(trig)], 'k': 'neck', 'dash': True})
             stop, tgt = P.rule(fk, g, F, i, d, entry=entry)
             bx = P.box(F, i, d, entry, stop, tgt)
-            for k_ in ('_stop', '_target', '_stop_t'):
+            for k_ in ('_stop', '_target', '_stop_s', '_target_c'):
                 bx.pop(k_, None)
             bx['key'] = fk
             bx['label'] = CATALOG[fk].label
             bx['note'] = CATALOG[fk].rule
-            bx['obs'] = P.obstacles(zs, entry, tgt)
+            bx['obs'] = P.obstacles(zs, entry, bx['target'])
             _shift(geo, s0)
             items.append({'id': f'forming_{fk}@{i - s0}', 'key': 'forming_' + fk, 'label': CATALOG[fk].label, 'dir': d, 'fam': 'figuras', 'i': i - s0, 'state': 'forming', 'q': st['q'], **geo,
                           'plan': None, 'sc': {'up' if d > 0 else 'dn': bx}, 'trig': {'level': P.r(trig), 'dist': round(st['dist'], 2), 'pct': round(abs(trig / last - 1) * 100, 2)},
                           'note': f'Figura dibujada pero sin romper: se activa con un cierre {"por encima" if d > 0 else "por debajo"} de {P.r(trig)} (a {st["dist"]:.1f} ATR del cierre). '
                                   'Si el precio se gira antes, la figura se invalida; el plan usa la entrada en ese nivel + 0,15 ATR.',
-                          'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_t': None, 'active': True, 'conf': []})
+                          'out': {'res': 'forming', 'bars': 0, 'ret': None}, 'out_s': None, 'active': True, 'conf': []})
     items.sort(key=lambda x: x['i'])
     sl = slice(s0, n)
     c = F['c']
@@ -291,7 +346,7 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
             'bars': {'t': [day(x) for x in bars['t'][sl]], 'o': [P.r(x) for x in bars['o'][sl]], 'h': [P.r(x) for x in bars['h'][sl]], 'l': [P.r(x) for x in bars['l'][sl]],
                      'c': [P.r(x) for x in bars['c'][sl]], 'v': [int(x) for x in bars['v'][sl]]},
             'sma50': [None if not np.isfinite(x) else P.r(x) for x in F['sma50'][sl]], 'sma200': [None if not np.isfinite(x) else P.r(x) for x in F['sma200'][sl]],
-            'zones': zs, 'patterns': items, 'summary': summ}
+            'zones': zs, 'patterns': items, 'summary': summ, 'trades': trades}
 
 
 def index_row(res: Dict) -> Dict:

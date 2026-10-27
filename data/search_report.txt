@@ -1,0 +1,177 @@
+BÚSQUEDA DE LA REGLA QUE MÁS GANA SOBRE EL AZAR · 500 acciones · 712,268 filas (las fiab_t más negociadas) · 2017-05-01 → 2026-10-12
+400 combinaciones de condiciones × 2 sentidos × 10 salidas = 8,000 reglas. Exceso = neto de costes menos la media de todas las filas de ese día (mismo sentido y salida). Selección hacia delante: cada año de prueba se elige con lo anterior (menos 60 sesiones) y se mide en el año; solo son elegibles reglas con ≥ 2,000 operaciones y operaciones en al menos el 60 % de los periodos del entrenamiento. t con errores agrupados en bloques de 10 sesiones (cierre a 10) o de 60 (salidas de hasta 60). Nulo: todo el procedimiento con los resultados desplazados en el calendario (al menos 300 sesiones; 40 repeticiones).
+Universo: miembros actuales, pero cada valor del S&P 500 solo desde su fecha de incorporación (499 valores con fecha; 153,417 barras-valor quitadas) (sesgo de supervivencia: los que salieron del índice no están).
+Salidas: op4a = stop 1,5 ATR · asegura +4 % · persigue 3 ATR · op4b = stop 2,5 ATR · asegura +4 % · persigue 3 ATR · op6a = stop 1,5 ATR · asegura +6 % · persigue 4 ATR · op6b = stop 2,5 ATR · asegura +6 % · persigue 4 ATR · run5 = stop que persigue 5 ATR sin asegurar · h10 = cierre a 10 sesiones sin stop · esc = escalera: stop 2,5 ATR · asegura +4 % y deja correr · asegura +10 % y persigue 2 ATR · esca = escalera con stop inicial 1,5 ATR · esc6 = escalera con stop inicial al 6 % del precio · esc10 = escalera con stop inicial al 10 % del precio
+
+=== TODAS LAS REGLAS · elegida por RENTABILIDAD (mayor t de exceso) · selección hacia delante, años 2020–2026 ===
+  FUERA DE MUESTRA: 16,123 operaciones · exceso +0.243 % por operación (t +1.7) · neto -0.161 % (azar en las mismas fechas -0.404 %) · ganan 60.4 % (todas las filas 58.3 %) · fiabilidad +1.4 puntos sobre el azar del día (t +1.6) · aseguró +4 % el 50.0 % y +10 % el 12.3 %
+  Nulo del procedimiento: exceso mediano +0.216 %, p95 +0.392 %; t p95 +3.3 · p del exceso 0.45 y de la t 0.45 · fiabilidad p95 +1.9 puntos, p 0.25 (t p95 +2.8, p 0.275)
+    año        n   exceso     neto     azar  ganan   +4%  +10%  regla elegida con el pasado (t de entrenamiento)
+   2020    1,819   +0.605   +1.144   +1.231   66.4  70.7  21.4  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · esc (t 13.6, exceso +0.60 %)
+   2021      773   -1.179   -3.375   -1.367   44.0  40.9   5.4  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10 (t 5.8, exceso +0.81 %)
+   2022    7,292   +0.287   -0.116   +0.324   64.7  64.7  16.4  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10 (t 5.8, exceso +0.74 %)
+   2023    3,310   -0.225   -1.736   -0.890   53.3  52.4  10.9  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10 (t 4.6, exceso +0.59 %)
+   2024      970   +1.071   +1.773   +0.465   57.8   0.0   0.0  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10 (t 3.5, exceso +0.73 %)
+   2025    1,011   +0.178   +1.078   +0.396   60.8   0.0   0.0  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10 (t 4.0, exceso +0.79 %)
+   2026      948   +1.229   +1.811   +0.350   55.8   0.0   0.0  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10 (t 4.0, exceso +0.70 %)
+
+=== SOLO CONTEXTO (sin patrones) · elegida por RENTABILIDAD (mayor t de exceso) · selección hacia delante, años 2020–2026 ===
+  FUERA DE MUESTRA: 18,637 operaciones · exceso +0.359 % por operación (t +2.5) · neto -0.444 % (azar en las mismas fechas -0.803 %) · ganan 59.5 % (todas las filas 57.3 %) · fiabilidad +1.9 puntos sobre el azar del día (t +2.2) · aseguró +4 % el 49.6 % y +10 % el 12.3 %
+  Nulo del procedimiento: exceso mediano +0.220 %, p95 +0.391 %; t p95 +3.3 · p del exceso 0.125 y de la t 0.3 · fiabilidad p95 +2.1 puntos, p 0.1 (t p95 +2.8, p 0.125)
+    año        n   exceso     neto     azar  ganan   +4%  +10%  regla elegida con el pasado (t de entrenamiento)
+   2020    4,298   +0.566   -1.406   -0.973   56.7  57.4  16.3  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10 (t 8.2, exceso +1.00 %)
+   2021      773   -1.179   -3.375   -1.367   44.0  40.9   5.4  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10 (t 5.8, exceso +0.81 %)
+   2022    7,292   +0.287   -0.116   +0.324   64.7  64.7  16.4  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10 (t 5.8, exceso +0.74 %)
+   2023    3,310   -0.225   -1.736   -0.890   53.3  52.4  10.9  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10 (t 4.6, exceso +0.59 %)
+   2024      633   +1.263   +2.461   +0.465   60.8   0.0   0.0  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10 (t 3.2, exceso +0.56 %)
+   2025    1,383   +1.337   +2.675   +0.396   66.5   0.0   0.0  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10 (t 3.5, exceso +0.63 %)
+   2026      948   +1.229   +1.811   +0.350   55.8   0.0   0.0  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10 (t 4.0, exceso +0.70 %)
+
+=== CON PATRÓN (al menos una condición de patrón) · elegida por RENTABILIDAD (mayor t de exceso) · selección hacia delante, años 2020–2026 ===
+  FUERA DE MUESTRA: 11,237 operaciones · exceso +0.363 % por operación (t +1.9) · neto +1.141 % (azar en las mismas fechas +0.778 %) · ganan 63.3 % (todas las filas 57.5 %) · fiabilidad +1.6 puntos sobre el azar del día (t +1.3) · aseguró +4 % el 43.0 % y +10 % el 11.8 %
+  Nulo del procedimiento: exceso mediano +0.131 %, p95 +0.428 %; t p95 +3.3 · p del exceso 0.15 y de la t 0.225 · fiabilidad p95 +2.8 puntos, p 0.275 (t p95 +2.8, p 0.35)
+    año        n   exceso     neto     azar  ganan   +4%  +10%  regla elegida con el pasado (t de entrenamiento)
+   2020    1,819   +0.605   +1.144   +1.231   66.4  70.7  21.4  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · esc (t 13.6, exceso +0.60 %)
+   2021    1,892   -0.449   +0.600   +0.568   57.9  58.5  14.1  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · esc6 (t 5.0, exceso +0.62 %)
+   2022    3,416   +0.201   +1.021   +0.324   71.1  71.4  19.8  precio bajo su media de 200 Y ruptura alcista en las últimas 5 sesiones → corto · esc10 (t 3.2, exceso +0.61 %)
+   2023    1,337   +0.531   +1.118   +0.324   57.0   0.0   0.0  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10 (t 3.5, exceso +0.76 %)
+   2024      970   +1.071   +1.773   +0.465   57.8   0.0   0.0  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10 (t 3.5, exceso +0.73 %)
+   2025    1,011   +0.178   +1.078   +0.396   60.8   0.0   0.0  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10 (t 4.0, exceso +0.79 %)
+   2026      792   +1.530   +2.291   +0.350   56.2   0.0   0.0  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10 (t 3.8, exceso +0.74 %)
+
+=== TODAS LAS REGLAS · elegida por FIABILIDAD (mayor t de «gana más veces que el azar del día», con exceso > 0) · selección hacia delante, años 2020–2026 ===
+  FUERA DE MUESTRA: 26,598 operaciones · exceso +0.110 % por operación (t +0.6) · neto -0.576 % (azar en las mismas fechas -0.686 %) · ganan 48.3 % (todas las filas 41.8 %) · fiabilidad +8.3 puntos sobre el azar del día (t +6.5) · aseguró +4 % el 48.9 % y +10 % el 6.6 %
+  Nulo del procedimiento: exceso mediano +0.002 %, p95 +0.336 %; t p95 +2.5 · p del exceso 0.275 y de la t 0.275 · fiabilidad p95 +4.4 puntos, p 0.0 (t p95 +5.3, p 0.0)
+    año        n   exceso     neto     azar  ganan   +4%  +10%  regla elegida con el pasado (t de entrenamiento)
+   2020    1,819   +0.605   +1.144   +1.231   66.4  70.7  21.4  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · esc (t 13.3, exceso +0.60 %)
+   2021    7,467   +0.475   -0.773   -1.370   50.6  50.3   0.0  volatilidad en el 40 % más alto Y sobre su media de 20 (20 % más alejado) → corto · op6b (t 9.5, exceso +0.24 %)
+   2022    2,999   -0.195   -0.574   -0.325   45.7  46.0   0.0  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · op6a (t 8.3, exceso +0.05 %)
+   2023    3,167   -0.279   -1.085   -0.610   34.5  34.7   0.0  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · op6a (t 9.2, exceso +0.03 %)
+   2024    3,470   -0.087   -1.026   -0.783   40.5  41.0   8.1  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · esca (t 10.2, exceso +0.04 %)
+   2025    3,482   -0.196   -0.917   -0.592   46.0  46.4  10.3  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · esca (t 11.4, exceso +0.00 %)
+   2026    4,194   +0.175   +0.065   -0.145   57.1  58.1  17.4  caída a 5 sesiones entre el 10 % mayor del día Y volatilidad en el 40 % más alto → largo · esca (t 11.4, exceso +0.28 %)
+
+=== SOLO CONTEXTO (sin patrones) · elegida por FIABILIDAD (mayor t de «gana más veces que el azar del día», con exceso > 0) · selección hacia delante, años 2020–2026 ===
+  FUERA DE MUESTRA: 28,300 operaciones · exceso +0.129 % por operación (t +0.7) · neto -0.529 % (azar en las mismas fechas -0.657 %) · ganan 47.8 % (todas las filas 38.3 %) · fiabilidad +8.4 puntos sobre el azar del día (t +7.0) · aseguró +4 % el 48.2 % y +10 % el 7.6 %
+  Nulo del procedimiento: exceso mediano +0.013 %, p95 +0.336 %; t p95 +2.2 · p del exceso 0.275 y de la t 0.3 · fiabilidad p95 +4.8 puntos, p 0.0 (t p95 +5.5, p 0.0)
+    año        n   exceso     neto     azar  ganan   +4%  +10%  regla elegida con el pasado (t de entrenamiento)
+   2020    3,521   +0.516   +0.696   -1.010   53.5  55.2  22.2  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · esca (t 12.6, exceso +0.01 %)
+   2021    7,467   +0.475   -0.773   -1.370   50.6  50.3   0.0  volatilidad en el 40 % más alto Y sobre su media de 20 (20 % más alejado) → corto · op6b (t 9.5, exceso +0.24 %)
+   2022    2,999   -0.195   -0.574   -0.325   45.7  46.0   0.0  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · op6a (t 8.3, exceso +0.05 %)
+   2023    3,167   -0.279   -1.085   -0.610   34.5  34.7   0.0  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · op6a (t 9.2, exceso +0.03 %)
+   2024    3,470   -0.087   -1.026   -0.783   40.5  41.0   8.1  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · esca (t 10.2, exceso +0.04 %)
+   2025    3,482   -0.196   -0.917   -0.592   46.0  46.4  10.3  volatilidad en el 40 % más alto Y volumen ≥ 1,5 veces su media de 20 → corto · esca (t 11.4, exceso +0.00 %)
+   2026    4,194   +0.175   +0.065   -0.145   57.1  58.1  17.4  caída a 5 sesiones entre el 10 % mayor del día Y volatilidad en el 40 % más alto → largo · esca (t 11.4, exceso +0.28 %)
+
+=== CON PATRÓN (al menos una condición de patrón) · elegida por FIABILIDAD (mayor t de «gana más veces que el azar del día», con exceso > 0) · selección hacia delante, años 2020–2026 ===
+  FUERA DE MUESTRA: 22,043 operaciones · exceso +0.200 % por operación (t +1.4) · neto -0.076 % (azar en las mismas fechas -0.276 %) · ganan 49.0 % (todas las filas 43.0 %) · fiabilidad +6.6 puntos sobre el azar del día (t +5.6) · aseguró +4 % el 49.7 % y +10 % el 8.3 %
+  Nulo del procedimiento: exceso mediano +0.053 %, p95 +0.312 %; t p95 +2.1 · p del exceso 0.15 y de la t 0.15 · fiabilidad p95 +4.0 puntos, p 0.0 (t p95 +4.7, p 0.0)
+    año        n   exceso     neto     azar  ganan   +4%  +10%  regla elegida con el pasado (t de entrenamiento)
+   2020    1,819   +0.605   +1.144   +1.231   66.4  70.7  21.4  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · esc (t 13.3, exceso +0.60 %)
+   2021    4,559   +0.584   -0.202   -0.969   60.1  60.2  11.1  volatilidad en el 40 % más alto Y 2 o más patrones alcistas a la vez → corto · esc (t 8.8, exceso +0.38 %)
+   2022    2,142   +0.013   +0.117   -0.325   47.7  47.8   0.0  volatilidad en el 40 % más alto Y 2 o más patrones alcistas a la vez → corto · op6a (t 8.3, exceso +0.19 %)
+   2023    3,608   -0.100   -0.598   -0.610   34.4  34.5   0.0  volatilidad en el 40 % más alto Y 2 o más patrones alcistas a la vez → corto · op6a (t 8.8, exceso +0.17 %)
+   2024    4,034   -0.397   -1.115   -0.996   31.3  31.5   0.0  volatilidad en el 40 % más alto Y 2 o más patrones alcistas a la vez → corto · op6a (t 9.1, exceso +0.14 %)
+   2025    3,395   +0.428   +0.668   +0.254   56.2  57.1  15.7  volatilidad en el 40 % más alto Y 2 o más patrones bajistas a la vez → largo · esca (t 9.8, exceso +0.38 %)
+   2026    2,486   +0.452   +0.521   -0.145   57.4  58.2  16.3  volatilidad en el 40 % más alto Y 2 o más patrones bajistas a la vez → largo · esca (t 11.1, exceso +0.36 %)
+
+=== REGLAS ELEGIDAS CON LOS AÑOS ≤ 2022 Y MIRADAS UNA SOLA VEZ DESPUÉS ===
+  [todo]
+   entren. n   exceso      t |  final n   exceso      t  regla
+      17,307   +0.594   +4.6 |   10,289   -0.064   -0.4  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10
+      17,307   +0.610   +4.3 |   10,333   +0.103   +0.6  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc
+       8,090   +0.746   +4.2 |    4,700   +1.553   +2.3  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op4b
+       8,090   +0.901   +4.1 |    4,682   +1.621   +2.5  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op6b
+      17,307   +0.407   +4.1 |   10,348   +0.086   +0.6  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc6
+       3,726   +1.004   +4.0 |    3,296   -0.305   -0.9  RSI(2) ≥ 90 Y hueco de apertura ≥ +2 % → corto · esc10
+       8,090   +0.616   +3.9 |    4,705   +1.274   +2.9  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc
+      17,307   +0.387   +3.9 |   10,366   +0.254   +1.7  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esca
+      16,364   +0.228   +3.6 |   10,333   +0.192   +1.4  precio bajo su media de 200 Y sobre su media de 20 (20 % más alejado) → corto · esca
+      16,364   +0.393   +3.6 |   10,306   -0.069   -0.4  precio bajo su media de 200 Y sobre su media de 20 (20 % más alejado) → corto · esc
+      17,307   +0.652   +3.5 |   10,304   +0.098   +0.5  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · op6b
+      16,364   +0.553   +3.5 |   10,285   -0.047   -0.3  precio bajo su media de 200 Y sobre su media de 20 (20 % más alejado) → corto · esc10
+       5,807   +0.757   +3.5 |    4,110   +0.764   +2.1  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10
+       7,581   +0.479   +3.4 |    5,454   -0.001   -0.0  RSI(2) ≥ 90 Y volumen ≥ 1,5 veces su media de 20 → corto · esc10
+       8,090   +0.574   +3.3 |    4,701   +0.854   +2.2  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc10
+  → de 15 reglas, 10 mantienen exceso positivo en el final; exceso final medio +0.421 % (entrenamiento medio +0.593 %)
+  [contexto]
+   entren. n   exceso      t |  final n   exceso      t  regla
+      17,307   +0.594   +4.6 |   10,289   -0.064   -0.4  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc10
+      17,307   +0.610   +4.3 |   10,333   +0.103   +0.6  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc
+       8,090   +0.746   +4.2 |    4,700   +1.553   +2.3  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op4b
+       8,090   +0.901   +4.1 |    4,682   +1.621   +2.5  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op6b
+      17,307   +0.407   +4.1 |   10,348   +0.086   +0.6  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esc6
+       3,726   +1.004   +4.0 |    3,296   -0.305   -0.9  RSI(2) ≥ 90 Y hueco de apertura ≥ +2 % → corto · esc10
+       8,090   +0.616   +3.9 |    4,705   +1.274   +2.9  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc
+      17,307   +0.387   +3.9 |   10,366   +0.254   +1.7  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · esca
+      16,364   +0.228   +3.6 |   10,333   +0.192   +1.4  precio bajo su media de 200 Y sobre su media de 20 (20 % más alejado) → corto · esca
+      16,364   +0.393   +3.6 |   10,306   -0.069   -0.4  precio bajo su media de 200 Y sobre su media de 20 (20 % más alejado) → corto · esc
+      17,307   +0.652   +3.5 |   10,304   +0.098   +0.5  precio bajo su media de 200 Y RSI(14) en el 30 % más alto → corto · op6b
+      16,364   +0.553   +3.5 |   10,285   -0.047   -0.3  precio bajo su media de 200 Y sobre su media de 20 (20 % más alejado) → corto · esc10
+       7,581   +0.479   +3.4 |    5,454   -0.001   -0.0  RSI(2) ≥ 90 Y volumen ≥ 1,5 veces su media de 20 → corto · esc10
+       8,090   +0.574   +3.3 |    4,701   +0.854   +2.2  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc10
+       3,726   +0.952   +3.3 |    3,283   -0.476   -1.3  RSI(2) ≥ 90 Y hueco de apertura ≥ +2 % → corto · op4b
+  → de 15 reglas, 9 mantienen exceso positivo en el final; exceso final medio +0.338 % (entrenamiento medio +0.606 %)
+  [patrones]
+   entren. n   exceso      t |  final n   exceso      t  regla
+       5,807   +0.757   +3.5 |    4,110   +0.764   +2.1  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10
+       5,807   +0.622   +3.0 |    4,089   +0.890   +2.0  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · esc
+       3,675   +0.410   +3.0 |    2,563   -0.168   -0.7  RSI(2) ≥ 90 Y formación de vela bajista hoy → corto · esc10
+       5,807   +0.784   +3.0 |    4,070   +0.767   +1.5  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · op6b
+      24,441   +0.462   +3.0 |   18,537   +0.263   +2.0  precio bajo su media de 200 Y 2 o más patrones bajistas a la vez → largo · op6a
+       9,091   +0.655   +2.9 |    6,744   +0.662   +1.9  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · h10
+      34,184   +0.336   +2.9 |   24,548   +0.231   +1.9  ruptura bajista en las últimas 5 sesiones Y 2 o más patrones bajistas a la vez → largo · op6a
+      19,248   +0.338   +2.9 |   14,152   -0.214   -1.1  volatilidad en el 40 % más alto Y 2 o más patrones alcistas a la vez → corto · esc6
+      11,116   +0.483   +2.9 |    8,231   +0.131   +0.8  precio bajo su media de 200 Y ruptura alcista en las últimas 5 sesiones → corto · esc10
+      34,184   +0.384   +2.9 |   24,368   +0.213   +1.4  ruptura bajista en las últimas 5 sesiones Y 2 o más patrones bajistas a la vez → largo · op6b
+      37,235   +0.353   +2.8 |   26,784   +0.173   +1.3  2 o más patrones bajistas a la vez → largo · op6b
+       5,807   +0.682   +2.8 |    4,079   +0.831   +1.9  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · esc10
+      24,441   +0.493   +2.8 |   18,407   +0.239   +1.3  precio bajo su media de 200 Y 2 o más patrones bajistas a la vez → largo · op6b
+      37,235   +0.302   +2.8 |   26,966   +0.200   +1.8  2 o más patrones bajistas a la vez → largo · op6a
+       9,091   +0.520   +2.7 |    6,709   +0.695   +2.1  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · esc
+  → de 15 reglas, 13 mantienen exceso positivo en el final; exceso final medio +0.378 % (entrenamiento medio +0.505 %)
+
+=== LAS MEJORES MIRANDO TODOS LOS AÑOS (descriptivo: están elegidas con los mismos datos con los que se miden; la cifra fiable es la de fuera de muestra) ===
+  [todo]
+  n   13,729 exceso +0.735 % (t +4.2) neto +1.849 % ganan 60.3 %  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10   años: 17:-0.5 18:+0.8 19:+0.2 20:+0.2 21:+1.0 22:+0.8 23:+0.4 24:+1.3 25:+1.3 26:+1.2
+  n   10,273 exceso +0.800 % (t +4.1) neto +1.414 % ganan 58.3 %  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10   años: 17:+0.2 18:+1.1 19:+0.3 20:+1.1 21:+0.2 22:+1.2 23:+0.5 24:+1.1 25:+0.2 26:+1.5
+  n   15,034 exceso +1.780 % (t +4.0) neto +3.579 % ganan 50.9 %  impulso a 120 sesiones en el 20 % mejor del día Y bajo su media de 20 (20 % más alejado) → largo · run5   años: 17:+3.1 18:+0.1 19:-0.5 20:+2.5 21:+0.2 22:+2.2 23:+3.4 24:+0.8 25:+2.9 26:+3.9
+  n   10,785 exceso +2.252 % (t +4.0) neto +4.168 % ganan 51.2 %  impulso a 120 sesiones en el 20 % mejor del día Y caída a 5 sesiones entre el 10 % mayor del día → largo · run5   años: 17:+2.6 18:+0.9 19:-0.3 20:+2.6 21:-1.3 22:+3.3 23:+2.7 24:+1.9 25:+4.0 26:+6.6
+  n   14,987 exceso +0.681 % (t +3.9) neto +0.932 % ganan 56.8 %  impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · h10   años: 17:+0.5 18:+0.5 19:+0.4 20:+1.2 21:-0.2 22:+0.7 23:+0.4 24:+1.1 25:+0.6 26:+1.7
+  n   13,702 exceso +0.836 % (t +3.8) neto +1.972 % ganan 72.2 %  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc   años: 17:-0.3 18:+0.4 19:+0.4 20:+0.5 21:+0.9 22:+0.8 23:+0.9 24:+0.8 25:+1.1 26:+2.6
+  [contexto]
+  n   13,729 exceso +0.735 % (t +4.2) neto +1.849 % ganan 60.3 %  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10   años: 17:-0.5 18:+0.8 19:+0.2 20:+0.2 21:+1.0 22:+0.8 23:+0.4 24:+1.3 25:+1.3 26:+1.2
+  n   15,034 exceso +1.780 % (t +4.0) neto +3.579 % ganan 50.9 %  impulso a 120 sesiones en el 20 % mejor del día Y bajo su media de 20 (20 % más alejado) → largo · run5   años: 17:+3.1 18:+0.1 19:-0.5 20:+2.5 21:+0.2 22:+2.2 23:+3.4 24:+0.8 25:+2.9 26:+3.9
+  n   10,785 exceso +2.252 % (t +4.0) neto +4.168 % ganan 51.2 %  impulso a 120 sesiones en el 20 % mejor del día Y caída a 5 sesiones entre el 10 % mayor del día → largo · run5   años: 17:+2.6 18:+0.9 19:-0.3 20:+2.6 21:-1.3 22:+3.3 23:+2.7 24:+1.9 25:+4.0 26:+6.6
+  n   14,987 exceso +0.681 % (t +3.9) neto +0.932 % ganan 56.8 %  impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · h10   años: 17:+0.5 18:+0.5 19:+0.4 20:+1.2 21:-0.2 22:+0.7 23:+0.4 24:+1.1 25:+0.6 26:+1.7
+  n   13,702 exceso +0.836 % (t +3.8) neto +1.972 % ganan 72.2 %  precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc   años: 17:-0.3 18:+0.4 19:+0.4 20:+0.5 21:+0.9 22:+0.8 23:+0.9 24:+0.8 25:+1.1 26:+2.6
+  n    7,822 exceso +2.152 % (t +3.7) neto -2.785 % ganan 33.0 %  cerca del mínimo de 52 semanas (posición ≤ 0,1) Y volatilidad (ATR/precio) en el 40 % más bajo → corto · run5   años: 18:+1.0 20:+8.0 21:-1.8 22:+1.3 23:+2.3 24:+2.0 25:+3.2 26:+2.0
+  [patrones]
+  n   10,273 exceso +0.800 % (t +4.1) neto +1.414 % ganan 58.3 %  impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10   años: 17:+0.2 18:+1.1 19:+0.3 20:+1.1 21:+0.2 22:+1.2 23:+0.5 24:+1.1 25:+0.2 26:+1.5
+  n   29,458 exceso +1.458 % (t +3.6) neto +3.363 % ganan 51.5 %  caída a 5 sesiones entre el 10 % mayor del día Y ruptura bajista en las últimas 5 sesiones → largo · run5   años: 17:+0.3 18:+0.9 19:+1.8 20:+3.4 21:+2.5 22:+1.9 23:+0.9 24:+0.4 25:+0.8 26:+2.7
+  n   60,981 exceso +0.301 % (t +3.6) neto +0.886 % ganan 44.0 %  ruptura bajista en las últimas 5 sesiones Y 2 o más patrones bajistas a la vez → largo · op6a   años: 17:-0.3 18:+0.4 19:+0.3 20:+0.6 21:+0.5 22:+0.4 23:+0.2 24:+0.3 25:+0.1 26:+0.4
+  n   16,408 exceso +0.692 % (t +3.6) neto +1.224 % ganan 58.2 %  impulso 12-1 meses en el 20 % mejor Y ruptura bajista en las últimas 5 sesiones → largo · h10   años: 17:+0.1 18:+0.9 19:+0.4 20:+0.7 21:+0.3 22:+1.2 23:+0.3 24:+1.1 25:+0.1 26:+1.5
+  n   45,011 exceso +0.381 % (t +3.5) neto +1.012 % ganan 45.8 %  precio bajo su media de 200 Y 2 o más patrones bajistas a la vez → largo · op6a   años: 17:-0.6 18:+0.4 19:+0.6 20:+0.7 21:+0.8 22:+0.4 23:+0.2 24:+0.4 25:+0.2 26:+0.4
+  n   94,142 exceso +0.543 % (t +3.5) neto +3.284 % ganan 51.2 %  ruptura bajista en las últimas 5 sesiones → largo · run5   años: 17:+0.1 18:+0.4 19:+1.1 20:-0.0 21:+1.3 22:+0.4 23:+0.7 24:+0.4 25:+0.2 26:+0.8
+
+=== ENTRAR AL AZAR (todas las filas) CON CADA SALIDA: neto medio por operación y % que termina con ganancia ===
+  largo op4a   n   711,281  neto +0.316 %  ganan 45.7 %  asegura +4 % 46.1 %  +10 % 0.0 %
+  largo op4b   n   710,408  neto +0.571 %  ganan 58.5 %  asegura +4 % 58.8 %  +10 % 0.0 %
+  largo op6a   n   710,996  neto +0.383 %  ganan 38.6 %  asegura +4 % 38.4 %  +10 % 0.0 %
+  largo op6b   n   709,801  neto +0.688 %  ganan 51.3 %  asegura +4 % 50.3 %  +10 % 0.0 %
+  largo run5   n   702,412  neto +1.893 %  ganan 47.5 %  asegura +4 % 0.0 %  +10 % 0.0 %
+  largo h10    n   712,268  neto +0.335 %  ganan 53.3 %  asegura +4 % 0.0 %  +10 % 0.0 %
+  largo esc    n   711,056  neto +0.509 %  ganan 58.6 %  asegura +4 % 58.9 %  +10 % 12.0 %
+  largo esca   n   711,714  neto +0.258 %  ganan 45.8 %  asegura +4 % 46.2 %  +10 % 9.4 %
+  largo esc6   n   711,252  neto +0.398 %  ganan 58.2 %  asegura +4 % 58.1 %  +10 % 11.3 %
+  largo esc10  n   709,857  neto +0.690 %  ganan 69.3 %  asegura +4 % 68.3 %  +10 % 13.4 %
+  corto op4a   n   711,387  neto -0.703 %  ganan 37.7 %  asegura +4 % 38.0 %  +10 % 0.0 %
+  corto op4b   n   710,649  neto -0.936 %  ganan 48.9 %  asegura +4 % 49.1 %  +10 % 0.0 %
+  corto op6a   n   711,094  neto -0.836 %  ganan 30.1 %  asegura +4 % 29.9 %  +10 % 0.0 %
+  corto op6b   n   709,943  neto -1.139 %  ganan 40.7 %  asegura +4 % 39.8 %  +10 % 0.0 %
+  corto run5   n   702,595  neto -2.630 %  ganan 33.7 %  asegura +4 % 0.0 %  +10 % 0.0 %
+  corto h10    n   712,268  neto -0.635 %  ganan 44.1 %  asegura +4 % 0.0 %  +10 % 0.0 %
+  corto esc    n   711,211  neto -0.838 %  ganan 49.0 %  asegura +4 % 49.1 %  +10 % 9.4 %
+  corto esca   n   711,817  neto -0.622 %  ganan 37.8 %  asegura +4 % 38.1 %  +10 % 7.2 %
+  corto esc6   n   711,388  neto -0.760 %  ganan 48.8 %  asegura +4 % 48.6 %  +10 % 9.0 %
+  corto esc10  n   710,009  neto -0.959 %  ganan 59.0 %  asegura +4 % 58.1 %  +10 % 10.9 %

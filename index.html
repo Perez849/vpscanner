@@ -39,6 +39,22 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-text);-webkit-fon
 button,input,select{font:inherit;color:inherit}
 a{color:inherit}
 
+/* sección: dos partes grandes (figuras y velas · regla de impulso) */
+.sec{display:flex;gap:6px;flex-wrap:wrap}
+.sec button{font-family:var(--f-display);font-size:15px;font-weight:700;padding:8px 16px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer;line-height:1.1}
+.sec button small{display:block;font-family:var(--f-mono);font-size:9px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;opacity:.75;margin-top:3px}
+.sec button.on{background:var(--ink);color:var(--bg)}
+.sec button.i{border-color:var(--violet)}.sec button.i.on{background:var(--violet);color:#fff}
+body.imp .top{border-bottom-color:var(--violet)}
+body.imp .nav button.on{background:var(--violet);color:#fff}
+.sumry.w .stat{flex:1 1 150px}
+.part.f{background:var(--ink);color:var(--bg)}
+.part{display:inline-block;font-family:var(--f-mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:5px;background:var(--violet);color:#fff;margin-right:8px;vertical-align:middle}
+table.ev td.l,table.ev th.l{text-align:left;white-space:normal;min-width:230px}
+table.ev tr.me td{background:color-mix(in srgb, var(--violet) 9%, transparent)}
+.yb{display:inline-block;vertical-align:middle}
+.cond{font-size:11.5px;color:var(--sub);line-height:1.5}
+.pos{color:var(--emerald);font-weight:700}.neg{color:var(--ember);font-weight:700}
 /* cabecera */
 .top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:4px 0 12px;border-bottom:2px solid var(--ink)}
 .brand{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.015em;text-decoration:none;line-height:1}
@@ -144,6 +160,7 @@ table.ev tr:hover td{background:var(--ink2)}
 .gc h4{margin:0 0 4px;font-size:14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .gc p{margin:4px 0;font-size:12px;color:var(--sub)}
 .gc .rl{font-size:11.5px;border-left:3px solid var(--rule2);padding-left:8px;color:var(--ink)}
+.pathbox{margin:8px 0 2px}.pathbox svg{display:block;width:100%;height:auto}.pathbox .cap{font-size:10.5px;color:var(--sub);line-height:1.4}
 .foot{font-size:11px;color:var(--dim);padding:18px 0 4px;max-width:90ch}
 
 @media (max-width:1250px){.chartwrap{grid-template-columns:minmax(0,1fr) 340px}.rail{display:none}}
@@ -154,7 +171,8 @@ table.ev tr:hover td{background:var(--ink2)}
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="#radar" id="brand">VP<b>Scanner</b><small>laboratorio de chartismo</small></a>
+    <a class="brand" href="#radar" id="brand">VP<b>Scanner</b><small>laboratorio de chartismo y reglas</small></a>
+    <nav class="sec" id="sec"></nav>
     <nav class="nav" id="nav"></nav>
     <div class="asof" id="asof"></div>
   </header>
@@ -176,9 +194,10 @@ const mon = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct
 const S = {
   view: 'radar', idx: null, cat: null, ev: null, sym: null, D: null, sel: null, hover: null, tab: 'act', cross: null, cache: {},
   rv: {mode: 'all', dir: 0, q: 60, all: 0, text: '', fav: 0},                                   // filtros del radar
-  f: {figuras: 1, rupturas: 1, velas: 1, directrices: 0, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'e', q: 60},   // filtros del gráfico
+  f: {figuras: 1, rupturas: 1, velas: 1, directrices: 0, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'a', q: 60},   // filtros del gráfico
   view_: {start: 0, ppb: 6}, hits: [], W: 0, H: 0, dpr: 1,
-  evK: 'K300', evFam: 'all', evSort: 't', evDir: -1, evText: ''
+  evK: 'K300', evFam: 'all', evSort: 't', evDir: -1, evText: '',
+  imp: null, trk: null, srch: null, cf: null, cfm: null, fb: null, ct: null, ps: null, iv: {rule: 'all', fresh: 0, text: '', hv: 1, risk: 1, cap: 0}, tv: {mode: 'all'}                                   // parte 2: cribador, búsqueda y confirmaciones
 };
 
 /* favoritos: solo viven en este navegador (localStorage) */
@@ -192,7 +211,7 @@ const distTxt = d => d == null ? '' : d < 0.1 ? 'en el disparo' : `a ${d.toFixed
 
 /* ───────────────────────── datos ───────────────────────── */
 async function J(path) {
-  if (window.VP) { const k = path.replace(/\.json$/, ''); return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
+  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['impulso', 'impulso_track', 'search', 'search_confirm', 'search_confirm_smallmid', 'fiab', 'cartera', 'plan_study'].includes(k)) return VP[k] || null; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
   if (S.cache[path]) return S.cache[path];
   const r = await fetch(BASE + path + '?v=' + Math.floor(Date.now() / 3600000));
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -200,17 +219,31 @@ async function J(path) {
 }
 const catOf = k => (S.cat && S.cat.patterns[k]) || {};
 const evOf = k => S.ev && S.ev.patterns ? {all: S.ev.patterns[k], hq: S.ev.patterns[k + ':hq']} : {};
+const pathOf = k => { const P = S.ev && S.ev.paths && S.ev.paths[k]; if (!P) return null; const a = P.K300 && P.K300.n >= 30 ? P.K300 : P.K50 && P.K50.n >= 20 ? P.K50 : null; return a ? {...a, K: P.K300 === a ? 300 : 50} : null; };
+function pathSvg(ps) {
+  if (!ps) return '';
+  const m = ps.m, se = ps.se, n = m.length, W = 300, H = 104, L = 30, R = 6, T = 8, B = 18;
+  const lo = Math.min(0, ...m.map((v, i) => v - 1.96 * (se[i] || 0))), hi = Math.max(0, ...m.map((v, i) => v + 1.96 * (se[i] || 0))), pad = (hi - lo) * 0.08 || 0.1;
+  const x = i => L + i / (n - 1) * (W - L - R), y = v => T + (hi + pad - v) / (hi - lo + 2 * pad) * (H - T - B), up = m[n - 1] >= 0, c = up ? 'var(--emerald)' : 'var(--ember)';
+  const band = m.map((v, i) => `${x(i).toFixed(1)},${y(v + 1.96 * (se[i] || 0)).toFixed(1)}`).concat(m.map((v, i) => `${x(n - 1 - i).toFixed(1)},${y(m[n - 1 - i] - 1.96 * (se[n - 1 - i] || 0)).toFixed(1)}`)).join(' ');
+  const line = m.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const sig = Math.abs(m[n - 1]) > 1.96 * (se[n - 1] || 1e9);
+  return `<div class="pathbox"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Trayectoria media tras el patrón"><line x1="${L}" x2="${W - R}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="var(--dim)" stroke-dasharray="3 3"/>
+    <polygon points="${band}" fill="${c}" opacity=".15"/><polyline points="${line}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/><circle cx="${x(n - 1).toFixed(1)}" cy="${y(m[n - 1]).toFixed(1)}" r="3" fill="${c}"/>
+    <text x="${L - 4}" y="${y(0) + 3}" text-anchor="end" font-size="8" fill="var(--sub)" font-family="var(--f-mono)">0</text><text x="${L}" y="${H - 4}" font-size="8" fill="var(--sub)" font-family="var(--f-mono)">sesión 1</text><text x="${W - R}" y="${H - 4}" text-anchor="end" font-size="8" fill="var(--sub)" font-family="var(--f-mono)">20</text>
+    <text x="${W - R}" y="${Math.max(10, y(m[n - 1]) - 6)}" text-anchor="end" font-size="9" font-weight="700" fill="${c}" font-family="var(--f-mono)">${pc(m[n - 1], 2)}</text></svg>
+    <div class="cap">Qué pasa después: exceso medio del lado operado sobre entrar al azar, de 1 a 20 sesiones (banda del 95 %, ${ps.K} mayores, n=${ps.n}). ${sig ? 'La banda no incluye el cero al final.' : 'La banda incluye el cero: no se distingue del azar.'}</div></div>`;
+}
 const thr = () => (S.ev && S.ev.meta.thr[S.evK].p95) || 3.3;
 
 /* ───────────────────────── arranque y rutas ───────────────────────── */
 async function init() {
   buildNav();
-  try { S.idx = await J('index.json'); S.cat = await J('catalog.json'); } catch (e) { $('#view').innerHTML = '<div class="empty">No hay datos todavía. Ejecuta <code>python -m vp lab</code> o lanza el flujo «Escaneo diario».</div>'; return; }
+  try { S.idx = await J('index.json'); S.cat = await J('catalog.json'); } catch (e) { S.idx = null; }
   try { S.ev = await J('evidence.json'); } catch (e) { S.ev = null; }
-  $('#asof').innerHTML = `datos hasta <b>${dstr(S.idx.asof)}</b><br>${S.idx.symbols.length} valores`;
-  $('#foot').innerHTML = 'VP Scanner dibuja y mide patrones chartistas. No es una recomendación de inversión: el estudio de la pestaña Evidencia muestra qué han aportado de verdad. ' +
-    (S.ev ? `Evidencia: ${S.ev.meta.universe} acciones, ${S.ev.meta.from} → ${S.ev.meta.to}. ${esc(S.ev.meta.note)}` : '');
-  window.addEventListener('resize', () => { if (S.view === 'chart') resize(); else if (S.view === 'ev') drawStrip(); });
+  try { S.ps = await J('plan_study.json'); } catch (e) { S.ps = null; }
+  for (const [k, f] of [['imp', 'impulso.json'], ['trk', 'impulso_track.json'], ['srch', 'search.json'], ['cf', 'search_confirm.json'], ['cfm', 'search_confirm_smallmid.json'], ['fb', 'fiab.json'], ['ct', 'cartera.json']]) { try { S[k] = (await J(f)) || null; } catch (e) { S[k] = null; } }
+  window.addEventListener('resize', () => { if (S.view === 'chart') resize(); else if (S.view === 'ev') drawStrip(); else if (S.view === 'impev') drawCartera(); });
   window.addEventListener('keydown', onKey);
   window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (h) go(h); });                 // atrás/adelante del navegador y enlaces con #VALOR
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', rerender);
@@ -218,23 +251,47 @@ async function init() {
   const h = (location.hash || '').replace('#', '');
   await go(h || 'radar', null, true);
 }
-function rerender() { if (S.view === 'chart') { draw(); renderPane(); } else if (S.view === 'ev') drawStrip(); }
+function rerender() { if (S.view === 'chart') { draw(); renderPane(); } else if (S.view === 'ev') drawStrip(); else if (S.view === 'impev') drawCartera(); }
+const IMPV = ['imp', 'imptrack', 'impev', 'impguide'];
 function buildNav() {
-  $('#nav').innerHTML = [['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']].map(([k, t]) => `<button data-v="${k}" class="${S.view === k ? 'on' : ''}">${t}</button>`).join('');
-  $('#nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.v === 'chart' ? (S.sym || S.idx.symbols[0].sym) : b.dataset.v));
+  const imp = IMPV.includes(S.view);
+  $('#sec').innerHTML = `<button data-s="fig" class="${imp ? '' : 'on'}">Figuras y velas<small>chartismo · parte 1</small></button><button data-s="imp" class="i ${imp ? 'on' : ''}">Regla de impulso<small>sin figuras ni velas · parte 2</small></button>`;
+  $('#sec').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.s === 'imp' ? 'impulso' : 'radar'));
+  const items = imp ? [['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']] : [['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']];
+  $('#nav').innerHTML = items.map(([k, t]) => `<button data-v="${k}" class="${S.view === k ? 'on' : ''}">${t}</button>`).join('');
+  $('#nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.v === 'chart' ? (S.sym || (S.idx && S.idx.symbols[0].sym) || 'radar') : b.dataset.v));
   $('#brand').onclick = e => { e.preventDefault(); go('radar'); };
+  document.body.classList.toggle('imp', imp);
+  try { if (!S.iv._ld) { S.iv._ld = 1; const r = +localStorage.getItem('vp.risk'), c = +localStorage.getItem('vp.cap'); if (r) S.iv.risk = r; if (c) S.iv.cap = c; } } catch (e) { /* sin almacenamiento */ }
 }
+const VIEWS = {radar: 'radar', evidencia: 'ev', ev: 'ev', guia: 'guide', guide: 'guide', chart: 'chart', impulso: 'imp', imp: 'imp', 'impulso-evidencia': 'impev', impev: 'impev', 'impulso-guia': 'impguide', impguide: 'impguide', 'impulso-seguimiento': 'imptrack', imptrack: 'imptrack'};
+const HASH = {ev: 'evidencia', guide: 'guia', imp: 'impulso', impev: 'impulso-evidencia', impguide: 'impulso-guia', imptrack: 'impulso-seguimiento'};
 async function go(where, selId, first) {
+  const w = (where || '').toLowerCase();
   const sym = S.idx && S.idx.symbols.find(s => s.sym === (where || '').toUpperCase());
-  const view = sym ? 'chart' : ({radar: 'radar', evidencia: 'ev', ev: 'ev', guia: 'guide', guide: 'guide', chart: 'chart'}[where] || 'radar');
+  const view = sym ? 'chart' : (VIEWS[w] || 'radar');
   S.view = view;
-  try { history.replaceState(null, '', '#' + (sym ? sym.sym : ({ev: 'evidencia', guide: 'guia'}[view] || view))); } catch (e) { /* el visor puede bloquearlo */ }
+  try { history.replaceState(null, '', '#' + (sym ? sym.sym : (HASH[view] || view))); } catch (e) { /* el visor puede bloquearlo */ }
   buildNav();
-  if (view === 'radar') renderRadar();
+  setChrome(view);
+  if (IMPV.includes(view)) { ({imp: renderImp, impev: renderImpEv, impguide: renderImpGuide, imptrack: renderImpTrack})[view](); }
+  else if (!S.idx) $('#view').innerHTML = '<div class="empty">No hay datos de figuras todavía. Ejecuta <code>python -m vp lab</code> o lanza el flujo «Escaneo diario».</div>';
+  else if (view === 'radar') renderRadar();
   else if (view === 'ev') renderEvidence();
   else if (view === 'guide') renderGuide();
   else await renderChartView(sym ? sym.sym : (S.sym || S.idx.symbols[0].sym), selId);
   if (!first) window.scrollTo({top: 0});
+}
+function setChrome(view) {                                                   // fecha de los datos y pie de página: cada parte lleva los suyos
+  if (IMPV.includes(view)) {
+    const m = S.imp && S.imp.meta;
+    $('#asof').innerHTML = m ? `cierre del <b>${esc(m.asof)}</b><br>${m.en_universo} acciones en el universo` : 'sin datos del cribador';
+    $('#foot').innerHTML = 'La regla de impulso es la parte 2 del laboratorio y no usa figuras ni velas. Es una candidata con una ventaja pequeña y no una recomendación de inversión: las cifras, con sus cautelas, están en la pestaña Evidencia.';
+  } else {
+    $('#asof').innerHTML = S.idx ? `datos hasta <b>${dstr(S.idx.asof)}</b><br>${S.idx.symbols.length} valores` : '';
+    $('#foot').innerHTML = 'VP Scanner dibuja y mide patrones chartistas. No es una recomendación de inversión: el estudio de la pestaña Evidencia muestra qué han aportado de verdad. ' +
+      (S.ev ? `Evidencia: ${S.ev.meta.universe} acciones, ${S.ev.meta.from} → ${S.ev.meta.to}. ${esc(S.ev.meta.note)}` : '');
+  }
 }
 
 /* ───────────────────────── radar ───────────────────────── */
@@ -265,7 +322,7 @@ function renderRadar() {
   const na = all.reduce((s, x) => s + x.active.filter(q => q.st !== 'forming' && (q.fam === 'figuras' || q.fam === 'directrices') && (q.q == null || q.q >= R.q)).length, 0);
   const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, t]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
   const miss = (S.idx.missing || []).length ? `<div class="warn">Sin datos de Yahoo en el último escaneo: <b>${S.idx.missing.map(esc).join(', ')}</b>. Revisa el símbolo en <code>watchlist.txt</code> (por ejemplo BRK-B, no BRK.B) o si tiene menos de 400 sesiones de historial.</div>` : '';
-  $('#view').innerHTML = `<h2>Radar</h2><p class="lead">Qué figuras se están formando o se han completado en las últimas sesiones. <b>Formándose</b>: la figura ya está dibujada pero no ha roto; se indica el nivel que la activa y a cuántos ATR está el precio. <b>Nuevas hoy</b>: se completaron en la última sesión.</p>${miss}
+  $('#view').innerHTML = `<h2><span class="part f">Parte 1</span>Radar</h2><p class="lead">Qué figuras se están formando o se han completado en las últimas sesiones. <b>Formándose</b>: la figura ya está dibujada pero no ha roto; se indica el nivel que la activa y a cuántos ATR está el precio. <b>Nuevas hoy</b>: se completaron en la última sesión.</p>${miss}
     <div class="sumry"><div class="stat"><b>${all.length}</b><span>valores vigilados</span></div><div class="stat"><b>${nf}</b><span>con figura formándose</span></div><div class="stat"><b>${nnear}</b><span>a ≤ ${NEAR} ATR del disparo</span></div><div class="stat"><b>${nnew}</b><span>figuras nuevas hoy</span></div><div class="stat"><b>${na}</b><span>figuras activas (Q ≥ ${R.q})</span></div></div>
     <div class="bar">${seg('r-mode', [['all', 'Todas'], ['near', 'Cerca del disparo'], ['forming', 'Formándose'], ['new', 'Nuevas hoy'], ['done', 'Completadas']], R.mode)}${seg('r-dir', [[0, 'Ambos'], [1, 'Alcistas'], [-1, 'Bajistas']], R.dir)}
       ${seg('r-q', [[0, 'Q: todas'], [60, '≥ 60'], [75, '≥ 75']], R.q)}<span class="tg ${R.all ? 'on' : ''}" id="r-all"><i></i>Incluir velas y rupturas</span><span class="tg ${R.fav ? 'on' : ''}" id="r-fav"><i></i>★ Favoritos (${favs.size})</span><input type="search" id="r-t" placeholder="Buscar valor" value="${esc(R.text)}" size="14"></div>
@@ -277,12 +334,13 @@ function renderRadar() {
   $('#r-t').oninput = e => { R.text = e.target.value; fillGrid(); };
   fillGrid();
 }
+const mixed = x => { const a = x.active.filter(q => q.st !== 'forming' && q.dir !== 0 && (S.rv.all || q.fam === 'figuras' || q.fam === 'directrices') && (q.q == null || q.q >= S.rv.q)); return a.some(q => q.dir > 0) && a.some(q => q.dir < 0); };
 function fillGrid() {
   const rows = radarRows(), g = $('#r-grid');
   if (!rows.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1">Ningún valor con figuras activas y estos filtros.</div>'; return; }
   const chip = q => `<span class="chip ${q.st === 'forming' ? 'f' : q.new ? 'n' : q.dir > 0 ? 'u' : q.dir < 0 ? 'd' : ''}" title="${q.st === 'forming' ? 'Formándose: ' + (q.dist != null ? distTxt(q.dist) + ' del nivel que la activa' : 'sin romper') : q.new ? 'Completada en la última sesión' : ''}">${q.st === 'forming' ? (q.dir > 0 ? '◐▲' : q.dir < 0 ? '◐▼' : '◐') : q.dir > 0 ? '▲' : q.dir < 0 ? '▼' : '◆'} ${esc(q.label)}${q.q != null ? ' · ' + q.q : ''}${q.st === 'forming' && q.dist != null ? ' · ' + distTxt(q.dist) : q.new ? ' · hoy' : ''}</span>`;
   g.innerHTML = rows.map(({x, a}) => `<div class="sc" data-s="${x.sym}" data-id="${a[0].id}"><div class="sc-h"><button class="fav ${favs.has(x.sym) ? 'on' : ''}" data-f="${x.sym}" title="Favorito">${favs.has(x.sym) ? '★' : '☆'}</button><b>${x.sym}</b><span class="nm">${esc(x.name)}</span><span class="sc-p">${fx(x.close)} <span style="color:${x.chg >= 0 ? 'var(--emerald)' : 'var(--ember)'}">${pc(x.chg)}</span></span></div>
-    ${spark(x.spark, x.spark[x.spark.length - 1] >= x.spark[0])}<div class="chips">${a.slice(0, 4).map(chip).join('')}${a.length > 4 ? `<span class="chip">+${a.length - 4}</span>` : ''}</div></div>`).join('');
+    ${spark(x.spark, x.spark[x.spark.length - 1] >= x.spark[0])}<div class="chips">${a.slice(0, 4).map(chip).join('')}${a.length > 4 ? `<span class="chip">+${a.length - 4}</span>` : ''}${mixed(x) ? '<span class="chip" title="Entre las señales que se muestran hay alcistas y bajistas vigentes a la vez: no hay una lectura clara">⚠ contradictorias</span>' : ''}</div></div>`).join('');
   g.querySelectorAll('.sc').forEach(e => e.onclick = ev => { if (ev.target.closest('.fav')) return; go(e.dataset.s, e.dataset.id); });
   g.querySelectorAll('.fav').forEach(b => b.onclick = ev => { ev.stopPropagation(); toggleFav(b.dataset.f); if (S.rv.fav) renderRadar(); else { b.classList.toggle('on', favs.has(b.dataset.f)); b.textContent = favs.has(b.dataset.f) ? '★' : '☆'; const t = $('#r-fav'); if (t) t.innerHTML = `<i></i>★ Favoritos (${favs.size})`; } });
 }
@@ -319,25 +377,69 @@ function evRows() {
   return out;
 }
 function renderEvidence() {
-  if (!S.ev) { $('#view').innerHTML = '<h2>Evidencia</h2><div class="empty">Todavía no hay estudio. Lanza el flujo «Estudio» (<code>python -m vp study</code>).</div>'; return; }
+  if (!S.ev) { $('#view').innerHTML = '<h2><span class="part f">Parte 1</span>Evidencia de las figuras y velas</h2><div class="empty">Todavía no hay estudio. Lanza el flujo «Estudio» (<code>python -m vp study</code>).</div>'; return; }
   const m = S.ev.meta, K = S.evK, T = m.thr[K], E = evSummary(K);
   const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, t]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
   const lab = k => esc((catOf(k.split(':')[0]).label || k) + (k.endsWith(':hq') ? ' (Q≥75)' : ''));
-  $('#view').innerHTML = `<h2>Evidencia</h2><p class="lead">¿Baten los patrones a entrar al azar? Cada señal se opera en la apertura siguiente y se cierra a ${m.primary} sesiones (coste ${m.cost} %); los bajistas se miden en corto. «Exceso» es el rendimiento menos el de entrar al azar en el mismo universo el mismo año. El umbral del mejor de N corrige que, al probar ${E.nAll} patrones, alguno saldrá «significativo» por casualidad.</p>
+  $('#view').innerHTML = `<h2><span class="part f">Parte 1</span>Evidencia de las figuras y velas</h2><p class="lead">¿Baten los patrones a entrar al azar? Cada señal se opera en la apertura siguiente y se cierra a ${m.primary} sesiones (coste ${m.cost} %); los bajistas se miden en corto. «Exceso» es el rendimiento menos el de entrar al azar ese mismo día en el mismo universo (así que lo que haga el mercado en bloque no cuenta como ventaja). «% ganadoras» es la parte de operaciones con ganancia neta, llegue o no a ningún objetivo. El umbral del mejor de N corrige que, al probar ${E.nAll} patrones, alguno saldrá «significativo» por casualidad.</p>
     <div class="panel"><div class="verd"><div><div class="big">${E.pos.length} de ${E.nBase}</div><div class="small">patrones con ventaja positiva que supera el umbral<br>(|t| ≥ ${T.p95}, percentil 95 del mejor de ${E.nAll})</div></div>
       <div style="flex:1;min-width:240px"><div class="small"><b>Con ventaja positiva:</b> ${E.pos.length ? E.pos.map(lab).join(' · ') : 'ninguno'}.<br><b>Superan el umbral pero rinden PEOR que el azar:</b> ${E.neg.length ? E.neg.map(lab).join(' · ') : 'ninguno'}.<br>Variantes de calidad alta (Q ≥ 75) que superan el umbral: ${E.hqAbove.length ? E.hqAbove.map(lab).join(' · ') : 'ninguna'}.<br>Por puro azar se esperarían ≈ ${(0.05 * E.nAll).toFixed(1)} si se miraran sueltos. Universo: ${m.universe} acciones · ${m.bars.toLocaleString('es-ES')} barras · ${m.from} → ${m.to}.</div></div></div></div>
     <div class="bar">${seg('e-k', [['K50', '50 mayores'], ['K300', '300 mayores']], K)}${seg('e-f', [['all', 'Todas']].concat(Object.entries(FAMS)), S.evFam)}<input type="search" id="e-t" placeholder="Buscar patrón" value="${esc(S.evText)}" size="16"></div>
-    <div class="panel"><h3>Resumen por familia</h3><div class="small" style="margin-bottom:6px">Exceso mediano sobre entrar al azar (a ${m.primary} sesiones) de los patrones de cada familia y sentido, y qué parte de ellos queda por encima del azar.</div><div id="e-fam"></div></div>
+    <div class="panel"><h3>Resumen por familia</h3><div class="small" style="margin-bottom:6px">Todas las señales de cada familia y sentido juntas (cada valor-día una sola vez), a ${m.primary} sesiones y frente a entrar al azar ese mismo día. Es un contraste conjunto con más potencia que cada patrón suelto; con 10 familias el umbral de Bonferroni es |t| ≥ 2,8 (★).</div><div id="e-fam"></div></div>
+    <div class="panel" style="border-left:3px solid var(--violet)"><h3>Con tu escalera (+4 % → +10 %): ¿cambia algo operar las figuras así?</h3><div class="small" style="margin-bottom:6px">Las mismas señales operadas con la <b>escalera del operador</b> (stop inicial estructural acotado a 1–2 ATR; al cerrar a +4 % el stop sube a +4 % y se queda; al cerrar a +10 % sube a +10 % y persigue a 2 ATR; hasta 60 sesiones), frente a entrar al azar el mismo valor con la misma escalera y la misma distancia de stop (8 entradas al azar por señal, con volatilidad parecida). Es el estudio del plan (<code>python -m vp plan</code>); las columnas «Escalera» de la tabla de abajo son lo mismo patrón por patrón.</div><div id="e-esc"></div></div>
+    <div class="panel"><h3>Qué puede detectar este estudio (potencia)</h3><div id="e-pow" class="small"></div></div>
+    <div class="panel"><h3>Controles positivos: ¿ve el método lo que sí existe?</h3><div class="small" style="margin-bottom:6px">Anomalías de cartera documentadas, medidas con el mismo motor (referencia del mismo día, bloques de 10 sesiones) y el mismo umbral. Si el método está bien, deben aparecer.</div><div id="e-ctl"></div></div>
+    <div class="panel"><h3>Cuando coinciden varias señales</h3><div class="small" style="margin-bottom:6px">Cada valor-día cuenta <b>una sola vez</b> aunque salten varios patrones a la vez (si no, el mismo movimiento se contaría varias veces). «Estructura» son figuras, rupturas, directrices y rebotes; el consenso de velas no cuenta aparte porque son las propias velas. Las contradictorias (señales alcistas y bajistas a la vez) se miden en largo y en corto.</div><div id="e-combo"></div></div>
     <div class="panel"><h3>t de cada patrón frente al azar</h3><div class="small" style="margin-bottom:4px">Cada punto es un patrón (verde alcista, rojo bajista; el anillo marca los de calidad alta). La banda sombreada es lo que se esperaría por azar para el mejor de ${E.nAll}: casi todo cae dentro.</div><canvas id="strip"></canvas></div>
-    <div class="tw"><table class="ev"><thead><tr>${[['label', 'Patrón'], ['n', 'n'], ['wr', 'Acierto'], ['mean', 'Media'], ['t', 'Exceso · t'], ['hq', 'Calidad ≥ 75']].map(([k, t]) => `<th data-k="${k}">${t}${S.evSort === k ? (S.evDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}<th>Años +</th><th></th></tr></thead><tbody id="e-body"></tbody></table></div>`;
+    <div class="tw"><table class="ev"><thead><tr>${[['label', 'Patrón'], ['n', 'n'], ['wr', '% ganadoras'], ['mean', 'Media'], ['t', 'Exceso ± IC 95 % · t'], ['hq', 'Calidad ≥ 75']].map(([k, t]) => `<th data-k="${k}"${k === 'wr' ? ' title="Parte de las operaciones que terminan con ganancia neta (después de costes) a la salida a tiempo fijo; no cuenta si llegan o no a ningún objetivo"' : ''}>${t}${S.evSort === k ? (S.evDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}<th>Años +</th><th title="Con la escalera del operador (+4 % plano → +10 % persiguiendo a 2 ATR, stop estructural acotado a 1–2 ATR): exceso sobre entrar al azar ese valor con la misma escalera · t">Escalera: exceso · t</th><th title="Con la escalera: % de operaciones que ganan (entre paréntesis, entrar al azar) · % que aseguran al menos el +4 %">Escalera: ganan (azar) · +4 %</th><th></th></tr></thead><tbody id="e-body"></tbody></table></div>`;
   $('#e-k').querySelectorAll('button').forEach(b => b.onclick = () => { S.evK = b.dataset.v; renderEvidence(); });
   $('#e-f').querySelectorAll('button').forEach(b => b.onclick = () => { S.evFam = b.dataset.v; renderEvidence(); });
   $('#e-t').oninput = e => { S.evText = e.target.value; fillEvTable(); drawStrip(); };
   $('.ev thead').querySelectorAll('th[data-k]').forEach(th => th.onclick = () => { const k = th.dataset.k; if (S.evSort === k) S.evDir *= -1; else { S.evSort = k; S.evDir = -1; } renderEvidence(); });
-  fillEvTable(); fillFam(); drawStrip();
+  fillEvTable(); fillFam(); fillLadder(); fillCombos(); fillPower(); drawStrip();
+}
+const escOf = k => { const r = S.ps && S.ps.patterns && S.ps.patterns[k]; return r && r.esc && r.esc[S.evK] && r.esc[S.evK].ex != null ? r.esc[S.evK] : null; };
+function fillLadder() {                                                      // la escalera sobre las figuras: conjunto, familias y resumen patrón por patrón (estudio del plan)
+  const el = $('#e-esc'); if (!el) return;
+  const P = S.ps && S.ps.pooled && S.ps.pooled.esc && S.ps.pooled.esc[S.evK];
+  if (!P) { el.innerHTML = '<div class="small">No hay estudio del plan cargado (<code>data/plan_study.json</code>).</div>'; return; }
+  const T = thr(), me = (S.ps.meta && S.ps.meta.min_events) || 20;
+  const row = (k, v) => v && v.ex != null && v.n >= 20 ? `<tr><td class="l">${k === 'todos' ? '<b>Todas las señales</b>' : k.replace(/^(\w)/, c => c.toUpperCase()) + (/bajistas/.test(k) ? ' (corto)' : ' (largo)')}</td><td>${v.n.toLocaleString('es-ES')}</td><td>${pc(v.mean, 2)}</td><td>${pc(v.base, 2)}</td><td class="${Math.abs(v.t) >= 2.8 ? (v.ex > 0 ? 'pos' : 'neg') : ''}">${pc(v.ex, 2)} · ${v.t.toFixed(1)}${Math.abs(v.t) >= 2.8 ? ' ★' : ''}</td><td>${v.win.toFixed(0)} % (${v.bwin.toFixed(0)} %)</td><td>${v.tgt.toFixed(0)} % (${v.btgt.toFixed(0)} %)</td><td>${v.stp.toFixed(0)} % (${v.bstp.toFixed(0)} %)</td></tr>` : '';
+  const pats = Object.entries(S.ps.patterns).filter(([k, r]) => !r.hq && r.esc && r.esc[S.evK] && r.esc[S.evK].n >= me && r.esc[S.evK].ex != null).map(([k, r]) => ({k, s: r.esc[S.evK], label: (catOf(k).label || k)}));
+  const pos = pats.filter(p => p.s.ex > 0).length, sig = pats.filter(p => Math.abs(p.s.t) >= T), mean = pats.reduce((a, p) => a + p.s.ex, 0) / Math.max(1, pats.length);
+  const top = pats.slice().sort((a, b) => b.s.t - a.s.t).slice(0, 3), bot = pats.slice().sort((a, b) => a.s.t - b.s.t).slice(0, 3);
+  const cal = S.ps.calibration && S.ps.calibration.esc;
+  el.innerHTML = `<div class="tw"><table class="ev"><thead><tr><th class="l">Grupo</th><th>n</th><th>Media</th><th>Azar con la escalera</th><th>Exceso · t</th><th>Ganan (azar)</th><th>Aseguran ≥ +4 % (azar)</th><th>Stop inicial (azar)</th></tr></thead><tbody>${Object.entries(P).map(([k, v]) => row(k, v)).join('')}</tbody></table></div>
+    <div class="small" style="margin-top:6px"><b>Patrón por patrón</b> (n ≥ ${me}): ${pats.length} patrones, exceso medio ${pc(mean, 2)}, ${pos} con exceso positivo (${(100 * pos / Math.max(1, pats.length)).toFixed(0)} %); superan el umbral del mejor de N (|t| ≥ ${T}): ${sig.length ? sig.map(p => `${esc(p.label)} (${pc(p.s.ex, 2)}, t ${p.s.t.toFixed(1)})`).join(', ') : 'ninguno'}. Mejores: ${top.map(p => `${esc(p.label)} ${pc(p.s.ex, 2)} (t ${p.s.t.toFixed(1)}, n ${p.s.n})`).join(' · ')}. Peores: ${bot.map(p => `${esc(p.label)} ${pc(p.s.ex, 2)} (t ${p.s.t.toFixed(1)}, n ${p.s.n})`).join(' · ')}.${cal ? ` Calibración en paseos aleatorios (sin ventaja posible): ${pc(cal.ex, 2)} (t ${cal.t.toFixed(1)}): el método no inventa ventajas.` : ''}</div>
+    <div class="verdict ${mean > 0 && sig.some(p => p.s.ex > 0) ? 'g' : 'a'}" style="margin-top:8px"><b>Lectura:</b> ${mean <= 0 ? `con tu escalera las figuras y velas, en conjunto, rinden <b>igual o peor</b> que entrar al azar con la misma escalera (${pc((P.todos || {}).ex, 2)}, t ${((P.todos || {}).t || 0).toFixed(1)}): la escalera cambia cómo se sale, no lo que vale la señal. Ganar 4 de cada 10 y asegurar +4 % en el ${((P.todos || {}).tgt || 0).toFixed(0)} % de las operaciones es lo que da el azar con esa salida.` : `con tu escalera las figuras y velas, en conjunto, rinden algo mejor que el azar (${pc((P.todos || {}).ex, 2)}, t ${((P.todos || {}).t || 0).toFixed(1)}).`}</div>`;
+}
+function fillPower() {
+  const K = S.evK, T = thr(), pw = $('#e-pow'), ct = $('#e-ctl'); if (!pw) return;
+  const ses = Object.entries(S.ev.patterns).filter(([k, r]) => !r.hq && r[K] && r[K].n >= S.ev.meta.min_events && r[K].se != null).map(([k, r]) => ({se: r[K].se, n: r[K].n, k})).sort((a, b) => a.se - b.se);
+  if (ses.length) {
+    const med = ses[Math.floor(ses.length / 2)], big = ses[0], rare = ses.slice(-10), rse = rare.reduce((a, b) => a + b.se, 0) / rare.length, mde = se => (T + 0.84) * se;
+    pw.innerHTML = `Un patrón se declara «con ventaja» cuando su |t| pasa ${T}. Con el error estándar real de cada patrón, el estudio detecta con un <b>80 % de probabilidad</b> efectos de al menos <b>${mde(med.se).toFixed(2)} %</b> por operación en un patrón típico (n ≈ ${med.n.toLocaleString('es-ES')}), de <b>${mde(big.se).toFixed(2)} %</b> en el más frecuente (n = ${big.n.toLocaleString('es-ES')}) y de <b>${mde(rse).toFixed(2)} %</b> en los 10 más raros. Efectos más pequeños, o patrones con pocas señales, pueden existir y no se ven: «no supera el umbral» no es «no funciona», es «no se distingue del azar con estos datos».`;
+  }
+  const c = S.ev.controls && S.ev.controls[K];
+  if (!c) { ct.innerHTML = '<div class="small">El estudio cargado no incluye controles (se calculan en el siguiente estudio).</div>'; return; }
+  ct.innerHTML = '<div class="tw"><table class="ev"><thead><tr><th>Control (largo)</th><th>n</th><th>% ganadoras</th><th>Exceso ± IC 95 % · t</th></tr></thead><tbody>' + Object.entries(c).filter(([k, v]) => v.ex != null).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.n.toLocaleString('es-ES')}</td><td>${v.wr.toFixed(0)} %</td><td class="${Math.abs(v.t) >= T ? (v.t > 0 ? 'pos' : 'neg') : ''}">${pc(v.ex, 2)} ± ${(1.96 * v.se).toFixed(2)} · ${v.t.toFixed(1)}${Math.abs(v.t) >= T ? ' ★' : ''}</td></tr>`).join('') + '</tbody></table></div>';
+}
+function fillCombos() {
+  const el = $('#e-combo'); if (!el) return;
+  const cb = S.ev.combos && S.ev.combos[S.evK];
+  if (!cb) { el.innerHTML = '<div class="small">El estudio cargado no incluye las coincidencias (se calculan en el siguiente estudio).</div>'; return; }
+  const T = thr(), row = (lab, s) => s && s.ex != null ? `<tr><td>${lab}</td><td>${s.n.toLocaleString('es-ES')}</td><td>${s.wr.toFixed(0)} %</td><td class="${s.t >= T && s.ex > 0 ? 'pos' : s.t <= -T ? 'neg' : ''}">${pc(s.ex, 2)} · ${s.t.toFixed(1)}</td></tr>` : '';
+  const grp = (t, o) => `<tr><td colspan="4"><b>${t}</b></td></tr>` + Object.entries(o).map(([k, s]) => row(k, s)).join('');
+  const vd = cb.valor_dias;
+  el.innerHTML = `<div class="tw"><table class="ev"><thead><tr><th>Valor-días con…</th><th>n</th><th>% ganadoras</th><th>Exceso · t</th></tr></thead><tbody>${grp('Señales alcistas (largo), sin ninguna bajista', cb.alcistas)}${grp('Señales bajistas (corto), sin ninguna alcista', cb.bajistas)}${grp('Contradictorias (alcistas y bajistas a la vez)', {'medidas en largo': cb.contradictorias.long, 'medidas en corto': cb.contradictorias.short})}</tbody></table></div><div class="small" style="margin-top:6px">${vd.alcistas.toLocaleString('es-ES')} valor-días con señal alcista, ${vd.bajistas.toLocaleString('es-ES')} con señal bajista y ${vd.contradictorios.toLocaleString('es-ES')} contradictorios; ${vd.con_varias.toLocaleString('es-ES')} con varias señales a la vez.</div>`;
 }
 function fillFam() {
   const el = $('#e-fam'); if (!el) return;
+  const fam = S.ev.combos && S.ev.combos[S.evK] && S.ev.combos[S.evK].familias;
+  if (fam) {                                                       // contraste conjunto por familia: todas las señales de la familia, cada valor-día una vez (10 contrastes: Bonferroni |t| ≥ 2,8)
+    el.innerHTML = '<table class="ev"><thead><tr><th>Familia</th><th>Patrones</th><th>Valor-días</th><th>% ganadoras</th><th>Exceso ± IC 95 % · t</th></tr></thead><tbody>' + Object.entries(fam).filter(([k, v]) => v.ex != null).map(([k, v]) => `<tr><td>${k.replace(/^(\w)/, c => c.toUpperCase())}${/bajistas/.test(k) ? ' (corto)' : ' (largo)'}</td><td>${v.patrones}</td><td>${v.n.toLocaleString('es-ES')}</td><td>${v.wr.toFixed(0)} %</td><td class="${Math.abs(v.t) >= 2.8 ? (v.ex > 0 ? 'pos' : 'neg') : ''}">${pc(v.ex, 2)} ± ${(1.96 * v.se).toFixed(2)} · ${v.t.toFixed(1)}${Math.abs(v.t) >= 2.8 ? ' ★' : ''}</td></tr>`).join('') + '</tbody></table>';
+    return;
+  }
   const K = S.evK, rows = [];
   for (const [k, r] of Object.entries(S.ev.patterns)) if (!r.hq && r[K] && r[K].n >= S.ev.meta.min_events && r[K].ex != null) rows.push({fam: r.fam, d: r.dir, ex: r[K].ex});
   const out = [];
@@ -349,8 +451,9 @@ function fillEvTable() {
   $('#e-body').innerHTML = rows.map(({k, r, s, hq, label}) => {
     const sig = Math.abs(s.t) >= T, cls = s.t >= T && s.ex > 0 ? 'pos' : s.t <= -T ? 'neg' : '';
     const hqt = hq && hq.ex != null && hq.n >= 20 ? `${pc(hq.ex, 2)} · ${hq.t.toFixed(1)} <span class="small">n=${hq.n}</span>` : '<span class="small">—</span>';
-    return `<tr><td><span class="dot" style="display:inline-block;background:${col(r.dir)};margin-right:6px"></span>${esc(label)}${sig ? ' ★' : ''}</td><td>${s.n}</td><td>${s.wr.toFixed(0)} %</td><td>${pc(s.mean, 2)}</td><td class="${cls}">${pc(s.ex, 2)} · ${s.t.toFixed(1)}</td><td>${hqt}</td><td>${s.pos}/${s.tot}</td><td><span class="tag">${FAMS[r.fam] || r.fam}</span></td></tr>`;
-  }).join('') || '<tr><td colspan="8" class="empty">Sin patrones con estos filtros.</td></tr>';
+    const e = escOf(k), ecls = e ? (Math.abs(e.t) >= T ? (e.ex > 0 ? 'pos' : 'neg') : '') : '';
+    return `<tr><td><span class="dot" style="display:inline-block;background:${col(r.dir)};margin-right:6px"></span>${esc(label)}${sig ? ' ★' : ''}</td><td>${s.n}</td><td>${s.wr.toFixed(0)} %</td><td>${pc(s.mean, 2)}</td><td class="${cls}">${pc(s.ex, 2)}${s.se != null ? ` ± ${(1.96 * s.se).toFixed(2)}` : ''} · ${s.t.toFixed(1)}</td><td>${hqt}</td><td>${s.pos}/${s.tot}</td><td class="${ecls}">${e ? `${pc(e.ex, 2)} · ${e.t.toFixed(1)}` : '<span class="small">—</span>'}</td><td>${e ? `${e.win.toFixed(0)} % (${e.bwin.toFixed(0)}) · ${e.tgt.toFixed(0)} %` : '<span class="small">—</span>'}</td><td><span class="tag">${FAMS[r.fam] || r.fam}</span></td></tr>`;
+  }).join('') || '<tr><td colspan="10" class="empty">Sin patrones con estos filtros.</td></tr>';
 }
 let stripPts = [];
 function drawStrip() {
@@ -387,18 +490,245 @@ function renderGuide() {
   const fam = S.gfam || 'all', t = (S.gtext || '').toLowerCase();
   const seg = `<div class="seg" id="g-f">${[['all', 'Todas']].concat(Object.entries(FAMS)).map(([v, l]) => `<button data-v="${v}" class="${fam === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const items = Object.entries(S.cat.patterns).filter(([k, p]) => (fam === 'all' || p.fam === fam) && (!t || (p.label + ' ' + p.desc).toLowerCase().includes(t)));
-  $('#view').innerHTML = `<h2>Guía de patrones</h2><p class="lead">Qué es cada patrón, cómo se calcula su plan (entrada, stop y objetivo) y qué ha demostrado en el estudio. Las reglas son las clásicas de manual: no están optimizadas contra los datos.</p>
+  $('#view').innerHTML = `<h2><span class="part f">Parte 1</span>Guía de patrones</h2><p class="lead">Qué es cada patrón, cómo se calcula su plan (entrada, stop y objetivo) y qué ha demostrado en el estudio. Las reglas son las clásicas de manual: no están optimizadas contra los datos.</p>
     <div class="panel"><h3>Cómo leer los estados</h3><div class="small"><b>◐ Formándose</b>: la figura ya está dibujada con los datos del último cierre pero no ha roto. Se indica el nivel que la activa (línea discontinua), a cuántos ATR está el precio y el plan si rompe. Una compresión (triángulo, cuña, canal, rectángulo) tiene dos escenarios; el resto (doble suelo, hombro-cabeza-hombro, bandera, taza, VCP…) uno.<br>
-      <b>NUEVO</b>: se completó en la última sesión. <b>ACTIVO</b>: se completó en las últimas 12 sesiones y no ha llegado ni al objetivo ni al stop. <b>CONSUMIDO</b>: la ruptura ya recorrió la medida clásica y no queda recorrido hasta el objetivo.<br>
-      <b>Consenso de velas</b>: dos o más formaciones de vela del mismo sentido y ninguna contraria en la misma sesión (hay 65 formaciones de vela); el estudio mide si ese consenso rinde más que una vela suelta.<br>
+      <b>NUEVO</b>: se completó en la última sesión. <b>ACTIVO</b>: se completó en las últimas 12 sesiones, no ha saltado el stop ni se ha cerrado todavía. <b>CONSUMIDO</b>: la ruptura ya recorrió la medida clásica y no queda recorrido hasta el objetivo. <b>MEDIDA RECORRIDA</b>: aviso informativo, no excluye la señal.<br>
+      <b>Escalera del operador</b> (la que se dibuja y se cuenta, con todas las señales): stop inicial estructural acotado a 2 ATR (nunca menos de 1); cuando una sesión cierra a +4 % el stop sube a +4 % y se queda ahí (se deja correr); cuando cierra a +10 % el stop sube a +10 % y desde ahí persigue al mejor cierre a 2 ATR; sin objetivo fijo. El plan clásico (stop al otro lado de la figura y objetivo por la medida clásica), sin límites, se ve con el interruptor del gráfico: da stops del 10, 26 o 43 %.<br>
+      <b>Consenso de velas</b>: dos o más formaciones de vela del mismo sentido y ninguna contraria en la misma sesión (hay 61 formaciones de vela); el estudio mide si ese consenso rinde más que una vela suelta.<br>
       <b>Q</b> (0–100) puntúa lo bien dibujada que está la figura: toques, ajuste, duración, forma, ruptura y volumen. La pestaña Evidencia comprueba si las figuras de Q ≥ 75 rinden más que las demás.<br>
       <b>Vigilar más valores</b>: edita <code>watchlist.txt</code> en el repositorio (un símbolo de Yahoo por línea); el escaneo diario lo lee entero. Los favoritos (★) se guardan solo en tu navegador.</div></div>
     <div class="bar">${seg}<input type="search" id="g-t" placeholder="Buscar" value="${esc(S.gtext || '')}" size="16"></div>
     <div class="gcards">${items.map(([k, p]) => { const e = evOf(k), [vc, vt] = verdictOf(e.all), hqv = e.hq && e.hq.K300 && e.hq.K300.n >= 30 ? e.hq.K300 : null;
       return `<div class="gc"><h4><span class="dot" style="background:${col(p.dir)}"></span>${esc(p.label)}<span class="tag">${FAMS[p.fam]}</span>${p.bars ? `<span class="tag">${p.bars} vela${p.bars > 1 ? 's' : ''}</span>` : ''}</h4>
-        <p>${esc(p.desc)}</p><p class="rl">${esc(p.rule)}</p>${S.ev ? `<div class="verdict ${vc}" style="margin:6px 0 0">${esc(vt)}</div>` : ''}${hqv ? `<p>Solo con calidad ≥ 75: exceso ${pc(hqv.ex, 2)} (t ${hqv.t.toFixed(1)}, n ${hqv.n}).</p>` : ''}</div>`; }).join('')}</div>`;
+        <p>${esc(p.desc)}</p><p class="rl">${esc(p.rule)}</p>${S.ev ? `<div class="verdict ${vc}" style="margin:6px 0 0">${esc(vt)}</div>` : ''}${S.ev ? pathSvg(pathOf(k)) : ''}${hqv ? `<p>Solo con calidad ≥ 75: exceso ${pc(hqv.ex, 2)} (t ${hqv.t.toFixed(1)}, n ${hqv.n}).</p>` : ''}</div>`; }).join('')}</div>`;
   $('#g-f').querySelectorAll('button').forEach(b => b.onclick = () => { S.gfam = b.dataset.v; renderGuide(); });
   $('#g-t').oninput = e => { S.gtext = e.target.value; renderGuide(); const i = $('#g-t'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
+}
+
+/* ───────────────────────── PARTE 2 · regla de impulso (sin figuras ni velas; estadísticas propias) ───────────────────────── */
+const nf = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');                       // miles con punto también en cifras de 4 dígitos
+const COND = {"sobre_200": "precio sobre su media de 200", "bajo_200": "precio bajo su media de 200", "impulso_alto": "impulso a 120 sesiones en el 20 % mejor del día", "impulso_bajo": "impulso a 120 sesiones en el 20 % peor", "impulso12_alto": "impulso 12-1 meses en el 20 % mejor", "impulso12_bajo": "impulso 12-1 meses en el 20 % peor", "cae5": "caída a 5 sesiones entre el 10 % mayor del día", "sube5": "subida a 5 sesiones entre el 10 % mayor del día", "rsi2_bajo": "RSI(2) ≤ 10", "rsi2_alto": "RSI(2) ≥ 90", "rsi14_bajo": "RSI(14) en el 30 % más bajo", "rsi14_alto": "RSI(14) en el 30 % más alto", "max52": "a ≤ 10 % del máximo de 52 semanas (posición ≥ 0,9)", "min52": "cerca del mínimo de 52 semanas (posición ≤ 0,1)", "vol_baja": "volatilidad (ATR/precio) en el 40 % más bajo", "vol_alta": "volatilidad en el 40 % más alto", "volumen": "volumen ≥ 1,5 veces su media de 20", "hueco_abajo": "hueco de apertura ≤ −2 %", "hueco_arriba": "hueco de apertura ≥ +2 %", "mercado_alza": "más del 55 % de las acciones sobre su media de 200", "mercado_baja": "menos del 45 % de las acciones sobre su media de 200", "bajo_media20": "bajo su media de 20 (20 % más alejado)", "sobre_media20": "sobre su media de 20 (20 % más alejado)", "liquido": "entre el 30 % más líquido del día", "velas_alcistas": "formación de vela alcista hoy", "velas_bajistas": "formación de vela bajista hoy", "figuras_alcistas": "figura alcista en las últimas 5 sesiones", "figuras_bajistas": "figura bajista en las últimas 5 sesiones", "rupturas_alcistas": "ruptura alcista en las últimas 5 sesiones", "rupturas_bajistas": "ruptura bajista en las últimas 5 sesiones", "confluencia_alcista": "2 o más patrones alcistas a la vez", "confluencia_bajista": "2 o más patrones bajistas a la vez"};
+const EXITS = {"op4a": "stop 1,5 ATR · asegura +4 % · persigue 3 ATR", "op4b": "stop 2,5 ATR · asegura +4 % · persigue 3 ATR", "op6a": "stop 1,5 ATR · asegura +6 % · persigue 4 ATR", "op6b": "stop 2,5 ATR · asegura +6 % · persigue 4 ATR", "run5": "stop que persigue 5 ATR sin asegurar", "h10": "cierre a 10 sesiones sin stop", "esc": "escalera: stop 2,5 ATR · asegura +4 % y deja correr · asegura +10 % y persigue 2 ATR", "esca": "escalera con stop inicial 1,5 ATR", "esc6": "escalera con stop inicial al 6 % del precio", "esc10": "escalera con stop inicial al 10 % del precio"};
+const RULES = {"C1": "Impulso alto y bajo su media de 200 · asegura +4 % y persigue 3 ATR", "C2": "Impulso alto y bajo su media de 200 · asegura +6 % y persigue 4 ATR", "C3": "Impulso alto y bajo su media de 200 · cierre a 10 sesiones", "C4": "Impulso alto y 2 o más señales bajistas · cierre a 10 sesiones", "C5": "Impulso alto y RSI(2) ≤ 10 · cierre a 10 sesiones", "C6": "Impulso alto y bajo su media de 200 · escalera", "C7": "Impulso alto y bajo su media de 200 · escalera (stop 6 %)", "C8": "Impulso alto y 2 o más señales bajistas · escalera", "V1": "Impulso alto y bajo su media de 200 · volatilidad baja · asegura +4 % y persigue 3 ATR", "V2": "Impulso alto y bajo su media de 200 · volatilidad alta · asegura +4 % y persigue 3 ATR", "V3": "Impulso alto y bajo su media de 200 · volatilidad baja · cierre a 10 sesiones", "V4": "Impulso alto y bajo su media de 200 · volatilidad alta · cierre a 10 sesiones", "V5": "Impulso alto y bajo su media de 200 · volatilidad baja · escalera", "V6": "Impulso alto y bajo su media de 200 · volatilidad alta · escalera", "imp_bajo200": "Impulso alto y bajo su media de 200 · escalera", "imp_bajistas": "Impulso alto y 2 o más señales bajistas · escalera", "imp_rsi2": "Impulso alto y RSI(2) ≤ 10 · escalera"};
+const ruleLabel = n => ((S.imp && S.imp.meta.reglas.find(r => r.nombre === n)) || {}).etiqueta || RULES[n] || n;       // código de regla → nombre que ve el operador
+const ruleShort = n => ((S.imp && S.imp.meta.reglas.find(r => r.nombre === n)) || {}).corta || RULES[n] || n;
+const ruleTxt = (nm, sentido) => (nm.length ? nm.map(k => COND[k] || k).join(' Y ') : 'cualquier fila') + (sentido ? ' → ' + sentido : '');
+const sg = x => x == null || !isFinite(x) ? 'neu' : x > 0 ? 'pos' : x < 0 ? 'neg' : 'neu';
+const pv = (p, reps) => p == null ? '—' : p === 0 ? '< ' + (1 / reps).toFixed(3) : p.toFixed(3);
+function yrBars(por) {                                                       // exceso medio por año de una regla (barras: verde positivo, rojo negativo)
+  const ys = Object.keys(por || {}).sort(); if (!ys.length) return '';
+  const v = ys.map(y => por[y]), mx = Math.max(1, ...v.map(Math.abs)), W = 11, H = 26, mid = H / 2;
+  return `<svg class="yb" width="${ys.length * W}" height="${H}" viewBox="0 0 ${ys.length * W} ${H}" role="img" aria-label="Exceso por año">${v.map((x, i) => { const h = Math.max(1, Math.abs(x) / mx * (mid - 1)); return `<rect x="${i * W + 1}" y="${x >= 0 ? mid - h : mid}" width="${W - 2}" height="${h}" rx="1" fill="${x >= 0 ? 'var(--emerald)' : 'var(--ember)'}"><title>${ys[i]}: ${pc(x, 2)}</title></rect>`; }).join('')}<line x1="0" x2="${ys.length * W}" y1="${mid}" y2="${mid}" stroke="var(--dim)" stroke-width=".6"/></svg>`;
+}
+const impHead = (t, lead) => `<h2><span class="part">Parte 2</span>${t}</h2><p class="lead">${lead}</p>`;
+
+const fiabCls = f => f == null ? '' : f >= 65 ? 'pos' : f < 50 ? 'neg' : '';
+function calib(f, inRule) {                                                  // probabilidad calibrada: interpola predicho → real en los tramos de la validación fuera de muestra (sección 8 de Evidencia)
+  const F = S.fb && S.fb.modelo, c = F && ((inRule && F.en_regla && F.en_regla.calibracion && F.en_regla.calibracion.length >= 3) ? F.en_regla.calibracion : F.todo && F.todo.calibracion);
+  if (f == null || !c || c.length < 2) return f;
+  const pts = c.map(b => [b.predicho, b.real]).sort((a, b) => a[0] - b[0]);
+  if (f <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++) if (f <= pts[i][0]) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; return y0 + (y1 - y0) * (f - x0) / Math.max(x1 - x0, 1e-9); }
+  return pts[pts.length - 1][1];
+}
+const fiabTxt = (p, inRule) => { if (p.fiab == null) return '—'; const c = calib(p.fiab, inRule); return c !== p.fiab ? `<span title="Modelo: ${p.fiab.toFixed(0)} %; calibrado con lo que ganó de verdad ese tramo fuera de muestra">${c.toFixed(0)} %</span>` : p.fiab.toFixed(0) + ' %'; };
+function renderImp() {
+  const I = S.imp, R = S.iv;
+  if (!I) { $('#view').innerHTML = impHead('Regla de impulso con caída', 'Qué acciones cumplen hoy la regla.') + '<div class="empty">El cribador todavía no ha generado datos. Lanza el flujo «Cribador de la regla de impulso» o ejecuta <code>python -m vp screen</code>.</div>'; return; }
+  const m = I.meta, rules = m.reglas, t = R.text.trim().toUpperCase(), hasFiab = I.picks.some(p => p.fiab != null);
+  const calm = p => p.vol != null && p.vol < 0.6;                              // volatilidad (percentil del día) fuera del 40 % más alto: donde no se midió ventaja
+  const base = p => (R.rule === 'all' || p.reglas.includes(R.rule)) && (!R.fresh || p.nuevas.length) && (!t || p.sym.includes(t));
+  const rows = I.picks.filter(p => base(p) && (!R.hv || !calm(p)));
+  const hidden = R.hv ? I.picks.filter(p => base(p) && calm(p)).length : 0;
+  const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, tx]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${tx}</button>`).join('')}</div>`;
+  const stats = rules.map(r => `<div class="stat" title="${esc(r.texto + ' · ' + (EXITS[r.salida] || r.salida))}"><b>${I.resumen[r.nombre].hoy}</b><span>${esc(r.corta || r.nombre)} (${I.resumen[r.nombre].nuevas} nuevas)</span></div>`).join('');
+  const exitOf = n => (rules.find(r => r.nombre === n) || {}).salida;
+  const plan = I.plan_hoy || {posiciones: []}, chosen = plan.posiciones.map(sy => I.picks.find(p => p.sym === sy)).filter(Boolean);
+  const risk = R.risk || 1, cap = R.cap || 0;
+  const sizeOf = p => risk * 100 / Math.abs(p.plan.stop_pct);                   // % de la cuenta con el que perder el stop inicial cuesta `risk` % de la cuenta
+  $('#view').innerHTML = impHead('Regla de impulso con caída', `Acciones del S&amp;P 500 y el Nasdaq-100 (las ${m.k} más negociadas) que están entre el 20 % mejor por <b>impulso a 12 meses</b> (sin el último mes) y <b>han caído</b>: bajo su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez. Tres entradas (<b>bajo 200</b>, <b>2+ bajistas</b>, <b>RSI(2) ≤ 10</b>) y una sola salida, la <b>escalera</b>: stop inicial a ${m.stop_atr} ATR; al cerrar a +4 % el stop sube a +4 % y se deja correr; al cerrar a +10 % sube a +10 % y persigue a 2 ATR. <b>No usa figuras ni velas</b>: es otra estrategia, con sus propias estadísticas (pestaña Evidencia) y su track record real (pestaña Seguimiento).`) + `
+    <div class="warn"><b>Candidata, no recomendación.</b> En acciones que no se usaron para encontrarla gana al azar por unas décimas de punto por operación (menos tras el sesgo de supervivencia) y <b>solo en las acciones muy volátiles</b>: por eso los stops iniciales están a más del 10 % y el tamaño de posición es lo que limita el riesgo. Ni asegura ganancias ni funciona todos los años.</div>
+    <div class="sumry w"><div class="stat"><b>${m.en_universo}</b><span>acciones en el universo</span></div><div class="stat"><b>${m.sobre_200.toFixed(0)} %</b><span>sobre su media de 200</span></div>${hasFiab ? `<div class="stat" title="Probabilidad media de ganar con la escalera que el modelo da hoy a TODAS las acciones del universo: la referencia para leer la fiabilidad de cada una"><b>${m.fiab && m.fiab.base_hoy != null ? m.fiab.base_hoy.toFixed(0) + ' %' : '—'}</b><span>fiabilidad media del universo hoy</span></div>` : ''}${stats}</div>
+    <div class="panel" style="border-left:3px solid var(--violet)"><h3>Plan de hoy (disciplina)</h3><div class="small" style="margin-bottom:6px">${esc(plan.criterio || '')}. Riesgo por operación <input type="number" id="i-risk" value="${risk}" min="0.25" max="3" step="0.25" style="width:60px"> % de la cuenta${cap ? '' : ''} · cuenta <input type="number" id="i-cap" value="${cap || ''}" placeholder="opcional" min="0" step="1000" style="width:110px"> (para ver importes). Estos dos valores se quedan solo en tu navegador.</div>
+      ${chosen.length ? `<div class="tw"><table class="ev"><thead><tr><th>Valor</th><th>Fiabilidad</th><th>Volat.</th><th>Grupo</th><th>Entrada (apertura)</th><th>Stop inicial</th><th>Asegura +4 %</th><th>Asegura +10 %</th><th>Tamaño</th>${cap ? '<th>Importe</th><th>Riesgo</th>' : ''}</tr></thead><tbody>${chosen.map(p => `<tr><td><b>${esc(p.sym)}</b></td><td class="${fiabCls(calib(p.fiab, true))}">${fiabTxt(p, true)}</td><td>${p.vol != null ? (p.vol * 100).toFixed(0) : '—'}</td><td>${p.grupo ?? '—'}</td><td>≈ ${fx(p.close)}</td><td>${fx(p.plan.stop)} <span class="neg">(${pc(p.plan.stop_pct)})</span></td><td>${fx(p.plan.asegura4)}</td><td>${fx(p.plan.asegura10)}</td><td>${sizeOf(p).toFixed(1)} %</td>${cap ? `<td>${fx(cap * sizeOf(p) / 100, 0)}</td><td>${fx(cap * risk / 100, 0)}</td>` : ''}</tr>`).join('')}</tbody></table></div>
+      <div class="small" style="margin-top:6px">Riesgo total si saltan todos los stops iniciales: <b>${(risk * chosen.length).toFixed(1)} %</b> de la cuenta${cap ? ` (${fx(cap * risk * chosen.length / 100, 0)})` : ''}. Entrada en la apertura siguiente: el stop real es apertura − ${m.stop_atr} ATR; los niveles +4 % y +10 % se calculan sobre el precio de entrada real.</div>` : '<div class="small">Hoy no hay ninguna acción que cumpla las condiciones del plan (volatilidad alta y una por grupo).</div>'}</div>
+    <div class="bar">${seg('i-r', [['all', 'Todas']].concat(rules.map(r => [r.nombre, r.corta || r.nombre])), R.rule)}<span class="tg ${R.fresh ? 'on' : ''}" id="i-n"><i></i>Solo nuevas hoy</span><span class="tg ${R.hv ? 'on' : ''}" id="i-v" title="La ventaja se midió en el 40 % de acciones más volátiles del día; en las tranquilas fue cero o negativa"><i></i>Solo volatilidad alta${hidden ? ' (' + hidden + ' ocultas)' : ''}</span><input type="search" id="i-t" placeholder="Símbolo" value="${esc(R.text)}" size="10"></div>
+    <div class="panel"><div class="tw"><table class="ev"><thead><tr><th>Valor</th><th>Cierre</th><th title="Probabilidad de que la escalera acabe con ganancia, según el modelo de fiabilidad entrenado solo con operaciones ya cerradas (ver Evidencia: calibración y control de volatilidad)">Fiabilidad</th><th title="Percentil del impulso a 12 meses (sin el último mes) entre las acciones del universo ese día">Impulso 12-1</th><th>vs media 200</th><th>RSI(2)</th><th>ATR %</th><th title="Percentil de la volatilidad (ATR/precio) entre las acciones del universo ese día. En el 40 % más bajo la regla no mostró ventaja">Volat.</th><th title="Valores con correlación de rendimientos ≥ 0,6 en 60 sesiones comparten grupo: comprar varios del mismo grupo es repetir la misma apuesta">Grupo</th><th title="Formaciones de vela, figuras y rupturas bajistas vigentes (no es una señal: marca que ha caído)">Bajistas</th><th class="l" title="Entradas que cumple: todas con impulso 12-1 en el 20 % mejor; «bajo 200» = bajo su media de 200; «2+ bajistas» = 2 o más señales bajistas a la vez; «RSI(2) ≤ 10»">Entrada</th>
+      <th title="Cierre − 2,5 ATR. El stop inicial real se fija con el precio de apertura de la sesión siguiente">Stop inicial</th><th>Asegura +4 %</th><th>Asegura +10 %</th><th title="Lo que se asegura (+4 %) frente a lo que se arriesga en el stop inicial">R:R a +4</th><th title="Posición (en % de la cuenta) con la que, si salta el stop inicial, se pierde el riesgo elegido">Tamaño</th></tr></thead><tbody>${rows.length ? rows.map(p => `<tr><td><b>${S.idx && S.idx.symbols.some(x => x.sym === p.sym) ? `<a href="#${esc(p.sym)}" title="Ver su gráfico de figuras">${esc(p.sym)}</a>` : esc(p.sym)}</b>${plan.posiciones.includes(p.sym) ? ' <span class="tag" style="background:var(--violet);color:#fff" title="En el plan de hoy">PLAN</span>' : ''}</td><td>${fx(p.close)}</td><td class="${fiabCls(calib(p.fiab, true))}">${fiabTxt(p, true)}</td><td>${(p.mom121 * 100).toFixed(0)}</td>
+      <td class="${sg(p.dist200)}">${pc(p.dist200)}</td><td>${p.rsi2.toFixed(0)}</td><td>${p.atrp.toFixed(1)}</td><td>${p.vol == null ? '—' : (p.vol * 100).toFixed(0)}${p.vol != null && p.vol < 0.6 ? ' <span class="neg" title="Volatilidad baja: en estas acciones la regla no mostró ventaja (ver Evidencia, robustez por volatilidad)">⚠</span>' : ''}</td><td>${p.grupo ?? '—'}</td><td>${p.bajistas}</td><td class="l"><div class="chips">${p.reglas.map(n => `<span class="chip ${p.nuevas.includes(n) ? 'n' : 'u'}" title="${esc(((rules.find(r => r.nombre === n) || {}).texto || n) + ' · ' + (EXITS[exitOf(n)] || ''))}${p.nuevas.includes(n) ? ' · nueva hoy' : ''}">${esc(ruleShort(n))}${p.nuevas.includes(n) ? ' ★' : ''}</span>`).join('')}</div></td>
+      <td>${fx(p.plan.stop)} <span class="neg">(${pc(p.plan.stop_pct)})</span></td><td>${fx(p.plan.asegura4)}</td><td>${fx(p.plan.asegura10)}</td><td>${p.plan.rr4 != null ? p.plan.rr4.toFixed(2) : '—'}</td><td>${sizeOf(p).toFixed(1)} %${p.plan.stop_pct < -10 ? ' <span class="neg" title="Stop a más del 10 %: valor muy volátil; el tamaño ya lo compensa">⚠</span>' : ''}</td></tr>`).join('') : '<tr><td class="l" colspan="16"><span class="empty">Ninguna acción cumple estas condiciones hoy.</span></td></tr>'}</tbody></table></div>
+      <div class="small" style="margin-top:6px">★ = cumple la regla hoy y no la cumplía en la sesión anterior. La referencia es el último cierre; se entra en la apertura siguiente. Fiabilidad: probabilidad de ganar con la escalera según el modelo (${m.fiab && m.fiab.filas_entrenamiento ? nf(m.fiab.filas_entrenamiento) + ' operaciones cerradas hasta el ' + esc(m.fiab.hasta) : 'sin modelo en este escaneo'}); compárala con la media del universo hoy, no con el 50 %. ${S.fb ? 'La cifra está <b>calibrada</b> con lo que ganó de verdad cada tramo de probabilidad fuera de muestra (el modelo en bruto es optimista en los extremos; pasa el ratón por encima para verlo).' : ''} <b>Ojo</b>: la mayor parte de esa probabilidad la explica la volatilidad del valor (con un stop a 2,5 ATR, el que se mueve mucho llega antes a +4 %); el modelo añade poco más (Evidencia, sección 8).</div></div>
+    <div class="panel"><h3>Cómo se opera la escalera</h3><div class="small">Entrada en la apertura siguiente. <b>Stop inicial</b> a ${m.stop_atr} ATR (alternativa: al ${m.stop_pct} % del precio, con tamaño ${(risk * 100 / m.stop_pct).toFixed(1)} %). Si una sesión <b>cierra a +4 %</b> o más, el stop sube a +4 % y se queda ahí: se deja correr sin perseguir, para que una corrección normal no saque antes del segundo nivel. Si una sesión <b>cierra a +10 %</b> o más, el stop sube a +10 % y desde ahí persigue al mejor cierre a 2 ATR (nunca por debajo de +10 %). Sin objetivo fijo; máximo 60 sesiones. El stop se ejecuta si se toca intradía; un hueco de apertura por debajo sale a la apertura (pasa en ~2 de cada 100 operaciones aseguradas). Las entradas «bajo 200» y «2+ bajistas» se confirmaron con esta misma escalera en acciones distintas (Evidencia, sección 4); «RSI(2) ≤ 10» se confirmó con el cierre a 10 sesiones y con la escalera solo en el menú de salidas. ${S.ct && S.ct.base ? 'La <b>cartera simulada</b> con esta disciplina durante toda la historia está en Evidencia (primer apartado).' : ''}</div></div>`;
+  $('#i-r').querySelectorAll('button').forEach(b => b.onclick = () => { R.rule = b.dataset.v; renderImp(); });
+  $('#i-n').onclick = () => { R.fresh = R.fresh ? 0 : 1; renderImp(); };
+  $('#i-v').onclick = () => { R.hv = R.hv ? 0 : 1; renderImp(); };
+  $('#i-t').oninput = e => { R.text = e.target.value; renderImp(); const i = $('#i-t'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
+  $('#i-risk').onchange = e => { R.risk = Math.max(0.25, Math.min(3, +e.target.value || 1)); try { localStorage.setItem('vp.risk', R.risk); } catch (x) {} renderImp(); };
+  $('#i-cap').onchange = e => { R.cap = Math.max(0, +e.target.value || 0); try { localStorage.setItem('vp.cap', R.cap); } catch (x) {} renderImp(); };
+}
+
+function renderImpTrack() {
+  const T = S.trk, R = S.tv;
+  if (!T || !T.operaciones) { $('#view').innerHTML = impHead('Seguimiento (track record hacia delante)', 'Qué pasó con cada acción que salió en el cribador.') + '<div class="empty">Todavía no hay seguimiento: se genera con el cribador diario (<code>python -m vp screen</code>) a partir del registro de días anteriores.</div>'; return; }
+  const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, tx]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${tx}</button>`).join('')}</div>`;
+  const tally = (k, label) => { const x = T[k]; if (!x || !x.n) return ''; return `<div class="stat" title="${esc(label)}"><b>${x.pct_ganan != null ? x.pct_ganan.toFixed(0) + ' %' : '—'}</b><span>${esc(label)}: ganan (${x.cerradas} cerradas, ${x.abiertas} abiertas)</span></div>`; };
+  const rows = T.operaciones.filter(r => R.mode === 'all' || (R.mode === 'plan' && r.plan_hoy) || (R.mode === 'open' && r.res === 'open') || (R.mode === 'closed' && ['target', 'stop', 'timeout'].includes(r.res))).slice().reverse();
+  const A = T.todas;
+  const resTx = r => r.res === 'open' ? `en curso ${pc(r.ahora)}${r.level >= 2 ? ' · +10 % asegurado' : r.level >= 1 ? ' · +4 % asegurado' : ''}` : r.res === 'target' ? `${r.net > 0 ? '✓' : '✗'} aseguró ${r.level >= 2 ? '+10 %' : '+4 %'} y salió con ${pc(r.net, 2)}` : r.res === 'stop' ? `✗ stop inicial ${pc(r.net, 2)}` : r.res === 'timeout' ? `${r.net > 0 ? '✓' : '✗'} cierre por tiempo ${pc(r.net, 2)}` : r.res === 'pendiente' ? 'entra en la próxima apertura' : r.res;
+  $('#view').innerHTML = impHead('Seguimiento (track record hacia delante)', `Cada acción que salió en el cribador se simula con la escalera y los <b>precios reales posteriores</b>: entrada en la apertura siguiente, stop inicial 2,5 ATR del día de la señal, +4 % plano, +10 % persiguiendo a 2 ATR, hasta 60 sesiones, coste ${S.imp ? S.imp.meta.coste : 0.15} %. Una operación por valor y día; si el valor ya tenía una abierta no se abre otra. <b>Nada de esto se puede ajustar a posteriori</b>: es la prueba de verdad de la regla, y crece cada día.`) + `
+    <div class="sumry w"><div class="stat"><b>${T.dias}</b><span>días de registro (${esc(T.desde || '')} → ${esc(T.hasta || '')})</span></div><div class="stat"><b>${A.n}</b><span>operaciones (${A.cerradas} cerradas, ${A.abiertas} abiertas${A.pendientes ? ', ' + A.pendientes + ' entran mañana' : ''})</span></div>
+      <div class="stat"><b>${A.pct_ganan != null ? A.pct_ganan.toFixed(0) + ' %' : '—'}</b><span>ganan (de las cerradas)</span></div><div class="stat"><b>${A.media_neta != null ? pc(A.media_neta, 2) : '—'}</b><span>neto medio por operación cerrada</span></div>
+      <div class="stat"><b>${A.cerradas ? A.asegura4 + ' / ' + A.asegura10 : '—'}</b><span>aseguraron +4 % / +10 %</span></div><div class="stat"><b>${A.abiertas_media != null ? pc(A.abiertas_media, 2) : '—'}</b><span>abiertas: media ahora (${A.asegurado_abiertas} ya aseguradas)</span></div>
+      ${tally('plan_hoy', 'plan de hoy')}${tally('vol_alta', 'volatilidad alta')}</div>
+    <div class="panel"><h3>Por regla</h3><div class="tw"><table class="ev"><thead><tr><th class="l">Regla</th><th>Operaciones</th><th>Cerradas</th><th>Ganan</th><th>+4 % / +10 %</th><th>Stop inicial</th><th>Neto medio</th><th>Ganancia media / pérdida media</th><th>Abiertas (media ahora)</th></tr></thead><tbody>${Object.entries(T.por_regla || {}).map(([k, x]) => `<tr><td class="l"><b>${esc(ruleLabel(k))}</b></td><td>${x.n}</td><td>${x.cerradas}</td><td class="${x.pct_ganan == null ? '' : x.pct_ganan >= 50 ? 'pos' : 'neg'}">${x.pct_ganan != null ? x.pct_ganan.toFixed(0) + ' %' : '—'}</td><td>${x.cerradas ? x.asegura4 + ' / ' + x.asegura10 : '—'}</td><td>${x.cerradas ? x.stop : '—'}</td><td class="${sg(x.media_neta)}">${x.media_neta != null ? pc(x.media_neta, 2) : '—'}</td><td>${x.gan_media != null ? pc(x.gan_media, 2) : '—'} / ${x.perd_media != null ? pc(x.perd_media, 2) : '—'}</td><td>${x.abiertas}${x.abiertas_media != null ? ' (' + pc(x.abiertas_media, 2) + ')' : ''}</td></tr>`).join('')}</tbody></table></div></div>
+    <div class="bar">${seg('t-m', [['all', 'Todas'], ['plan', 'Plan de hoy'], ['open', 'Abiertas'], ['closed', 'Cerradas']], R.mode)}</div>
+    <div class="panel"><div class="tw"><table class="ev"><thead><tr><th>Señal</th><th>Valor</th><th class="l">Reglas</th><th>Fiabilidad</th><th>Volat.</th><th>Entrada</th><th>Stop inicial</th><th class="l">Resultado</th><th>Sesiones</th><th>Salida</th></tr></thead><tbody>${rows.length ? rows.map(r => `<tr><td>${esc(r.fecha)}</td><td><b>${esc(r.sym)}</b>${r.plan_hoy ? ' <span class="tag" style="background:var(--violet);color:#fff">PLAN</span>' : ''}</td><td class="l">${(r.reglas || []).map(ruleShort).join(', ')}</td><td class="${fiabCls(r.fiab)}">${r.fiab != null ? r.fiab.toFixed(0) + ' %' : '—'}</td><td>${r.vol != null ? (r.vol * 100).toFixed(0) : '—'}</td><td>${r.entrada != null ? fx(r.entrada) : '—'}</td><td>${r.stop != null ? fx(r.stop) : '—'}</td><td class="l ${r.res === 'open' ? '' : r.net > 0 ? 'pos' : r.net != null ? 'neg' : ''}">${resTx(r)}</td><td>${r.bars ?? '—'}</td><td>${r.salida || '—'}</td></tr>`).join('') : '<tr><td class="l" colspan="10"><span class="empty">Nada que mostrar.</span></td></tr>'}</tbody></table></div></div>`;
+  $('#t-m').querySelectorAll('button').forEach(b => b.onclick = () => { R.mode = b.dataset.v; renderImpTrack(); });
+}
+
+function confTable(E, title, note, fixed = true) {
+  if (!E) return `<div class="panel"><h3>${esc(title)}</h3><div class="empty">Sin datos.</div></div>`;
+  const m = E.meta;
+  return `<div class="panel"><h3>${esc(title)}</h3><div class="small" style="margin-bottom:6px">${esc(note)} ${m.universe} acciones, las ${m.k} más negociadas, ${m.from} → ${m.to}, coste ${m.coste} %. ${fixed ? 'Reglas fijadas antes de mirar estas acciones: no se eligió nada.' : 'Comprobación hecha después de ver los resultados (no fijada de antemano).'} <b>p</b> = fracción de ${m.reps} repeticiones con los resultados desplazados en el calendario que igualan lo observado.</div>
+    <div class="tw"><table class="ev"><thead><tr><th class="l">Regla (largo)</th><th>Salida</th><th>n</th><th>Exceso · t</th><th>Neto (azar mismas fechas)</th><th>% ganadoras (todas las filas)</th><th title="Puntos de ganancia por encima del azar del mismo día (t agrupada; p del nulo)">Fiabilidad</th><th title="Aseguró +4 % / +10 % / saltó el stop inicial">+4 / +10 / stop</th><th title="Ganancia media de las ganadoras / pérdida media de las perdedoras · factor de beneficio (suma ganado / suma perdido)">Gana / pierde · factor</th><th>p exceso / p t</th><th>Exceso por año</th></tr></thead><tbody>${E.reglas.map(r => {
+      const pos = Object.values(r.por_año).filter(v => v > 0).length, tot = Object.keys(r.por_año).length;
+      return `<tr><td class="l"><b>${esc(RULES[r.nombre] || r.nombre)}</b><br><span class="small">${esc(r.nombre)} · ${esc(ruleTxt(r.regla, ''))}</span></td><td title="${esc(EXITS[r.salida] || '')}">${esc(r.salida)}</td><td>${nf(r.n)}</td><td class="${sg(r.exceso)}">${pc(r.exceso, 2)} · t ${r.t.toFixed(1)}</td><td>${pc(r.neto, 2)} (${pc(r.azar_neto, 2)})</td><td>${r.ganan.toFixed(1)} % (${r.ganan_todas.toFixed(1)} %)</td><td class="${sg(r.fiab)}">${r.fiab != null ? (r.fiab >= 0 ? '+' : '') + r.fiab.toFixed(1) + ' · t ' + r.fiab_t.toFixed(1) + ' · p ' + pv(r.p_fiab, r.reps) : '—'}</td><td>${r.asegura4 != null ? r.asegura4.toFixed(0) + ' / ' + r.asegura10.toFixed(0) + ' / ' + r.stop_inicial.toFixed(0) + ' %' : '—'}</td><td>${r.gan_media != null ? pc(r.gan_media, 1) + ' / ' + pc(r.perd_media, 1) + ' · ' + r.factor.toFixed(2) : '—'}</td><td>${pv(r.p_exceso, r.reps)} / ${pv(r.p_t, r.reps)}</td><td>${yrBars(r.por_año)} <span class="small">${pos}/${tot}</span></td></tr>`; }).join('')}</tbody></table></div></div>`;
+}
+
+function robTable() {                                                        // la misma regla base según la volatilidad: descriptivo, no fijado de antemano
+  const parts = [[S.cfm, 'S&P 400 y 600'], [S.cf, 'universo de la búsqueda']].filter(([E]) => E && E.robustez && E.robustez.length);
+  if (!parts.length) return '';
+  return `<div class="panel"><h3>6. ¿Solo en valores muy volátiles? Robustez por volatilidad</h3><div class="small" style="margin-bottom:6px"><b>Descriptivo, no fijado de antemano.</b> La misma regla base (impulso 12-1 alto Y bajo su media de 200) según la volatilidad del valor: ATR/precio en el 40 % <b>más bajo</b> o en el 40 % <b>más alto</b> del día. Interesa porque el stop inicial es de 2,5 ATR: en valores muy volátiles queda a más del 10–20 % del precio.</div>
+    ${parts.map(([E, nm]) => confTable({meta: E.meta, reglas: E.robustez}, nm, '', false).replace('<div class="panel">', '<div style="margin-top:8px">').replace(/<\/div><\/div>$/, '</div>')).join('')}</div>`;
+}
+function fiabSelTable() {                                                   // selección hacia delante por FIABILIDAD (gana más veces que el azar del día)
+  const W = S.srch, wf = W && W.walk_forward_fiab, nl = W && W.nulo_fiab;
+  if (!wf) return '';
+  const sub = [['todo', 'Todas las reglas'], ['contexto', 'Solo contexto (sin patrones)'], ['patrones', 'Con patrón']];
+  const f = (x, d = 2) => x == null ? '—' : pc(x, d);
+  const ys = wf.todo['años'] || [];
+  return `<div class="panel"><h3>7. Búsqueda por fiabilidad: la regla que gana más veces que el azar del día</h3><div class="small" style="margin-bottom:6px">Mismo procedimiento que la sección 1 (selección hacia delante, control del procedimiento) pero cada año se elige la regla con mayor <b>t de ganancia relativa</b> (gana − fracción del día que gana con la misma salida), exigiendo exceso positivo. Es la pregunta del operador: no «cuánto de media», sino «cuántas veces sale bien», medido frente al azar del mismo día.</div>
+    <div class="tw"><table class="ev"><thead><tr><th class="l">Conjunto</th><th>Operaciones</th><th>Fiabilidad (puntos) · t</th><th>% ganadoras (todas las filas)</th><th>+4 % / +10 %</th><th>Exceso · t</th><th>Neto (azar)</th><th>Control: fiab p95 · p</th></tr></thead><tbody>${sub.map(([k, t]) => { const w = wf[k], n = (nl || {})[k] || {}; if (!w || w.exceso == null) return ''; return `<tr><td class="l">${t}</td><td>${nf(w.n)}</td><td class="${sg(w.fiab)}">${w.fiab != null ? (w.fiab >= 0 ? '+' : '') + w.fiab.toFixed(1) + ' · t ' + w.fiab_t.toFixed(1) : '—'}</td><td>${w.ganan.toFixed(1)} % (${w.ganan_todas_las_filas.toFixed(1)} %)</td><td>${w.asegura4 != null ? w.asegura4.toFixed(0) + ' / ' + w.asegura10.toFixed(0) + ' %' : '—'}</td><td class="${sg(w.exceso)}">${f(w.exceso)} · t ${w.t.toFixed(1)}</td><td>${f(w.neto)} (${f(w.neto_azar_mismas_fechas)})</td><td>${n.fiab_p95 != null ? (n.fiab_p95 >= 0 ? '+' : '') + n.fiab_p95.toFixed(1) + ' · ' + pv(n.p_fiab, n.reps) : '—'}</td></tr>`; }).join('')}</tbody></table></div>
+    <div class="tw" style="margin-top:8px"><table class="ev"><thead><tr><th>Año</th><th>Operaciones</th><th>Fiabilidad</th><th>% ganadoras</th><th>+4 % / +10 %</th><th>Exceso</th><th>Neto</th><th class="l">Regla elegida con lo anterior</th></tr></thead><tbody>${ys.map(r => `<tr><td>${r['año']}</td><td>${nf(r.n)}</td><td class="${sg(r.fiab)}">${r.fiab != null ? (r.fiab >= 0 ? '+' : '') + r.fiab.toFixed(1) : '—'}</td><td>${r.ganan != null ? r.ganan.toFixed(1) + ' %' : '—'}</td><td>${r.asegura4 != null ? r.asegura4.toFixed(0) + ' / ' + r.asegura10.toFixed(0) : '—'}</td><td class="${sg(r.exceso)}">${f(r.exceso)}</td><td>${f(r.neto)}</td><td class="l">${esc(ruleTxt(r.regla, r.sentido))} · ${esc(r.salida)} <span class="small">(t ${r.train_t.toFixed(1)})</span></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function fiabModel() {                                                      // el modelo de fiabilidad: ¿separa de antemano las operaciones que salen bien?
+  const F = S.fb;
+  if (!F || !F.modelo) return '';
+  const m = F.meta, A = F.modelo.todo, R = F.modelo.en_regla, V = F.solo_volatilidad.todo, VR = F.solo_volatilidad.en_regla;
+  const blk = (t, r, cls) => r && r.auc != null ? `<tr><td class="l">${t}</td><td>${nf(r.n)}</td><td class="${cls || ''}">${r.auc.toFixed(3)}</td><td>${r.base.toFixed(1)} %</td><td>${r.top ? r.top.real.toFixed(1) + ' %' : '—'}</td><td class="${r.top ? sg(r.top.fiab) : ''}">${r.top ? (r.top.fiab >= 0 ? '+' : '') + r.top.fiab.toFixed(1) + ' · t ' + r.top.fiab_t.toFixed(1) : '—'}</td><td>${r.top ? pc(r.top.neto, 2) + ' · ' + pc(r.top.exceso, 2) : '—'}</td><td>${r.bot ? r.bot.real.toFixed(1) + ' %' : '—'}</td><td class="${r.top_menos_bot != null ? sg(r.top_menos_bot) : ''}">${r.top_menos_bot != null ? (r.top_menos_bot >= 0 ? '+' : '') + r.top_menos_bot.toFixed(1) : '—'}</td></tr>` : '';
+  const cal = A.calibracion || [];
+  const years = Object.entries(F.modelo.por_año || {}).filter(([, r]) => r.auc != null);
+  return `<div class="panel"><h3>8. Modelo de fiabilidad: ¿se sabe de antemano qué operaciones van a salir bien?</h3><div class="small" style="margin-bottom:6px">Gradient boosting (parámetros fijados de antemano) que predice la probabilidad de que la escalera (${esc(m.texto_salida)}) acabe con ganancia, a partir del contexto del valor (percentiles del día), sus patrones recientes y la amplitud del mercado. <b>Walk-forward por años</b> (${m.test_years[0]}–${m.test_years[m.test_years.length - 1]}): para cada año se entrena solo con operaciones cerradas al menos ${m.purga_dias} días antes. ${nf(m.cerradas)} operaciones cerradas de ${nf(m.filas)} filas. La columna «decil más fiable» es, cada día, el 10 % de acciones con mayor probabilidad predicha. <b>Control «solo volatilidad»</b>: el mismo modelo con una sola variable (percentil de ATR/precio): si el modelo completo no lo supera, la fiabilidad es solo que el valor se mueve.</div>
+    <div class="tw"><table class="ev"><thead><tr><th class="l">Modelo · filas</th><th>n</th><th title="Área bajo la curva ROC fuera de muestra (0,5 = azar)">AUC</th><th>Ganan (todas)</th><th>Decil más fiable: ganan</th><th>Fiabilidad · t</th><th>Neto · exceso</th><th>Decil menos fiable: ganan</th><th>Diferencia (puntos)</th></tr></thead><tbody>${blk('Completo · todas las filas', A, 'pos')}${blk('Completo · dentro de la regla ' + esc(m.regla.nombre), R, 'pos')}${blk('Solo volatilidad · todas las filas', V)}${blk('Solo volatilidad · dentro de la regla', VR)}</tbody></table></div>
+    ${cal.length ? `<div class="small" style="margin-top:8px"><b>Calibración</b> (si el modelo dice X %, ¿gana X %?): ${cal.map(c => `${esc(c.tramo)}: predicho ${c.predicho.toFixed(0)} % → real <b>${c.real.toFixed(0)} %</b> (n ${nf(c.n)}, neto ${pc(c.neto, 2)})`).join(' · ')}</div>` : ''}
+    ${years.length ? `<div class="tw" style="margin-top:8px"><table class="ev"><thead><tr><th>Año</th><th>n</th><th>AUC</th><th>Ganan (todas)</th><th>Decil más fiable: ganan</th><th>Fiabilidad</th><th>Neto</th><th>Exceso</th><th>Decil menos fiable: ganan</th></tr></thead><tbody>${years.map(([y, r]) => `<tr><td>${y}</td><td>${nf(r.n)}</td><td>${r.auc.toFixed(3)}</td><td>${r.base.toFixed(1)} %</td><td>${r.top ? r.top.real.toFixed(1) + ' %' : '—'}</td><td class="${r.top ? sg(r.top.fiab) : ''}">${r.top ? (r.top.fiab >= 0 ? '+' : '') + r.top.fiab.toFixed(1) : '—'}</td><td>${r.top ? pc(r.top.neto, 2) : '—'}</td><td>${r.top ? pc(r.top.exceso, 2) : '—'}</td><td>${r.bot ? r.bot.real.toFixed(1) + ' %' : '—'}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    <div class="verdict ${A.auc - V.auc >= 0.03 ? 'g' : 'a'}" style="margin-top:8px"><b>Veredicto:</b> ${A.auc - V.auc >= 0.03 ? `el modelo completo supera al control de solo volatilidad (AUC ${A.auc.toFixed(3)} frente a ${V.auc.toFixed(3)}): aporta información más allá de que el valor se mueva.` : `el modelo completo apenas supera al control de solo volatilidad (AUC ${A.auc.toFixed(3)} frente a ${V.auc.toFixed(3)}): la «fiabilidad» es, casi toda, que el valor se mueve mucho (con el stop a 2,5 ATR, el que se mueve llega antes a +4 %). ${R && VR && R.auc - VR.auc >= 0.03 ? `Dentro de la regla sí separa algo más que la volatilidad (AUC ${R.auc.toFixed(3)} frente a ${VR.auc.toFixed(3)}), pero el decil más fiable gana lo mismo con una cosa que con la otra.` : ''} Úsala para ordenar, no como una promesa.`} ${A.calibracion && A.calibracion.length ? 'Calibración: el modelo es optimista en los extremos (la pestaña Hoy muestra la probabilidad ya corregida con estos tramos).' : ''}</div></div>`;
+}
+function renderImpEv() {
+  const W = S.srch;
+  if (!W || !S.cfm) { $('#view').innerHTML = impHead('Evidencia de la regla de impulso', 'Estadísticas de la parte 2.') + '<div class="empty">Todavía no hay estudio de la regla. Lanza el flujo «Laboratorio y estudio» con <code>cmd = search</code> y <code>cmd = confirm</code>.</div>'; return; }
+  const m = W.meta, wf = W.walk_forward, nl = W.nulo, ys = wf.todo['años'];
+  const sub = [['todo', 'Todas las reglas'], ['contexto', 'Solo contexto (sin patrones)'], ['patrones', 'Con patrón (al menos una condición de patrón)']];
+  const f = (x, d = 2) => x == null ? '—' : pc(x, d);
+  const dfm = (W.dev_final.todo || {}).mejores || [], posF = dfm.filter(r => r.final_exceso != null && r.final_exceso > 0).length;
+  $('#view').innerHTML = impHead('Evidencia de la regla de impulso', `Estadísticas <b>propias de esta parte</b>, separadas de las de las figuras. Exceso = rendimiento neto de costes menos el de todas las acciones del universo ese mismo día, con el mismo sentido y la misma salida; <b>fiabilidad</b> = puntos de «gana» por encima de la fracción del día que gana con esa salida. Los resultados son por operación (una fila = una acción y un día). Las salidas <code>esc</code>, <code>esca</code>, <code>esc6</code> y <code>esc10</code> son la escalera del operador (+4 % plano → +10 % persiguiendo a 2 ATR) con stop inicial a 2,5 ATR, 1,5 ATR, 6 % o 10 % del precio.`) + `
+    <div class="verdict a"><b>Resumen honesto.</b> Hay una idea que se repite y se confirma en acciones distintas: <b>valores de impulso alto a 12 meses que han caído → largo</b>, operados con la escalera. En acciones que no sirvieron para encontrarla gana 7 de cada 10 veces, asegura el +4 % en el 73 % y el +10 % en 1 de cada 5 (sección 4); pero entrar al azar el mismo día con la misma escalera ya gana el 59–61 %, así que lo que pone la regla son <b>+7 puntos de acierto y +0,5 a +0,8 % por operación</b> (menos tras el sesgo de supervivencia), <b>solo en acciones muy volátiles</b> (sección 6) y con un stop ancho (el stop al 6 % la destroza). La pérdida media (−9 a −12 %) es mayor que la ganancia media (+6 %): la compensa la tasa de acierto. El <b>buscador automático</b> con las 10 salidas ya <b>no</b> es significativo (sección 1: p 0,45) y elegir por fiabilidad da reglas que aciertan más pero no ganan dinero (sección 7); el <b>modelo de fiabilidad</b> apenas supera al control de volatilidad (sección 8). Lo que aguanta es la regla concreta, no la búsqueda ni el modelo. Las figuras y las velas no aportan nada a esta regla (ver Guía).${ctLine()}</div>
+    ${carteraPanel()}${menuPanel()}
+    <div class="panel"><h3>1. Búsqueda con selección hacia delante (${m.test_years[0]}–${m.test_years[m.test_years.length - 1]})</h3><div class="small" style="margin-bottom:6px">${nf(m.pruebas)} reglas (${m.combinaciones} combinaciones de ${m.condiciones} condiciones × 2 sentidos × ${Object.keys(m.salidas).length} salidas) sobre ${nf(m.filas)} filas (acciones-días de las ${m.k} más negociadas, ${m.from} → ${m.to}). Cada año se elige la mejor regla <b>solo con lo anterior</b> (menos 60 sesiones) y se mide en ese año sin tocarla: lo que se muestra es el resultado del procedimiento completo de buscar y elegir. Control: se repite todo con los resultados desplazados en el calendario (al menos 300 sesiones; ${nl.todo.reps} repeticiones). Universo: ${m.miembros === 'en la fecha' ? 'miembros actuales, cada valor del S&amp;P 500 solo desde su incorporación al índice (' + nf(m.barras_quitadas) + ' barras quitadas por el sesgo de supervivencia)' : 'miembros actuales de los índices'}.</div>
+      <div class="tw"><table class="ev"><thead><tr><th class="l">Conjunto de reglas</th><th>Operaciones</th><th>Exceso · t</th><th>Neto (azar mismas fechas)</th><th>% ganadoras (todas las filas)</th><th>Control: exceso p95 · p</th><th>Control: t p95 · p</th></tr></thead><tbody>${sub.map(([k, t]) => { const w = wf[k], n = nl[k]; return `<tr><td class="l">${t}</td><td>${nf(w.n)}</td><td class="${sg(w.exceso)}">${f(w.exceso)} · t ${w.t.toFixed(1)}</td><td>${f(w.neto)} (${f(w.neto_azar_mismas_fechas)})</td><td>${w.ganan.toFixed(1)} % (${w.ganan_todas_las_filas.toFixed(1)} %)</td><td>${f(n.exceso_p95)} · ${pv(n.p_exceso, n.reps)}</td><td>${n.t_p95.toFixed(1)} · ${pv(n.p_t, n.reps)}</td></tr>`; }).join('')}</tbody></table></div>
+      <div class="small" style="margin-top:6px">El exceso supera el p95 del control en las tres versiones, pero la t no (p entre 0,1 y 0,4): compatible con una ventaja real pequeña, sin ser una prueba firme.</div></div>
+    <div class="panel"><h3>2. Año a año: la regla que se habría elegido con lo anterior</h3><div class="tw"><table class="ev"><thead><tr><th>Año</th><th>Operaciones</th><th>Exceso</th><th>Neto</th><th>Azar</th><th>% ganadoras</th><th class="l">Regla elegida (t de entrenamiento)</th></tr></thead><tbody>${ys.map(r => `<tr><td>${r['año']}</td><td>${nf(r.n)}</td><td class="${sg(r.exceso)}">${f(r.exceso)}</td><td>${f(r.neto)}</td><td>${f(r.azar_neto)}</td><td>${r.ganan.toFixed(1)} %</td><td class="l">${esc(ruleTxt(r.regla, r.sentido))} · ${esc(r.salida)} <span class="small">(t ${r.train_t.toFixed(1)})</span></td></tr>`).join('')}</tbody></table></div></div>
+    <div class="panel"><h3>3. Elegidas con los años ≤ ${W.dev_final.todo.dev_end} y miradas una sola vez después</h3><div class="small" style="margin-bottom:6px">De las ${dfm.length} mejores reglas del entrenamiento, <b>${posF}</b> mantienen exceso positivo en el final (exceso medio final ${f(dfm.filter(r => r.final_exceso != null).reduce((a, r) => a + r.final_exceso, 0) / Math.max(1, dfm.filter(r => r.final_exceso != null).length))}, de ${f(dfm.reduce((a, r) => a + r.train_exceso, 0) / Math.max(1, dfm.length))} en el entrenamiento).</div>
+      <div class="tw"><table class="ev"><thead><tr><th>Entrenamiento: n</th><th>Exceso · t</th><th>Final: n</th><th>Exceso · t</th><th class="l">Regla</th></tr></thead><tbody>${dfm.map(r => `<tr><td>${nf(r.train_n)}</td><td>${f(r.train_exceso)} · ${r.train_t.toFixed(1)}</td><td>${nf(r.final_n)}</td><td class="${sg(r.final_exceso)}">${f(r.final_exceso)}${r.final_t != null ? ' · ' + r.final_t.toFixed(1) : ''}</td><td class="l">${esc(ruleTxt(r.regla, r.sentido))} · ${esc(r.salida)}</td></tr>`).join('')}</tbody></table></div></div>
+    ${confTable(S.cfm, '4. Confirmación en acciones distintas: S&P 400 y S&P 600', 'Las cinco candidatas se fijaron con la búsqueda anterior y se evalúan en otras acciones (mismo método, coste más alto).')}
+    ${confTable(S.cf, '5. Las mismas candidatas en el universo de la búsqueda', 'Misma muestra que la búsqueda (no es independiente): sirve para comparar con las cifras anteriores.')}
+    ${robTable()}
+    ${fiabSelTable()}
+    ${fiabModel()}
+    <div class="panel"><h3>Cautelas que estos datos no pueden quitar</h3><div class="small"><ul style="margin:0;padding-left:18px">
+      <li><b>Sesgo de supervivencia</b>: el universo son los miembros actuales de los índices; los que cayeron y salieron no están. Comprar caídas de valores fuertes es justo lo que más se infla con eso (quitando las filas anteriores a la incorporación al S&amp;P 500 la ventaja se reduce a menos de la mitad). En el S&amp;P 400 y 600 ni siquiera se puede quitar. Descuenta la mitad: unos <b>+0,3 a +0,5 % por operación</b> sobre el azar.</li>
+      <li><b>Solo en valores muy volátiles</b>: el stop inicial de 2,5 ATR queda a más del 10–20 % del precio y el tamaño de la posición es lo que controla el riesgo. La comprobación por volatilidad se hizo después de ver los resultados: se medirá hacia delante con el registro del cribador.</li>
+      <li><b>Es pequeña</b>: con costes reales (comisión, deslizamiento en valores menos líquidos, impuestos) y operaciones simultáneas sobre el mismo mercado, la ganancia real será menor y variable. Hay años con −1 %.</li>
+      <li><b>Son medias</b>: una operación suelta pierde casi un tercio de las veces con la mejor salida.</li>
+      <li><b>Solo largos</b>: la mejor regla en corto no se sostuvo en el final. Las reglas de huecos de apertura y las de un solo régimen de mercado tampoco.</li>
+      <li><b>No es chartismo</b>: con patrón o sin él da lo mismo; el patrón solo marca que el valor ha caído.</li></ul></div></div>`;
+  drawCartera();
+  const mr = $('#ct-r'); if (mr) mr.querySelectorAll('button').forEach(b => b.onclick = () => { S.ctRule = b.dataset.v; renderImpEv(); window.scrollTo({top: $('#ct-menu').offsetTop - 60}); });
+}
+const VARIANT_TXT = {sin_volatilidad: 'sin el filtro de volatilidad alta', riesgo_2: 'riesgo 2 % por operación', riesgo_0_5: 'riesgo 0,5 % por operación', max_3: 'máximo 3 posiciones', max_10: 'máximo 10 posiciones', sin_grupos: 'sin la regla de un valor por grupo'};
+const yrsOf = m => m ? Math.max(1, (new Date(m.to) - new Date(m.from)) / DAY / 365.25) : 10;
+function ctLine() {                                                          // una frase del resumen honesto con lo que da la cartera simulada
+  const C = S.ct, b = C && C.base; if (!b || !b.cartera) return '';
+  const c = b.cartera, au = b.azar_universo, mk = b.mercado;
+  return ` <b>En una cuenta</b>, con la disciplina del plan de hoy durante ${yrsOf(C.meta).toFixed(0)} años, eso es ${pc(c.anual, 1)} al año con una caída máxima del ${c.caida_max.toFixed(0)} % y la cuenta invertida de media al ${c.exposicion_media.toFixed(0)} % (elegir al azar las mismas fechas: ${pc(au.anual.mediana, 1)} al año, p ${pv(au.anual.p, au.anual.n)}; el mercado a partes iguales: ${pc(mk.anual, 1)} con una caída del ${mk.caida_max.toFixed(0)} %): primer apartado.`;
+}
+function carteraPanel() {                                                    // ¿da para vivir? la disciplina del plan de hoy simulada día a día contra carteras al azar y el mercado
+  const C = S.ct, b = C && C.base; if (!b || !b.cartera) return '';
+  const m = C.meta, c = b.cartera, au = b.azar_universo, ao = b.azar_orden, mk = b.mercado, yrs = yrsOf(m);
+  const row = (t, x, extra, cls) => `<tr class="${cls || ''}"><td class="l">${t}</td><td class="${sg(x.anual)}"><b>${pc(x.anual, 1)}</b></td><td class="neg">${pc(x.caida_max, 1)}</td><td>${x.sharpe != null ? x.sharpe.toFixed(2) : '—'}</td><td>${x.mar != null ? x.mar.toFixed(2) : '—'}</td><td>${x.años_positivos != null ? x.años_positivos + '/' + x.años : '—'}</td><td>${x.peor_año != null ? pc(x.peor_año, 1) : '—'}</td><td>${extra}</td></tr>`;
+  const sum = (x, p) => `${pc(x.mediana, 1)} <span class="small">(${pc(x.p05, 1)} a ${pc(x.p95, 1)}) · p ${pv(p, x.n)}</span>`;
+  const beat = au.anual.p <= 0.05, beatMk = c.anual > mk.anual, beatMar = (c.mar || 0) > (mk.mar || 0);
+  const verd = beat ? (beatMk ? `la cartera de la regla gana a las carteras al azar del universo con las mismas fechas (p ${pv(au.anual.p, au.anual.n)}) <b>y</b> al mercado a partes iguales, con menos caída.` :
+    `la cartera de la regla gana a las carteras al azar del universo con las mismas fechas (p ${pv(au.anual.p, au.anual.n)}), pero <b>no</b> al mercado a partes iguales en rentabilidad bruta: con riesgo del ${m.riesgo_pct} % por operación y stops anchos la cuenta está invertida solo al ${c.exposicion_media.toFixed(0)} % de media, así que gana menos en total aunque gane más por euro invertido${beatMar ? ' (rentabilidad por unidad de caída máxima mejor que la del mercado)' : ''}. Para vivir de esto haría falta más riesgo por operación (ver variantes) y aceptar caídas mayores, o más entradas.`) :
+    `la cartera de la regla <b>no se distingue</b> de elegir al azar entre las acciones volátiles del universo en las mismas fechas (p ${pv(au.anual.p, au.anual.n)}): lo que gana lo gana el mercado de esos días, no la regla.`;
+  return `<div class="panel" style="border-left:3px solid var(--violet)"><h3>¿Da para vivir? La cartera simulada con la disciplina del plan de hoy (${m.from.slice(0, 4)}–${m.to.slice(0, 4)})</h3>
+    <div class="small" style="margin-bottom:6px">Las estadísticas por operación no dicen qué pasa en una cuenta. Aquí se simula <b>día a día</b>, con toda la historia y los precios reales, exactamente lo que hace la pestaña Hoy: cada sesión se abren, como mucho hasta tener <b>${m.max_pos} posiciones</b>, las acciones de la regla «${esc((m.reglas[b.regla] || {}).etiqueta || b.regla)}» con volatilidad alta (percentil ≥ ${(m.vol_min * 100).toFixed(0)}), una por grupo (correlación < ${m.corr_min}), por orden de volatilidad; entrada en la apertura siguiente; tamaño con el que el stop inicial a 2,5 ATR cuesta el <b>${m.riesgo_pct} % de la cuenta</b> (nunca más del ${(m.cap_pos * 100).toFixed(0)} % de la cuenta, sin apalancamiento); salida con <b>${esc(m.menu[b.salida] || b.salida)}</b>; coste ${m.coste} %. Se compara con <b>${m.reps} carteras al azar</b> que entran los mismos días, el mismo número de veces, en acciones al azar del universo con la misma volatilidad alta y la misma salida (lo que pone la regla), con las mismas acciones de la regla en orden al azar (lo que pone el orden) y con comprar y mantener el universo a partes iguales (el mercado, sin costes). Universo: ${m.universe} acciones, ${m.miembros === 'en la fecha' ? 'cada una desde su incorporación al S&P 500' : 'miembros actuales'}.</div>
+    <div class="sumry w"><div class="stat"><b>${pc(c.anual, 1)}</b><span>al año (${pc(c.total, 0)} en total)</span></div><div class="stat"><b>${pc(c.caida_max, 1)}</b><span>caída máxima desde un máximo</span></div><div class="stat"><b>${c.operaciones}</b><span>operaciones (${c.por_año_ops} al año) · ganan ${c.ganan} %</span></div><div class="stat"><b>${c.exposicion_media.toFixed(0)} %</b><span>de la cuenta invertida, de media (posición media ${c.tamaño_medio} %)</span></div><div class="stat"><b>${pc(au.anual.mediana, 1)}</b><span>al año eligiendo al azar (mediana de ${au.anual.n})</span></div><div class="stat"><b>${pc(mk.anual, 1)}</b><span>al año el mercado a partes iguales</span></div></div>
+    <canvas id="ct-cv" style="width:100%;height:260px;display:block;margin:6px 0"></canvas>
+    <div class="tw"><table class="ev"><thead><tr><th class="l">Cartera</th><th>Al año</th><th>Caída máxima</th><th title="Rentabilidad media diaria entre su desviación, anualizada (sin tipo libre de riesgo)">Sharpe</th><th title="Rentabilidad anual entre caída máxima">Anual / caída</th><th>Años +</th><th>Peor año</th><th>Operaciones</th></tr></thead><tbody>
+      ${row('<b>La regla con la disciplina del plan de hoy</b>', c, `${c.operaciones} · ganan ${c.ganan} % · neto medio ${pc(c.neto_medio, 2)} · ${c.sesiones_media} sesiones`, '')}
+      <tr><td class="l">Al azar en el universo (volatilidad alta), mismas fechas y mismo número de entradas</td><td>${sum(au.anual, au.anual.p)}</td><td>${sum(au.caida_max, au.caida_max.p)}</td><td colspan="4" class="small">mediana (percentiles 5 y 95) de ${au.anual.n} carteras · p = fracción que iguala o supera a la regla</td><td>${au.operaciones_media}</td></tr>
+      <tr><td class="l">Las mismas acciones de la regla, en orden al azar (sin preferir las más volátiles)</td><td>${sum(ao.anual, ao.anual.p)}</td><td>${sum(ao.caida_max, ao.caida_max.p)}</td><td colspan="5" class="small">si p es grande, el orden por volatilidad no aporta</td></tr>
+      ${row('Comprar y mantener el universo a partes iguales (sin costes)', mk, '—', '')}</tbody></table></div>
+    <div class="tw" style="margin-top:8px"><table class="ev"><thead><tr><th>Año</th><th>La regla</th><th>Al azar (mediana)</th><th>Mercado</th><th>Operaciones</th><th>Ganan</th></tr></thead><tbody>${b.por_año.map(r => `<tr><td>${r['año']}</td><td class="${sg(r.cartera)}">${pc(r.cartera, 1)}</td><td class="${sg(r.azar_mediana)}">${pc(r.azar_mediana, 1)}</td><td class="${sg(r.mercado)}">${pc(r.mercado, 1)}</td><td>${r.operaciones}</td><td>${r.ganan != null ? r.ganan.toFixed(0) + ' %' : '—'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="small" style="margin-top:8px"><b>Variantes de la misma cartera</b> (todo lo demás igual): ${Object.entries(b.variantes || {}).map(([k, v]) => `${VARIANT_TXT[k] || k}: <b>${pc(v.anual, 1)}</b> al año, caída ${pc(v.caida_max, 0)}, ${v.operaciones} ops`).join(' · ')}. El riesgo por operación escala la rentabilidad y la caída casi en la misma proporción: la cifra que no cambia es la relación entre las dos.</div>
+    <div class="verdict ${beat && beatMk ? 'g' : beat ? 'a' : 'r'}" style="margin-top:8px"><b>Veredicto:</b> ${verd} Sesgo de supervivencia no corregido del todo (favorece a la regla y al mercado a partes iguales por igual) y sin impuestos ni deslizamiento.</div></div>`;
+}
+function menuPanel() {                                                       // ¿hay una salida mejor que la escalera? la misma entrada con cada salida del menú, por operación y en cartera
+  const C = S.ct; if (!C || !C.menu) return '';
+  const m = C.meta, rules = Object.keys(C.menu), rn = S.ctRule && C.menu[S.ctRule] ? S.ctRule : (C.base && C.base.regla) || rules[0], E = C.menu[rn] || {};
+  const seg = (id, items, cur) => `<div class="seg" id="${id}">${items.map(([v, tx]) => `<button data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${tx}</button>`).join('')}</div>`;
+  const rows = Object.entries(E).filter(([, r]) => r.operacion && r.operacion.exceso != null).sort((a, b) => b[1].cartera.anual - a[1].cartera.anual);
+  const best = rows.length ? rows[0][0] : null, mine = (C.base && C.base.salida) || 'esc';
+  const tr = ([e, r]) => { const o = r.operacion, c = r.cartera, az = r.azar_universo; return `<tr class="${e === mine ? 'me' : ''}"><td class="l">${e === mine ? '<b>' : ''}${esc(m.menu[e] || e)}${e === mine ? '</b> <span class="tag" style="background:var(--violet);color:#fff">la tuya</span>' : ''}${e === best && e !== mine ? ' <span class="tag">mejor del menú</span>' : ''}</td><td>${nf(o.n)}</td><td>${pc(o.neto, 2)} <span class="small">(${pc(o.azar_dia, 2)})</span></td><td class="${sg(o.exceso)}">${pc(o.exceso, 2)} · t ${o.t.toFixed(1)}</td><td>${o.ganan.toFixed(0)} % <span class="small">(${o.ganan_azar.toFixed(0)})</span></td><td>${o.asegura1.toFixed(0)} / ${o.asegura2.toFixed(0)} / ${o.stop_inicial.toFixed(0)}</td><td>${pc(o.gan_media, 1)} / ${pc(o.perd_media, 1)} · ${o.factor != null ? o.factor.toFixed(2) : '—'}</td><td>${o.sesiones.toFixed(0)}</td><td>${pc(o.neto_por_sesion * 100, 1).replace(' %', '')}</td><td class="${sg(c.anual)}"><b>${pc(c.anual, 1)}</b></td><td class="neg">${pc(c.caida_max, 0)}</td><td>${c.sharpe != null ? c.sharpe.toFixed(2) : '—'}</td><td>${c.operaciones}</td><td>${az ? `${pc(az.anual.mediana, 1)} <span class="small">· p ${pv(az.anual.p, az.anual.n)}</span>` : '—'}</td></tr>`; };
+  return `<div class="panel" id="ct-menu"><h3>¿Hay una salida mejor que tu escalera? El menú de salidas sobre la misma entrada</h3>
+    <div class="small" style="margin-bottom:6px">La misma entrada («${esc((m.reglas[rn] || {}).etiqueta || rn)}», volatilidad alta) operada con cada salida del menú, fijadas aquí antes de mirar el resultado. Por operación: neto (entre paréntesis, entrar al azar ese día con la misma salida), exceso con t agrupada, % que gana (azar), % que asegura el primer / el segundo nivel / salta el stop inicial, ganancia media / pérdida media · factor de beneficio, sesiones que dura y <b>neto por cada 100 sesiones de capital ocupado</b> (lo que importa cuando la cuenta tiene sitio limitado). En cartera: la misma disciplina de arriba con esa salida, y la mediana de ${m.reps} carteras al azar con esa salida (p). <b>Es una comparación hecha después de ver los datos</b>: la mejor fila es una referencia, no una regla nueva; con ${rows.length} salidas, la mejor saldrá algo mejor de lo que es.</div>
+    ${rules.length > 1 ? `<div class="bar">${seg('ct-r', rules.map(r => [r, (m.reglas[r] || {}).etiqueta || r]), rn)}</div>` : ''}
+    <div class="tw"><table class="ev"><thead><tr><th class="l">Salida</th><th>n</th><th>Neto (azar)</th><th>Exceso · t</th><th>Ganan (azar)</th><th title="Aseguró el primer nivel / el segundo / saltó el stop inicial">1º / 2º / stop</th><th>Gana / pierde · factor</th><th>Sesiones</th><th title="Neto medio por operación dividido por las sesiones que dura, por 100">Neto / 100 ses.</th><th>Cartera: al año</th><th>Caída</th><th>Sharpe</th><th>Ops</th><th>Azar: al año (p)</th></tr></thead><tbody>${rows.map(tr).join('')}</tbody></table></div></div>`;
+}
+function drawCartera() {                                                     // curva de la cuenta: la regla, el mercado a partes iguales y la mediana de las carteras al azar
+  const cvs = $('#ct-cv'), b = S.ct && S.ct.base; if (!cvs || !b || !b.curva || b.curva.length < 2) return;
+  const dpr = window.devicePixelRatio || 1, W = cvs.clientWidth, H = 260;
+  cvs.width = W * dpr; cvs.height = H * dpr; const x = cvs.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const L = 52, R = 12, T = 10, B = 26, pts = b.curva, n = pts.length;
+  const vals = pts.flatMap(p => [p[1], p[2], p[3]]).filter(v => v > 0), lo = Math.min(...vals), hi = Math.max(...vals);
+  const Y = v => T + (Math.log(hi) - Math.log(v)) / (Math.log(hi) - Math.log(lo) || 1) * (H - T - B), X = i => L + i / (n - 1) * (W - L - R);
+  x.font = '10px ' + css('--f-mono'); x.textBaseline = 'middle'; x.strokeStyle = css('--grid'); x.fillStyle = css('--sub'); x.textAlign = 'right';
+  const ticks = [0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32].filter(v => v >= lo && v <= hi);
+  for (const v of ticks) { x.beginPath(); x.moveTo(L, Y(v)); x.lineTo(W - R, Y(v)); x.stroke(); x.fillText('×' + v, L - 6, Y(v)); }
+  x.textAlign = 'center';
+  pts.forEach((p, i) => { if (p[0].slice(5, 7) === '01' && (i === 0 || pts[i - 1][0].slice(0, 4) !== p[0].slice(0, 4))) x.fillText(p[0].slice(0, 4), X(i), H - 10); });
+  const line = (k, color, w) => { x.strokeStyle = color; x.lineWidth = w; x.beginPath(); pts.forEach((p, i) => { if (!(p[k] > 0)) return; i ? x.lineTo(X(i), Y(p[k])) : x.moveTo(X(i), Y(p[k])); }); x.stroke(); };
+  line(3, css('--amber'), 1.2); line(2, css('--sub'), 1.2); line(1, css('--violet'), 2);
+  x.textAlign = 'left'; x.lineWidth = 1;
+  [[css('--violet'), 'la regla con la disciplina'], [css('--sub'), 'mercado a partes iguales'], [css('--amber'), 'al azar (mediana)']].forEach(([c, t], i) => { x.fillStyle = c; x.fillRect(L + 6 + i * 205, T + 4, 12, 3); x.fillStyle = css('--ink'); x.fillText(t, L + 22 + i * 205, T + 6); });
+}
+
+function renderImpGuide() {
+  const cd = k => `<li><b>${esc(COND[k] || k)}</b></li>`;
+  $('#view').innerHTML = impHead('Guía de la regla de impulso', 'Qué es, cómo se encontró, cómo se opera y qué límites tiene.') + `
+    <div class="panel"><h3>La idea</h3><div class="small">Entre las acciones grandes de EE.UU., las que llevan 12 meses subiendo más que las demás (el 20 % mejor, sin contar el último mes) suelen seguir ganando a las demás; cuando además <b>caen un poco</b> (por debajo de su media de 200 sesiones, con RSI(2) muy bajo o con varias señales bajistas a la vez) rebotan mejor que la media del mercado ese día. La regla compra esas acciones en largo. Es un efecto conocido en la literatura (impulso más rebote a corto plazo); aquí se ha medido con las salidas de un operador y con control del sesgo de buscar entre miles de reglas.</div></div>
+    <div class="panel"><h3>Las reglas, con su nombre</h3><div class="small"><b>Tres entradas</b>, todas en largo y todas con impulso 12-1 meses en el 20 % mejor del día: <b>bajo 200</b> = ${esc(ruleTxt(['bajo_200', 'impulso12_alto'], ''))} · <b>2+ bajistas</b> = ${esc(ruleTxt(['impulso12_alto', 'confluencia_bajista'], ''))} · <b>RSI(2) ≤ 10</b> = ${esc(ruleTxt(['impulso12_alto', 'rsi2_bajo'], ''))}. <b>Una salida</b>: la escalera del operador. Eso es todo lo que aplica la pestaña Hoy.<br>En la Evidencia y en los ficheros de datos las candidatas llevan un código, porque la misma entrada se midió con varias salidas: <b>C1, C2, C3, C6, C7</b> son «bajo 200» con asegura +4 %, asegura +6 %, cierre a 10 sesiones, la escalera y la escalera con stop al 6 %; <b>C4</b> y <b>C8</b> son «2+ bajistas» con cierre a 10 sesiones y con la escalera; <b>C5</b> es «RSI(2) ≤ 10» con cierre a 10 sesiones; <b>V1–V6</b> son «bajo 200» separada por volatilidad baja o alta con tres salidas. La web enseña siempre el nombre y deja el código en pequeño.</div></div>
+    <div class="panel"><h3>La escalera del operador y la disciplina</h3><div class="small"><b>Escalera</b>: entrada en la apertura siguiente; stop inicial a 2,5 ATR; al cerrar una sesión a +4 % el stop sube a +4 % y se queda (se deja correr); al cerrar a +10 % el stop sube a +10 % y persigue al mejor cierre a 2 ATR; sin objetivo; 60 sesiones como máximo. Se asegura al menos +4 % y, si llega, +10 %.<br><b>Fiabilidad</b>: probabilidad de que esa operación acabe con ganancia, según un modelo entrenado solo con operaciones ya cerradas y validado hacia delante (Evidencia, sección 8). Léela frente a la media del universo ese día, no frente al 50 %.<br><b>Plan de hoy</b>: como mucho 5 posiciones, una por grupo de valores correlacionados, por orden de fiabilidad, solo volatilidad alta, riesgo del 1 % de la cuenta cada una (el tamaño lo fija el stop). El riesgo total de la cartera queda acotado aunque salten todos los stops.<br><b>Seguimiento</b>: cada día se simula con precios reales lo que pasó con cada acción que salió; es el track record de la regla, imposible de ajustar a posteriori.</div></div>
+    <div class="panel"><h3>Cómo se encontró sin engañarse</h3><div class="small"><ul style="margin:0;padding-left:18px"><li>Se probaron ${S.srch ? nf(S.srch.meta.pruebas) : '8.000'} reglas (combinaciones de 32 condiciones fijadas de antemano, en largo y corto, con ${S.srch ? Object.keys(S.srch.meta.salidas).length : 10} salidas). Si se prueban miles de reglas, la mejor siempre parece buena.</li>
+      <li><b>Selección hacia delante</b>: cada año se elige la mejor regla con los datos anteriores y se mide en ese año; el resultado «fuera de muestra» es el del procedimiento completo.</li>
+      <li><b>Control del procedimiento</b>: se repite todo con los resultados desplazados en el calendario; lo que «encuentra» así es lo que da el azar al buscar.</li>
+      <li><b>Confirmación en acciones distintas</b> (S&amp;P 400 y 600) con ocho hipótesis fijadas antes de mirarlas (las mismas tres entradas con distintas salidas), y la <b>cartera simulada</b> día a día con la disciplina del plan de hoy frente a carteras al azar y al mercado (Evidencia, primer apartado).</li>
+      <li><b>Sesgo de supervivencia parcialmente corregido</b>: cada valor del S&amp;P 500 solo cuenta desde su fecha de incorporación al índice.</li>
+      <li><b>Robustez por volatilidad</b> (descriptiva, hecha después): la ventaja está en el 40 % de acciones más volátiles del día; en las tranquilas es cero o negativa. Por eso la pestaña Hoy muestra por defecto solo las de volatilidad alta.</li>
+      <li><b>Fiabilidad, no solo rentabilidad</b>: la búsqueda se repite eligiendo cada año la regla que gana más veces que el azar del día (Evidencia, sección 7), y el modelo de fiabilidad se juzga por su calibración fuera de muestra y frente a un control de solo volatilidad (sección 8).</li></ul></div></div>
+    <div class="panel"><h3>Condiciones usadas (todas con datos hasta el cierre del día; los percentiles son del día)</h3><div class="small"><ul style="margin:0;padding-left:18px;columns:2;column-gap:28px">${Object.keys(COND).map(cd).join('')}</ul></div></div>
+    <div class="panel"><h3>Qué no es</h3><div class="small"><b>No es chartismo.</b> Los patrones (velas, figuras, rupturas) solo entran como una condición más («2 o más señales bajistas a la vez») y no añaden nada: con patrón o sin él la ventaja es la misma. Las estadísticas de las figuras están en la otra parte del laboratorio (Figuras y velas → Evidencia) y no se mezclan con estas.<br><b>No es una recomendación de inversión</b>: la ventaja estimada es pequeña, depende del sesgo de supervivencia que no se pudo quitar del todo y varía de un año a otro.<br><b>Seguimiento hacia delante</b>: el cribador guarda cada día qué acciones cumplían cada regla (<code>data/impulso_hist.json</code>) para medir, sin posibilidad de ajustar nada, qué pasó con ellas.</div></div>`;
 }
 
 /* ───────────────────────── gráfico: vista ───────────────────────── */
@@ -450,7 +780,7 @@ function buildBar() {
     tg('rr', 'Plan de todos los activos') + tg('hist', 'Resultado de todos') + tg('act', 'Solo activos') +
     '<span class="sep"></span><div class="seg" id="sg-dir"><button data-v="0">Ambos</button><button data-v="1">Alcistas</button><button data-v="-1">Bajistas</button></div>' +
     '<div class="seg" id="sg-q" title="Calidad de la figura (0–100): toques, ajuste de las rectas, simetría, duración, ruptura y volumen"><button data-v="0">Calidad: todas</button><button data-v="60">≥ 60</button><button data-v="75">≥ 75</button></div>' +
-    '<div class="seg" id="sg-stop" title="Stop estructural (bajo la figura) o táctico (1,5 ATR)"><button data-v="e">Stop estructural</button><button data-v="t">Stop táctico</button></div>' +
+    '<div class="seg" id="sg-stop" title="Escalera del operador: stop inicial estructural acotado a 2 ATR; al cerrar a +4 % el stop sube a +4 % y se queda; al cerrar a +10 % sube a +10 % y persigue a 2 ATR (sin objetivo fijo). Plan clásico: stop al otro lado de la figura y objetivo por la medida clásica, sin límites (a veces con stops del 10–40 %)"><button data-v="a">Plan del operador</button><button data-v="e">Plan clásico</button></div>' +
     '<div class="seg" id="sg-rng"><button data-v="63">3M</button><button data-v="126">6M</button><button data-v="252">1A</button><button data-v="999">Todo</button></div>';
   const mark = (id, cur) => $(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', String(b.dataset.v) === String(cur)));
   mark('#sg-dir', S.f.dir); mark('#sg-q', S.f.q); mark('#sg-stop', S.f.stop); mark('#sg-rng', 126);
@@ -470,19 +800,27 @@ function vis(p) {
   return true;
 }
 function boxesOf(p) {
-  const tact = s => S.f.stop === 't' && s.stop_t != null;
-  if (p.state === 'forming') return ['up', 'dn'].filter(k => p.sc[k]).map(k => { const s = p.sc[k], t = tact(s); return {k, d: k === 'up' ? 1 : -1, entry: s.entry, target: s.target, stop: t ? s.stop_t : s.stop, t1: s.t1, rr: t ? s.rr_t : s.rr, out: null, tact: t}; });
-  const t = tact(p.plan);
-  return [{k: 'x', d: p.dir, entry: p.plan.entry, target: p.plan.target, stop: t ? p.plan.stop_t : p.plan.stop, t1: p.plan.t1, rr: t ? p.plan.rr_t : p.plan.rr, out: t ? p.out_t : p.out, tact: t}];
+  const cls = S.f.stop === 'e';                                                 // plan clásico sin límites (referencia) o plan operable (por defecto)
+  const pick = (s, d) => {
+    if (!cls) return {entry: s.entry, target: s.target, stop: s.stop, t1: s.t1, rr: s.rr, cls: false};
+    return {entry: s.entry, target: s.target_c, stop: s.stop_s, t1: s.entry + (s.target_c - s.entry) / 2, rr: s.rr_s, cls: true};
+  };
+  if (p.state === 'forming') return ['up', 'dn'].filter(k => p.sc[k]).map(k => ({k, d: k === 'up' ? 1 : -1, out: null, target2: cls ? null : p.sc[k].target2, ...pick(p.sc[k])}));
+  return [{k: 'x', d: p.dir, out: cls ? (p.out_s || p.out) : p.out, target2: cls ? null : p.plan.target2, ...pick(p.plan)}];
 }
 const rrOf = p => boxesOf(p)[0];
+const isClosed = o => !!o && (o.res === 'target' || o.res === 'stop' || o.res === 'timeout') && o.xi != null;   // operación terminada (llegó al objetivo, saltó el stop o se cerró por tiempo)
+const isWin = o => !!o && o.net != null && o.net > 0;                                                              // gana quien termina con ganancia neta, llegue o no al objetivo
+const glyph = o => o.res === 'target' ? '✓' : o.res === 'stop' ? '✗' : isWin(o) ? '+' : '−';
+const rTxt = o => o.r == null ? '' : ` · ${o.r > 0 ? '+' : ''}${o.r.toFixed(1).replace('-', '−')} R`;
 function resTxt(o) {
   if (!o) return ['x', 'sin simular'];
   if (o.res === 'forming') return ['f', 'sin romper todavía'];
-  if (o.res === 'target') return ['t', `✓ objetivo en ${o.bars} ses. (${pc(o.ret)})`];
-  if (o.res === 'stop') return ['s', `✗ stop en ${o.bars} ses. (${pc(o.ret)})`];
-  if (o.res === 'open') return ['o', o.ret == null ? 'recién completado' : `en curso (${pc(o.ret)})`];
-  if (o.res === 'timeout') return ['x', `sin resolver en 40 ses. (${pc(o.ret)})`];
+  if (o.res === 'target' && o.locked) return isWin(o) ? ['t', `✓ aseguró ${o.level >= 2 ? '+10 %' : '+4 %'} y salió en ${o.bars} ses. con ${pc(o.net, 2)} neto${rTxt(o)}`] : ['s', `✗ aseguró ${o.level >= 2 ? '+10 %' : '+4 %'} pero un hueco de apertura lo sacó por debajo del stop en ${o.bars} ses.: ${pc(o.net, 2)} neto${rTxt(o)}`];
+  if (o.res === 'target') return ['t', `✓ objetivo en ${o.bars} ses.: ganó ${pc(o.net, 2)} neto${rTxt(o)}`];
+  if (o.res === 'stop') return ['s', `✗ stop en ${o.bars} ses.: ${o.net > 0 ? 'ganó' : 'perdió'} ${pc(o.net, 2)} neto${rTxt(o)}`];
+  if (o.res === 'timeout') return [isWin(o) ? 't' : 's', `${isWin(o) ? '✓ ganó' : '✗ perdió'} ${pc(o.net, 2)} neto${rTxt(o)}: cerrada a las ${o.bars} ses. sin tocar el stop ni asegurar${o.prog != null && !o.locked ? ` (recorrió el ${Math.round(o.prog * 100)} % del camino)` : ''}`];
+  if (o.res === 'open') return ['o', o.ret == null ? 'recién completado' : `en curso (${pc(o.ret)} ahora${o.level >= 2 ? ', +10 % asegurado' : o.locked ? ', +4 % asegurado' : ', sin asegurar'})`];
   return ['x', 'entrada ya fuera de niveles'];
 }
 const status = p => p.state === 'forming' ? ['f', 'sin romper todavía'] : resTxt(rrOf(p).out);
@@ -490,9 +828,9 @@ const qcls = q => q >= 75 ? 'qh' : q >= 60 ? 'qm' : 'ql';
 const qtag = p => p.q == null ? '' : `<span class="tag ${qcls(p.q)}" title="Calidad de la figura (0–100)">Q ${p.q}</span>`;
 function evLines(e) {
   if (!e || !e.all) return '';
-  const row = (k, lab) => e.all[k] && e.all[k].n ? `<span>${lab}</span><span>n=${e.all[k].n} · acierto ${e.all[k].wr.toFixed(0)} % · media ${pc(e.all[k].mean, 2)} · exceso ${pc(e.all[k].ex, 2)} (t ${e.all[k].t.toFixed(1)}) · años+ ${e.all[k].pos}/${e.all[k].tot}</span>` : '';
+  const row = (k, lab) => e.all[k] && e.all[k].n ? `<span>${lab}</span><span>n=${e.all[k].n} · ganadoras ${e.all[k].wr.toFixed(0)} % · media ${pc(e.all[k].mean, 2)} · exceso ${pc(e.all[k].ex, 2)} (t ${e.all[k].t.toFixed(1)}) · años+ ${e.all[k].pos}/${e.all[k].tot}</span>` : '';
   const hq = e.hq && (e.hq.K300 && e.hq.K300.n >= 30 ? e.hq.K300 : e.hq.K50);
-  return `<div class="kv">${row('K50', '50 mayores')}${row('K300', '300 mayores')}</div>` + (hq && hq.ex != null ? `<div class="small" style="margin-top:4px"><b>Solo con calidad ≥ 75:</b> n=${hq.n} · acierto ${hq.wr.toFixed(0)} % · exceso ${pc(hq.ex, 2)} (t ${hq.t.toFixed(1)}). ${Math.abs(hq.t) >= 2 ? '' : 'Sin diferencia apreciable: dibujar mejor la figura no la hace más fiable.'}</div>` : '');
+  return `<div class="kv">${row('K50', '50 mayores')}${row('K300', '300 mayores')}</div>` + (hq && hq.ex != null ? `<div class="small" style="margin-top:4px"><b>Solo con calidad ≥ 75:</b> n=${hq.n} · ganadoras ${hq.wr.toFixed(0)} % · exceso ${pc(hq.ex, 2)} (t ${hq.t.toFixed(1)}). ${Math.abs(hq.t) >= 2 ? '' : 'Sin diferencia apreciable: dibujar mejor la figura no la hace más fiable.'}</div>` : '');
 }
 
 /* ───────────────────────── gráfico: geometría ───────────────────────── */
@@ -640,7 +978,7 @@ function draw() {
     for (const r of bxs) {
       const x0 = X(p.i + (forming ? 1 : 0)), o = r.out, dd = forming ? r.d : p.dir;
       let x1 = X(p.i + (forming ? 24 : 26));
-      if (o && o.xi != null && (o.res === 'target' || o.res === 'stop')) x1 = X(o.xi);
+      if (isClosed(o)) x1 = X(o.xi);
       x1 = Math.max(x1, x0 + 60); xr = Math.max(xr, x1);
       const ye = Y(r.entry), yt = Y(r.target), ys = Y(r.stop);
       cx.save(); cx.globalAlpha = a;
@@ -650,12 +988,13 @@ function draw() {
       hl(yt, css('--emerald'), [6, 3]); hl(ys, css('--ember'), [6, 3]); hl(ye, css('--sapphire'), forming ? [3, 3] : []);
       if (r.t1 != null && sel) hl(Y(r.t1), css('--emerald'), [2, 4], 1);
       const arrow = forming ? (dd > 0 ? '▲ ' : '▼ ') : '', pcs = x => pc((x / r.entry - 1) * 100 * dd);
-      labs.push([yt, `${arrow}Objetivo ${fx(r.target)}  ${pcs(r.target)}`, css('--emerald')], [ys, `${arrow}Stop ${fx(r.stop)}  ${pcs(r.stop)}${r.tact ? ' (táctico)' : ''}`, css('--ember')],
+      if (!r.cls && r.target2 && sel) { const y2 = Y(r.target2); hl(y2, css('--emerald'), [2, 4], 1); labs.push([y2, `${arrow}Asegurar +10 % ${fx(r.target2)}  ${pcs(r.target2)}`, css('--emerald')]); }
+      labs.push([yt, `${arrow}${r.cls ? 'Objetivo' : 'Asegurar +4 %'} ${fx(r.target)}  ${pcs(r.target)}`, css('--emerald')], [ys, `${arrow}Stop${r.cls ? ' clásico' : ' inicial'} ${fx(r.stop)}  ${pcs(r.stop)}`, css('--ember')],
         [ye, forming ? `${arrow}Rompe ${dd > 0 ? '>' : '<'} ${fx(r.entry)} · R:R ${r.rr != null ? r.rr.toFixed(1) : '—'}` : `Entrada ${fx(r.entry)} · R:R ${r.rr != null ? r.rr.toFixed(1) : '—'}`, css('--sapphire')]);
       if (r.t1 != null && sel) labs.push([Y(r.t1), `${arrow}T1 (50 %) ${fx(r.t1)}`, css('--emerald'), 1]);
-      if (o && o.xi != null && (o.res === 'target' || o.res === 'stop')) {
-        const ok = o.res === 'target', xx = X(o.xi), yy = Y(o.xp);
-        cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 8, 0, 7); cx.fill(); cx.fillStyle = '#fff'; cx.font = '700 12px ' + css('--f-text'); cx.textAlign = 'center'; cx.fillText(ok ? '✓' : '✗', xx, yy + .5);
+      if (isClosed(o)) {
+        const ok = isWin(o), xx = X(o.xi), yy = Y(o.xp);
+        cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 8, 0, 7); cx.fill(); cx.fillStyle = '#fff'; cx.font = '700 12px ' + css('--f-text'); cx.textAlign = 'center'; cx.fillText(glyph(o), xx, yy + .5);
       }
       cx.restore();
     }
@@ -666,7 +1005,7 @@ function draw() {
     for (const [y, t, c, soft] of labs) pill(t, outside ? xr + 8 : Math.min(xr - 4, L.x1 - 4), y, c, {size: 10, align: outside ? 'l' : 'r', alpha: soft ? .75 : 1});
     cx.restore();
   }
-  if (S.f.hist) for (const p of pats) { const o = p.state === 'forming' ? null : rrOf(p).out; if (p === S.sel || !o || o.xi == null || !(o.res === 'target' || o.res === 'stop')) continue; const ok = o.res === 'target', xx = X(o.xi), yy = Y(o.xp); cx.globalAlpha = .85; cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 4.5, 0, 7); cx.fill(); cx.globalAlpha = 1; }
+  if (S.f.hist) for (const p of pats) { const o = p.state === 'forming' ? null : rrOf(p).out; if (p === S.sel || !isClosed(o)) continue; const ok = isWin(o), xx = X(o.xi), yy = Y(o.xp); cx.globalAlpha = .85; cx.fillStyle = ok ? css('--emerald') : css('--ember'); cx.beginPath(); cx.arc(xx, yy, 4.5, 0, 7); cx.fill(); cx.globalAlpha = 1; }
   // etiquetas: pastilla con nombre para las figuras; marcador pequeño para velas, rupturas y rebotes
   const stackUp = {}, stackDn = {};
   const pri = p => (p.state === 'forming') * 4 + major(p) * 3 + p.active * 2 + (p.q || 0) / 100;
@@ -714,18 +1053,29 @@ function draw() {
 const scenTxt = p => (p.sc.up && p.sc.dn ? 'dos escenarios' : p.sc.up ? '▲ al alza' : '▼ a la baja') + (p.trig && p.trig.dist != null ? ' · ' + distTxt(p.trig.dist) : '');
 function card(p) {
   const r = p.state === 'forming' ? null : rrOf(p), [rc, rt] = status(p), sel = p === S.sel, fm = p.state === 'forming';
-  return `<div class="pc ${sel ? 'sel' : ''}" data-id="${p.id}"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span>${esc(p.label)}${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${p.new ? '<span class="tag new">NUEVO</span>' : ''}${!fm && p.plan.spent ? '<span class="tag spent" title="La ruptura ya recorrió la medida clásica de la figura">CONSUMIDO</span>' : ''}${qtag(p)}<span class="tag">${FAMS[p.fam] || p.fam}</span></div>
+  return `<div class="pc ${sel ? 'sel' : ''}" data-id="${p.id}"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span>${esc(p.label)}${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${p.new ? '<span class="tag new">NUEVO</span>' : ''}${!fm && p.plan.spent ? '<span class="tag spent" title="La ruptura ya recorrió la medida clásica de la figura (aviso: no excluye la señal)">MEDIDA RECORRIDA</span>' : ''}${qtag(p)}<span class="tag">${FAMS[p.fam] || p.fam}</span></div>
     <div class="pc-s"><span>${dstr(S.D.bars.t[p.i])}</span><span>${fm ? scenTxt(p) : 'R:R ' + (r.rr != null ? r.rr.toFixed(1) : '—')}</span><span class="res ${rc}">${rt}</span></div></div>`;
 }
 const obsTxt = o => o && o.length ? `<div class="small" style="margin-top:4px"><b>En el camino al objetivo:</b> ${o.map(z => `${z.k === 'S' ? 'soporte' : 'resistencia'} ${fx(z.p)} (×${z.n})`).join(' · ')}. ${o.length >= 2 ? 'Varias barreras: el objetivo completo es poco probable sin pausas.' : 'El precio tiene que atravesarla.'}</div>` : '';
 function scTable(s, d) {
-  const pcs = x => pc((x / s.entry - 1) * 100 * d), t = S.f.stop === 't' && s.stop_t != null, [vc, vt] = verdictOf(evOf(s.key).all);
+  const cls = S.f.stop === 'e', tg = cls ? s.target_c : s.target, st = cls ? s.stop_s : s.stop, rr = cls ? s.rr_s : s.rr, t1 = cls ? s.entry + (s.target_c - s.entry) / 2 : null;
+  const pcs = x => pc((x / s.entry - 1) * 100 * d), [vc, vt] = verdictOf(evOf(s.key).all);
   return `<div class="small" style="margin-top:8px"><b style="color:var(--${d > 0 ? 'emerald' : 'ember'})">${d > 0 ? '▲ Ruptura al alza' : '▼ Ruptura a la baja'}</b> · ${esc(s.label)}</div>
-    <table class="lv"><tr><td>Entrada (cierre ${d > 0 ? '>' : '<'})</td><td>${fx(s.entry)}</td></tr><tr><td style="color:var(--emerald)">Objetivo</td><td>${fx(s.target)} (${pcs(s.target)})</td></tr>
-    <tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(s.t1)} (${pcs(s.t1)})</td></tr>
-    <tr><td style="color:var(--ember)">Stop${t ? ' táctico' : ' estructural'}</td><td>${fx(t ? s.stop_t : s.stop)} (${pcs(t ? s.stop_t : s.stop)})</td></tr><tr><td>Recompensa / riesgo</td><td>${(t ? s.rr_t : s.rr).toFixed(2)}</td></tr></table>
+    <table class="lv"><tr><td>Entrada (cierre ${d > 0 ? '>' : '<'})</td><td>${fx(s.entry)}</td></tr><tr><td style="color:var(--emerald)">${cls ? 'Objetivo' : 'Asegurar +4 % (stop plano)'}</td><td>${fx(tg)} (${pcs(tg)})</td></tr>
+    ${!cls && s.target2 ? `<tr><td style="color:var(--emerald)">Asegurar +10 % (persigue 2 ATR)</td><td>${fx(s.target2)} (${pcs(s.target2)})</td></tr>` : ''}
+    ${t1 != null ? `<tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(t1)} (${pcs(t1)})</td></tr>` : ''}
+    <tr><td style="color:var(--ember)">Stop${cls ? ' clásico' : ' inicial'}</td><td>${fx(st)} (${pcs(st)})</td></tr><tr><td>Recompensa / riesgo${cls ? '' : ' (hasta asegurar)'}</td><td>${rr.toFixed(2)}</td></tr></table>
     <div class="small">${esc(s.note)}</div>${obsTxt(s.obs)}<div class="verdict ${vc}">${esc(vt)}</div>`;
 }
+const opBlock = p => {                                                                        // avisos informativos: nunca excluyen la señal
+  const pl = p.plan, w = [];
+  if (S.f.stop === 'e') return '';
+  if (pl.risk_hi) w.push(`el stop queda a ${pl.risk_pct.toFixed(1)} % del precio (más del 8 %): valor muy volátil`);
+  else if (pl.rr_low) w.push(`el stop (${pl.risk_pct.toFixed(1)} %) está más lejos que el +4 % que se quiere asegurar`);
+  if (pl.spent) w.push('la ruptura ya recorrió casi toda la medida clásica de la figura');
+  return w.length ? `<div class="verdict a" style="margin:6px 0"><b>Aviso:</b> ${w.join('; ')}. La señal sigue contando.</div>` : '';
+};
+const sizeTxt = p => { const pl = p.plan; if (S.f.stop === 'e' || pl.risk_pct == null) return ''; return `<div class="small" style="margin-top:4px">Riesgo ${pl.risk_pct.toFixed(1)} % del precio (${pl.risk_atr.toFixed(1)} ATR)${pl.stop_cap ? `; el stop clásico estaba a ${pl.risk_s_pct.toFixed(1)} %` : ''}. Para arriesgar el 1 % de la cuenta, la posición sería el ${(100 / pl.risk_pct).toFixed(0)} % de la cuenta.</div>`; };
 function cardFull(p) {
   const fm = p.state === 'forming';
   const hd = `<div class="pc sel" style="cursor:default"><div class="pc-h"><span class="dot" style="background:${fm ? 'var(--amber)' : col(p.dir)}"></span><span style="font-size:15px">${esc(p.label)}</span>${fm ? '<span class="tag form">FORMÁNDOSE</span>' : p.active ? '<span class="tag live">ACTIVO</span>' : ''}${p.new ? '<span class="tag new">NUEVO</span>' : ''}${qtag(p)}<span style="margin-left:auto;cursor:pointer" id="clr" class="tag">cerrar ✕</span></div>`;
@@ -735,15 +1085,34 @@ function cardFull(p) {
     (one ? `<div class="small" style="margin-top:8px">El disparador es el nivel de la línea discontinua (cuello, borde o techo de la figura); la entrada supone un cierre 0,15 ATR más allá. Si el precio pierde antes la base de la figura, queda invalidada. La evidencia de abajo es la de la figura ya rota: el estudio no mide figuras en formación.</div></div>`
       : `<div class="small" style="margin-top:8px">Las dos rectas se ajustan con los pivotes que el precio respeta; la entrada es el valor de cada recta en la próxima sesión (+0,15 ATR). Si el cierre sale por un lado, el otro escenario queda anulado.${p.trig && p.trig.dist != null ? ` Hoy el cierre está ${distTxt(p.trig.dist)} de la recta más cercana.` : ''}</div></div>`);
   const r = rrOf(p), [rc, rt] = resTxt(r.out), e = evOf(p.key), [vc, vt] = verdictOf(e.all);
-  const same = S.D.patterns.filter(q => q.key === p.key && q !== p && q.out && (q.out.res === 'target' || q.out.res === 'stop')), w = same.filter(q => q.out.res === 'target').length;
+  const same = S.D.patterns.filter(q => q.key === p.key && q !== p && isClosed(q.out)), w = same.filter(q => isWin(q.out)).length, tg = same.filter(q => q.out.res === 'target').length;
   return hd + `<div class="small" style="margin-top:3px">${esc(desc)} · ${p.dir > 0 ? 'sesgo alcista' : p.dir < 0 ? 'sesgo bajista' : 'neutral'} · completado el ${dstr(S.D.bars.t[p.i])}</div>
-    <table class="lv"><tr><td>Entrada</td><td>${fx(r.entry)}</td></tr><tr><td style="color:var(--emerald)">Objetivo</td><td>${fx(r.target)} (${pc((r.target / r.entry - 1) * 100 * p.dir)})</td></tr>
-    <tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(r.t1)} (${pc((r.t1 / r.entry - 1) * 100 * p.dir)})</td></tr>
-    <tr><td style="color:var(--ember)">Stop${r.tact ? ' táctico' : ' estructural'}</td><td>${fx(r.stop)} (${pc((r.stop / r.entry - 1) * 100 * p.dir)})</td></tr><tr><td>Recompensa / riesgo</td><td>${r.rr != null ? r.rr.toFixed(2) : '—'}</td></tr></table>
-    ${p.plan.spent ? '<div class="verdict r" style="margin:6px 0"><b>Objetivo consumido:</b> la ruptura ya recorrió casi toda la medida clásica de la figura, así que no queda recorrido hasta el objetivo. No se cuenta como activa.</div>' : ''}<div class="small">${esc(p.note)}</div>${p.conf && p.conf.length ? `<div class="small" style="margin-top:4px"><b>También saltan en esas sesiones</b> (mismo sentido, ±3): ${p.conf.map(esc).join(' · ')}. Suelen medir casi lo mismo: no son confirmaciones independientes.</div>` : ''}${obsTxt(p.plan.obs)}${r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con la medida clásica el riesgo es mayor que la recompensa teórica.</div>' : ''}
+    <table class="lv"><tr><td>Entrada</td><td>${fx(r.entry)}</td></tr><tr><td style="color:var(--emerald)">${r.cls ? 'Objetivo' : 'Asegurar +4 % (stop plano)'}</td><td>${fx(r.target)} (${pc((r.target / r.entry - 1) * 100 * p.dir)})</td></tr>
+    ${!r.cls && r.target2 ? `<tr><td style="color:var(--emerald)">Asegurar +10 % (persigue 2 ATR)</td><td>${fx(r.target2)} (${pc((r.target2 / r.entry - 1) * 100 * p.dir)})</td></tr>` : ''}
+    ${r.t1 != null ? `<tr><td style="color:var(--emerald)">T1 (50 %)</td><td>${fx(r.t1)} (${pc((r.t1 / r.entry - 1) * 100 * p.dir)})</td></tr>` : ''}
+    <tr><td style="color:var(--ember)">Stop${r.cls ? ' clásico' : ''}</td><td>${fx(r.stop)} (${pc((r.stop / r.entry - 1) * 100 * p.dir)})</td></tr><tr><td>Recompensa / riesgo${r.cls ? '' : ' (hasta asegurar)'}</td><td>${r.rr != null ? r.rr.toFixed(2) : '—'}</td></tr></table>${r.cls ? '' : '<div class="small" style="margin-top:4px">Escalera: si una sesión cierra a +4 % o más, el stop sube a +4 % y se queda ahí (se deja correr); si cierra a +10 % o más, el stop sube a +10 % y desde ahí persigue al mejor cierre a 2 ATR. Sin objetivo fijo; máximo 60 sesiones.</div>'}
+    ${opBlock(p)}${sizeTxt(p)}<div class="small">${esc(p.note)}</div>${obsTxt(p.plan.obs)}${r.cls && r.rr != null && r.rr < 1 ? '<div class="small" style="color:var(--ember)">R:R menor que 1: con el plan clásico el riesgo es mayor que la recompensa teórica.</div>' : ''}
     <div class="verdict ${rc === 't' ? 'g' : rc === 's' ? 'r' : 'n'}" style="margin-top:8px"><b>Qué pasó aquí:</b> ${rt}</div>
-    ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'llegó' : 'llegaron'} al objetivo y ${same.length - w} al stop.</div>` : ''}
-    <div class="verdict ${vc}">${S.ev ? 'Estudio: ' + esc(vt) : 'Sin estudio cargado.'}</div>${evLines(e)}</div>`;
+    ${moveTxt(r.out)}${tradeTxt(p)}
+    ${same.length ? `<div class="small">En este valor, ${same.length === 1 ? 'otra señal cerrada' : 'otras ' + same.length + ' señales cerradas'} de «${esc(p.label)}»: ${w} ${w === 1 ? 'terminó' : 'terminaron'} con ganancia neta (${tg} llegando a asegurar) y ${same.length - w} con pérdida.</div>` : ''}
+    <div class="verdict ${vc}">${S.ev ? 'Estudio: ' + esc(vt) : 'Sin estudio cargado.'}</div>${S.ev ? pathSvg(pathOf(p.key)) : ''}${evLines(e)}</div>`;
+}
+function moveTxt(o) {
+  if (!o || !(isClosed(o) || (o.res === 'open' && o.ret != null)) || o.mfe == null) return '';
+  const parc = '';
+  return `<div class="small" style="margin-top:4px">Recorrido máximo a favor ${pc(o.mfe, 1)}${o.prog != null ? ` (el ${Math.round(o.prog * 100)} % del camino hasta ${S.f.stop === 'e' ? 'el objetivo clásico' : 'el nivel a asegurar'})` : ''}, máximo en contra −${o.mae.toFixed(1)} %. Resultado neto de ${S.ev ? S.ev.meta.cost : 0.15} % de costes.${parc}</div>`;
+}
+function tradeTxt(p) {
+  const t = p.trade; if (!t || !S.D.trades) return '';
+  const lead = id => S.D.trades.list.find(x => x.id === id);
+  if (t.role === 'lider') {
+    const x = lead(p.id); if (!x) return '';
+    return `<div class="small" style="margin-top:4px"><b>Operación única:</b> esta señal abre la operación; ${x.conf.length ? `mientras duró ${x.conf.length === 1 ? 'confirmó otra señal' : 'confirmaron otras ' + x.conf.length + ' señales'} del mismo sentido (${[...new Set(x.conf)].slice(0, 5).map(esc).join(', ')}) que no suman otra operación` : 'no saltó ninguna otra señal del mismo sentido'}${x.contra.length ? ` y ${x.contra.length === 1 ? 'una fue' : x.contra.length + ' fueron'} <b>contraria${x.contra.length === 1 ? '' : 's'}</b> (${[...new Set(x.contra)].slice(0, 4).map(esc).join(', ')}): conflicto` : ''}.</div>`;
+  }
+  const l = t.with && lead(t.with);
+  if (t.role === 'confirma') return `<div class="small" style="margin-top:4px"><b>Operación única:</b> salta con la operación de «${esc(l ? l.label : '—')}» ya abierta y en el mismo sentido: es una confirmación y no suma otra operación ni otro acierto.</div>`;
+  if (t.role === 'contraria') return `<div class="small" style="margin-top:4px;color:var(--ember)"><b>Señal contraria:</b> salta con la operación de «${esc(l ? l.label : '—')}» abierta en el sentido opuesto. No se cuenta como operación propia.</div>`;
+  return '';
 }
 function candlesToday() {
   const n = S.D.n, t = S.D.patterns.filter(p => p.fam === 'velas' && p.i === n - 1 && !p.key.startsWith('consenso')), u = t.filter(p => p.dir > 0), d = t.filter(p => p.dir < 0);
@@ -751,21 +1120,29 @@ function candlesToday() {
   const nm = a => a.map(p => esc(p.label)).join(', ');
   return `${u.length ? `<span style="color:var(--emerald)">▲ ${u.length}: ${nm(u)}</span>` : ''}${u.length && d.length ? '<br>' : ''}${d.length ? `<span style="color:var(--ember)">▼ ${d.length}: ${nm(d)}</span>` : ''}<br><span class="small">${u.length >= 2 && !d.length ? 'Consenso alcista' : d.length >= 2 && !u.length ? 'Consenso bajista' : u.length && d.length ? 'Señales contrarias: sin consenso' : 'Una sola formación'}</span>`;
 }
+function signalsNow() {
+  const act = S.D.patterns.filter(p => p.active && p.state === 'done' && p.dir !== 0), est = act.filter(p => p.fam !== 'velas'), vel = act.filter(p => p.fam === 'velas' && !p.key.startsWith('consenso'));
+  const c = (a, d) => a.filter(p => p.dir === d).length, up = c(act, 1), dn = c(act, -1), sy = (a) => `<span style="color:var(--emerald)">▲ ${c(a, 1)}</span> <span style="color:var(--ember)">▼ ${c(a, -1)}</span>`;
+  if (!act.length) return 'ninguna activa';
+  const v = up && dn ? '<span style="color:var(--ember)">contradictorias: hay señales alcistas y bajistas a la vez</span>' : up ? 'todas alcistas' : 'todas bajistas';
+  const al = est.length && vel.length ? (est.every(p => p.dir > 0) && vel.every(p => p.dir > 0)) || (est.every(p => p.dir < 0) && vel.every(p => p.dir < 0)) ? ' Figura y velas coinciden.' : ' Figura y velas no coinciden.' : '';
+  return `figuras y rupturas ${sy(est)} · velas ${sy(vel)}<br><span class="small">${v}.${al} Cuentan como una sola operación (la primera que saltó); el estudio no ve ventaja por sumar señales (pestaña Evidencia).</span>`;
+}
 function reading() {
   const D = S.D, sm = D.summary, c = sm.close, n = D.n, s50 = D.sma50[n - 1], s200 = D.sma200[n - 1];
   const trend = s50 == null ? '—' : (c > s50 && s50 > (s200 ?? 0)) ? 'alcista (precio sobre la media de 50 y esta sobre la de 200)' : c < s50 && s50 < (s200 ?? 1e9) ? 'bajista (precio bajo la media de 50 y esta bajo la de 200)' : 'mixta';
   const up = D.zones.filter(z => z.p > c).sort((a, b) => a.p - b.p)[0], dn = D.zones.filter(z => z.p < c).sort((a, b) => b.p - a.p)[0];
-  const done = D.patterns.filter(p => p.out && (p.out.res === 'target' || p.out.res === 'stop')), won = done.filter(p => p.out.res === 'target').length;
-  const byFam = {}; for (const p of done) { (byFam[p.fam] = byFam[p.fam] || [0, 0])[p.out.res === 'target' ? 0 : 1]++; }
+  const T = D.trades || {list: [], all: {n: 0}, by_fam: {}, conflicts: 0}, A = T.all, roles = {confirma: 0, contraria: 0}; for (const p of D.patterns) if (p.trade && roles[p.trade.role] != null) roles[p.trade.role]++;
   return `<h3>${S.sym} · lectura</h3><div class="kv"><span>Tendencia</span><span>${trend}</span><span>Cierre</span><span>${fx(c)}</span><span>Media 50 / 200</span><span>${fx(s50)} / ${fx(s200)}</span>
     <span>Distancia a la media 200</span><span>${sm.dist200 == null ? '—' : pc(sm.dist200)}</span><span>Rango anual</span><span>${sm.pos52 == null ? '—' : (sm.pos52 * 100).toFixed(0) + ' % (0 = mínimo, 100 = máximo)'}</span>
     <span>RSI(14) / RSI(2)</span><span>${sm.rsi14} / ${sm.rsi2}</span><span>ATR (14)</span><span>${fx(sm.atr)} · ${sm.atrp} % del precio</span>
-    <span>Velas de la última sesión</span><span>${candlesToday()}</span>
+    <span>Velas de la última sesión</span><span>${candlesToday()}</span><span>Señales vigentes</span><span>${signalsNow()}</span>
     <span>Resistencia más cercana</span><span>${up ? fx(up.p) + ' (' + pc((up.p / c - 1) * 100) + ', ' + up.touches + ' toques)' : '—'}</span><span>Soporte más cercano</span><span>${dn ? fx(dn.p) + ' (' + pc((dn.p / c - 1) * 100) + ', ' + dn.touches + ' toques)' : '—'}</span></div>
-    <h3 style="margin-top:12px">Qué pasó con los patrones de este valor</h3>
-    <div class="small">${done.length} patrones llegaron a su objetivo o a su stop en los últimos ${n} días: <b>${won}</b> al objetivo y <b>${done.length - won}</b> al stop (${done.length ? (won / done.length * 100).toFixed(0) : '—'} %). Con un R:R de 2 hace falta acertar más del 33 % para no perder, pero hay que descontar costes y el sesgo de elegir qué patrones mirar a posteriori.</div>
-    <div class="kv" style="margin-top:6px">${Object.entries(byFam).map(([k, v]) => `<span>${FAMS[k] || k}</span><span>${v[0]} objetivo · ${v[1]} stop</span>`).join('')}</div>
-    <div class="small" style="margin-top:10px">Cómo se calcula: entrada en el cierre de la barra que completa el patrón; objetivo por la medida clásica de cada figura; stop estructural al otro lado de la figura (nunca a menos de 1 ATR) o táctico a 1,5 ATR; el resultado se simula entrando en la apertura siguiente, el stop gana si se tocan ambos el mismo día y se cierra a los 40 días.</div>`;
+    <h3 style="margin-top:12px">Qué pasó con las operaciones de este valor</h3>
+    <div class="small">${!D.trades ? 'Este gráfico se generó antes del recuento por operaciones: se actualiza en el próximo escaneo.' : A.n ? `${A.n} operaciones cerradas en los últimos ${n} días: <b>${A.won}</b> terminaron con ganancia neta y <b>${A.lost}</b> con pérdida (${(A.won / A.n * 100).toFixed(0)} % ganadoras). Media ${pc(A.mean_net, 2)} neto por operación${A.mean_r != null ? ` (${A.mean_r > 0 ? '+' : ''}${A.mean_r.toFixed(2).replace('-', '−')} R)` : ''}, suma ${pc(A.sum_net, 1)}. Llegaron a asegurar +4 % ${A.tgt}${A.lk2 != null ? ` (y +10 % ${A.lk2})` : ''}, saltó el stop inicial en ${A.stp} y ${A.tmo} se cerraron por tiempo sin asegurar (${A.tmo_won} con ganancia).${A.avg_win != null ? ` Las ganadoras ganaron ${pc(A.avg_win, 2)} de media${A.avg_loss != null ? ` y las perdedoras ${pc(A.avg_loss, 2)}` : ''}.` : ''}` : 'Ninguna operación cerrada en la ventana.'}
+      Cuentan todas las señales, ninguna se descarta. Una operación por valor: las ${roles.confirma + roles.contraria} señales que saltaron con otra operación ya abierta no suman${T.conflicts ? ` (${roles.contraria} eran contrarias a la operación abierta, en ${T.conflicts} operaciones: conflicto)` : ''}. Gana quien termina con ganancia neta, llegue o no al objetivo. Es la historia de un solo valor: sirve para mirar, no demuestra nada (eso es la pestaña Evidencia).</div>
+    <div class="kv" style="margin-top:6px">${Object.entries(T.by_fam).map(([k, v]) => `<span>${FAMS[k] || k} (primera señal)</span><span>${v.n} op. · ${v.won} ganaron · ${pc(v.mean_net, 2)} de media</span>`).join('')}</div>
+    <div class="small" style="margin-top:10px">Cómo se calcula: la señal se completa en el cierre de una barra y se entra en la apertura siguiente. Stop inicial: el estructural (al otro lado de la figura) si queda entre 1 y 2 ATR de la entrada; si está más lejos se acorta a 2 ATR. Cuando una sesión cierra a +4 % o más a favor, el stop sube a +4 % y se queda (no persigue: una corrección normal no saca antes del segundo nivel); cuando cierra a +10 % o más, el stop sube a +10 % y persigue al mejor cierre a 2 ATR (nunca baja de lo asegurado), hasta 60 sesiones. Todas las señales cuentan; los avisos (riesgo alto, stop más lejos que el +4 %) son solo informativos. El stop gana si se tocan ambos el mismo día; se descuenta el 0,15 % de costes del estudio.</div>`;
 }
 function renderPane() {
   if (!S.D || S.view !== 'chart') return;
