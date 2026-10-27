@@ -333,7 +333,7 @@ def report(ev: Dict) -> str:
     m, ex = ev['meta'], ev['experimento']
     p95 = ex['umbral']['p95']
     L = [f"CONTEXTO Y CONFLUENCIA · {m['universe']} acciones · {m['señales']:,} señales de patrón (las {m['k']} más negociadas) · {m['from']} → {m['to']} · exceso = rendimiento a {m['horizonte']} sesiones menos el del conjunto ese día, con el signo del sentido",
-         f"Umbral del mejor de {ex['umbral']['combinaciones']} combinaciones: |t| ≥ {p95} (p95) / {ex['umbral']['p99']} (p99). Desarrollo ≤ {m['desarrollo_hasta']}, final después. ★ = supera el umbral y mantiene el signo en el final.",
+         f"Umbral del mejor de {ex['umbral']['combinaciones']} combinaciones ({ex['umbral']['reps']} repeticiones, t con bloques de {BLOCK} sesiones): |t| ≥ {p95} (p95) / {ex['umbral']['p99']} (p99, poco preciso con tan pocas repeticiones). Desarrollo ≤ {m['desarrollo_hasta']}, final después. ★ = supera el umbral y mantiene el signo en el final.",
          '']
     for g, rec in ex['grupos'].items():
         b = rec['base']

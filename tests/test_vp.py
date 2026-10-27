@@ -466,7 +466,15 @@ def test_lab_json(tmp='/tmp/vp_lab_test'):
         for pt in p['pts']:
             assert 0 <= pt[0] < n + 60
     row = lab.index_row(res)
-    assert row['sym'] == 'RW' and len(row['spark']) == lab.SPARK
+    assert row['sym'] == 'RW' and len(row['spark']) == lab.SPARK and isinstance(row['mix'], bool)
+    T = res['trades']
+    done = [p for p in res['patterns'] if p['state'] == 'done']
+    assert len(T['list']) < len(done) and T['all']['n'] <= len(T['list']) and all(p['trade']['role'] in ('lider', 'confirma', 'contraria', 'na') for p in done)     # las señales solapadas no se cuentan una a una
+    assert sum(1 for p in done if p['trade']['role'] == 'lider') == len(T['list'])
+    for p in done:
+        o = p['out']
+        if o['res'] in ('target', 'stop', 'timeout'):
+            assert {'net', 'r', 'mfe', 'mae', 'prog', 't1'} <= set(o) and (o['res'] != 'target' or o['net'] > 0) and (o['res'] != 'stop' or o['net'] <= 0), o
     os.makedirs(tmp, exist_ok=True)
     lab.write_catalog(tmp)
     cat = json.load(open(os.path.join(tmp, 'catalog.json')))

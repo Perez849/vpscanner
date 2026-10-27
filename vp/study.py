@@ -324,7 +324,7 @@ def report(ev: Dict) -> str:
     for K in m['ks']:
         thr = m['thr'][f'K{K}']
         t_ = m['tested'][f'K{K}']
-        L.append(f"\n=== Las {K} acciones más negociadas en cada fecha ({thr['bars']:,} barras) · umbral del mejor de {t_['n']}: |t| ≥ {thr['p95']} (p95) / {thr['p99']} (p99) ===")
+        L.append(f"\n=== Las {K} acciones más negociadas en cada fecha ({thr['bars']:,} barras) · umbral del mejor de {t_['n']}: |t| ≥ {thr['p95']} (p95) / {thr['p99']} (p99, poco preciso) ===")
         rows = [(k, r[f'K{K}']) for k, r in ev['patterns'].items() if f'K{K}' in r and r[f'K{K}'].get('n', 0) >= MIN_EVENTS and 'ex' in r[f'K{K}']]
         rows.sort(key=lambda x: -abs(x[1]['t']))
         L.append('  patrón'.ljust(30) + 'n'.rjust(7) + 'ganan'.rjust(9) + 'media'.rjust(8) + 'exceso'.rjust(8) + 't'.rjust(7) + 'años+'.rjust(7) + 'vs año'.rjust(9) + 't'.rjust(6))
