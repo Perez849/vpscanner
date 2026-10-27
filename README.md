@@ -191,7 +191,7 @@ En la **Guía** y en el panel de cada gráfico se dibuja la **trayectoria media*
 
 ## PARTE 2 · Regla de impulso con caída (sin figuras ni velas)
 
-Estadísticas **separadas** de las de la parte 1. Resumen: probando 4.800 reglas con selección hacia delante y control del procedimiento, y confirmando cinco candidatas fijadas de antemano en acciones distintas (S&P 400 y 600), la idea que se repite es **comprar acciones de impulso alto a 12 meses que han caído** (por debajo de su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez), en largo y con las salidas del operador. Exceso estimado de **+0,3 a +0,5 % por operación** sobre el azar tras descontar el sesgo de supervivencia. En la web: «Regla de impulso» → Hoy · Evidencia · Guía.
+Estadísticas **separadas** de las de la parte 1. Resumen: probando 4.800 reglas con selección hacia delante y control del procedimiento, y confirmando cinco candidatas fijadas de antemano en acciones distintas (S&P 400 y 600), la idea que se repite es **comprar acciones de impulso alto a 12 meses que han caído** (por debajo de su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez), en largo y con las salidas del operador. Exceso estimado de **+0,3 a +0,5 % por operación** sobre el azar tras descontar el sesgo de supervivencia, **concentrado en el 40 % más volátil** (en las acciones tranquilas la ventaja es cero o negativa). En la web: «Regla de impulso» → Hoy · Evidencia · Guía.
 
 ### ¿Existe alguna regla que gane de verdad al azar? Búsqueda con selección hacia delante (`vp/search.py`)
 
@@ -239,6 +239,23 @@ Las 5 mejores candidatas se fijaron **antes** de mirar otras acciones (`search.C
 
 Las cinco dan exceso positivo en acciones distintas, con 8 o 9 de 10 años positivos. Con 5 hipótesis (muy correlacionadas) y corrección de Bonferroni, **C4 y C5 siguen siendo significativas** (p < 0,017); C3 queda en 0,03–0,1 y C1 y C2 en el límite. En el universo grande, con los miembros desde su incorporación, las mismas reglas dan exceso de +0,68 a +1,10 % (t entre 3,4 y 4,2, p < 1/300) y 72 % de ganadoras con asegurar +4 % frente al 58,5 % de entrar al azar (`data/search_confirm.txt`, `data/search_confirm_smallmid.txt`).
 
+#### ¿Solo en valores muy volátiles? Robustez por volatilidad
+
+La búsqueda no distinguía por volatilidad, y el cribador real enseñó el motivo para hacerlo: las acciones que cumplen hoy la regla son casi todas muy volátiles (semiconductores, IA), con el stop inicial de 2,5 ATR a entre el 9 % y el 25 % del precio. Se midió la misma regla base (impulso 12-1 alto Y bajo su media de 200) según la volatilidad del valor, ATR/precio en el 40 % **más bajo** o en el 40 % **más alto** de ese día. **Es una comprobación descriptiva, hecha después de ver los resultados** (no estaba fijada de antemano); por eso se anota aquí y el seguimiento hacia delante la tratará como hipótesis nueva.
+
+| volatilidad del valor | universo | salida | n | exceso (t) | p exceso / p t | años + | % ganadoras (todas las filas) |
+|---|---|---|---|---|---|---|---|
+| **alta** (40 % más volátil) | S&P 400 y 600 | asegura +4 % | 12.705 | **+1,21 %** (+2,2) | 0,037 / 0,077 | 9/10 | 71,8 % (60,6 %) |
+| **alta** | S&P 400 y 600 | cierre a 10 ses. | 12.718 | **+0,95 %** (+2,9) | 0,003 / 0,017 | 9/10 | 52,5 % (49,9 %) |
+| **alta** | S&P 500 + Nasdaq-100 | asegura +4 % | 9.249 | **+1,47 %** (+3,5) | < 0,003 / 0,010 | 9/10 | 72,8 % (58,5 %) |
+| **alta** | S&P 500 + Nasdaq-100 | cierre a 10 ses. | 9.274 | **+1,10 %** (+4,3) | < 0,003 / < 0,003 | 9/10 | 58,5 % (53,3 %) |
+| **baja** (40 % más tranquilo) | S&P 400 y 600 | asegura +4 % | 3.274 | −0,94 % (−1,6) | 0,96 / 0,87 | 2/6 | 71,9 % (60,6 %) |
+| **baja** | S&P 400 y 600 | cierre a 10 ses. | 3.274 | −0,57 % (−1,4) | 0,90 / 0,74 | 1/6 | 62,4 % (49,9 %) |
+| **baja** | S&P 500 + Nasdaq-100 | asegura +4 % | 2.385 | −0,11 % (−0,3) | 0,37 / 0,39 | 3/6 | 70,5 % (58,5 %) |
+| **baja** | S&P 500 + Nasdaq-100 | cierre a 10 ses. | 2.388 | −0,07 % (−0,2) | 0,41 / 0,41 | 3/6 | 64,8 % (53,3 %) |
+
+**Toda la ventaja está en las acciones muy volátiles; en las tranquilas es cero o negativa.** En las tranquilas hay pocas filas (un valor tranquilo con impulso alto y bajo su media de 200 es raro: 2.400–3.300 operaciones en 6 años), así que no se puede descartar una ventaja pequeña, pero la estimación en acciones distintas es negativa. En términos prácticos: la regla gana al azar donde el stop inicial a 2,5 ATR queda lejos (en valores con ATR de 5–9 %, a más del 12–20 % del precio), de modo que el **tamaño de la posición** es lo que controla el riesgo (el cribador lo da: con riesgo del 1 % de la cuenta, entre el 4 % y el 11 % de la cuenta por valor). Es el efecto conocido del rebote de las caídas en valores de beta alta; no es una propiedad del patrón. Con el sesgo de supervivencia (más grave justo en valores volátiles que cayeron y volvieron a subir) el exceso real es probablemente la mitad.
+
 **Cautelas que no se pueden quitar con estos datos**
 - El sesgo de supervivencia no está del todo corregido (los que salieron del índice no están; en el S&P 400 y 600 ni siquiera se quita la incorporación): comprar caídas de valores fuertes es justo lo que más se infla con él. Es razonable descontar la mitad: unos **+0,3 a +0,5 % por operación** sobre el azar, no +1 %.
 - **No es chartismo**: la parte que aporta es el impulso y la caída previa. Con patrón o sin él da lo mismo (C3 sin patrón +0,63 % y C4 con patrón +1,02 % en el S&P 400/600; +0,74 % y +0,80 % en el universo grande): el patrón es un marcador de «ha caído», no una señal propia.
@@ -251,7 +268,8 @@ Las cinco dan exceso positivo en acciones distintas, con 8 o 9 de 10 años posit
 `python -m vp screen` (o el flujo «Cribador de la regla de impulso», de lunes a viernes a las 23:30 UTC, tras el cierre y el escaneo de la parte 1) aplica al **último cierre** del universo (S&P 500 + Nasdaq-100, las 300 más negociadas ese día) las cinco reglas candidatas con **exactamente las mismas condiciones y los mismos percentiles del día** que la búsqueda y la confirmación (`search.conditions`), de modo que una acción de la tabla es exactamente una fila de la estadística. Una prueba comprueba que da las mismas acciones que el panel completo en 5 fechas distintas, sin mirar el futuro.
 
 - **Salida**: `data/impulso.json` (acciones que cumplen cada regla hoy, cuáles son nuevas respecto a la sesión anterior, percentiles de impulso, distancia a la media de 200, RSI(2), ATR, señales bajistas, y el plan: stop inicial a 2,5 ATR del cierre, niveles donde se asegura +4 % o +6 %, y el **tamaño de posición con el que perder el stop inicial cuesta el 1 % de la cuenta**) y la pestaña **Hoy** de la web.
-- **Ninguna acción se descarta** por tener un stop lejano (en valores muy volátiles llega al 15–20 %): se marca con ⚠ y el tamaño de posición ya lo compensa.
+- **Ninguna acción se descarta** por tener un stop lejano (en valores muy volátiles llega al 15–25 %): se marca con ⚠ y el tamaño de posición ya lo compensa. Por defecto la tabla muestra solo las de **volatilidad alta** (percentil ≥ 60 de ATR/precio del día), que es donde se midió la ventaja (ver robustez); las de volatilidad baja se pueden ver quitando el filtro y salen con un aviso.
+- **Hipótesis a medir hacia delante**: «solo volatilidad alta» se formuló después de ver los resultados; `impulso_hist.json` guarda también la volatilidad de cada acción para evaluarla más adelante con datos que no se han mirado.
 - **Seguimiento hacia delante**: cada día se añade a `data/impulso_hist.json` qué acciones cumplían cada regla. Sirve para medir más adelante, sin posibilidad de ajustar nada, qué pasó con las que salieron: es la prueba que no se puede trucar con datos pasados.
 
 

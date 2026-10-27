@@ -17,3 +17,17 @@ C4 · impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez 
 C5 · impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · h10
    n 16,211 (567 valores) · exceso +0.777 % (t +3.4; nulo p95 +0.320 % / t +1.8; p exceso 0.0, p t 0.0) · neto +0.809 % (azar mismas fechas +0.031 %) · ganan 52.9 % (todas las filas 49.9 %)
    años positivos 9/10: 17:-0.3 18:+0.5 19:+1.0 20:+2.0 21:+0.8 22:+0.6 23:+0.1 24:+0.9 25:+0.2 26:+1.6
+
+ROBUSTEZ POR VOLATILIDAD (descriptiva, no fijada de antemano): la misma regla base en valores tranquilos (ATR/precio en el 40 % más bajo del día) o muy volátiles (40 % más alto)
+V1 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad (ATR/precio) en el 40 % más bajo → largo · op4b
+   n 3,274 (203 valores) · exceso -0.939 % (t -1.6; p exceso 0.96, p t 0.867) · neto +2.013 % (azar mismas fechas +2.951 %) · ganan 71.9 % (todas las filas 60.6 %)
+   años positivos 2/6: 18:-0.6 19:+0.4 20:-2.3 22:-0.5 23:+0.2 25:-1.2
+V2 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad en el 40 % más alto → largo · op4b
+   n 12,705 (377 valores) · exceso +1.209 % (t +2.2; p exceso 0.037, p t 0.077) · neto +1.492 % (azar mismas fechas +0.284 %) · ganan 71.8 % (todas las filas 60.6 %)
+   años positivos 9/10: 17:+2.0 18:-0.6 19:+1.2 20:+7.1 21:+0.9 22:+0.7 23:+1.9 24:+0.3 25:+0.8 26:+0.6
+V3 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad (ATR/precio) en el 40 % más bajo → largo · h10
+   n 3,274 (203 valores) · exceso -0.566 % (t -1.4; p exceso 0.9, p t 0.743) · neto +1.627 % (azar mismas fechas +2.192 %) · ganan 62.4 % (todas las filas 49.9 %)
+   años positivos 1/6: 18:-2.1 19:-1.0 20:-0.4 22:-0.5 23:+0.1 25:-1.0
+V4 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad en el 40 % más alto → largo · h10
+   n 12,718 (377 valores) · exceso +0.953 % (t +2.9; p exceso 0.003, p t 0.017) · neto +1.056 % (azar mismas fechas +0.103 %) · ganan 52.5 % (todas las filas 49.9 %)
+   años positivos 9/10: 17:-1.1 18:+0.1 19:+0.9 20:+2.9 21:+1.8 22:+1.4 23:+0.1 24:+1.1 25:+0.6 26:+1.1
