@@ -1,4 +1,12 @@
-"""Plan de cada patrón: entrada, stop y objetivo con la regla clásica de la figura; objetivo parcial T1, stop mínimo, obstáculos y resultado simulado."""
+"""Plan de cada patrón: entrada, stop y objetivo; objetivo parcial T1, obstáculos y resultado simulado.
+
+El plan clásico (stop al otro lado de la figura y objetivo por la medida clásica) da cosas sin sentido operativo: stops del 10, 26 o 43 % con objetivos del 4 %. Por eso el plan que se muestra, se simula
+y se cuenta tiene reglas de riesgo explícitas y fijadas de antemano (no optimizadas con los resultados):
+  · el stop estructural se respeta solo si queda a ≤ MAX_RISK_ATR ATR de la entrada; si está más lejos se acorta a ese límite, y nunca queda a menos de MIN_STOP ATR (un stop pegado salta con el ruido);
+  · el objetivo es la medida clásica, pero a lo sumo MAX_RR veces el riesgo (más allá no es realista en 40 sesiones);
+  · si con ese stop el objetivo no da al menos MIN_RR veces el riesgo, o el riesgo pasa del MAX_RISK_PCT % del precio (valor demasiado volátil para este plan), o la ruptura ya consumió la medida,
+    la señal es «no operable»: se dibuja, pero no se cuenta como operación.
+El plan clásico (sin límites) se conserva como referencia (`stop_s`, `target_c`, `rr_s`)."""
 from __future__ import annotations
 import math
 from typing import Dict, List, Optional, Tuple
@@ -11,8 +19,11 @@ from .shapes import at
 
 HOLD = 40            # sesiones máximas del resultado simulado
 MIN_STOP = 1.0       # el stop nunca queda a menos de 1 ATR de la entrada (un stop pegado da R:R absurdos y salta con el ruido)
-FAR_STOP = 3.0       # por encima de 3 ATR el estructural se considera lejano: se ofrece además un stop táctico de 1,5 ATR
-TACT = 1.5
+MAX_RISK_ATR = 2.0   # el stop nunca queda a más de 2 ATR de la entrada: ~5 % en una acción de volatilidad media (ATR del 2,6 %); el estructural más lejano se acorta
+MIN_RR = 1.5         # recompensa / riesgo mínima para que la señal sea operable
+MAX_RR = 3.0         # el objetivo no pasa de 3 veces el riesgo
+MAX_RISK_PCT = 8.0   # riesgo máximo (% del precio) para que la señal sea operable: en un valor con ATR de más del 4 % hasta el stop de 2 ATR es demasiado lejos
+TACT = 1.5           # (estudio del plan) stop táctico de referencia
 SPENT = 1.0          # si la medida clásica deja menos de 1 ATR hasta el objetivo, la ruptura ya la consumió: no hay recorrido que operar
 
 
@@ -100,23 +111,28 @@ def rule(name: str, g: Dict, F: Dict[str, np.ndarray], i: int, d: int, entry: Op
 
 
 def box(F: Dict[str, np.ndarray], i: int, d: int, entry: float, stop: float, target: float) -> Dict:
-    """Entrada, stop y objetivo (más el parcial T1 al 50 %) con un stop mínimo de 1 ATR y, si el estructural es muy lejano, un stop táctico de 1,5 ATR."""
+    """Plan operable a partir del stop estructural y el objetivo clásico: riesgo entre MIN_STOP y MAX_RISK_ATR ATR, objetivo a lo sumo MAX_RR veces el riesgo y marca de operable
+    (recompensa / riesgo ≥ MIN_RR y objetivo no consumido). Devuelve también el plan clásico sin límites (`stop_s`, `target_c`, `rr_s`)."""
     a = float(F['atr'][i])
     spent = bool(d * (target - entry) < SPENT * a)                  # medido antes de corregir: un objetivo que la ruptura ya superó no se disfraza de 2R
     if d > 0 and not (stop < entry < target):
         stop, target = generic(entry, a, 1, max(abs(entry - stop), 0.6 * a))
     if d < 0 and not (target < entry < stop):
         stop, target = generic(entry, a, -1, max(abs(entry - stop), 0.6 * a))
-    stop_min = abs(entry - stop) < MIN_STOP * a
-    if stop_min:
-        stop = entry - d * MIN_STOP * a
-    risk, reward = abs(entry - stop), abs(target - entry)
-    far = risk > FAR_STOP * a
-    stop_t = entry - d * TACT * a if far else None
-    return {'entry': r(entry), 'stop': r(stop), 'target': r(target), 't1': r(entry + d * 0.5 * reward), 'rr': float(round(reward / max(risk, 1e-9), 2)), 'spent': spent,
-            'risk_pct': float(round(risk / entry * 100, 2)), 'reward_pct': float(round(reward / entry * 100, 2)), 'stop_min': bool(stop_min), 'far': bool(far),
-            'stop_t': None if stop_t is None else r(stop_t), 'rr_t': None if stop_t is None else float(round(reward / max(abs(entry - stop_t), 1e-9), 2)),
-            '_stop': stop, '_stop_t': stop_t, '_target': target}
+    stop_s, target_c = stop, target
+    risk_s, reward_c = abs(entry - stop_s), abs(target_c - entry)
+    risk = min(max(risk_s, MIN_STOP * a), MAX_RISK_ATR * a)
+    reward = min(reward_c, MAX_RR * risk)
+    stop = entry - d * risk
+    target = entry + d * reward
+    rr = reward / max(risk, 1e-9)
+    risk_pct = risk / entry * 100
+    ok = bool(not spent and rr >= MIN_RR - 1e-9 and risk_pct <= MAX_RISK_PCT)
+    return {'entry': r(entry), 'stop': r(stop), 'target': r(target), 't1': r(entry + d * 0.5 * reward), 'rr': float(round(rr, 2)), 'spent': spent, 'ok': ok,
+            'risk_pct': float(round(risk_pct, 2)), 'risk_hi': bool(risk_pct > MAX_RISK_PCT), 'reward_pct': float(round(reward / entry * 100, 2)), 'risk_atr': float(round(risk / a, 2)),
+            'stop_cap': bool(risk_s > MAX_RISK_ATR * a), 'stop_min': bool(risk_s < MIN_STOP * a), 'tgt_cap': bool(reward_c > MAX_RR * risk + 1e-9),
+            'stop_s': r(stop_s), 'target_c': r(target_c), 'rr_s': float(round(reward_c / max(risk_s, 1e-9), 2)), 'risk_s_pct': float(round(risk_s / entry * 100, 2)),
+            '_stop': stop, '_target': target, '_stop_s': stop_s, '_target_c': target_c}
 
 
 COST = 0.15          # coste de ida y vuelta (%) que descuenta también el estudio: el resultado «neto» de la web es comparable con el de las estadísticas

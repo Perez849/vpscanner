@@ -27,7 +27,7 @@ import numpy as np
 from . import engine, plan as P, study, ta
 from .catalog import CATALOG, HQ
 
-VARIANTS = ('plan', 'tact', 'fix', 'trail3', 'trail5')
+VARIANTS = ('plan', 'struct', 'fix', 'trail3', 'trail5')
 TRAIL = {'trail3': 3.0, 'trail5': 5.0}      # stop que persigue al cierre más alto (o bajo) a N ATR, sin objetivo
 TRAIL_HOLD = 60
 HOLD = P.HOLD
@@ -92,8 +92,8 @@ def sim_trail(o, h, l, c, i: int, d: int, mult: float, a: float, maxb: int = TRA
     return 2, d * (float(c[e + maxb - 1]) / entry - 1.0) * 100.0
 
 
-def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict[str, Tuple[float, float]]]:
-    """(stop, objetivo) de cada variante para el evento e."""
+def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict[str, Optional[Tuple[float, float]]]]:
+    """(stop, objetivo) de cada variante para el evento e; la variante «plan» es None si la señal no es operable (recompensa / riesgo bajo, riesgo alto u objetivo consumido)."""
     i, name = e['i'], e['name']
     d = CATALOG[name].dir
     a = float(F['atr'][i])
@@ -105,8 +105,7 @@ def _geoms(F: Dict[str, np.ndarray], e: Dict) -> Optional[Dict[str, Tuple[float,
         bx = P.box(F, i, d, entry, stop, tgt)
     except Exception:
         return None
-    tgt_ = bx['_target']
-    return {'plan': (bx['_stop'], tgt_), 'tact': (entry - d * P.TACT * a, tgt_), 'fix': (entry - d * FIX_STOP * a, entry + d * FIX_TARGET * a)}
+    return {'plan': (bx['_stop'], bx['_target']) if bx['ok'] else None, 'struct': (bx['_stop_s'], bx['_target_c']), 'fix': (entry - d * FIX_STOP * a, entry + d * FIX_TARGET * a)}
 
 
 def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
@@ -157,7 +156,10 @@ def _plan_work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
             t['bt'].append(0.0); t['bs'].append(float((res == 1).mean())); t['bo'].append(float((res == 2).mean()))
             t['ra'].append(m_); t['rw'].append(0.0)
             t['win'].append(float(r0[1] - COST > 0)); t['bwin'].append(float(np.mean([x[1] - COST > 0 for x in rs])))
-        for v, (stop, tgt) in gm.items():
+        for v, st_tg in gm.items():
+            if st_tg is None:
+                continue
+            stop, tgt = st_tg
             r0 = sim(o, h, l, c, i, d, stop, tgt)
             if r0 is None:
                 continue
@@ -277,7 +279,8 @@ def report(ev: Dict) -> str:
                  ' · '.join(f"{v}: {c['ex']:+.2f} % (t {c['t']:+.1f}, n {c['n']})" for v, c in ev['calibration'].items()))
     L.append(f"ESTUDIO DEL PLAN · {m['universe']} acciones · {m['bars']:,} barras · {m['from']} → {m['to']} · coste {m['cost']} % · cierre a {m['hold']} sesiones · {m['random_entries']} entradas al azar por señal")
     desc = {'trail3': 'STOP QUE PERSIGUE a 3 ATR del mejor cierre, sin objetivo, hasta 60 sesiones', 'trail5': 'STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin objetivo, hasta 60 sesiones',
-            'plan': 'PLAN: stop estructural y objetivo clásico (lo que dibuja la web)', 'tact': 'TÁCTICO: stop de 1,5 ATR y el objetivo clásico', 'fix': f"FIJO: stop {m['fix'][0]} ATR y objetivo {m['fix'][1]} ATR para todos los patrones"}
+            'plan': 'PLAN OPERABLE: stop estructural acotado a 2 ATR, objetivo ≤ 3 veces el riesgo, solo señales con recompensa / riesgo ≥ 1,5 y riesgo ≤ 8 % (lo que dibuja la web)',
+            'struct': 'PLAN CLÁSICO sin límites: stop al otro lado de la figura y objetivo por la medida clásica (referencia: da stops del 10–40 %)', 'fix': f"FIJO: stop {m['fix'][0]} ATR y objetivo {m['fix'][1]} ATR para todos los patrones"}
     for K in m['ks']:
         for v in m['variants']:
             if v not in ev['pooled']:

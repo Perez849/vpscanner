@@ -327,8 +327,10 @@ def test_plan():
     neck = next(l['a'][1] for l in p['lines'] if l['k'] == 'neck')
     low = min(q[1] for q in p['pts'] if q[2] in ('1', '2'))
     assert rr['stop'] < rr['entry'] < rr['t1'] < rr['target'] and p['dir'] == 1
-    assert abs(rr['target'] - (neck + (neck - low))) < 0.02, (rr, neck, low)          # objetivo = cuello + altura de la figura
-    assert rr['stop'] < low
+    assert abs(rr['target_c'] - (neck + (neck - low))) < 0.02, (rr, neck, low)        # objetivo clásico = cuello + altura de la figura
+    assert rr['stop_s'] < low                                                         # stop clásico bajo el mínimo más bajo
+    assert rr['stop'] > rr['stop_s'] and rr['stop_cap']                               # ese stop está lejísimos en ATR: el plan operable lo acorta
+    assert rr['target'] <= rr['entry'] + plan.MAX_RR * (rr['entry'] - rr['stop']) + 0.02
     assert p['out']['res'] == 'target' and p['out']['ret'] > 0 and p['out']['xi'] > p['i']
     res2, dbs2 = run([(56, 70)])
     assert dbs2 and dbs2[-1]['out']['res'] == 'stop' and dbs2[-1]['out']['ret'] < 0
@@ -345,6 +347,28 @@ def test_plan():
     print(f'ok · plan: objetivo = cuello + altura, stop bajo la figura, T1 intermedio, resultado simulado y JSON de {len(s) // 1024} KB')
 
 
+def test_plan_rules():
+    """Reglas de riesgo del plan: stop estructural acotado a 2 ATR (y ≥ 1), objetivo ≤ 3 veces el riesgo, «no operable» con recompensa / riesgo < 1,5, riesgo > 8 % o objetivo consumido."""
+    n = 80
+    c = np.full(n, 100.0)
+    F = {'atr': np.full(n, 2.0), 'c': c, 'o': c, 'h': c + 1, 'l': c - 1}                    # ATR 2 % del precio
+    a = plan.box(F, 60, 1, 100.0, 80.0, 140.0)                                                # stop estructural a 20 % y objetivo a 40 %
+    assert a['stop'] == 96.0 and a['stop_cap'] and a['risk_atr'] == 2.0 and a['target'] == 112.0 and a['tgt_cap'] and a['rr'] == 3.0 and a['ok'], a      # 2 ATR = 4 %; objetivo 3R = 12 %
+    assert a['stop_s'] == 80.0 and a['target_c'] == 140.0 and a['rr_s'] == 2.0                # el plan clásico se conserva como referencia
+    b = plan.box(F, 60, 1, 100.0, 99.0, 105.0)                                                # stop pegado: se ensancha a 1 ATR
+    assert b['stop'] == 98.0 and b['stop_min'] and not b['stop_cap'] and b['rr'] == 2.5 and b['ok'], b
+    d = plan.box(F, 60, 1, 100.0, 96.0, 103.0)                                                # recompensa 3 contra riesgo 4: 0,75 R, no operable
+    assert abs(d['rr'] - 0.75) < 1e-9 and not d['ok'] and not d['spent'], d
+    e = plan.box(F, 60, -1, 100.0, 105.0, 90.0)                                               # corto: stop de 5 % acortado a 4 %, objetivo de 10 % (< 3R = 12 %) se queda
+    assert e['stop'] == 104.0 and e['target'] == 90.0 and e['rr'] == 2.5 and e['stop_cap'] and not e['tgt_cap'] and e['ok'], e
+    f = plan.box(F, 60, 1, 100.0, 97.0, 101.0)                                                # objetivo a menos de 1 ATR de la entrada: consumido
+    assert f['spent'] and not f['ok']
+    F2 = {'atr': np.full(n, 6.0), 'c': c, 'o': c, 'h': c + 1, 'l': c - 1}                    # ATR 6 %: el stop estructural a 10 % pasa del 8 %: valor demasiado volátil
+    g = plan.box(F2, 60, 1, 100.0, 90.0, 140.0)
+    assert g['risk_pct'] == 10.0 and g['risk_hi'] and not g['ok'], g
+    print('ok · plan operable: stop acotado a 2 ATR, objetivo ≤ 3R, y «no operable» con R:R bajo, riesgo alto u objetivo consumido')
+
+
 def test_min_stop_and_forming():
     b, _ = plant_fig('rising_wedge')
     F = ta.prepare(b)
@@ -352,7 +376,8 @@ def test_min_stop_and_forming():
     atr = {p['i']: float(F['atr'][p['i'] + len(F['c']) - 300]) for p in res['patterns'] if p['plan']}
     for p in res['patterns']:
         if p['plan']:
-            assert abs(p['plan']['entry'] - p['plan']['stop']) >= 0.99 * atr[p['i']] - 1e-6, (p['key'], p['plan'])
+            risk = abs(p['plan']['entry'] - p['plan']['stop'])
+            assert 0.99 * atr[p['i']] - 1e-6 <= risk <= (plan.MAX_RISK_ATR + 0.01) * atr[p['i']] + 1e-6, (p['key'], p['plan'])           # riesgo entre 1 y 2 ATR
     # triángulo simétrico sin romper: figura en formación con escenario alcista y bajista
     an = [(0, 100), (10, 110), (20, 102), (30, 108), (40, 104), (48, 106.5), (54, 105)]
     y0 = an[0][1]; an = [(x, y0 + (y - y0) * 0.5) for x, y in an]
@@ -469,7 +494,7 @@ def test_lab_json(tmp='/tmp/vp_lab_test'):
     assert row['sym'] == 'RW' and len(row['spark']) == lab.SPARK
     T = res['trades']
     done = [p for p in res['patterns'] if p['state'] == 'done']
-    assert len(T['list']) < len(done) and T['all']['n'] <= len(T['list']) and all(p['trade']['role'] in ('lider', 'confirma', 'contraria', 'na') for p in done)     # las señales solapadas no se cuentan una a una
+    assert len(T['list']) < len(done) and T['all']['n'] <= len(T['list']) and all(p['trade']['role'] in ('lider', 'confirma', 'contraria', 'na', 'no_operable') for p in done)     # las señales solapadas no se cuentan una a una
     assert sum(1 for p in done if p['trade']['role'] == 'lider') == len(T['list'])
     for p in done:
         o = p['out']
@@ -567,7 +592,7 @@ def test_plan_study():
         assert s['n'] > 1500 and abs(s['ex']) < 0.6 and abs(s['t']) < 6, (v, s)           # sin ventaja posible: el exceso queda cerca de 0
         assert (0 < s['tgt'] < 100 or v.startswith('trail')) and abs(s['tgt'] + s['stp'] + s['tmo'] - 100) < 0.05      # con stop que persigue no hay objetivo
     txt = planstudy.report(ev)
-    assert 'PLAN:' in txt and 'FIJO' in txt
+    assert 'PLAN OPERABLE' in txt and 'PLAN CLÁSICO' in txt and 'FIJO' in txt and 'ganan' in txt
     print(f'ok · estudio del plan: simulador idéntico a plan.outcome ({tot} casos) y sin ventaja sobre paseos aleatorios')
 
 
@@ -713,17 +738,18 @@ def test_group_trades():
              it('shooting_star', 'velas', 14, -1, 'stop', -2.0, xi=15),                                                                            # contraria
              it('marubozu_bull', 'velas', 30, 1, 'timeout', 4.0, xi=45),                                                                           # operación nueva: cerrada por tiempo con ganancia
              it('hs_top', 'figuras', 31, -1, 'na', None),                                                                                          # fuera de niveles: no abre nada
-             it('donch55_dn', 'rupturas', 60, -1, 'stop', -3.0, xi=62)]
+             it('donch55_dn', 'rupturas', 60, -1, 'stop', -3.0, xi=62),
+             dict(it('box_up', 'rupturas', 80, 1, 'target', 9.0, xi=90), plan={'ok': False})]                                                       # sin R:R suficiente: no se habría operado
     tr = lab.group_trades(items, 100)
     assert [t['key'] for t in tr['list']] == ['double_bottom', 'marubozu_bull', 'donch55_dn'], [t['key'] for t in tr['list']]
     first = tr['list'][0]
     assert first['conf'] == ['hammer', 'bull_engulf'] or sorted(first['conf']) == ['bull_engulf', 'hammer'], first
     assert first['contra'] == ['shooting_star'] and tr['conflicts'] == 1
     roles = {x['key']: x['trade']['role'] for x in items}
-    assert roles == {'hammer': 'confirma', 'double_bottom': 'lider', 'bull_engulf': 'confirma', 'shooting_star': 'contraria', 'marubozu_bull': 'lider', 'hs_top': 'na', 'donch55_dn': 'lider'}, roles
+    assert roles == {'hammer': 'confirma', 'double_bottom': 'lider', 'bull_engulf': 'confirma', 'shooting_star': 'contraria', 'marubozu_bull': 'lider', 'hs_top': 'na', 'donch55_dn': 'lider', 'box_up': 'no_operable'}, roles
     A = tr['all']
     assert A['n'] == 3 and A['won'] == 2 and A['lost'] == 1 and A['tmo'] == 1 and A['tmo_won'] == 1 and abs(A['mean_net'] - (7.0 + 4.0 - 3.0) / 3) < 1e-3, A
-    print('ok · operaciones únicas: 7 señales solapadas = 3 operaciones, con las contrarias avisadas y el cierre por tiempo con ganancia contado como ganado')
+    print('ok · operaciones únicas: 8 señales solapadas = 3 operaciones, con las contrarias avisadas y el cierre por tiempo con ganancia contado como ganado')
 
 
 def test_combos_unique_valuedays():
@@ -749,7 +775,7 @@ def test_combos_unique_valuedays():
     print(f'ok · coincidencias: {all_up} valor-días alcistas contados una vez ({a["solo velas"]["n"]} solo velas, {a["solo estructura"]["n"]} solo estructura, {a["velas y estructura juntas"]["n"]} juntas)')
 
 
-ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_min_stop_and_forming, test_shapes_geometry,
+ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
        test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment]
 
 if __name__ == '__main__':
