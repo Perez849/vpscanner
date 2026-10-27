@@ -204,26 +204,37 @@ La pregunta de «maximiza la rentabilidad por encima del azar» tiene una trampa
 - **Errores agrupados** en bloques de 10 sesiones (cierre a 10) o de 60 (salidas de hasta 60 sesiones: sus resultados se solapan hasta 60). Con bloques de 10 y salidas largas, el control daba «descubrimientos» enormes en datos sin ningún efecto.
 - **Sesgo de supervivencia parcialmente corregido**: el universo son los miembros ACTUALES del S&P 500 y el Nasdaq-100, y las acciones que cayeron y salieron del índice no están (Yahoo no las tiene). Cada valor del S&P 500 solo cuenta desde su **fecha de incorporación** al índice (columna «Date added» de Wikipedia): se quitan 153.000 barras-valor (21 %). Los que salieron siguen sin estar: el sesgo restante favorece a los largos.
 
-#### Resultado de la búsqueda (fuera de muestra, 2020–2026)
+#### Resultado de la búsqueda (fuera de muestra, 2020–2026; 27-oct-2026, con las 10 salidas)
 
-| conjunto de reglas | operaciones | exceso por operación (t) | neto (azar mismas fechas) | % ganadoras (todas las filas) | control: exceso p95 / p-valor |
-|---|---|---|---|---|---|
-| todas | 17.060 | **+0,54 %** (+2,1) | −0,61 % (−1,15 %) | 56,9 % (53,4 %) | +0,52 % / 0,05 |
-| solo contexto (sin patrones) | 17.095 | +0,62 % (+2,4) | −0,47 % (−1,09 %) | 57,6 % (53,4 %) | +0,47 % / 0,00 |
-| con patrón | 8.416 | +0,74 % (+3,0) | +1,42 % (+0,68 %) | 56,8 % (52,1 %) | +0,64 % / 0,00 |
+Con las cuatro salidas de la escalera la biblioteca pasa de 4.800 a **8.000 reglas** (400 combinaciones × 2 sentidos × 10 salidas). Dos criterios de selección, cada uno con su control:
 
-Lectura honesta: el exceso fuera de muestra está **en el límite de la significación** (supera el p95 del control en las tres versiones, pero la t no: p = 0,1 a 0,4), con 40 repeticiones del control. Es compatible con una ventaja real pequeña (+0,5 a +0,7 % por operación) y no es una prueba firme. Con los miembros actuales sin quitar el sesgo de supervivencia el mismo procedimiento daba +1,2 % (t 2,8), es decir, más del doble: la mitad de lo que parecía ventaja venía de ese sesgo.
+| criterio · conjunto | operaciones | exceso (t) | fiabilidad (puntos sobre el día, t) | ganan (todas las filas) | +4 % / +10 % | control: p exceso · p fiabilidad |
+|---|---|---|---|---|---|---|
+| **rentabilidad** · todas | 16.123 | +0,24 % (+1,7) | +1,4 (+1,6) | 60,4 % (58,3 %) | 50 / 12 % | 0,45 · 0,25 |
+| rentabilidad · solo contexto | 18.637 | +0,36 % (+2,5) | +1,9 (+2,2) | 59,5 % (57,3 %) | 50 / 12 % | 0,125 · 0,10 |
+| rentabilidad · con patrón | 11.237 | +0,36 % (+1,9) | +1,6 (+1,3) | 63,3 % (57,5 %) | 43 / 12 % | 0,15 · 0,275 |
+| **fiabilidad** · todas | 26.598 | +0,11 % (+0,6) | **+8,3 (+6,5)** | 48,3 % (41,8 %) | 49 / 7 % | 0,275 · **< 0,025** |
+| fiabilidad · solo contexto | 28.300 | +0,13 % (+0,7) | +8,4 (+7,0) | 47,8 % (38,3 %) | 48 / 8 % | 0,275 · < 0,025 |
+| fiabilidad · con patrón | 22.043 | +0,20 % (+1,4) | +6,6 (+5,6) | 49,0 % (43,0 %) | 50 / 8 % | 0,15 · < 0,025 |
 
-**Lo que se repite**: elegidas con los años ≤ 2022 y miradas una sola vez después, **12 de las 15 mejores reglas mantienen exceso positivo** (final medio +0,45 %), y las mejores de todas son siempre la misma idea: **valores de impulso alto a 12 meses (20 % mejor, sin el último mes) que han caído** (por debajo de su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez) → **largo**. Entrenamiento (≤ 2022) → final (2023–2026), con las salidas del operador:
+Dos lecciones, las dos incómodas:
 
-| regla (largo) | salida | entrenamiento: exceso (t) | final: exceso (t) |
+- **Con más salidas, la búsqueda automática por rentabilidad deja de ser significativa** (exceso +0,24 %, p 0,45; antes, con 6 salidas, +0,54 % y p 0,05). Al tener más libertad elige en 2021–2023 reglas en **corto** con la escalera y stop al 10 % que pierden fuera de muestra (−1,2 % en 2021). Más libertad = más sobreajuste; el procedimiento completo de «buscar la mejor» no gana al azar de buscar. Lo que se sostiene es una regla concreta (abajo), no el buscador.
+- **Elegir por fiabilidad encuentra reglas que ganan más veces que el azar del día (+8 puntos, p < 0,025) pero no ganan dinero** (exceso +0,11 %, p 0,275): son cortos en valores volátiles con salidas de stop estrecho, que aciertan a menudo con ganancias pequeñas y pierden poco a menudo con pérdidas grandes. **La tasa de acierto sola no es un objetivo**: hay que mirar acierto × lo que se gana cuando se acierta × lo que se pierde cuando no. Es exactamente la trampa de «fiabilidad» en la que cae quien solo mira el porcentaje de trades ganados.
+
+**Lo que se repite**: elegidas con los años ≤ 2022 y miradas una sola vez después, 10 de las 15 mejores reglas mantienen exceso positivo (final medio +0,42 %), y lo que aguanta de verdad es siempre la misma idea en largo, **valores de impulso alto a 12 meses (20 % mejor, sin el último mes) que han caído** (bajo su media de 200 o con 2 o más señales bajistas); los cortos que el entrenamiento ponía primeros se quedan en cero en el final:
+
+| regla | salida | entrenamiento: exceso (t) | final: exceso (t) |
 |---|---|---|---|
-| impulso 12-1 alto Y bajo su media de 200 | stop 2,5 ATR · asegura +4 % | +0,75 % (+4,2) | +1,55 % (+2,3) |
-| impulso 12-1 alto Y bajo su media de 200 | stop 2,5 ATR · asegura +6 % | +0,90 % (+4,1) | +1,62 % (+2,5) |
-| impulso 12-1 alto Y bajo su media de 200 | cierre a 10 sesiones | +0,61 % (+3,2) | +0,96 % (+2,7) |
-| impulso 12-1 alto Y 2+ patrones bajistas | cierre a 10 sesiones | +0,76 % (+3,5) | +0,76 % (+2,1) |
+| impulso 12-1 alto Y bajo su media de 200 → largo | stop 2,5 ATR · asegura +6 % | +0,90 % (+4,1) | +1,62 % (+2,5) |
+| impulso 12-1 alto Y bajo su media de 200 → largo | stop 2,5 ATR · asegura +4 % | +0,75 % (+4,2) | +1,55 % (+2,3) |
+| impulso 12-1 alto Y bajo su media de 200 → largo | **escalera** (2,5 ATR; +4 → +10) | +0,62 % (+3,9) | **+1,27 % (+2,9)** |
+| impulso 12-1 alto Y bajo su media de 200 → largo | escalera con stop al 10 % | +0,57 % (+3,3) | +0,85 % (+2,2) |
+| impulso 12-1 alto Y 2+ señales bajistas → largo | cierre a 10 sesiones | +0,76 % (+3,5) | +0,76 % (+2,1) |
+| bajo su media de 200 Y RSI(14) alto → **corto** | escalera con stop al 10 % | +0,59 % (+4,6) | −0,06 % (−0,4) |
+| RSI(2) ≥ 90 Y hueco de apertura ≥ +2 % → corto | escalera con stop al 10 % | +1,00 % (+4,0) | −0,31 % (−0,9) |
 
-Lo que **no** se sostiene: los cortos (la «mejor» regla en corto de entrenamiento, bajo la media de 200 con RSI(14) alto, da +0,10 % en el final), las reglas de huecos de apertura y las de un solo régimen de mercado.
+Entrar al azar con cada salida (todas las filas, largo): con la escalera y stop a 2,5 ATR gana el **58,6 %** y asegura +4 % el 59 % (+10 % el 12 %); con stop al 10 % del precio, el **69 %**. Ganar 7 de cada 10 es barato con stops anchos en una década alcista: por eso todo se mide frente al azar del mismo día.
 
 #### Confirmación en acciones que no se usaron para encontrar la regla
 
