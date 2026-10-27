@@ -711,7 +711,7 @@ function drawCartera() {                                                     // 
   const line = (k, color, w) => { x.strokeStyle = color; x.lineWidth = w; x.beginPath(); pts.forEach((p, i) => { if (!(p[k] > 0)) return; i ? x.lineTo(X(i), Y(p[k])) : x.moveTo(X(i), Y(p[k])); }); x.stroke(); };
   line(3, css('--amber'), 1.2); line(2, css('--sub'), 1.2); line(1, css('--violet'), 2);
   x.textAlign = 'left'; x.lineWidth = 1;
-  [[css('--violet'), 'la regla con la disciplina'], [css('--sub'), 'mercado a partes iguales'], [css('--amber'), 'al azar (mediana)']].forEach(([c, t], i) => { x.fillStyle = c; x.fillRect(L + 6 + i * 170, T + 4, 12, 3); x.fillStyle = css('--ink'); x.fillText(t, L + 22 + i * 170, T + 6); });
+  [[css('--violet'), 'la regla con la disciplina'], [css('--sub'), 'mercado a partes iguales'], [css('--amber'), 'al azar (mediana)']].forEach(([c, t], i) => { x.fillStyle = c; x.fillRect(L + 6 + i * 205, T + 4, 12, 3); x.fillStyle = css('--ink'); x.fillText(t, L + 22 + i * 205, T + 6); });
 }
 
 function renderImpGuide() {
