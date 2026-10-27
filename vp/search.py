@@ -66,7 +66,7 @@ SUBSETS = ('todo', 'contexto', 'patrones')
 
 
 # ── salidas ───────────────────────────────────────────────────────────────
-def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.ndarray, d: int, stop_atr: float, lock_pct: Optional[float], trail: float, maxb: int) -> np.ndarray:
+def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.ndarray, d: int, stop_atr: float, lock_pct: Optional[float], trail: float, maxb: int, cost: float = COST) -> np.ndarray:
     """Resultado neto (%) de entrar en la apertura siguiente a CADA barra, con la regla del operador: stop inicial a `stop_atr` ATR de la entrada; si `lock_pct` no es None, al cerrar
     una sesión a ese % a favor el stop sube a ese nivel y desde entonces persigue al mejor cierre a `trail` ATR (nunca por debajo de lo asegurado); si es None, el stop persigue
     al mejor cierre desde el principio. El stop gana si se toca el mismo día y un hueco más allá sale a la apertura. Es la misma regla que plan.outcome_lock, vectorizada por entradas.
@@ -110,26 +110,26 @@ def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.
     j = idx + maxb                                                         # última sesión de la ventana: cierre por tiempo
     tm = ~done & (j <= n - 1)
     xp[tm] = c[np.minimum(j, n - 1)][tm]
-    net[:m] = d * (xp / entry - 1.0) * 100.0 - COST
+    net[:m] = d * (xp / entry - 1.0) * 100.0 - cost
     return net
 
 
-def hold_all(o: np.ndarray, c: np.ndarray, d: int, hz: int) -> np.ndarray:
+def hold_all(o: np.ndarray, c: np.ndarray, d: int, hz: int, cost: float = COST) -> np.ndarray:
     n = len(c)
     net = np.full(n, np.nan)
     if n > hz + 1:
         mm = n - hz
-        net[:mm] = d * (c[hz:hz + mm] / o[1:1 + mm] - 1.0) * 100.0 - COST
+        net[:mm] = d * (c[hz:hz + mm] / o[1:1 + mm] - 1.0) * 100.0 - cost
     return net
 
 
-def ops_all(F: Dict[str, np.ndarray]) -> np.ndarray:
+def ops_all(F: Dict[str, np.ndarray], cost: float = COST) -> np.ndarray:
     """(barras, 2, salidas): resultado neto de entrar a cada barra en largo (0) y en corto (1) con cada salida de EXITS."""
     o, h, l, c, atr = F['o'], F['h'], F['l'], F['c'], F['atr']
     out = np.full((len(c), 2, NE), np.nan, dtype=np.float32)
     for di, d in enumerate((1, -1)):
         for ei, (name, stop_atr, lock, trail, maxb) in enumerate(EXITS):
-            out[:, di, ei] = hold_all(o, c, d, maxb) if stop_atr is None else sim_all(o, h, l, c, atr, d, stop_atr, lock, trail, maxb)
+            out[:, di, ei] = hold_all(o, c, d, maxb, cost) if stop_atr is None else sim_all(o, h, l, c, atr, d, stop_atr, lock, trail, maxb, cost)
     return out
 
 
@@ -146,9 +146,10 @@ def apply_join(work: Dict[str, Dict], join: Dict[str, str]) -> int:
     return dropped
 
 
-def _work(args: Tuple[str, Dict[str, np.ndarray]]) -> Tuple[str, Dict]:
-    sym, w = ml._work(args)
-    w['ops'] = ops_all(ta.prepare(args[1]))
+def _work(args: Tuple) -> Tuple[str, Dict]:
+    sym, b, *rest = args                                                     # (valor, barras[, coste de ida y vuelta en %])
+    _, w = ml._work((sym, b))
+    w['ops'] = ops_all(ta.prepare(b), rest[0] if rest else COST)
     return sym, w
 
 
@@ -201,7 +202,7 @@ def conditions(D: ml.Data) -> Dict[str, np.ndarray]:
 class Panel:
     """Filas del universo con el resultado neto de cada salida, el exceso sobre el día y la biblioteca de combinaciones (condición sola, par de condiciones o ninguna = todas las filas)."""
 
-    def __init__(self, D: ml.Data, work: Dict[str, Dict], min_day: int = MIN_DAY, min_combo: int = MIN_COMBO):
+    def __init__(self, D: ml.Data, work: Dict[str, Dict], min_day: int = MIN_DAY, min_combo: int = MIN_COMBO, library: bool = True):
         self.D = D
         nrow = len(D.sym)
         cnt = np.bincount(D.sym, minlength=len(D.syms))
@@ -227,7 +228,7 @@ class Panel:
         self.rel = R[D.dcode, D.sym]                                         # (filas, 2, salidas), NaN si ese día no hay referencia
         cond = conditions(D)
         self.cond_names = list(cond)
-        names = [()] + [(k,) for k in cond] + [pr for pr in combinations(cond, 2)]
+        names = [()] + ([(k,) for k in cond] + [pr for pr in combinations(cond, 2)] if library else [])
         self.combos: List[Tuple[str, ...]] = []
         self.idx: List[np.ndarray] = []
         for nm in names:
@@ -438,11 +439,12 @@ def null_runs(P: Panel, test_years: List[int], reps: int, seed: int = 13, verbos
 
 
 # ── conjunto ──────────────────────────────────────────────────────────────
-def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = ml.K, reps: int = 30, test_years: Optional[List[int]] = None, dev_end: int = DEV_END, verbose: bool = False,
-            min_day: int = MIN_DAY, min_combo: int = MIN_COMBO, join: Optional[Dict[str, str]] = None) -> Dict:
+def build(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = ml.K, verbose: bool = False, min_day: int = MIN_DAY, min_combo: int = MIN_COMBO, join: Optional[Dict[str, str]] = None,
+          cost: float = COST, library: bool = True) -> Tuple[ml.Data, Panel, int]:
+    """Descarga ya hecha → trabajo por valor (indicadores, patrones, salidas) → datos del universo → panel. Devuelve (datos, panel, barras-valor quitadas por la incorporación al índice)."""
     from concurrent.futures import ProcessPoolExecutor
     t0 = time.time()
-    jobs = [(s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}) for s, b in bars.items() if len(b['c']) > 400]
+    jobs = [(s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}, cost) for s, b in bars.items() if len(b['c']) > 400]
     work: Dict[str, Dict] = {}
     if workers > 1:
         with ProcessPoolExecutor(max_workers=workers) as ex:
@@ -456,12 +458,20 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
             work[s] = w
     dropped = apply_join(work, join) if join else 0
     D = ml.Data(work, k=k)
-    P = Panel(D, work, min_day=min_day, min_combo=min_combo)
+    P = Panel(D, work, min_day=min_day, min_combo=min_combo, library=library)
+    if verbose:
+        print(f'  panel: {len(D.sym):,} filas · {len(P.combos)} combinaciones de reglas · {time.time() - t0:.0f}s', flush=True)
+    return D, P, dropped
+
+
+def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = ml.K, reps: int = 30, test_years: Optional[List[int]] = None, dev_end: int = DEV_END, verbose: bool = False,
+            min_day: int = MIN_DAY, min_combo: int = MIN_COMBO, join: Optional[Dict[str, str]] = None, cost: float = COST) -> Dict:
+    t0 = time.time()
+    D, P, dropped = build(bars, workers, k, verbose, min_day, min_combo, join, cost)
+    work_syms = D.syms
     years = sorted(int(y) for y in np.unique(D.year))
     if test_years is None:
         test_years = [y for y in years if y >= years[0] + 3 and int((D.year == y).sum()) > 20000]
-    if verbose:
-        print(f'  panel: {len(D.sym):,} filas · {len(P.combos)} combinaciones de reglas · {time.time() - t0:.0f}s', flush=True)
     T = P.tables(P.rel, absolute=True)
     wf = {s: walk_forward(P, T, P.sub[s], test_years, absolute=True) for s in SUBSETS}
     st = {s: static_split(P, T, P.sub[s], dev_end) for s in SUBSETS}
@@ -487,7 +497,7 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
             base[f'{DIRS[di]} {EXITS[ei][0]}'] = {'n': int(n), 'neto': round(float(T['SA'][0, di, ei].sum() / n), 3), 'ganan': round(float(100 * T['SW'][0, di, ei].sum() / n), 1)}
     out = {'meta': {'generated': int(time.time()), 'universe': len(D.syms), 'filas': int(len(D.sym)), 'from': str(D.date[0]), 'to': str(D.date[-1]), 'k': k, 'combinaciones': len(P.combos) - 1,
                     'pruebas': (len(P.combos) - 1) * 2 * NE, 'condiciones': len(P.cond_names), 'test_years': test_years, 'dev_end': dev_end, 'reps': reps, 'salidas': {e[0]: EXIT_TXT[e[0]] for e in EXITS},
-                    'miembros': 'en la fecha' if join else 'actuales', 'valores_con_fecha': int(sum(1 for s_ in work if join and join.get(s_))), 'barras_quitadas': dropped},
+                    'miembros': 'en la fecha' if join else 'actuales', 'valores_con_fecha': int(sum(1 for s_ in work_syms if join and join.get(s_))), 'barras_quitadas': dropped, 'coste': cost},
            'walk_forward': wf, 'nulo': nl, 'dev_final': st, 'en_muestra': ins, 'azar_absoluto': base}
     if verbose:
         print(f'  búsqueda: {len(P.combos) - 1} combinaciones × 2 sentidos × {NE} salidas · {time.time() - t0:.0f}s', flush=True)
@@ -544,6 +554,101 @@ def report(ev: Dict) -> str:
     for k, v in ev['azar_absoluto'].items():
         L.append(f"  {k:12s} n {v['n']:9,}  neto {v['neto']:+.3f} %  ganan {v['ganan']:.1f} %")
     return '\n'.join(L)
+
+
+# ── confirmación en otras acciones ────────────────────────────────────────
+# Reglas candidatas fijadas con la búsqueda sobre las 300 acciones más negociadas del S&P 500 ∪ Nasdaq-100 (2017–2026), ANTES de mirarlas en acciones distintas. Son las que aguantaron
+# la selección hacia delante y la mayoría de los años: valores de impulso alto a 12 meses (sin el último mes) que han caído por debajo de su media de 200 sesiones o que acumulan señales bajistas.
+CANDIDATAS = (
+    {'nombre': 'C1', 'regla': ['bajo_200', 'impulso12_alto'], 'sentido': 'largo', 'salida': 'op4b'},
+    {'nombre': 'C2', 'regla': ['bajo_200', 'impulso12_alto'], 'sentido': 'largo', 'salida': 'op6b'},
+    {'nombre': 'C3', 'regla': ['bajo_200', 'impulso12_alto'], 'sentido': 'largo', 'salida': 'h10'},
+    {'nombre': 'C4', 'regla': ['impulso12_alto', 'confluencia_bajista'], 'sentido': 'largo', 'salida': 'h10'},
+    {'nombre': 'C5', 'regla': ['impulso12_alto', 'rsi2_bajo'], 'sentido': 'largo', 'salida': 'h10'},
+)
+
+
+def evaluate_rules(P: Panel, rules: Tuple[Dict, ...], reps: int = 300, seed: int = 21) -> List[Dict]:
+    """Exceso, t agrupado, neto, % ganadoras, años positivos y p-valores (resultados desplazados en el calendario) de reglas FIJAS: una sola hipótesis por regla, sin elegir nada."""
+    D = P.D
+    cond = conditions(D)
+    exn = [e[0] for e in EXITS]
+    rng = np.random.default_rng(seed)
+    shifts = rng.integers(120, max(P.nd - 120, 121), size=reps)
+    out = []
+    for r in rules:
+        m = np.ones(len(D.sym), bool)
+        for k in r['regla']:
+            m &= cond[k]
+        ix = np.flatnonzero(m)
+        d, e = DIRS.index(r['sentido']), exn.index(r['salida'])
+        b = P.blk[ix]
+
+        def stat(x: np.ndarray) -> Tuple[float, float, float]:
+            ok = np.isfinite(x)
+            S = np.bincount(b[ok], weights=x[ok], minlength=P.nb)
+            N = np.bincount(b[ok], minlength=P.nb).astype(float)
+            n, mm, tt = t_blocks(S, N, P.G[e])
+            return float(n), float(mm), float(tt)
+        n, mean, t = stat(P.rel[ix, d, e])
+        nul = np.array([stat(P.R[(D.dcode[ix] + sh) % P.nd, D.sym[ix], d, e]) for sh in shifts])
+        ab = P.net[ix, d, e]
+        okb = np.isfinite(ab)
+        allnet = P.net[:, d, e]
+        yr = {}
+        for y in sorted(int(v) for v in np.unique(D.year[ix])):
+            xs = P.rel[ix, d, e][(D.year[ix] == y)]
+            xs = xs[np.isfinite(xs)]
+            if len(xs) >= 100:
+                yr[y] = round(float(xs.mean()), 3)
+        out.append({**r, 'n': int(n), 'valores': int(len(np.unique(D.sym[ix]))), 'exceso': round(mean, 3), 't': round(t, 2), 'neto': round(float(ab[okb].mean()), 3), 'azar_neto': round(float(ab[okb].mean() - mean), 3),
+                    'ganan': round(float(100 * (ab[okb] > 0).mean()), 1), 'ganan_todas': round(float(100 * (allnet[np.isfinite(allnet)] > 0).mean()), 1), 'por_año': yr,
+                    'nulo_exceso_p95': round(float(np.quantile(nul[:, 1], 0.95)), 3), 'nulo_t_p95': round(float(np.nanquantile(nul[:, 2], 0.95)), 2),
+                    'p_exceso': round(float((nul[:, 1] >= mean).mean()), 3), 'p_t': round(float((nul[np.isfinite(nul[:, 2]), 2] >= t).mean()), 3), 'reps': int(reps)})
+    return out
+
+
+def confirm(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = ml.K, cost: float = COST, reps: int = 300, join: Optional[Dict[str, str]] = None, verbose: bool = False,
+            rules: Tuple[Dict, ...] = CANDIDATAS, min_day: int = MIN_DAY) -> Dict:
+    D, P, dropped = build(bars, workers, k, verbose, min_day, MIN_COMBO, join, cost, library=False)
+    res = evaluate_rules(P, rules, reps)
+    return {'meta': {'generated': int(time.time()), 'universe': len(D.syms), 'filas': int(len(D.sym)), 'from': str(D.date[0]), 'to': str(D.date[-1]), 'k': k, 'coste': cost, 'reps': reps,
+                     'miembros': 'en la fecha' if join else 'actuales', 'barras_quitadas': dropped, 'salidas': {e[0]: EXIT_TXT[e[0]] for e in EXITS}}, 'reglas': res}
+
+
+def confirm_report(ev: Dict, titulo: str = '') -> str:
+    m = ev['meta']
+    L = [f"CONFIRMACIÓN DE LAS REGLAS CANDIDATAS{' · ' + titulo if titulo else ''} · {m['universe']} acciones · {m['filas']:,} filas (las {m['k']} más negociadas) · {m['from']} → {m['to']} · coste {m['coste']} %",
+         'Reglas fijadas antes de mirar estas acciones (una hipótesis cada una, no se elige nada). Exceso = neto menos la media de todas las filas de ese día. p = fracción de repeticiones con los resultados desplazados en el calendario que igualan o superan lo observado.',
+         f"Universo: {'miembros actuales' if m['miembros'] == 'actuales' else 'miembros actuales desde su incorporación al S&P 500'}. Salidas: " + ' · '.join(f'{k} = {v}' for k, v in m['salidas'].items()), '']
+    for r in ev['reglas']:
+        ys = ' '.join(f"{str(y)[2:]}:{v:+.1f}" for y, v in r['por_año'].items())
+        pos = sum(v > 0 for v in r['por_año'].values())
+        L += [f"{r['nombre']} · {_rule(r['regla'], r['sentido'])} · {r['salida']}",
+              f"   n {r['n']:,} ({r['valores']} valores) · exceso {r['exceso']:+.3f} % (t {r['t']:+.1f}; nulo p95 {r['nulo_exceso_p95']:+.3f} % / t {r['nulo_t_p95']:+.1f}; p exceso {r['p_exceso']}, p t {r['p_t']}) · neto {r['neto']:+.3f} % (azar mismas fechas {r['azar_neto']:+.3f} %) · ganan {r['ganan']:.1f} % (todas las filas {r['ganan_todas']:.1f} %)",
+              f"   años positivos {pos}/{len(r['por_año'])}: {ys}"]
+    return '\n'.join(L)
+
+
+def confirm_run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2, reps: int = 300, cost: float = COST, k: int = ml.K, tag: str = '', members: str = 'asof') -> Dict:
+    from . import data, universe
+    bars, failed = data.fetch_many(symbols, rng=rng, workers=4, cache_dir=cache_dir, max_age_h=24 * 3, verbose=True)
+    if len(bars) < 0.9 * len(symbols):
+        raise SystemExit(f'solo {len(bars)} de {len(symbols)} valores descargados (Yahoo limita las peticiones): se detiene; lo ya descargado queda en la caché')
+    join = None
+    if members == 'asof' and not tag:                                      # la tabla de incorporaciones es la del S&P 500: solo se aplica al universo grande
+        try:
+            join = universe.sp500_join_dates()
+        except Exception as exc:
+            print(f'  no se pudo leer la tabla de miembros del S&P 500 ({type(exc).__name__}: {exc}): se usan los miembros actuales', flush=True)
+    ev = confirm(bars, workers=workers, k=k, cost=cost, reps=reps, join=join, verbose=True)
+    os.makedirs(out_dir, exist_ok=True)
+    json.dump(ev, open(os.path.join(out_dir, f'search_confirm{tag}.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    txt = confirm_report(ev, tag.strip('_'))
+    open(os.path.join(out_dir, f'search_confirm{tag}.txt'), 'w', encoding='utf-8').write(txt)
+    print(txt, flush=True)
+    sys.stdout.flush()
+    return ev
 
 
 def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2, reps: int = 30, members: str = 'asof') -> Dict:

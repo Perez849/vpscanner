@@ -943,8 +943,27 @@ def test_universe_changes_and_survivorship():
     print('ok · fechas de incorporación al S&P 500; barras anteriores quitadas; reglas de un solo régimen no elegibles')
 
 
+def test_search_confirm():
+    """La confirmación evalúa reglas fijas: con reversión plantada, «largo tras caer» gana y «largo tras subir» pierde, con p-valores pequeños; en paseos aleatorios ninguna se distingue del azar."""
+    rules = ({'nombre': 'T1', 'regla': ['cae5'], 'sentido': 'largo', 'salida': 'h10'}, {'nombre': 'T2', 'regla': ['sube5'], 'sentido': 'largo', 'salida': 'h10'},
+             {'nombre': 'T3', 'regla': ['cae5', 'bajo_200'], 'sentido': 'largo', 'salida': 'op4b'})
+    kw = dict(workers=1, k=40, reps=80, min_day=15, rules=rules)
+    ev = search.confirm({f'S{j}': _walk_ar(1500, 1500 + j, 0.25) for j in range(40)}, **kw)
+    r1, r2, r3 = ev['reglas']
+    assert r1['exceso'] > 0.8 and r1['t'] > 5 and r1['p_exceso'] <= 0.05 and r1['p_t'] <= 0.05 and r1['n'] > 2000 and sum(v > 0 for v in r1['por_año'].values()) >= len(r1['por_año']) - 1, r1
+    assert r2['exceso'] < -0.5 and r2['t'] < -4 and r2['p_exceso'] > 0.9, r2
+    assert r3['n'] > 500 and r3['exceso'] > 0.3 and 'neto' in r3 and 'ganan' in r3, r3
+    txt = search.confirm_report(ev, 'prueba')
+    assert 'T1' in txt and 'caída a 5 sesiones' in txt and 'p exceso' in txt and 'años positivos' in txt
+    ev0 = search.confirm({f'S{j}': _walk_ar(1500, 1700 + j, 0.0) for j in range(40)}, **kw)
+    for r in ev0['reglas']:
+        assert abs(r['t']) < 4 and r['p_exceso'] > 0.01 and r['p_exceso'] < 0.99, r
+    assert all(r['nombre'] in {c['nombre'] for c in search.CANDIDATAS} or r['nombre'].startswith('T') for r in ev0['reglas']) and len(search.CANDIDATAS) == 5
+    print(f'ok · confirmación: reglas fijas (T1 exceso {r1["exceso"]:+.2f} %, t {r1["t"]:.0f}; T2 {r2["exceso"]:+.2f} %) y nada en paseos aleatorios')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_universe_changes_and_survivorship]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship]
 
 if __name__ == '__main__':
     for fn in ALL:

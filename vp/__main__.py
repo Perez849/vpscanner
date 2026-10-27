@@ -19,6 +19,7 @@ def main() -> None:
     ap.add_argument('--universe', default='large', choices=['large', 'smallmid', 'mixed'], help='study: large = S&P 500 + Nasdaq-100 · smallmid = S&P 400 + 600 · mixed = cripto, divisas, materias primas e índices')
     ap.add_argument('--ks', default='', help='study: tamaños del universo móvil por dinero negociado, separados por comas (por defecto 50,300; smallmid 100,500; mixed todos)')
     ap.add_argument('--members', default='asof', choices=['asof', 'today'], help='search: asof = cada valor del S&P 500 solo desde su fecha de incorporación · today = miembros actuales en todo el periodo (sesgo de supervivencia)')
+    ap.add_argument('--confirm', action='store_true', help='search: evalúa las reglas candidatas fijadas de antemano en el universo elegido (--universe) en lugar de buscar')
     ap.add_argument('--cost', type=float, default=-1.0, help='study: coste de ida y vuelta en % (por defecto 0,15; smallmid 0,30)')
     a = ap.parse_args()
     syms = [s.strip().upper() for s in a.symbols.replace(',', ' ').split() if s.strip()]
@@ -30,6 +31,12 @@ def main() -> None:
         if a.max:
             uni = uni[:a.max]
         context.run(uni, a.out, cache_dir=a.cache, workers=a.workers or max(1, (os.cpu_count() or 2) - 0), reps=a.reps or 100)
+    elif a.cmd == 'search' and a.confirm:
+        uni = syms or universe.universe_by_name(a.universe)
+        if a.max:
+            uni = uni[:a.max]
+        cost = a.cost if a.cost >= 0 else {'large': 0.15, 'smallmid': 0.30, 'mixed': 0.15}[a.universe]
+        search.confirm_run(uni, a.out, cache_dir=a.cache, workers=a.workers or max(1, (os.cpu_count() or 2) - 0), reps=a.reps or 300, cost=cost, tag='' if a.universe == 'large' else f'_{a.universe}', members=a.members)
     elif a.cmd == 'search':
         uni = syms or universe.study_universe()
         if a.max:
