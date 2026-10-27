@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado) | search (búsqueda de la regla que más gana sobre el azar, con selección hacia delante) | confirm (evalúa en el universo elegido las reglas candidatas fijadas de antemano) | screen (cribador: qué acciones cumplen hoy las reglas candidatas) | fiab (modelo de fiabilidad walk-forward de la escalera del operador)'
+        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado) | search (búsqueda de la regla que más gana sobre el azar, con selección hacia delante) | confirm (evalúa en el universo elegido las reglas candidatas fijadas de antemano) | screen (cribador: qué acciones cumplen hoy las reglas candidatas) | fiab (modelo de fiabilidad walk-forward de la escalera del operador) | cartera (cartera simulada con la disciplina del plan de hoy y menú de salidas)'
         default: 'lab'
       symbols:
         description: 'valores separados por comas (vacío = lista por defecto del lab o S&P 500 + Nasdaq-100 en el estudio)'
         default: ''
       reps:
-        description: 'study, context y search: desplazamientos temporales del umbral del mejor de N (search: repeticiones del nulo del procedimiento, 30 por defecto)'
+        description: 'study, context y search: desplazamientos temporales del umbral del mejor de N (search: repeticiones del nulo del procedimiento, 30 por defecto; cartera: carteras al azar, 20)'
         default: '150'
       members:
         description: 'search: asof (cada valor del S&P 500 solo desde su incorporación al índice) | today (miembros actuales en todo el periodo: con sesgo de supervivencia)'
@@ -61,7 +61,10 @@ jobs:
           elif [ "$CMD" = "fiab" ]; then
             python -u -m vp fiab --symbols "$INPUT_SYMBOLS" --out /tmp/out --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "screen" ]; then
+            cp data/impulso_hist.json /tmp/out/ 2>/dev/null || true
             python -u -m vp screen --symbols "$INPUT_SYMBOLS" --out /tmp/out 2>&1 | tee /tmp/out/log.txt
+          elif [ "$CMD" = "cartera" ]; then
+            python -u -m vp cartera --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-20}" --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "confirm" ]; then
             python -u -m vp search --confirm --symbols "$INPUT_SYMBOLS" --universe "${INPUT_UNIVERSE:-smallmid}" --out /tmp/out --reps "${INPUT_REPS:-300}" --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "search" ]; then

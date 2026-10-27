@@ -147,19 +147,21 @@ def sim_ladder(o, h, l, c, i: int, d: int, stop: float, a: float, levels=P.LADDE
         return None
     hh, ll, cc, oo = h[e:e + maxb], l[e:e + maxb], c[e:e + maxb], o[e:e + maxb]
     pct = lambda px: d * (px / entry - 1.0) * 100.0
-    lv_px = [entry * (1.0 + d * p / 100.0) for p, _ in levels]
+    lv = [(float(p[0]), float(p[1]), p[2]) if len(p) == 3 else (float(p[0]), float(p[0]), p[1]) for p in levels]
+    tg_px = [entry * (1.0 + d * tg / 100.0) for tg, _, _ in lv]
+    lk_px = [entry * (1.0 + d * lk / 100.0) for _, lk, _ in lv]
     lvl = np.zeros(maxb, np.int64)
-    for q, px in enumerate(lv_px):                                             # nivel asegurado tras cada barra (el más alto que el cierre haya pasado)
+    for q, px in enumerate(tg_px):                                             # nivel asegurado tras cada barra (el más alto que el cierre haya pasado)
         lvl = np.where(np.maximum.accumulate((cc >= px) if d > 0 else (cc <= px)), q + 1, lvl)
     best = np.maximum.accumulate(cc) if d > 0 else np.minimum.accumulate(cc)
     plv, pbest = np.concatenate([[0], lvl[:-1]]), np.concatenate([[entry], best[:-1]])     # el stop de cada barra lo fija el estado tras la anterior
     st = np.full(maxb, float(stop))
-    for q, (_, tr) in enumerate(levels):
+    for q, (_, _, tr) in enumerate(lv):
         at = plv == q + 1
         if tr is None:
-            st = np.where(at, lv_px[q], st)
+            st = np.where(at, lk_px[q], st)
         else:
-            st = np.where(at, np.maximum(lv_px[q], pbest - tr * a) if d > 0 else np.minimum(lv_px[q], pbest + tr * a), st)
+            st = np.where(at, np.maximum(lk_px[q], pbest - tr * a) if d > 0 else np.minimum(lk_px[q], pbest + tr * a), st)
     hit = (ll <= st) if d > 0 else (hh >= st)
     if hit.any():
         k = int(np.argmax(hit))

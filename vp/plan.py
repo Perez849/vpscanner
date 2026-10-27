@@ -227,7 +227,8 @@ def outcome_lock(F: Dict[str, np.ndarray], i: int, d: int, stop: float, lock_pct
 
 
 def outcome_ladder(F: Dict[str, np.ndarray], i: int, d: int, stop: float, levels: Tuple[Tuple[float, Optional[float]], ...] = LADDER, maxb: int = HOLD_LOCK) -> Dict:
-    """La escalera del operador: entrada en la apertura siguiente con `stop`; cada nivel de `levels` es (porcentaje a favor, ATR a los que persigue desde ese nivel o None = stop plano).
+    """La escalera del operador: entrada en la apertura siguiente con `stop`; cada nivel de `levels` es (porcentaje a favor, ATR a los que persigue desde ese nivel o None = stop plano),
+    o (disparo %, nivel que se asegura %, ATR) cuando se quiere colchón: (6, 4, None) = al cerrar a +6 % el stop sube a +4 %.
     Con LADDER: al cerrar a +4 % el stop sube a +4 % y se queda ahí; al cerrar a +10 % sube a +10 % y persigue al mejor cierre a 2 ATR. El stop de cada sesión se fija con los cierres
     anteriores; el stop gana si se toca el mismo día que cualquier otra cosa; un hueco más allá del stop sale a la apertura. `res`: 'target' = se llegó a asegurar algún nivel,
     'stop' = saltó el stop inicial, 'timeout' = cierre por tiempo sin asegurar. `level` = nivel más alto asegurado (0, 1, 2); `locked` = level ≥ 1."""
@@ -240,25 +241,27 @@ def outcome_ladder(F: Dict[str, np.ndarray], i: int, d: int, stop: float, levels
     a = float(atr[i])
     if (d > 0 and entry <= stop) or (d < 0 and entry >= stop):
         return {'res': 'na', 'bars': 0, 'ret': None}
-    lv_px = [entry * (1.0 + d * pct / 100.0) for pct, _ in levels]
+    lv = [(float(p[0]), float(p[1]), p[2]) if len(p) == 3 else (float(p[0]), float(p[0]), p[1]) for p in levels]   # (disparo %, nivel que se asegura %, ATR a los que persigue)
+    tg_px = [entry * (1.0 + d * tg / 100.0) for tg, _, _ in lv]
+    lk_px = [entry * (1.0 + d * lk / 100.0) for _, lk, _ in lv]
     st, level, best = stop, 0, entry
     for k in range(e, min(n, e + maxb)):
         if (l[k] <= st) if d > 0 else (h[k] >= st):
             gap = (o[k] <= st) if d > 0 else (o[k] >= st)
             px = float(o[k]) if gap else st
-            out = _finish(F, d, e, k, entry, stop, lv_px[0], entry, 'target' if level else 'stop', px, k - e + 1, level >= 1)
+            out = _finish(F, d, e, k, entry, stop, lk_px[0], entry, 'target' if level else 'stop', px, k - e + 1, level >= 1)
             out['locked'], out['level'] = level >= 1, level
             return out
         best = max(best, float(c[k])) if d > 0 else min(best, float(c[k]))
-        while level < len(levels) and ((c[k] >= lv_px[level]) if d > 0 else (c[k] <= lv_px[level])):
+        while level < len(lv) and ((c[k] >= tg_px[level]) if d > 0 else (c[k] <= tg_px[level])):
             level += 1
         if level:
-            tr = levels[level - 1][1]
-            base = lv_px[level - 1]
+            tr = lv[level - 1][2]
+            base = lk_px[level - 1]
             st = base if tr is None else (max(base, best - tr * a) if d > 0 else min(base, best + tr * a))
     k = min(n, e + maxb) - 1
     res = 'open' if k >= n - 1 and e + maxb > n else ('target' if level else 'timeout')
-    out = _finish(F, d, e, k, entry, stop, lv_px[0], entry, res, float(c[k]), k - e + 1, level >= 1)
+    out = _finish(F, d, e, k, entry, stop, lk_px[0], entry, res, float(c[k]), k - e + 1, level >= 1)
     out['locked'], out['level'] = level >= 1, level
     return out
 

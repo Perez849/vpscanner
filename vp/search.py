@@ -84,27 +84,37 @@ SUBSETS = ('todo', 'contexto', 'patrones')
 
 
 # ── salidas ───────────────────────────────────────────────────────────────
+def _levels(lvls) -> List[Tuple[float, float, Optional[float]]]:
+    """Niveles de la escalera como (disparo %, nivel que se asegura %, ATR a los que persigue o None): (4, None) = al cerrar a +4 % el stop sube a +4 %; (6, 4, None) = al cerrar a +6 % sube a +4 % (colchón)."""
+    return [(float(p[0]), float(p[1]), p[2]) if len(p) == 3 else (float(p[0]), float(p[0]), p[1]) for p in lvls]
+
+
 def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.ndarray, d: int, stop_atr: Optional[float] = None, lock_pct: Optional[float] = None, trail: Optional[float] = None,
-            maxb: int = 60, cost: float = COST, stop_pct: Optional[float] = None, ladder=None) -> Tuple[np.ndarray, np.ndarray]:
+            maxb: int = 60, cost: float = COST, stop_pct: Optional[float] = None, ladder=None, with_bars: bool = False):
     """Resultado neto (%) y código de salida de entrar en la apertura siguiente a CADA barra. Stop inicial a `stop_atr` ATR (o a `stop_pct` % del precio). Con `lock_pct`: al cerrar a ese %
-    a favor el stop sube a ese nivel y persigue al mejor cierre a `trail` ATR; sin lock, persigue desde el principio. Con `ladder` (la escalera del operador): cada nivel es (%, ATR a los que
-    persigue desde él o None = stop plano); con ((4, None), (10, 2)) el stop sube a +4 % y se queda, y al cerrar a +10 % sube a +10 % y persigue a 2 ATR. El stop gana si se toca el mismo día;
+    a favor el stop sube a ese nivel y persigue al mejor cierre a `trail` ATR; sin lock, persigue desde el principio (y sin `trail`, el stop inicial se queda fijo hasta el cierre por tiempo).
+    Con `ladder` (la escalera del operador): cada nivel es (%, ATR a los que persigue desde él o None = stop plano), o (disparo %, nivel %, ATR) cuando el nivel que se asegura es
+    distinto del cierre que lo dispara; con ((4, None), (10, 2)) el stop sube a +4 % y se queda, y al cerrar a +10 % sube a +10 % y persigue a 2 ATR. El stop gana si se toca el mismo día;
     un hueco más allá sale a la apertura. Es la misma regla que plan.outcome_lock / plan.outcome_ladder, vectorizada por entradas.
-    Código: 0 = saltó el stop inicial, 1 = aseguró el primer nivel, 2 = aseguró el segundo, 3 = cierre por tiempo sin asegurar. NaN / -1 donde la operación no ha terminado o no hay ATR."""
+    Código: 0 = saltó el stop inicial, 1 = aseguró el primer nivel, 2 = aseguró el segundo, 3 = cierre por tiempo sin asegurar. NaN / -1 donde la operación no ha terminado o no hay ATR.
+    Con `with_bars` devuelve además las sesiones que duró cada operación (0 donde no terminó)."""
     n = len(c)
     m = n - 1
     net = np.full(n, np.nan)
     code = np.full(n, -1, dtype=np.int8)
+    nb = np.zeros(n, dtype=np.int16)
     if m < maxb + 2:
-        return net, code
+        return (net, code, nb) if with_bars else (net, code)
     entry, a = o[1:], atr[:m]
     done = ~(np.isfinite(a) & np.isfinite(entry) & (a > 0))
     st = entry - d * (stop_atr * a if stop_pct is None else stop_pct / 100.0 * entry)
-    lvls = ladder if ladder is not None else (((lock_pct, trail),) if lock_pct is not None else ())
-    lv_px = [entry * (1.0 + d * pct / 100.0) for pct, _ in lvls]
+    lvls = _levels(ladder if ladder is not None else (((lock_pct, trail),) if lock_pct is not None else ()))
+    tg_px = [entry * (1.0 + d * tg / 100.0) for tg, _, _ in lvls]
+    lk_px = [entry * (1.0 + d * lk / 100.0) for _, lk, _ in lvls]
     level = np.zeros(m, np.int8)
     best = entry.copy()
     xp = np.full(m, np.nan)
+    xb = np.zeros(m, np.int16)
     idx = np.arange(m)
     for k in range(maxb):
         j = idx + 1 + k
@@ -119,42 +129,47 @@ def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.
             hit, gap = hj >= st, oj >= st
         sold = live & hit
         xp[sold] = np.where(gap, oj, st)[sold]
+        xb[sold] = k + 1
         done |= sold
         upd = live & ~hit
         best = np.where(upd, np.maximum(best, cj) if d > 0 else np.minimum(best, cj), best)
         if lvls:
             for q in range(len(lvls) - 1, -1, -1):                              # el nivel más alto que el cierre haya pasado (puede saltar dos de golpe)
-                reached = (cj >= lv_px[q]) if d > 0 else (cj <= lv_px[q])
+                reached = (cj >= tg_px[q]) if d > 0 else (cj <= tg_px[q])
                 level = np.where(upd & reached & (level < q + 1), q + 1, level)
-            for q, (pct, tr) in enumerate(lvls):
+            for q, (_, _, tr) in enumerate(lvls):
                 at = upd & (level == q + 1)
                 if tr is None:
-                    st = np.where(at, lv_px[q], st)
+                    st = np.where(at, lk_px[q], st)
                 else:
-                    new = np.maximum(lv_px[q], best - tr * a) if d > 0 else np.minimum(lv_px[q], best + tr * a)
+                    new = np.maximum(lk_px[q], best - tr * a) if d > 0 else np.minimum(lk_px[q], best + tr * a)
                     st = np.where(at, new, st)
-        else:
+        elif trail is not None:
             new = np.maximum(st, best - trail * a) if d > 0 else np.minimum(st, best + trail * a)
             st = np.where(upd, new, st)
     j = idx + maxb                                                         # última sesión de la ventana: cierre por tiempo
     tm = ~done & (j <= n - 1)
     xp[tm] = c[np.minimum(j, n - 1)][tm]
+    xb[tm] = maxb
     fin = np.isfinite(xp)
     net[:m] = d * (xp / entry - 1.0) * 100.0 - cost
     cd = np.where(level >= 1, level, np.where(tm, 3, 0)).astype(np.int8)
     code[:m] = np.where(fin, cd, -1)
-    return net, code
+    nb[:m] = np.where(fin, xb, 0)
+    return (net, code, nb) if with_bars else (net, code)
 
 
-def hold_all(o: np.ndarray, c: np.ndarray, d: int, hz: int, cost: float = COST) -> Tuple[np.ndarray, np.ndarray]:
+def hold_all(o: np.ndarray, c: np.ndarray, d: int, hz: int, cost: float = COST, with_bars: bool = False):
     n = len(c)
     net = np.full(n, np.nan)
     code = np.full(n, -1, dtype=np.int8)
+    nb = np.zeros(n, dtype=np.int16)
     if n > hz + 1:
         mm = n - hz
         net[:mm] = d * (c[hz:hz + mm] / o[1:1 + mm] - 1.0) * 100.0 - cost
         code[:mm] = 3
-    return net, code
+        nb[:mm] = hz
+    return (net, code, nb) if with_bars else (net, code)
 
 
 def ops_all(F: Dict[str, np.ndarray], cost: float = COST) -> Tuple[np.ndarray, np.ndarray]:
@@ -664,6 +679,25 @@ CANDIDATAS = (
 )
 
 
+# Las mismas entradas, sin la salida: lo que aplica el cribador diario (parte 2). La salida es siempre la escalera del operador (`esc`); los nombres son los que ve el operador.
+ENTRADAS = (
+    {'nombre': 'imp_bajo200', 'etiqueta': 'Impulso alto y bajo su media de 200', 'corta': 'bajo 200', 'regla': ['bajo_200', 'impulso12_alto'], 'sentido': 'largo', 'salida': 'esc'},
+    {'nombre': 'imp_bajistas', 'etiqueta': 'Impulso alto y 2 o más señales bajistas', 'corta': '2+ bajistas', 'regla': ['impulso12_alto', 'confluencia_bajista'], 'sentido': 'largo', 'salida': 'esc'},
+    {'nombre': 'imp_rsi2', 'etiqueta': 'Impulso alto y RSI(2) ≤ 10', 'corta': 'RSI(2) ≤ 10', 'regla': ['impulso12_alto', 'rsi2_bajo'], 'sentido': 'largo', 'salida': 'esc'},
+)
+ENTRY_TXT = {tuple(sorted(e['regla'])): e['etiqueta'] for e in ENTRADAS}
+EXIT_SHORT = {'op4a': 'asegura +4 % (stop 1,5 ATR)', 'op4b': 'asegura +4 % y persigue 3 ATR', 'op6a': 'asegura +6 % (stop 1,5 ATR)', 'op6b': 'asegura +6 % y persigue 4 ATR', 'run5': 'persigue 5 ATR',
+              'h10': 'cierre a 10 sesiones', 'esc': 'escalera', 'esca': 'escalera (stop 1,5 ATR)', 'esc6': 'escalera (stop 6 %)', 'esc10': 'escalera (stop 10 %)'}
+
+
+def label(rule: Dict) -> str:
+    """Nombre legible de una regla candidata: entrada · salida (y la volatilidad si la lleva). Los códigos C1…C8 / V1…V6 son solo identificadores de los ficheros de datos."""
+    base = [k for k in rule['regla'] if k not in ('vol_baja', 'vol_alta')]
+    ent = ENTRY_TXT.get(tuple(sorted(base)), _rule(base, ''))
+    vol = ' · volatilidad baja' if 'vol_baja' in rule['regla'] else ' · volatilidad alta' if 'vol_alta' in rule['regla'] else ''
+    return f"{ent}{vol} · {EXIT_SHORT.get(rule['salida'], rule['salida'])}"
+
+
 # Robustez (DESCRIPTIVA, no fijada de antemano): la misma regla base según la volatilidad del valor (ATR / precio en el 40 % más bajo o más alto del día). Responde a si la ventaja existe
 # también en valores tranquilos, donde el stop inicial es normal, o solo en los muy volátiles.
 ROBUSTEZ = (
@@ -674,6 +708,7 @@ ROBUSTEZ = (
     {'nombre': 'V5', 'regla': ['bajo_200', 'impulso12_alto', 'vol_baja'], 'sentido': 'largo', 'salida': 'esc'},
     {'nombre': 'V6', 'regla': ['bajo_200', 'impulso12_alto', 'vol_alta'], 'sentido': 'largo', 'salida': 'esc'},
 )
+LABELS = {r['nombre']: label(r) for r in CANDIDATAS + ROBUSTEZ + ENTRADAS}        # código → nombre legible (la web y los informes enseñan el nombre; el código queda en los datos)
 
 
 def evaluate_rules(P: Panel, rules: Tuple[Dict, ...], reps: int = 300, seed: int = 21) -> List[Dict]:
@@ -741,7 +776,7 @@ def confirm_report(ev: Dict, titulo: str = '') -> str:
     for r in ev['reglas']:
         ys = ' '.join(f"{str(y)[2:]}:{v:+.1f}" for y, v in r['por_año'].items())
         pos = sum(v > 0 for v in r['por_año'].values())
-        L += [f"{r['nombre']} · {_rule(r['regla'], r['sentido'])} · {r['salida']}",
+        L += [f"{r['nombre']} «{label(r)}» · {_rule(r['regla'], r['sentido'])} · {r['salida']}",
               f"   n {r['n']:,} ({r['valores']} valores) · exceso {r['exceso']:+.3f} % (t {r['t']:+.1f}; nulo p95 {r['nulo_exceso_p95']:+.3f} % / t {r['nulo_t_p95']:+.1f}; p exceso {r['p_exceso']}, p t {r['p_t']}) · neto {r['neto']:+.3f} % (azar mismas fechas {r['azar_neto']:+.3f} %) · ganan {r['ganan']:.1f} % (todas las filas {r['ganan_todas']:.1f} %)",
               f"   fiabilidad {r.get('fiab', float('nan')):+.1f} puntos sobre el azar del día (t {r.get('fiab_t', float('nan')):+.1f}, p {r.get('p_fiab')}) · aseguró +4 % {r.get('asegura4', float('nan')):.1f} %, +10 % {r.get('asegura10', float('nan')):.1f} %, stop inicial {r.get('stop_inicial', float('nan')):.1f} % · ganancia media {r.get('gan_media')} % / pérdida media {r.get('perd_media')} % · factor de beneficio {r.get('factor')}",
               f"   años positivos {pos}/{len(r['por_año'])}: {ys}"]
@@ -750,7 +785,7 @@ def confirm_report(ev: Dict, titulo: str = '') -> str:
         for r in ev['robustez']:
             ys = ' '.join(f"{str(y)[2:]}:{v:+.1f}" for y, v in r['por_año'].items())
             pos = sum(v > 0 for v in r['por_año'].values())
-            L += [f"{r['nombre']} · {_rule(r['regla'], r['sentido'])} · {r['salida']}",
+            L += [f"{r['nombre']} «{label(r)}» · {_rule(r['regla'], r['sentido'])} · {r['salida']}",
                   f"   n {r['n']:,} ({r['valores']} valores) · exceso {r['exceso']:+.3f} % (t {r['t']:+.1f}; p exceso {r['p_exceso']}, p t {r['p_t']}) · neto {r['neto']:+.3f} % (azar mismas fechas {r['azar_neto']:+.3f} %) · ganan {r['ganan']:.1f} % (todas las filas {r['ganan_todas']:.1f} %)",
                   f"   años positivos {pos}/{len(r['por_año'])}: {ys}"]
     return '\n'.join(L)

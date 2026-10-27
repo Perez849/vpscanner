@@ -1005,7 +1005,9 @@ def test_search_confirm():
 def test_screen():
     """El cribador del último cierre da las mismas acciones que el panel completo en esa fecha (sin mirar el futuro), el plan de la escalera sale del cierre y el ATR, y el registro no repite días."""
     bars = {f'S{j}': _walk_ar(1500, 2000 + j, 0.0) for j in range(40)}
-    rules = search.CANDIDATAS
+    rules = search.ENTRADAS
+    assert len(rules) == 3 and all(r['salida'] == 'esc' and r['etiqueta'] and r['corta'] for r in rules) and {tuple(r['regla']) for r in rules} <= {tuple(c['regla']) for c in search.CANDIDATAS}
+    assert search.LABELS['C6'] == 'Impulso alto y bajo su media de 200 · escalera' and search.LABELS['V5'].count('volatilidad baja') == 1 and set(search.LABELS) >= {c['nombre'] for c in search.CANDIDATAS + search.ROBUSTEZ}
     work = {s: search._work((s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}))[1] for s, b in bars.items()}
     Df = ml.Data(work, k=40)
     ff = screen._flags(Df, rules)
@@ -1096,22 +1098,52 @@ def test_fiab_model():
     print(f"ok · modelo de fiabilidad: AUC {m['auc']:.2f} fuera de muestra con reversión plantada (control solo volatilidad {v['auc']:.2f}), calibrado, y {m0['auc']:.2f} en paseos aleatorios")
 
 
+def test_cartera():
+    """La cartera simulada con la disciplina del plan de hoy: con una reversión plantada, la cartera de la regla «ha caído 5 sesiones» gana más que las carteras al azar del universo con el mismo
+    calendario de entradas; en paseos aleatorios la estadística por operación no se distingue del azar. Contabilidad: sin apalancamiento, posiciones ≤ 20 %, caída máxima y rentabilidad bien calculadas."""
+    from vp import cartera
+    m = cartera.metrics(np.array([1.0, 1.1, 0.99, 1.2, 1.2]), np.array([2020, 2020, 2021, 2021, 2021]))
+    assert abs(m['total'] - 20) < 1e-6 and abs(m['caida_max'] - (0.99 / 1.1 - 1) * 100) < 1e-6 and m['por_año'] == {2020: 10.0, 2021: round((1.2 / 1.1 - 1) * 100, 2)} and m['años_positivos'] == 2, m
+    sm = cartera._summary(np.array([1.0, 2.0, 3.0, 4.0]), 3.5)
+    assert sm['p'] == 0.25 and sm['mediana'] == 2.5, sm
+    rules = ({'nombre': 'T', 'etiqueta': 'ha caído 5 sesiones', 'regla': ['cae5'], 'sentido': 'largo', 'salida': 'h10'},)
+    kw = dict(workers=1, k=40, reps=8, rules=rules, menu=('h10', 'esc'), base_rule='T', base_exit='h10')
+    ev = cartera.analyze({f'S{j}': _walk_ar(1500, 3000 + j, 0.25) for j in range(40)}, **kw)
+    b, row = ev['base'], ev['menu']['T']['h10']
+    c, au = b['cartera'], b['azar_universo']
+    assert row['operacion']['exceso'] > 0.5 and row['operacion']['t'] > 4 and row['operacion']['sesiones'] == 10, row['operacion']
+    assert c['operaciones'] > 60 and c['anual'] > au['anual']['p95'] and au['anual']['p'] <= 0.125 and c['ganan'] > 50, (c, au)
+    assert 0 < c['exposicion_media'] <= 100 and c['tamaño_medio'] <= 20 + 1e-6 and c['caida_max'] <= 0 and len(b['curva']) > 10 and all(len(x) == 4 for x in b['curva']) and set(b['variantes']) >= {'riesgo_2', 'max_3', 'sin_volatilidad'}
+    assert b['variantes']['riesgo_2']['tamaño_medio'] > c['tamaño_medio'] and b['por_año'] and 'anual' in b['mercado'] and b['azar_orden']['anual']['n'] == 8
+    assert set(ev['menu']['T']) == {'h10', 'esc'} and 'azar_universo' in ev['menu']['T']['esc'] and ev['meta']['menu']['esc'].startswith('tu escalera')
+    txt = cartera.report(ev)
+    assert 'CASO BASE' in txt and 'MENÚ DE SALIDAS' in txt and 'azar del universo' in txt
+    # mecánica de un recorrido: la cuenta nunca se apalanca y la curva es positiva
+
+    ev0 = cartera.analyze({f'S{j}': _walk_ar(1500, 3100 + j, 0.0) for j in range(40)}, **dict(kw, reps=4))
+    assert abs(ev0['menu']['T']['h10']['operacion']['t']) < 4, ev0['menu']['T']['h10']['operacion']
+    print(f"ok · cartera simulada: con reversión plantada {c['anual']:+.1f} %/año frente a {au['anual']['mediana']:+.1f} % del azar (p {au['anual']['p']}); en paseos aleatorios nada; contabilidad correcta")
+
+
 def test_web_impulso_constants():
     """La web copia las condiciones y las salidas de la regla de impulso: tienen que ser exactamente las de vp/search.py, y las dos partes (figuras / impulso) tienen sus propias rutas y pestañas."""
     import re
     html = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'index.html'), encoding='utf-8').read()
     cond = json.loads(re.search(r'const COND = (\{.*?\});\n', html).group(1))
     exits = json.loads(re.search(r'const EXITS = (\{.*?\});\n', html).group(1))
-    assert cond == search.DESC and exits == search.EXIT_TXT, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT))
-    for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "'impulso-seguimiento': 'imptrack'", "['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1', 'Asegurar +10 %', 'Plan de hoy'):
+    rules = json.loads(re.search(r'const RULES = (\{.*?\});\n', html).group(1))
+    assert cond == search.DESC and exits == search.EXIT_TXT and rules == search.LABELS, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT), set(rules) ^ set(search.LABELS))
+    for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "'impulso-seguimiento': 'imptrack'", "['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1', 'Asegurar +10 %', 'Plan de hoy',
+                   'La cartera simulada', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)'):
         assert needle in html, needle
-    for f in ('impulso.json', 'impulso_track.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json', 'fiab.json'):
+    assert 'C1 · C2 · C3 · C6 · C7</b>' not in html                        # los códigos no se enseñan como nombre
+    for f in ('impulso.json', 'impulso_track.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json', 'fiab.json', 'cartera.json', 'plan_study.json'):
         assert f"'{f}'" in html, f
     print('ok · web: condiciones y salidas de la regla de impulso idénticas a las del código; dos partes con rutas y pestañas propias')
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_web_impulso_constants]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_impulso_constants]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»

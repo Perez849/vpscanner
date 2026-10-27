@@ -1,7 +1,7 @@
 """
 Cribador diario de la regla de impulso con caída (parte 2 del laboratorio, separada del chartismo), con la escalera del operador y disciplina de gestión.
 
-Aplica al ÚLTIMO cierre del universo (S&P 500 + Nasdaq-100, las 300 más negociadas ese día) las reglas candidatas de `search.CANDIDATAS`, con exactamente las mismas condiciones y los mismos
+Aplica al ÚLTIMO cierre del universo (S&P 500 + Nasdaq-100, las 300 más negociadas ese día) las reglas de entrada de `search.ENTRADAS` (las mismas entradas que las candidatas confirmadas, con nombre claro; la salida es siempre la escalera), con exactamente las mismas condiciones y los mismos
 percentiles del día que usa la búsqueda y su confirmación (`search.conditions`): una acción cumple una regla si hoy está en el 20 % mejor del universo por impulso a 12 meses (sin el último mes)
 Y ha caído (bajo su media de 200 sesiones, RSI(2) ≤ 10 o 2 o más señales bajistas a la vez).
 
@@ -78,7 +78,7 @@ def clusters(bars: Dict[str, Dict[str, np.ndarray]], syms: List[str], win: int =
     return out
 
 
-def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int = 1, rules=search.CANDIDATAS, verbose: bool = False, model: bool = True) -> Dict:
+def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int = 1, rules=search.ENTRADAS, verbose: bool = False, model: bool = True) -> Dict:
     """Acciones que cumplen cada regla en el último cierre, con su plan, su fiabilidad y su grupo. `bars`: barras diarias por valor (≥ 400 barras)."""
     t0 = time.time()
     D, Pn, _ = search.build(bars, workers, k, verbose, search.MIN_DAY, search.MIN_COMBO, None, search.COST, library=False, keep_last=True)
@@ -131,7 +131,7 @@ def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int =
     plan_hoy = daily_plan(picks)
     return {'meta': {'asof': str(D.date[last]), 'generated': int(time.time()), 'valores': len(D.syms), 'k': k, 'en_universo': int(today.sum()), 'sobre_200': round(bre * 100, 1), 'coste': ml.COST,
                      'escalera': [list(x) for x in P.LADDER], 'stop_atr': STOP_ATR, 'stop_pct': STOP_PCT, 'riesgo_pct': RISK_PCT, 'max_pos': MAX_POS, 'corr_min': CORR_MIN, 'fiab': fiab_meta,
-                     'reglas': [{'nombre': r['nombre'], 'regla': r['regla'], 'sentido': r['sentido'], 'salida': r['salida'], 'texto': search._rule(r['regla'], r['sentido'])} for r in rules], 'segundos': round(time.time() - t0)},
+                     'reglas': [{'nombre': r['nombre'], 'etiqueta': r.get('etiqueta', r['nombre']), 'corta': r.get('corta', r['nombre']), 'regla': r['regla'], 'sentido': r['sentido'], 'salida': r['salida'], 'texto': search._rule(r['regla'], r['sentido'])} for r in rules], 'segundos': round(time.time() - t0)},
             'resumen': {r['nombre']: {'hoy': len(hit_today[r['nombre']]), 'nuevas': len(hit_today[r['nombre']] - hit_before[r['nombre']])} for r in rules}, 'picks': picks, 'plan_hoy': plan_hoy}
 
 
@@ -235,7 +235,7 @@ def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[
     print(f"CRIBADOR DE LA REGLA DE IMPULSO · {m['asof']} · {m['en_universo']} acciones en el universo (las {m['k']} más negociadas) · {m['sobre_200']} % sobre su media de 200 · fiabilidad: {m['fiab']}", flush=True)
     for r in m['reglas']:
         s = ev['resumen'][r['nombre']]
-        print(f"  {r['nombre']} {r['texto']} · {r['salida']}: {s['hoy']} hoy ({s['nuevas']} nuevas)", flush=True)
+        print(f"  {r['etiqueta']} ({r['nombre']}: {r['texto']} · {r['salida']}): {s['hoy']} hoy ({s['nuevas']} nuevas)", flush=True)
     for p in ev['picks'][:20]:
         print(f"    {p['sym']:6s} {p['close']:9.2f}  fiab {p['fiab'] if p['fiab'] is not None else '  -'}  vol {p['vol'] * 100:3.0f}  impulso {p['mom121'] * 100:3.0f}  vs 200 {p['dist200']:+6.1f} %  grupo {p['grupo']}  stop {p['plan']['stop_pct']:+.1f} %  {','.join(p['reglas'])}", flush=True)
     print(f"  plan de hoy: {ev['plan_hoy']['posiciones']} · seguimiento: {tr['todas']}", flush=True)
