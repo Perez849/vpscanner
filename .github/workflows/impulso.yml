@@ -1,7 +1,7 @@
 name: Cribador de la regla de impulso (diario)
 
-# Parte 2 del laboratorio (separada del chartismo): tras el cierre de Wall Street calcula qué acciones del S&P 500 y el Nasdaq-100 cumplen hoy cada una de las 5 reglas candidatas
-# (impulso alto a 12 meses que ha caído), con el plan de la escalera (+4 % → +10 %), la fiabilidad del modelo y el plan de hoy, y lo guarda en data/impulso.json; data/impulso_hist.json acumula
+# Parte 2 del laboratorio (separada del chartismo): tras el cierre de Wall Street calcula qué acciones del S&P 500 y el Nasdaq-100 cumplen hoy cada una de las tres entradas con nombre
+# («bajo 200», «2+ bajistas», «RSI(2) ≤ 10»: impulso alto a 12 meses que ha caído), con el plan de la escalera (+4 % → +10 %), la fiabilidad del modelo y el plan de hoy, y lo guarda en data/impulso.json; data/impulso_hist.json acumula
 # cada día las que cumplían y data/impulso_track.json simula con precios reales lo que pasó con cada una (track record hacia delante).
 on:
   schedule:
