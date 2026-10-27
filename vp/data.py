@@ -69,7 +69,8 @@ def parse(payload: Dict) -> Optional[Bars]:
     t, arr = t[order], arr[:, order]
     keep = np.concatenate([[True], np.diff(t) > 0])                    # sin marcas repetidas
     meta = res.get('meta', {})
-    b: Bars = {'t': t[keep], 'o': arr[0][keep], 'h': arr[1][keep], 'l': arr[2][keep], 'c': arr[3][keep], 'v': arr[4][keep]}
+    o_, h_, l_, c_ = arr[0][keep], arr[1][keep], arr[2][keep], arr[3][keep]
+    b: Bars = {'t': t[keep], 'o': o_, 'h': np.maximum.reduce([h_, o_, c_]), 'l': np.minimum.reduce([l_, o_, c_]), 'c': c_, 'v': arr[4][keep]}      # un máximo por debajo del cierre o un mínimo por encima (error de dato de Yahoo) falsearía las velas
     b['name'] = meta.get('longName') or meta.get('shortName') or ''        # type: ignore[assignment]
     return b
 

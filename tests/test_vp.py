@@ -389,6 +389,11 @@ def test_data_parse():
     q['close'][3] = None
     b = data.parse({'chart': {'result': [{'meta': {'longName': 'Prueba SA'}, 'timestamp': ts, 'indicators': {'quote': [q]}}], 'error': None}})
     assert len(b['c']) == 11 and b['name'] == 'Prueba SA' and np.all(np.diff(b['t']) > 0)
+    q2 = {k: list(v) for k, v in q.items()}
+    q2['high'][5] = q2['close'][5] - 0.5                                   # máximo por debajo del cierre: error de dato que se corrige a max(o, h, c)
+    q2['low'][6] = q2['open'][6] + 0.7                                     # mínimo por encima de la apertura
+    b3 = data.parse({'chart': {'result': [{'meta': {}, 'timestamp': ts, 'indicators': {'quote': [q2]}}], 'error': None}})
+    assert (b3['h'] >= np.maximum(b3['o'], b3['c'])).all() and (b3['l'] <= np.minimum(b3['o'], b3['c'])).all()
     assert data.parse({'chart': {'result': None, 'error': {'code': 'Not Found'}}}) is None
     assert data.span('3y', 1.7e9).startswith('period1=') and data.span('6mo') == 'range=6mo'
     last = int(datetime(2023, 11, 15, 14, 30, tzinfo=timezone.utc).timestamp())

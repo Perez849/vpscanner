@@ -24,7 +24,7 @@ Una figura no es «dos pivotes unidos por una recta». El motor:
 - **Primera ruptura**: el cuello (o la taza, o la figura de compresión) solo se rompe la primera vez que el cierre lo pasa; un nuevo cruce tras un fallo no es la figura otra vez.
 - **Figuras en formación**: las figuras ya dibujadas que aún no han roto se devuelven aparte, evaluadas como si la próxima barra fuera la de ruptura y con los mismos criterios. Una compresión (triángulo, cuña, canal, rectángulo) tiene dos escenarios (rompe arriba / rompe abajo); doble y triple suelo o techo, H-C-H, bandera y banderín, taza con asa y VCP tienen uno, con su **disparador** (cuello, borde o techo) y la **distancia en ATR** (≤ 3 ATR y calidad ≥ 50). Es una lectura del último cierre: no aparece en el estudio, que solo mide figuras ya rotas.
 
-Además, **65 formaciones de vela** (30 clásicas y 31 más: cinturón, kicker, contraataque, harami cruz, paloma y halcón, tres exteriores, tres golpes, bebé abandonado, bloqueo de avance, tres métodos, tasuki, sándwich, vela exterior y ruptura de vela interior, entre otras) con **4 de consenso** (dos o más formaciones del mismo sentido y ninguna contraria en la misma sesión, o tres o más), y **13 rupturas** (máximos y mínimos de 55/100/252 sesiones, Bollinger y ATR comprimidos, caja de Darvas, base junto al máximo anual). El catálogo completo (`vp/catalog.py`, 110 patrones) alimenta el motor, el estudio y la Guía.
+Además, **61 formaciones de vela** (30 clásicas y 31 más: cinturón, kicker, contraataque, harami cruz, paloma y halcón, tres exteriores, tres golpes, bebé abandonado, bloqueo de avance, tres métodos, tasuki, sándwich, vela exterior y ruptura de vela interior, entre otras) con **4 de consenso** (dos o más formaciones del mismo sentido y ninguna contraria en la misma sesión, o tres o más), y **13 rupturas** (máximos y mínimos de 55/100/252 sesiones, Bollinger y ATR comprimidos, caja de Darvas, base junto al máximo anual). El catálogo completo (`vp/catalog.py`, 110 patrones) alimenta el motor, el estudio y la Guía.
 
 ## El plan de cada patrón (`vp/plan.py`)
 
@@ -32,6 +32,8 @@ Además, **65 formaciones de vela** (30 clásicas y 31 más: cinturón, kicker, 
 - **Stop** estructural más allá de la figura (0,25 ATR de margen), **nunca a menos de 1 ATR** de la entrada y, si queda a más de 3 ATR, un stop táctico de 1,5 ATR.
 - **Obstáculos**: soportes y resistencias fuertes entre la entrada y el objetivo.
 - **Resultado simulado**: entrada en la apertura siguiente, el stop gana si se tocan ambos el mismo día, cierre a las 40 sesiones.
+- **Quién gana y quién pierde**: gana la operación que **termina con ganancia neta** (después del 0,15 % de costes del estudio), llegue o no al objetivo. Un cierre por tiempo con +10 % cuenta como ganado aunque el objetivo fuera +25 %; llegar al objetivo, saltar el stop o cerrar por tiempo es solo cómo terminó. De cada operación se guardan la ganancia neta, el **múltiplo del riesgo (R)**, el **recorrido máximo** a favor y en contra, qué parte del camino al objetivo llegó a recorrer y lo que habría dado con **parcial** (la mitad en T1 y el stop del resto a la entrada). Antes, la web contaba solo «objetivo contra stop» e ignoraba los cierres por tiempo, y el estudio del plan llamaba «acierto» a llegar al objetivo (un 0 % con el stop que persigue, que no tiene objetivo): ambas cosas estaban mal.
+- **Una operación por valor** (`group_trades` en `vp/lab.py`): cuando varias señales saltan a la vez (velas y figuras, o varias velas) **no se cuenta cada una**. La primera señal (si coinciden varias en la misma barra, la de mayor rango: figura > ruptura > directriz > rebote > vela, y a igualdad la de mayor calidad) abre la operación y su plan es el que se simula; las del mismo sentido mientras está abierta son **confirmaciones** (no suman otra operación ni otro acierto) y las del sentido contrario son **contrarias** (aviso de conflicto, tampoco son operación propia). La Lectura de cada valor cuenta operaciones, no señales.
 - **Objetivo consumido**: si la ruptura ya recorrió la medida clásica (queda menos de 1 ATR hasta el objetivo) el patrón se marca como consumido y no cuenta como activo.
 
 ## Estudio de evidencia (`vp/study.py`)
@@ -60,7 +62,7 @@ Con las **300 más negociadas** de cada fecha y el umbral del mejor de 130 varia
 - Con las **50 mayores** solo supera el umbral la base junto a máximos (negativa).
 - **Triples y dobles con extremos realmente iguales** (n entre 200 y 1.600): triple suelo +0,48 % (t +1,0), triple techo −0,43 % (t −0,9), doble suelo −0,19 %, doble techo −0,04 %, H-C-H +0,10 % en corto (el invertido +0,26 %): indistinguibles del azar. Afinar la geometría deja la figura bien dibujada, no más fiable.
 - **VCP con techo plano**: con la definición anterior (más laxa) salía significativamente negativo (−0,39 %, t −3,5); con tres máximos casi iguales queda en −0,27 % (t −1,7, n 1.600) y ya no supera el umbral.
-- Por familia (exceso mediano a 10 sesiones): figuras alcistas −0,19 % (solo el 27 % de ellas por encima del azar), figuras bajistas +0,10 %, rupturas alcistas −0,38 %, rupturas bajistas −0,37 %, velas alcistas −0,11 % y bajistas +0,12 %. **Ninguna vela, de las 65, supera el umbral.** El mejor caso aislado es el kicker alcista (+1,76 %, t +2,4, 78 señales), que con 130 patrones probados es lo que sale por azar.
+- Por familia (exceso mediano a 10 sesiones): figuras alcistas −0,19 % (solo el 27 % de ellas por encima del azar), figuras bajistas +0,10 %, rupturas alcistas −0,38 %, rupturas bajistas −0,37 %, velas alcistas −0,11 % y bajistas +0,12 %. **Ninguna vela (61 formaciones y 4 de consenso) supera el umbral.** El mejor caso aislado es el kicker alcista (+1,76 %, t +2,4, 78 señales), que con 130 patrones probados es lo que sale por azar.
 - **Consenso de velas**: dos formaciones del mismo sentido (+0,01 % alcista, +0,14 % bajista) o tres o más (+0,28 % y +0,24 %) mejoran algo el exceso de las velas sueltas (más con tres que con dos), pero ninguno es significativo (t entre 0,0 y 1,0): confluir ayuda a dibujar, no demuestra ventaja.
 - **¿Ayuda dibujar mejor la figura?** Las señales de calidad ≥ 75 mejoran el exceso en 11 de 24 figuras (media +0,10 %): compatible con ruido.
 - Una versión anterior del estudio (otro código y un universo con pertenencia histórica a índices) llegó a cifras casi idénticas en lo que no ha cambiado (base junto a máximos −0,57 %, cuña ascendente +0,52 %): el resultado no depende de la implementación.
@@ -75,7 +77,7 @@ Con las **300 más negociadas** de cada fecha y el umbral del mejor de 130 varia
 
 ## Aprendizaje automático (`vp/ml.py`): ¿combinar todo mejora?
 
-`python -m vp ml` entrena un gradient boosting para ordenar las 300 acciones más negociadas de cada día por su rendimiento relativo a 10 sesiones, con **24 variables de contexto** (rendimientos a 1–250 sesiones, RSI, distancias a medias, rango anual, volatilidad, volumen, forma de la vela; todo como percentil del día) y **118 de patrones** (las 65 velas y su consenso de hoy; figuras y rupturas de las últimas 5 sesiones). Reglas para no engañarse:
+`python -m vp ml` entrena un gradient boosting para ordenar las 300 acciones más negociadas de cada día por su rendimiento relativo a 10 sesiones, con **24 variables de contexto** (rendimientos a 1–250 sesiones, RSI, distancias a medias, rango anual, volatilidad, volumen, forma de la vela; todo como percentil del día) y **118 de patrones** (las 61 formaciones de vela y los 4 consensos de hoy; figuras y rupturas de las últimas 5 sesiones). Reglas para no engañarse:
 
 - **Validación hacia delante**: para predecir el año Y se entrena solo con lo anterior a enero de Y (menos 15 días) y nunca se vuelve atrás.
 - **Desarrollo y final separados**: 5 configuraciones fijadas de antemano; la elegida (la «grande») sale de los años 2020–2023 y se **juzga una sola vez en 2024–2026**, que no se toca.
@@ -163,7 +165,7 @@ watchlist.txt         valores que vigila el escaneo diario (editable)
 vp/
   catalog.py          catálogo de patrones: nombre, descripción, regla del plan
   ta.py               indicadores (ATR, medias, RSI…) con NumPy
-  candles.py          65 formaciones de vela y 4 de consenso
+  candles.py          61 formaciones de vela y 4 de consenso
   breakouts.py        13 rupturas y compresiones
   shapes.py           motor geométrico de figuras (swings, rectas por toques, calidad, formación)
   engine.py           junta todo en eventos causales
