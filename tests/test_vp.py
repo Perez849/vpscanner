@@ -947,12 +947,16 @@ def test_search_confirm():
     """La confirmación evalúa reglas fijas: con reversión plantada, «largo tras caer» gana y «largo tras subir» pierde, con p-valores pequeños; en paseos aleatorios ninguna se distingue del azar."""
     rules = ({'nombre': 'T1', 'regla': ['cae5'], 'sentido': 'largo', 'salida': 'h10'}, {'nombre': 'T2', 'regla': ['sube5'], 'sentido': 'largo', 'salida': 'h10'},
              {'nombre': 'T3', 'regla': ['cae5', 'bajo_200'], 'sentido': 'largo', 'salida': 'op4b'})
-    kw = dict(workers=1, k=40, reps=80, min_day=15, rules=rules)
+    kw = dict(workers=1, k=40, reps=80, min_day=15, rules=rules, robustez=())
     ev = search.confirm({f'S{j}': _walk_ar(1500, 1500 + j, 0.25) for j in range(40)}, **kw)
     r1, r2, r3 = ev['reglas']
     assert r1['exceso'] > 0.8 and r1['t'] > 5 and r1['p_exceso'] <= 0.05 and r1['p_t'] <= 0.05 and r1['n'] > 2000 and sum(v > 0 for v in r1['por_año'].values()) >= len(r1['por_año']) - 1, r1
     assert r2['exceso'] < -0.5 and r2['t'] < -4 and r2['p_exceso'] > 0.9, r2
     assert r3['n'] > 500 and r3['exceso'] > 0.3 and 'neto' in r3 and 'ganan' in r3, r3
+    rob = ({'nombre': 'V1', 'regla': ['cae5', 'vol_baja'], 'sentido': 'largo', 'salida': 'h10'}, {'nombre': 'V2', 'regla': ['cae5', 'vol_alta'], 'sentido': 'largo', 'salida': 'h10'})
+    ev_r = search.confirm({f'S{j}': _walk_ar(1500, 1500 + j, 0.25) for j in range(40)}, **dict(kw, rules=rules[:1], robustez=rob))
+    assert [r['nombre'] for r in ev_r['robustez']] == ['V1', 'V2'] and all(r['n'] > 300 and 'p_exceso' in r for r in ev_r['robustez']), ev_r['robustez']
+    assert 'ROBUSTEZ POR VOLATILIDAD' in search.confirm_report(ev_r) and 'ROBUSTEZ' not in search.confirm_report(ev)
     txt = search.confirm_report(ev, 'prueba')
     assert 'T1' in txt and 'caída a 5 sesiones' in txt and 'p exceso' in txt and 'años positivos' in txt
     ev0 = search.confirm({f'S{j}': _walk_ar(1500, 1700 + j, 0.0) for j in range(40)}, **kw)

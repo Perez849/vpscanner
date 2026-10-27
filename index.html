@@ -531,6 +531,12 @@ function confTable(E, title, note) {
       return `<tr><td class="l"><b>${esc(r.nombre)}</b> ${esc(ruleTxt(r.regla, ''))}</td><td>${esc(r.salida)}</td><td>${nf(r.n)}</td><td class="${sg(r.exceso)}">${pc(r.exceso, 2)} · t ${r.t.toFixed(1)}</td><td>${pc(r.neto, 2)} (${pc(r.azar_neto, 2)})</td><td>${r.ganan.toFixed(1)} % (${r.ganan_todas.toFixed(1)} %)</td><td>${pv(r.p_exceso, r.reps)} / ${pv(r.p_t, r.reps)}</td><td>${yrBars(r.por_año)} <span class="small">${pos}/${tot}</span></td></tr>`; }).join('')}</tbody></table></div></div>`;
 }
 
+function robTable() {                                                        // la misma regla base según la volatilidad: descriptivo, no fijado de antemano
+  const parts = [[S.cfm, 'S&P 400 y 600'], [S.cf, 'universo de la búsqueda']].filter(([E]) => E && E.robustez && E.robustez.length);
+  if (!parts.length) return '';
+  return `<div class="panel"><h3>6. ¿Solo en valores muy volátiles? Robustez por volatilidad</h3><div class="small" style="margin-bottom:6px"><b>Descriptivo, no fijado de antemano.</b> La misma regla base (impulso 12-1 alto Y bajo su media de 200) según la volatilidad del valor: ATR/precio en el 40 % <b>más bajo</b> o en el 40 % <b>más alto</b> del día. Interesa porque el stop inicial es de 2,5 ATR: en valores muy volátiles queda a más del 10–20 % del precio.</div>
+    ${parts.map(([E, nm]) => confTable({meta: E.meta, reglas: E.robustez}, nm, '').replace('<div class="panel">', '<div style="margin-top:8px">').replace(/<\/div><\/div>$/, '</div>')).join('')}</div>`;
+}
 function renderImpEv() {
   const W = S.srch;
   if (!W || !S.cfm) { $('#view').innerHTML = impHead('Evidencia de la regla de impulso', 'Estadísticas de la parte 2.') + '<div class="empty">Todavía no hay estudio de la regla. Lanza el flujo «Laboratorio y estudio» con <code>cmd = search</code> y <code>cmd = confirm</code>.</div>'; return; }
@@ -548,6 +554,7 @@ function renderImpEv() {
       <div class="tw"><table class="ev"><thead><tr><th>Entrenamiento: n</th><th>Exceso · t</th><th>Final: n</th><th>Exceso · t</th><th class="l">Regla</th></tr></thead><tbody>${dfm.map(r => `<tr><td>${nf(r.train_n)}</td><td>${f(r.train_exceso)} · ${r.train_t.toFixed(1)}</td><td>${nf(r.final_n)}</td><td class="${sg(r.final_exceso)}">${f(r.final_exceso)}${r.final_t != null ? ' · ' + r.final_t.toFixed(1) : ''}</td><td class="l">${esc(ruleTxt(r.regla, r.sentido))} · ${esc(r.salida)}</td></tr>`).join('')}</tbody></table></div></div>
     ${confTable(S.cfm, '4. Confirmación en acciones distintas: S&P 400 y S&P 600', 'Las cinco candidatas se fijaron con la búsqueda anterior y se evalúan en otras acciones (mismo método, coste más alto).')}
     ${confTable(S.cf, '5. Las mismas candidatas en el universo de la búsqueda', 'Misma muestra que la búsqueda (no es independiente): sirve para comparar con las cifras anteriores.')}
+    ${robTable()}
     <div class="panel"><h3>Cautelas que estos datos no pueden quitar</h3><div class="small"><ul style="margin:0;padding-left:18px">
       <li><b>Sesgo de supervivencia</b>: el universo son los miembros actuales de los índices; los que cayeron y salieron no están. Comprar caídas de valores fuertes es justo lo que más se infla con eso (quitando las filas anteriores a la incorporación al S&amp;P 500 la ventaja se reduce a menos de la mitad). En el S&amp;P 400 y 600 ni siquiera se puede quitar. Descuenta la mitad: unos <b>+0,3 a +0,5 % por operación</b> sobre el azar.</li>
       <li><b>Es pequeña</b>: con costes reales (comisión, deslizamiento en valores menos líquidos, impuestos) y operaciones simultáneas sobre el mismo mercado, la ganancia real será menor y variable. Hay años con −1 %.</li>

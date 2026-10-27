@@ -569,6 +569,16 @@ CANDIDATAS = (
 )
 
 
+# Robustez (DESCRIPTIVA, no fijada de antemano): la misma regla base según la volatilidad del valor (ATR / precio en el 40 % más bajo o más alto del día). Responde a si la ventaja existe
+# también en valores tranquilos, donde el stop inicial es normal, o solo en los muy volátiles.
+ROBUSTEZ = (
+    {'nombre': 'V1', 'regla': ['bajo_200', 'impulso12_alto', 'vol_baja'], 'sentido': 'largo', 'salida': 'op4b'},
+    {'nombre': 'V2', 'regla': ['bajo_200', 'impulso12_alto', 'vol_alta'], 'sentido': 'largo', 'salida': 'op4b'},
+    {'nombre': 'V3', 'regla': ['bajo_200', 'impulso12_alto', 'vol_baja'], 'sentido': 'largo', 'salida': 'h10'},
+    {'nombre': 'V4', 'regla': ['bajo_200', 'impulso12_alto', 'vol_alta'], 'sentido': 'largo', 'salida': 'h10'},
+)
+
+
 def evaluate_rules(P: Panel, rules: Tuple[Dict, ...], reps: int = 300, seed: int = 21) -> List[Dict]:
     """Exceso, t agrupado, neto, % ganadoras, años positivos y p-valores (resultados desplazados en el calendario) de reglas FIJAS: una sola hipótesis por regla, sin elegir nada."""
     D = P.D
@@ -610,11 +620,12 @@ def evaluate_rules(P: Panel, rules: Tuple[Dict, ...], reps: int = 300, seed: int
 
 
 def confirm(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = ml.K, cost: float = COST, reps: int = 300, join: Optional[Dict[str, str]] = None, verbose: bool = False,
-            rules: Tuple[Dict, ...] = CANDIDATAS, min_day: int = MIN_DAY) -> Dict:
+            rules: Tuple[Dict, ...] = CANDIDATAS, min_day: int = MIN_DAY, robustez: Tuple[Dict, ...] = ROBUSTEZ) -> Dict:
     D, P, dropped = build(bars, workers, k, verbose, min_day, MIN_COMBO, join, cost, library=False)
     res = evaluate_rules(P, rules, reps)
+    rob = evaluate_rules(P, robustez, reps) if robustez else []
     return {'meta': {'generated': int(time.time()), 'universe': len(D.syms), 'filas': int(len(D.sym)), 'from': str(D.date[0]), 'to': str(D.date[-1]), 'k': k, 'coste': cost, 'reps': reps,
-                     'miembros': 'en la fecha' if join else 'actuales', 'barras_quitadas': dropped, 'salidas': {e[0]: EXIT_TXT[e[0]] for e in EXITS}}, 'reglas': res}
+                     'miembros': 'en la fecha' if join else 'actuales', 'barras_quitadas': dropped, 'salidas': {e[0]: EXIT_TXT[e[0]] for e in EXITS}}, 'reglas': res, 'robustez': rob}
 
 
 def confirm_report(ev: Dict, titulo: str = '') -> str:
@@ -628,6 +639,14 @@ def confirm_report(ev: Dict, titulo: str = '') -> str:
         L += [f"{r['nombre']} · {_rule(r['regla'], r['sentido'])} · {r['salida']}",
               f"   n {r['n']:,} ({r['valores']} valores) · exceso {r['exceso']:+.3f} % (t {r['t']:+.1f}; nulo p95 {r['nulo_exceso_p95']:+.3f} % / t {r['nulo_t_p95']:+.1f}; p exceso {r['p_exceso']}, p t {r['p_t']}) · neto {r['neto']:+.3f} % (azar mismas fechas {r['azar_neto']:+.3f} %) · ganan {r['ganan']:.1f} % (todas las filas {r['ganan_todas']:.1f} %)",
               f"   años positivos {pos}/{len(r['por_año'])}: {ys}"]
+    if ev.get('robustez'):
+        L += ['', 'ROBUSTEZ POR VOLATILIDAD (descriptiva, no fijada de antemano): la misma regla base en valores tranquilos (ATR/precio en el 40 % más bajo del día) o muy volátiles (40 % más alto)']
+        for r in ev['robustez']:
+            ys = ' '.join(f"{str(y)[2:]}:{v:+.1f}" for y, v in r['por_año'].items())
+            pos = sum(v > 0 for v in r['por_año'].values())
+            L += [f"{r['nombre']} · {_rule(r['regla'], r['sentido'])} · {r['salida']}",
+                  f"   n {r['n']:,} ({r['valores']} valores) · exceso {r['exceso']:+.3f} % (t {r['t']:+.1f}; p exceso {r['p_exceso']}, p t {r['p_t']}) · neto {r['neto']:+.3f} % (azar mismas fechas {r['azar_neto']:+.3f} %) · ganan {r['ganan']:.1f} % (todas las filas {r['ganan_todas']:.1f} %)",
+                  f"   años positivos {pos}/{len(r['por_año'])}: {ys}"]
     return '\n'.join(L)
 
 
