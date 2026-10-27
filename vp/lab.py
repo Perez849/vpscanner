@@ -248,7 +248,7 @@ def analyze(sym: str, bars: Dict[str, np.ndarray], name: str = '', nb: int = NB)
             note += f' El stop estructural quedaba a {bx["risk_s_pct"]:.1f} % de la entrada (más de {P.MAX_RISK_ATR:g} ATR): se ha acortado a {bx["risk_pct"]:.1f} %.'
         if bx['stop_min']:
             note += f' El stop estructural quedaba a menos de {P.MIN_STOP:g} ATR: se ha ampliado a {P.MIN_STOP:g} ATR.'
-        note += f' Escalera del operador: al cerrar una sesión por encima de +{P.LOCK_PCT:g} % el stop sube a +{P.LOCK_PCT:g} % y se deja correr; al cerrar por encima de +{P.LOCK2_PCT:g} % el stop sube a +{P.LOCK2_PCT:g} % y persigue al mejor cierre a {P.TRAIL2_ATR:g} ATR; sin objetivo fijo (la medida clásica daba +{bx["reward_c_pct"]:.1f} %).'
+        note += f' Se opera con la escalera (+{P.LOCK_PCT:g} % → +{P.LOCK2_PCT:g} %), sin objetivo fijo; la medida clásica daba +{bx["reward_c_pct"]:.1f} %.'
         if bx['risk_hi']:
             note += f' Aviso: el stop queda a {bx["risk_pct"]:.1f} % del precio, más de {P.MAX_RISK_PCT:g} %: valor muy volátil.'
         elif bx['rr_low']:

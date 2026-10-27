@@ -209,7 +209,7 @@ def track(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], cost: float 
         nets = [x['net'] for x in cl]
         wins = [x for x in nets if x > 0]
         loss = [x for x in nets if x <= 0]
-        return {'n': len(rs), 'cerradas': len(cl), 'abiertas': len(op), 'ganan': len(wins), 'pct_ganan': round(100 * len(wins) / len(cl), 1) if cl else None, 'asegura4': sum(1 for x in cl if x['level'] >= 1),
+        return {'n': len(rs), 'cerradas': len(cl), 'abiertas': len(op), 'pendientes': sum(1 for x in rs if x['res'] == 'pendiente'), 'ganan': len(wins), 'pct_ganan': round(100 * len(wins) / len(cl), 1) if cl else None, 'asegura4': sum(1 for x in cl if x['level'] >= 1),
                 'asegura10': sum(1 for x in cl if x['level'] >= 2), 'stop': sum(1 for x in cl if x['res'] == 'stop'), 'media_neta': round(float(np.mean(nets)), 3) if nets else None, 'suma_neta': round(float(np.sum(nets)), 2) if nets else None,
                 'gan_media': round(float(np.mean(wins)), 2) if wins else None, 'perd_media': round(float(np.mean(loss)), 2) if loss else None, 'abiertas_media': round(float(np.mean([x['ahora'] for x in op])), 2) if op else None,
                 'asegurado_abiertas': sum(1 for x in op if x.get('level', 0) >= 1)}
