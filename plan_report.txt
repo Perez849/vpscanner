@@ -1,0 +1,470 @@
+CALIBRACIÓN con paseos aleatorios (sin ventaja posible; el exceso que salga aquí es sesgo del método y hay que descontarlo): esc: -0.08 % (t -2.2, n 40080) · escf: -0.07 % (t -2.1, n 40080) · lock4: -0.07 % (t -2.4, n 40080) · lock5: -0.07 % (t -2.0, n 40080) · lock4f: -0.08 % (t -2.5, n 40080) · struct: -0.08 % (t -1.7, n 40679) · fix: -0.05 % (t -1.1, n 40683) · trail3: -0.17 % (t -2.1, n 40080) · trail5: -0.12 % (t -1.5, n 40080)
+ESTUDIO DEL PLAN · 500 acciones · 1,227,102 barras · 2016-10-21 → 2026-10-26 · coste 0.15 % · cierre a 40 sesiones · 8 entradas al azar por señal
+
+=== ESCALERA DEL OPERADOR: stop inicial estructural acotado a 1–2 ATR; al cerrar a +4 % el stop sube a +4 % y se deja correr; al cerrar a +10 % sube a +10 % y persigue a 2 ATR (todas las señales, hasta 60 sesiones) · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36640  -0.21%  +0.05%  -0.26%   -4.0       43/ 45 %          |  44/ 56/  0  vs   45/ 55/  0   1.7/1.7
+  figuras alcistas            1922  +0.62%  +0.69%  -0.07%   -0.3       52/ 53 %          |  52/ 47/  0  vs   53/ 47/  0   2.0/1.9
+  figuras bajistas            1497  -1.11%  -0.84%  -0.28%   -1.0       43/ 43 %          |  44/ 56/  0  vs   44/ 56/  0   2.0/1.7
+  rupturas alcistas          11566  +0.31%  +0.79%  -0.47%   -2.9       48/ 52 %          |  48/ 52/  0  vs   52/ 48/  0   2.0/2.0
+  rupturas bajistas           5456  -1.26%  -0.81%  -0.46%   -1.8       44/ 45 %          |  44/ 56/  0  vs   46/ 54/  0   2.0/1.4
+  velas alcistas              5696  +0.09%  +0.45%  -0.37%   -1.3       44/ 45 %          |  44/ 56/  0  vs   46/ 54/  0   1.1/1.5
+  velas bajistas              7868  -0.59%  -0.67%  +0.08%   +0.5       33/ 33 %          |  33/ 66/  0  vs   33/ 67/  0   1.0/1.7
+  directrices alcistas         925  +0.73%  +0.53%  +0.20%   +0.5       51/ 49 %          |  52/ 48/  0  vs   49/ 51/  0   1.5/1.5
+  directrices bajistas        1191  -0.57%  -0.67%  +0.09%   +0.4       41/ 38 %          |  41/ 59/  0  vs   38/ 62/  0   1.5/1.7
+  rebotes alcistas             269  +0.43%  +0.55%  -0.12%   -0.3       42/ 43 %          |  42/ 58/  0  vs   44/ 56/  0   1.2/1.6
+  rebotes bajistas             250  +0.16%  -0.84%  +1.00%   +2.4       41/ 32 %          |  41/ 59/  0  vs   32/ 68/  0   1.3/1.9
+  los 10 patrones de mayor |t|:
+    ▲ inside_break_up             451  -0.82%  +0.87%  -1.68%   -4.6   ganan  39 % (azar  51 %)
+    ▲ cup_handle                   71  -0.77%  +0.99%  -1.76%   -3.1   ganan  41 % (azar  57 %)
+    ▲ donch252_up                1973  +0.31%  +0.87%  -0.56%   -2.6   ganan  47 % (azar  53 %)
+    ▲ donch55_up                 3321  +0.33%  +0.81%  -0.48%   -2.6   ganan  48 % (azar  52 %)
+    ▲ donch100_up                2634  +0.39%  +0.84%  -0.45%   -2.6   ganan  48 % (azar  52 %)
+    ▲ base_near_high              856  +0.09%  +0.71%  -0.62%   -2.5   ganan  45 % (azar  50 %)
+    ▼ resistance_reject           250  +0.16%  -0.84%  +1.00%   +2.4   ganan  41 % (azar  32 %)
+    ▼ donch55_dn                 1639  -1.44%  -0.78%  -0.67%   -2.1   ganan  43 % (azar  46 %)
+    ▲ channel_up_up                54  -0.15%  +1.05%  -1.20%   -2.0   ganan  46 % (azar  56 %)
+    ▲ bull_engulf                 184  -0.52%  +0.53%  -1.05%   -1.9   ganan  41 % (azar  49 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.170 % · con exceso positivo 43 % · |t| ≥ 3,35: 1 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== ESCALERA DEL OPERADOR con stop inicial de 1,5 ATR para todos los patrones · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36713  -0.27%  +0.00%  -0.28%   -4.1       41/ 43 %          |  42/ 58/  0  vs   44/ 56/  0   1.5/1.7
+  figuras alcistas            1916  +0.51%  +0.54%  -0.03%   -0.1       46/ 46 %          |  46/ 54/  0  vs   46/ 53/  0   1.5/1.9
+  figuras bajistas            1495  -0.99%  -0.70%  -0.28%   -1.2       37/ 38 %          |  38/ 62/  0  vs   38/ 62/  0   1.5/1.7
+  rupturas alcistas          11546  +0.17%  +0.64%  -0.47%   -3.6       42/ 47 %          |  43/ 57/  0  vs   47/ 53/  0   1.5/2.0
+  rupturas bajistas           5451  -1.16%  -0.71%  -0.45%   -2.2       39/ 41 %          |  40/ 60/  0  vs   41/ 59/  0   1.5/1.4
+  velas alcistas              5752  +0.08%  +0.51%  -0.44%   -1.5       47/ 49 %          |  47/ 53/  0  vs   50/ 50/  0   1.5/1.5
+  velas bajistas              7918  -0.72%  -0.76%  +0.04%   +0.2       37/ 37 %          |  37/ 63/  0  vs   37/ 63/  0   1.5/1.7
+  directrices alcistas         925  +0.73%  +0.53%  +0.20%   +0.5       51/ 49 %          |  52/ 48/  0  vs   49/ 51/  0   1.5/1.5
+  directrices bajistas        1191  -0.57%  -0.67%  +0.09%   +0.4       41/ 38 %          |  41/ 59/  0  vs   38/ 62/  0   1.5/1.7
+  rebotes alcistas             269  +0.23%  +0.58%  -0.34%   -0.8       44/ 47 %          |  44/ 56/  0  vs   48/ 52/  0   1.5/1.6
+  rebotes bajistas             250  +0.20%  -0.87%  +1.07%   +2.5       43/ 33 %          |  44/ 56/  0  vs   33/ 66/  0   1.5/1.9
+  los 10 patrones de mayor |t|:
+    ▲ inside_break_up             451  -0.78%  +0.78%  -1.56%   -4.7   ganan  37 % (azar  49 %)
+    ▲ cup_handle                   70  -0.82%  +0.73%  -1.56%   -3.6   ganan  37 % (azar  50 %)
+    ▲ donch252_up                1970  +0.13%  +0.70%  -0.57%   -3.2   ganan  42 % (azar  47 %)
+    ▲ donch100_up                2629  +0.24%  +0.72%  -0.48%   -3.1   ganan  43 % (azar  47 %)
+    ▲ donch55_up                 3314  +0.20%  +0.66%  -0.47%   -3.1   ganan  43 % (azar  47 %)
+    ▼ resistance_reject           250  +0.20%  -0.87%  +1.07%   +2.5   ganan  43 % (azar  33 %)
+    ▲ base_near_high              854  +0.00%  +0.53%  -0.52%   -2.5   ganan  38 % (azar  42 %)
+    ▼ triple_top                   35  -1.91%  -0.67%  -1.24%   -2.5   ganan  23 % (azar  39 %)
+    ▲ box_up                     1641  +0.15%  +0.52%  -0.37%   -2.2   ganan  45 % (azar  46 %)
+    ▼ inside_break_dn             287  -1.34%  -0.66%  -0.69%   -2.1   ganan  35 % (azar  41 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.180 % · con exceso positivo 34 % · |t| ≥ 3,35: 2 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN DE UN NIVEL: stop inicial estructural acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR (todas las señales, hasta 60 sesiones) · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36640  -0.17%  +0.13%  -0.30%   -3.8       43/ 45 %          |  44/ 56/  0  vs   45/ 55/  0   1.7/1.7
+  figuras alcistas            1922  +0.69%  +0.91%  -0.22%   -0.8       52/ 52 %          |  52/ 47/  0  vs   53/ 47/  0   2.0/1.9
+  figuras bajistas            1497  -1.17%  -0.96%  -0.21%   -0.7       43/ 43 %          |  44/ 56/  0  vs   44/ 56/  0   2.0/1.7
+  rupturas alcistas          11566  +0.40%  +1.00%  -0.60%   -3.3       48/ 52 %          |  48/ 52/  0  vs   52/ 48/  0   2.0/2.0
+  rupturas bajistas           5456  -1.33%  -0.94%  -0.39%   -1.4       43/ 45 %          |  44/ 56/  0  vs   46/ 54/  0   2.0/1.4
+  velas alcistas              5696  +0.34%  +0.70%  -0.37%   -1.1       44/ 45 %          |  44/ 56/  0  vs   46/ 54/  0   1.1/1.5
+  velas bajistas              7868  -0.69%  -0.74%  +0.05%   +0.3       33/ 32 %          |  33/ 66/  0  vs   33/ 67/  0   1.0/1.7
+  directrices alcistas         925  +0.91%  +0.78%  +0.13%   +0.3       51/ 49 %          |  52/ 48/  0  vs   49/ 51/  0   1.5/1.5
+  directrices bajistas        1191  -0.58%  -0.77%  +0.19%   +0.6       40/ 38 %          |  41/ 59/  0  vs   38/ 62/  0   1.5/1.7
+  rebotes alcistas             269  +0.18%  +0.91%  -0.73%   -1.8       42/ 43 %          |  42/ 58/  0  vs   44/ 56/  0   1.2/1.6
+  rebotes bajistas             250  +0.29%  -0.85%  +1.14%   +2.4       41/ 32 %          |  41/ 59/  0  vs   32/ 68/  0   1.3/1.9
+  los 10 patrones de mayor |t|:
+    ▲ inside_break_up             451  -0.89%  +1.27%  -2.16%   -4.9   ganan  38 % (azar  51 %)
+    ▲ cup_handle                   71  -1.00%  +1.08%  -2.08%   -3.5   ganan  41 % (azar  57 %)
+    ▲ base_near_high              856  +0.03%  +0.80%  -0.76%   -3.2   ganan  45 % (azar  50 %)
+    ▲ donch252_up                1973  +0.41%  +1.13%  -0.72%   -2.9   ganan  47 % (azar  52 %)
+    ▲ donch100_up                2634  +0.54%  +1.08%  -0.54%   -2.8   ganan  48 % (azar  52 %)
+    ▲ donch55_up                 3321  +0.47%  +1.01%  -0.54%   -2.7   ganan  48 % (azar  52 %)
+    ▲ box_up                     1643  +0.32%  +0.90%  -0.58%   -2.5   ganan  52 % (azar  53 %)
+    ▲ channel_up_up                54  -0.31%  +1.16%  -1.47%   -2.4   ganan  46 % (azar  56 %)
+    ▼ resistance_reject           250  +0.29%  -0.85%  +1.14%   +2.4   ganan  41 % (azar  32 %)
+    ▲ tweezer_bottom              636  +0.01%  +0.68%  -0.67%   -2.2   ganan  40 % (azar  41 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.206 % · con exceso positivo 33 % · |t| ≥ 3,35: 2 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN DEL OPERADOR con +5 %: al cerrar a +5 % el stop sube a +5 % y persigue a 3 ATR · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36640  -0.18%  +0.14%  -0.31%   -3.7       39/ 41 %          |  39/ 60/  0  vs   41/ 59/  0   1.7/2.1
+  figuras alcistas            1922  +0.72%  +0.99%  -0.27%   -0.9       47/ 49 %          |  47/ 52/  1  vs   49/ 51/  1   2.0/2.3
+  figuras bajistas            1497  -1.25%  -1.08%  -0.17%   -0.5       39/ 39 %          |  39/ 60/  1  vs   39/ 61/  1   2.0/2.1
+  rupturas alcistas          11566  +0.45%  +1.08%  -0.63%   -2.9       44/ 48 %          |  44/ 56/  0  vs   48/ 51/  0   2.0/2.4
+  rupturas bajistas           5456  -1.56%  -1.05%  -0.52%   -1.8       39/ 41 %          |  39/ 61/  0  vs   41/ 59/  1   2.0/1.7
+  velas alcistas              5696  +0.49%  +0.78%  -0.29%   -0.8       40/ 42 %          |  41/ 59/  0  vs   42/ 58/  0   1.1/1.8
+  velas bajistas              7868  -0.72%  -0.80%  +0.07%   +0.4       29/ 29 %          |  30/ 70/  0  vs   29/ 71/  0   1.0/2.1
+  directrices alcistas         925  +1.09%  +0.78%  +0.32%   +0.8       48/ 45 %          |  48/ 52/  0  vs   45/ 55/  0   1.5/1.9
+  directrices bajistas        1191  -0.71%  -0.85%  +0.14%   +0.4       36/ 33 %          |  36/ 64/  0  vs   33/ 66/  0   1.5/2.1
+  rebotes alcistas             269  +0.14%  +1.04%  -0.90%   -2.1       37/ 40 %          |  37/ 63/  0  vs   40/ 60/  0   1.2/2.1
+  rebotes bajistas             250  +0.18%  -0.86%  +1.04%   +2.0       34/ 28 %          |  34/ 66/  0  vs   28/ 72/  0   1.3/2.4
+  los 10 patrones de mayor |t|:
+    ▲ inside_break_up             451  -0.85%  +1.36%  -2.21%   -4.8   ganan  35 % (azar  47 %)
+    ▲ cup_handle                   71  -1.18%  +1.15%  -2.33%   -3.9   ganan  37 % (azar  53 %)
+    ▲ base_near_high              856  +0.08%  +0.87%  -0.79%   -3.2   ganan  40 % (azar  46 %)
+    ▲ channel_up_up                54  -0.81%  +1.14%  -1.95%   -3.0   ganan  35 % (azar  53 %)
+    ▲ donch252_up                1973  +0.47%  +1.26%  -0.78%   -2.6   ganan  43 % (azar  49 %)
+    ▼ inside_break_dn             286  -1.93%  -0.94%  -0.99%   -2.6   ganan  33 % (azar  39 %)
+    ▲ donch55_up                 3321  +0.49%  +1.07%  -0.58%   -2.5   ganan  44 % (azar  48 %)
+    ▲ donch100_up                2634  +0.57%  +1.18%  -0.62%   -2.5   ganan  44 % (azar  49 %)
+    ▲ support_bounce              269  +0.14%  +1.04%  -0.90%   -2.1   ganan  37 % (azar  40 %)
+    ▼ bear_flag                   267  -2.00%  -1.05%  -0.95%   -2.1   ganan  39 % (azar  43 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.207 % · con exceso positivo 42 % · |t| ≥ 3,35: 2 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN DEL OPERADOR con stop inicial de 1,5 ATR para todos los patrones y aseguramiento a +4 % · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36713  -0.25%  +0.09%  -0.33%   -4.1       41/ 43 %          |  42/ 58/  0  vs   44/ 56/  0   1.5/1.7
+  figuras alcistas            1916  +0.55%  +0.75%  -0.20%   -0.8       46/ 46 %          |  46/ 54/  0  vs   46/ 53/  0   1.5/1.9
+  figuras bajistas            1495  -1.01%  -0.83%  -0.19%   -0.7       37/ 38 %          |  38/ 62/  0  vs   38/ 62/  0   1.5/1.7
+  rupturas alcistas          11546  +0.20%  +0.84%  -0.63%   -4.3       42/ 47 %          |  43/ 57/  0  vs   47/ 53/  0   1.5/2.0
+  rupturas bajistas           5451  -1.22%  -0.83%  -0.39%   -1.6       39/ 41 %          |  40/ 60/  0  vs   41/ 59/  0   1.5/1.4
+  velas alcistas              5752  +0.36%  +0.81%  -0.45%   -1.3       47/ 49 %          |  47/ 53/  0  vs   50/ 50/  0   1.5/1.5
+  velas bajistas              7918  -0.83%  -0.84%  +0.01%   +0.1       37/ 37 %          |  37/ 63/  0  vs   37/ 63/  0   1.5/1.7
+  directrices alcistas         925  +0.91%  +0.78%  +0.13%   +0.3       51/ 49 %          |  52/ 48/  0  vs   49/ 51/  0   1.5/1.5
+  directrices bajistas        1191  -0.58%  -0.77%  +0.19%   +0.6       40/ 38 %          |  41/ 59/  0  vs   38/ 62/  0   1.5/1.7
+  rebotes alcistas             269  -0.02%  +1.01%  -1.03%   -2.4       43/ 47 %          |  44/ 56/  0  vs   48/ 52/  0   1.5/1.6
+  rebotes bajistas             250  +0.34%  -0.88%  +1.22%   +2.5       43/ 33 %          |  44/ 56/  0  vs   33/ 66/  0   1.5/1.9
+  los 10 patrones de mayor |t|:
+    ▲ inside_break_up             451  -0.88%  +1.14%  -2.03%   -5.1   ganan  37 % (azar  49 %)
+    ▲ cup_handle                   70  -1.00%  +0.79%  -1.79%   -4.2   ganan  37 % (azar  50 %)
+    ▲ donch100_up                2629  +0.32%  +0.95%  -0.63%   -3.7   ganan  43 % (azar  47 %)
+    ▲ donch252_up                1970  +0.18%  +0.93%  -0.74%   -3.3   ganan  42 % (azar  47 %)
+    ▲ donch55_up                 3314  +0.27%  +0.84%  -0.57%   -3.3   ganan  42 % (azar  47 %)
+    ▲ base_near_high              854  -0.07%  +0.60%  -0.67%   -3.2   ganan  38 % (azar  42 %)
+    ▲ box_up                     1641  +0.12%  +0.72%  -0.59%   -3.1   ganan  45 % (azar  46 %)
+    ▲ tweezer_bottom              643  +0.07%  +1.00%  -0.93%   -2.8   ganan  47 % (azar  49 %)
+    ▲ bb_squeeze_up              1126  +0.10%  +0.74%  -0.64%   -2.7   ganan  42 % (azar  46 %)
+    ▼ triple_top                   35  -2.03%  -0.71%  -1.31%   -2.6   ganan  23 % (azar  39 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.218 % · con exceso positivo 36 % · |t| ≥ 3,35: 3 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN CLÁSICO sin límites: stop al otro lado de la figura y objetivo por la medida clásica (referencia: da stops del 10–40 %) · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36540  -0.18%  +0.03%  -0.22%   -2.0       39/ 40 %          |  34/ 58/  8  vs   35/ 57/  9   1.7/3.1
+  figuras alcistas            1939  +1.07%  +1.36%  -0.29%   -0.7       48/ 50 %          |  33/ 44/ 24  vs   34/ 42/ 25   2.9/5.4
+  figuras bajistas            1502  -2.25%  -1.98%  -0.27%   -0.5       38/ 39 %          |  23/ 49/ 27  vs   23/ 49/ 27   3.2/5.0
+  rupturas alcistas          11587  +0.62%  +1.13%  -0.52%   -1.8       46/ 49 %          |  40/ 51/  9  vs   43/ 47/ 10   2.0/3.5
+  rupturas bajistas           5454  -2.36%  -1.61%  -0.75%   -1.6       34/ 37 %          |  27/ 62/ 10  vs   29/ 59/ 12   2.0/3.4
+  velas alcistas              5602  +0.63%  +0.58%  +0.05%   +0.1       41/ 40 %          |  38/ 58/  4  vs   37/ 58/  5   1.1/2.2
+  velas bajistas              7807  -0.43%  -0.70%  +0.27%   +1.3       32/ 30 %          |  29/ 68/  3  vs   28/ 69/  3   1.0/1.9
+  directrices alcistas         931  +1.23%  +0.78%  +0.44%   +1.0       43/ 40 %          |  40/ 56/  4  vs   38/ 59/  3   1.5/3.0
+  directrices bajistas        1195  -0.73%  -1.01%  +0.28%   +0.8       31/ 28 %          |  29/ 68/  3  vs   27/ 71/  2   1.5/3.0
+  rebotes alcistas             269  -0.08%  +0.53%  -0.61%   -1.5       36/ 39 %          |  35/ 64/  1  vs   38/ 61/  2   1.2/2.4
+  rebotes bajistas             254  -0.07%  -0.94%  +0.87%   +1.8       34/ 29 %          |  31/ 65/  5  vs   27/ 70/  3   1.3/2.6
+  los 10 patrones de mayor |t|:
+    ▼ diamond_bear                112  -6.87%  -3.17%  -3.70%   -2.7   ganan  25 % (azar  35 %)
+    ▼ stick_sandwich_bear          29  -0.79%  -0.08%  -0.71%   -2.7   ganan  21 % (azar  37 %)
+    ▲ base_near_high              858  +0.10%  +1.14%  -1.05%   -2.6   ganan  59 % (azar  66 %)
+    ▲ inside_break_up             458  -0.34%  +1.05%  -1.40%   -2.6   ganan  35 % (azar  43 %)
+    ▲ donch252_up                1980  +0.60%  +1.35%  -0.74%   -2.1   ganan  40 % (azar  45 %)
+    ▲ asc_triangle                 63  -1.06%  +0.85%  -1.92%   -2.0   ganan  32 % (azar  49 %)
+    ▼ resistance_reject           254  -0.07%  -0.94%  +0.87%   +1.8   ganan  34 % (azar  29 %)
+    ▼ belt_bear                   370  -0.28%  -1.17%  +0.89%   +1.7   ganan  33 % (azar  28 %)
+    ▲ three_outside_up            219  -0.42%  +0.85%  -1.27%   -1.7   ganan  38 % (azar  42 %)
+    ▲ donch55_up                 3330  +0.56%  +1.13%  -0.57%   -1.7   ganan  41 % (azar  44 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.069 % · con exceso positivo 53 % · |t| ≥ 3,35: 0 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== FIJO: stop 1.5 ATR y objetivo 3.0 ATR para todos los patrones · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36840  -0.25%  -0.07%  -0.19%   -3.0       35/ 36 %          |  33/ 65/  2  vs   34/ 64/  2   1.5/3.0
+  figuras alcistas            1923  +0.49%  +0.55%  -0.06%   -0.2       40/ 40 %          |  38/ 59/  2  vs   39/ 59/  2   1.5/3.0
+  figuras bajistas            1500  -1.17%  -1.09%  -0.09%   -0.3       30/ 29 %          |  27/ 69/  3  vs   27/ 70/  3   1.5/3.0
+  rupturas alcistas          11576  +0.23%  +0.66%  -0.43%   -2.7       38/ 42 %          |  37/ 61/  1  vs   41/ 58/  2   1.5/3.0
+  rupturas bajistas           5461  -1.59%  -1.11%  -0.48%   -1.4       27/ 30 %          |  25/ 72/  3  vs   27/ 69/  3   1.5/3.0
+  velas alcistas              5766  +0.57%  +0.81%  -0.25%   -0.6       39/ 41 %          |  37/ 60/  3  vs   38/ 58/  3   1.5/3.0
+  velas bajistas              7965  -0.75%  -0.95%  +0.20%   +0.9       30/ 28 %          |  28/ 70/  2  vs   27/ 71/  2   1.5/3.0
+  directrices alcistas         931  +1.23%  +0.78%  +0.44%   +1.0       43/ 40 %          |  40/ 56/  4  vs   38/ 59/  3   1.5/3.0
+  directrices bajistas        1195  -0.73%  -1.01%  +0.28%   +0.8       31/ 28 %          |  29/ 68/  3  vs   27/ 71/  2   1.5/3.0
+  rebotes alcistas             269  -0.01%  +0.77%  -0.79%   -1.5       36/ 40 %          |  35/ 64/  1  vs   38/ 59/  2   1.5/3.0
+  rebotes bajistas             254  +0.02%  -0.89%  +0.91%   +1.9       35/ 28 %          |  32/ 64/  4  vs   27/ 71/  2   1.5/3.0
+  los 10 patrones de mayor |t|:
+    ▼ triple_top                   35  -2.50%  -0.63%  -1.86%   -3.3   ganan  14 % (azar  31 %)
+    ▲ base_near_high              858  +0.03%  +0.43%  -0.39%   -2.6   ganan  38 % (azar  42 %)
+    ▲ donch252_up                1977  +0.20%  +0.75%  -0.55%   -2.5   ganan  37 % (azar  42 %)
+    ▲ inside_break_up             457  -0.34%  +0.67%  -1.02%   -2.5   ganan  36 % (azar  42 %)
+    ▼ inside_break_dn             288  -2.03%  -0.92%  -1.11%   -2.3   ganan  24 % (azar  30 %)
+    ▼ crows                        91  -1.86%  -0.55%  -1.31%   -2.3   ganan  26 % (azar  30 %)
+    ▲ donch55_up                 3320  +0.22%  +0.65%  -0.43%   -2.2   ganan  38 % (azar  42 %)
+    ▲ cup_handle                   69  -0.92%  +0.60%  -1.53%   -2.2   ganan  29 % (azar  42 %)
+    ▲ donch100_up                2636  +0.31%  +0.75%  -0.43%   -2.1   ganan  39 % (azar  43 %)
+    ▼ resistance_reject           254  +0.02%  -0.89%  +0.91%   +1.9   ganan  35 % (azar  28 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.054 % · con exceso positivo 44 % · |t| ≥ 3,35: 0 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== STOP QUE PERSIGUE a 3 ATR del mejor cierre desde la entrada, sin asegurar nada, hasta 60 sesiones · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36948  -0.20%  +0.18%  -0.38%   -2.2       36/ 37 %          |   0/ 92/  8  vs    0/ 92/  8   3.0/0.0
+  figuras alcistas            1931  +1.30%  +1.83%  -0.54%   -1.1       41/ 42 %          |   0/ 92/  8  vs    0/ 91/  9   3.0/0.0
+  figuras bajistas            1499  -2.31%  -2.39%  +0.08%   +0.2       30/ 29 %          |   0/ 93/  7  vs    0/ 94/  6   3.0/0.0
+  rupturas alcistas          11623  +1.00%  +2.03%  -1.04%   -2.5       40/ 44 %          |   0/ 94/  6  vs    0/ 92/  8   3.0/0.0
+  rupturas bajistas           5481  -3.17%  -2.44%  -0.73%   -1.4       27/ 30 %          |   0/ 94/  6  vs    0/ 93/  7   3.0/0.0
+  velas alcistas              5803  +2.03%  +2.21%  -0.18%   -0.2       42/ 43 %          |   0/ 86/ 14  vs    0/ 88/ 12   3.0/0.0
+  velas bajistas              7966  -1.66%  -2.00%  +0.34%   +0.8       31/ 29 %          |   0/ 94/  6  vs    0/ 95/  5   3.0/0.0
+  directrices alcistas         930  +2.80%  +2.00%  +0.79%   +0.7       45/ 43 %          |   0/ 86/ 14  vs    0/ 89/ 11   3.0/0.0
+  directrices bajistas        1193  -2.06%  -2.10%  +0.04%   +0.1       30/ 28 %          |   0/ 94/  6  vs    0/ 95/  5   3.0/0.0
+  rebotes alcistas             270  +2.44%  +2.70%  -0.26%   -0.2       41/ 42 %          |   0/ 92/  8  vs    0/ 90/ 10   3.0/0.0
+  rebotes bajistas             252  -0.28%  -1.75%  +1.47%   +1.6       33/ 29 %          |   0/ 90/ 10  vs    0/ 95/  5   3.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ cup_handle                   71  -1.51%  +1.40%  -2.91%   -3.9   ganan  27 % (azar  44 %)
+    ▲ inside_break_up             454  -0.54%  +2.46%  -2.99%   -3.5   ganan  33 % (azar  44 %)
+    ▲ base_near_high              857  +0.12%  +1.30%  -1.18%   -3.5   ganan  41 % (azar  45 %)
+    ▲ donch252_up                1982  +0.85%  +2.47%  -1.62%   -3.0   ganan  39 % (azar  45 %)
+    ▼ island_bear                 154  -0.56%  -3.48%  +2.92%   +2.4   ganan  38 % (azar  27 %)
+    ▲ donch100_up                2644  +1.15%  +2.19%  -1.04%   -2.2   ganan  40 % (azar  45 %)
+    ▼ gravestone                   54  -3.34%  -1.26%  -2.08%   -2.2   ganan  19 % (azar  33 %)
+    ▲ three_outside_up            220  -0.29%  +1.89%  -2.18%   -2.1   ganan  37 % (azar  42 %)
+    ▲ donch55_up                 3338  +1.15%  +2.04%  -0.89%   -2.0   ganan  40 % (azar  44 %)
+    ▼ bb_squeeze_dn               936  -2.56%  -1.58%  -0.97%   -1.8   ganan  28 % (azar  31 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.102 % · con exceso positivo 48 % · |t| ≥ 3,35: 3 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin asegurar nada, hasta 60 sesiones · las 50 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                      36948  -0.17%  +0.48%  -0.65%   -2.7       40/ 42 %          |   0/ 68/ 32  vs    0/ 65/ 35   5.0/0.0
+  figuras alcistas            1931  +2.65%  +3.27%  -0.61%   -0.7       49/ 50 %          |   0/ 63/ 37  vs    0/ 62/ 38   5.0/0.0
+  figuras bajistas            1499  -3.81%  -3.83%  +0.02%   +0.0       31/ 32 %          |   0/ 69/ 31  vs    0/ 70/ 30   5.0/0.0
+  rupturas alcistas          11623  +2.20%  +3.79%  -1.59%   -2.1       45/ 51 %          |   0/ 71/ 29  vs    0/ 63/ 37   5.0/0.0
+  rupturas bajistas           5481  -5.12%  -3.83%  -1.29%   -1.4       30/ 33 %          |   0/ 70/ 30  vs    0/ 66/ 34   5.0/0.0
+  velas alcistas              5803  +3.19%  +3.84%  -0.65%   -0.5       50/ 51 %          |   0/ 56/ 44  vs    0/ 55/ 45   5.0/0.0
+  velas bajistas              7966  -2.81%  -3.48%  +0.67%   +1.0       33/ 31 %          |   0/ 72/ 28  vs    0/ 74/ 26   5.0/0.0
+  directrices alcistas         930  +4.01%  +3.49%  +0.52%   +0.4       54/ 50 %          |   0/ 54/ 46  vs    0/ 58/ 42   5.0/0.0
+  directrices bajistas        1193  -3.48%  -3.35%  -0.13%   -0.2       32/ 31 %          |   0/ 71/ 29  vs    0/ 72/ 28   5.0/0.0
+  rebotes alcistas             270  +4.80%  +4.46%  +0.34%   +0.1       51/ 50 %          |   0/ 54/ 46  vs    0/ 59/ 41   5.0/0.0
+  rebotes bajistas             252  -0.79%  -2.96%  +2.17%   +1.8       41/ 31 %          |   0/ 64/ 36  vs    0/ 72/ 28   5.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ rect_up                      25  +9.59%  +1.95%  +7.64%   +3.0   ganan  76 % (azar  49 %)
+    ▲ base_near_high              857  +0.25%  +2.06%  -1.81%   -2.9   ganan  41 % (azar  51 %)
+    ▼ desc_triangle                37  -5.30%  -1.39%  -3.91%   -2.5   ganan  14 % (azar  37 %)
+    ▲ inside_break_up             454  +1.24%  +4.79%  -3.56%   -2.4   ganan  41 % (azar  52 %)
+    ▲ donch252_up                1982  +2.22%  +4.55%  -2.33%   -2.3   ganan  44 % (azar  53 %)
+    ▼ belt_bear                   368  -1.47%  -3.89%  +2.42%   +2.3   ganan  38 % (azar  30 %)
+    ▼ island_bear                 154  -1.19%  -5.56%  +4.37%   +2.3   ganan  42 % (azar  30 %)
+    ▲ donch100_up                2644  +2.47%  +4.19%  -1.72%   -2.0   ganan  45 % (azar  52 %)
+    ▲ channel_up_up                54  +0.57%  +3.44%  -2.86%   -1.9   ganan  44 % (azar  52 %)
+    ▲ donch55_up                 3338  +2.33%  +3.85%  -1.52%   -1.9   ganan  46 % (azar  52 %)
+  patrones con n ≥ 20: 86 · exceso medio -0.160 % · con exceso positivo 43 % · |t| ≥ 3,35: 0 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== ESCALERA DEL OPERADOR: stop inicial estructural acotado a 1–2 ATR; al cerrar a +4 % el stop sube a +4 % y se deja correr; al cerrar a +10 % sube a +10 % y persigue a 2 ATR (todas las señales, hasta 60 sesiones) · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     218700  -0.23%  -0.06%  -0.17%   -3.3       42/ 44 %          |  43/ 57/  0  vs   44/ 56/  0   1.7/1.7
+  figuras alcistas           11352  +0.25%  +0.47%  -0.22%   -1.3       50/ 51 %          |  50/ 49/  0  vs   52/ 48/  0   2.0/1.9
+  figuras bajistas            9028  -0.80%  -0.75%  -0.05%   -0.3       44/ 43 %          |  44/ 55/  0  vs   43/ 56/  0   2.0/1.7
+  rupturas alcistas          67669  +0.05%  +0.49%  -0.45%   -3.3       46/ 50 %          |  46/ 54/  0  vs   50/ 50/  0   2.0/2.0
+  rupturas bajistas          34938  -0.97%  -0.80%  -0.17%   -0.6       43/ 44 %          |  44/ 56/  0  vs   45/ 55/  0   2.0/1.4
+  velas alcistas             33819  +0.33%  +0.38%  -0.05%   -0.2       44/ 44 %          |  45/ 55/  0  vs   44/ 56/  0   1.0/1.5
+  velas bajistas             45299  -0.52%  -0.59%  +0.07%   +0.6       33/ 32 %          |  33/ 67/  0  vs   32/ 67/  0   1.0/1.7
+  directrices alcistas        5611  +0.56%  +0.37%  +0.19%   +0.9       49/ 47 %          |  50/ 50/  0  vs   48/ 52/  0   1.5/1.6
+  directrices bajistas        7443  -0.77%  -0.66%  -0.12%   -0.7       37/ 37 %          |  37/ 62/  0  vs   37/ 63/  0   1.5/1.7
+  rebotes alcistas            1633  +0.33%  +0.31%  +0.03%   +0.2       44/ 44 %          |  44/ 56/  0  vs   44/ 56/  0   1.3/1.7
+  rebotes bajistas            1908  -0.44%  -0.55%  +0.12%   +0.6       35/ 34 %          |  35/ 65/  0  vs   34/ 66/  0   1.3/1.9
+  los 10 patrones de mayor |t|:
+    ▲ cup_handle                  471  -0.77%  +0.52%  -1.28%   -3.8   ganan  43 % (azar  53 %)
+    ▲ donch252_up               10668  -0.07%  +0.52%  -0.59%   -3.7   ganan  45 % (azar  50 %)
+    ▲ donch100_up               15059  +0.01%  +0.53%  -0.52%   -3.5   ganan  45 % (azar  50 %)
+    ▲ doji_star_bull               24  -2.99%  +0.38%  -3.37%   -3.4   ganan  25 % (azar  50 %)
+    ▲ kicker_bull                  74  +2.44%  +0.45%  +1.99%   +3.3   ganan  72 % (azar  55 %)
+    ▲ donch55_up                19280  +0.08%  +0.53%  -0.45%   -3.0   ganan  46 % (azar  50 %)
+    ▲ counter_bull                 21  -1.65%  +1.21%  -2.85%   -2.9   ganan  43 % (azar  52 %)
+    ▲ inside_break_up            2325  -0.03%  +0.52%  -0.55%   -2.8   ganan  45 % (azar  48 %)
+    ▲ base_near_high             5219  -0.04%  +0.42%  -0.46%   -2.7   ganan  43 % (azar  49 %)
+    ▲ atr_squeeze_up               36  -1.16%  +0.23%  -1.39%   -2.7   ganan  42 % (azar  50 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.155 % · con exceso positivo 42 % · |t| ≥ 3,35: 4 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== ESCALERA DEL OPERADOR con stop inicial de 1,5 ATR para todos los patrones · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     218897  -0.24%  -0.09%  -0.16%   -3.4       41/ 42 %          |  41/ 58/  0  vs   43/ 57/  0   1.5/1.7
+  figuras alcistas           11328  +0.17%  +0.35%  -0.18%   -1.3       44/ 45 %          |  44/ 56/  0  vs   45/ 55/  0   1.5/1.9
+  figuras bajistas            9012  -0.65%  -0.66%  +0.01%   +0.0       39/ 37 %          |  39/ 61/  0  vs   37/ 63/  0   1.5/1.7
+  rupturas alcistas          67526  -0.03%  +0.39%  -0.42%   -3.8       41/ 45 %          |  41/ 59/  0  vs   45/ 55/  0   1.5/2.0
+  rupturas bajistas          34886  -0.83%  -0.71%  -0.12%   -0.5       39/ 40 %          |  40/ 60/  0  vs   40/ 60/  0   1.5/1.4
+  velas alcistas             34052  +0.30%  +0.42%  -0.12%   -0.5       48/ 48 %          |  48/ 51/  0  vs   49/ 51/  0   1.5/1.5
+  velas bajistas             45496  -0.58%  -0.66%  +0.08%   +0.6       37/ 36 %          |  37/ 63/  0  vs   37/ 63/  0   1.5/1.7
+  directrices alcistas        5611  +0.56%  +0.37%  +0.19%   +0.9       49/ 47 %          |  50/ 50/  0  vs   48/ 52/  0   1.5/1.6
+  directrices bajistas        7443  -0.77%  -0.66%  -0.12%   -0.7       37/ 37 %          |  37/ 62/  0  vs   37/ 63/  0   1.5/1.7
+  rebotes alcistas            1633  +0.42%  +0.31%  +0.11%   +0.7       47/ 46 %          |  48/ 52/  0  vs   47/ 53/  0   1.5/1.7
+  rebotes bajistas            1910  -0.44%  -0.55%  +0.11%   +0.6       38/ 36 %          |  38/ 62/  0  vs   37/ 63/  0   1.5/1.9
+  los 10 patrones de mayor |t|:
+    ▲ donch252_up               10645  -0.14%  +0.42%  -0.56%   -4.3   ganan  40 % (azar  45 %)
+    ▲ cup_handle                  468  -0.73%  +0.46%  -1.19%   -4.0   ganan  37 % (azar  46 %)
+    ▲ donch100_up               15028  -0.05%  +0.44%  -0.50%   -4.0   ganan  40 % (azar  45 %)
+    ▲ donch55_up                19241  +0.00%  +0.43%  -0.42%   -3.4   ganan  41 % (azar  45 %)
+    ▲ doji_star_bull               24  -2.40%  -0.01%  -2.39%   -2.9   ganan  25 % (azar  44 %)
+    ▲ base_near_high             5199  -0.09%  +0.30%  -0.39%   -2.9   ganan  36 % (azar  41 %)
+    ▼ triple_top                  197  -1.31%  -0.51%  -0.80%   -2.7   ganan  32 % (azar  39 %)
+    ▼ rect_dn                      98  -1.26%  -0.34%  -0.92%   -2.5   ganan  31 % (azar  40 %)
+    ▲ atr_squeeze_up               36  -1.35%  +0.27%  -1.62%   -2.5   ganan  36 % (azar  46 %)
+    ▲ inside_break_up            2325  -0.02%  +0.46%  -0.48%   -2.4   ganan  44 % (azar  46 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.131 % · con exceso positivo 41 % · |t| ≥ 3,35: 4 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN DE UN NIVEL: stop inicial estructural acotado a 1–2 ATR, al cerrar a +4 % el stop sube a +4 % y persigue a 3 ATR (todas las señales, hasta 60 sesiones) · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     218700  -0.23%  -0.04%  -0.18%   -2.8       42/ 44 %          |  43/ 57/  0  vs   44/ 56/  0   1.7/1.7
+  figuras alcistas           11352  +0.34%  +0.57%  -0.23%   -1.2       50/ 51 %          |  50/ 49/  0  vs   52/ 48/  0   2.0/1.9
+  figuras bajistas            9028  -0.80%  -0.84%  +0.04%   +0.2       44/ 43 %          |  44/ 55/  0  vs   43/ 56/  0   2.0/1.7
+  rupturas alcistas          67669  +0.06%  +0.59%  -0.53%   -3.7       46/ 50 %          |  46/ 54/  0  vs   50/ 50/  0   2.0/2.0
+  rupturas bajistas          34938  -1.05%  -0.93%  -0.12%   -0.4       43/ 44 %          |  44/ 56/  0  vs   45/ 55/  0   2.0/1.4
+  velas alcistas             33819  +0.49%  +0.50%  -0.01%   -0.0       44/ 44 %          |  45/ 55/  0  vs   44/ 56/  0   1.0/1.5
+  velas bajistas             45299  -0.60%  -0.65%  +0.04%   +0.3       33/ 32 %          |  33/ 67/  0  vs   32/ 67/  0   1.0/1.7
+  directrices alcistas        5611  +0.63%  +0.47%  +0.17%   +0.7       49/ 47 %          |  50/ 50/  0  vs   48/ 52/  0   1.5/1.6
+  directrices bajistas        7443  -0.83%  -0.72%  -0.11%   -0.5       37/ 37 %          |  37/ 62/  0  vs   37/ 63/  0   1.5/1.7
+  rebotes alcistas            1633  +0.32%  +0.47%  -0.14%   -0.8       44/ 43 %          |  44/ 56/  0  vs   44/ 56/  0   1.3/1.7
+  rebotes bajistas            1908  -0.42%  -0.59%  +0.17%   +0.8       35/ 34 %          |  35/ 65/  0  vs   34/ 66/  0   1.3/1.9
+  los 10 patrones de mayor |t|:
+    ▲ donch252_up               10668  -0.05%  +0.64%  -0.69%   -4.1   ganan  45 % (azar  50 %)
+    ▲ donch100_up               15059  +0.04%  +0.65%  -0.60%   -3.9   ganan  45 % (azar  50 %)
+    ▲ donch55_up                19280  +0.12%  +0.64%  -0.52%   -3.3   ganan  46 % (azar  50 %)
+    ▲ base_near_high             5219  -0.07%  +0.44%  -0.51%   -3.0   ganan  43 % (azar  49 %)
+    ▲ doji_star_bull               24  -2.99%  +0.51%  -3.50%   -2.8   ganan  25 % (azar  50 %)
+    ▲ bb_squeeze_up              6899  +0.01%  +0.43%  -0.42%   -2.7   ganan  44 % (azar  46 %)
+    ▲ cup_handle                  471  -0.56%  +0.53%  -1.09%   -2.7   ganan  43 % (azar  53 %)
+    ▲ kicker_bull                  74  +2.65%  +0.58%  +2.07%   +2.4   ganan  72 % (azar  55 %)
+    ▲ atr_squeeze_up               36  -1.36%  +0.38%  -1.73%   -2.4   ganan  42 % (azar  50 %)
+    ▼ dark_cloud                  413  -0.08%  -0.79%  +0.71%   +2.4   ganan  39 % (azar  31 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.167 % · con exceso positivo 40 % · |t| ≥ 3,35: 2 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN DEL OPERADOR con +5 %: al cerrar a +5 % el stop sube a +5 % y persigue a 3 ATR · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     218700  -0.24%  -0.04%  -0.20%   -2.8       38/ 40 %          |  38/ 61/  0  vs   40/ 60/  0   1.7/2.2
+  figuras alcistas           11352  +0.44%  +0.61%  -0.17%   -0.8       46/ 47 %          |  46/ 53/  1  vs   47/ 52/  1   2.0/2.3
+  figuras bajistas            9028  -0.92%  -0.96%  +0.04%   +0.1       39/ 39 %          |  39/ 60/  1  vs   38/ 61/  1   2.0/2.1
+  rupturas alcistas          67669  +0.12%  +0.66%  -0.54%   -3.3       42/ 46 %          |  42/ 58/  1  vs   46/ 53/  1   2.0/2.5
+  rupturas bajistas          34938  -1.22%  -1.02%  -0.19%   -0.6       39/ 40 %          |  39/ 61/  1  vs   40/ 60/  0   2.0/1.8
+  velas alcistas             33819  +0.54%  +0.54%  +0.00%   +0.0       41/ 40 %          |  41/ 59/  0  vs   40/ 59/  0   1.0/1.9
+  velas bajistas             45299  -0.68%  -0.70%  +0.02%   +0.2       29/ 28 %          |  29/ 71/  0  vs   28/ 71/  0   1.0/2.2
+  directrices alcistas        5611  +0.76%  +0.50%  +0.26%   +1.0       45/ 43 %          |  46/ 54/  0  vs   44/ 56/  0   1.5/2.0
+  directrices bajistas        7443  -0.88%  -0.78%  -0.10%   -0.5       33/ 33 %          |  33/ 67/  0  vs   33/ 67/  0   1.5/2.2
+  rebotes alcistas            1633  +0.39%  +0.54%  -0.14%   -0.8       40/ 40 %          |  40/ 60/  0  vs   40/ 60/  0   1.3/2.1
+  rebotes bajistas            1908  -0.49%  -0.64%  +0.14%   +0.6       31/ 30 %          |  31/ 69/  0  vs   30/ 70/  0   1.3/2.3
+  los 10 patrones de mayor |t|:
+    ▲ donch252_up               10668  -0.01%  +0.72%  -0.73%   -3.7   ganan  40 % (azar  46 %)
+    ▲ donch100_up               15059  +0.10%  +0.71%  -0.61%   -3.4   ganan  41 % (azar  46 %)
+    ▲ inside_break_up            2325  -0.02%  +0.71%  -0.73%   -3.2   ganan  41 % (azar  44 %)
+    ▲ base_near_high             5219  -0.06%  +0.55%  -0.61%   -3.2   ganan  39 % (azar  45 %)
+    ▲ donch55_up                19280  +0.16%  +0.71%  -0.55%   -3.1   ganan  42 % (azar  46 %)
+    ▲ cup_handle                  471  -0.75%  +0.56%  -1.31%   -3.1   ganan  39 % (azar  48 %)
+    ▲ bb_squeeze_up              6899  +0.05%  +0.50%  -0.45%   -2.8   ganan  40 % (azar  43 %)
+    ▲ soldiers                    333  -0.27%  +0.70%  -0.96%   -2.6   ganan  42 % (azar  45 %)
+    ▲ doji_star_bull               24  -3.59%  +0.17%  -3.76%   -2.6   ganan  17 % (azar  46 %)
+    ▲ atr_squeeze_up               36  -1.62%  +0.63%  -2.25%   -2.5   ganan  33 % (azar  47 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.178 % · con exceso positivo 39 % · |t| ≥ 3,35: 2 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN DEL OPERADOR con stop inicial de 1,5 ATR para todos los patrones y aseguramiento a +4 % · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     218897  -0.23%  -0.07%  -0.17%   -2.7       41/ 42 %          |  41/ 58/  0  vs   43/ 57/  0   1.5/1.7
+  figuras alcistas           11328  +0.26%  +0.45%  -0.19%   -1.2       44/ 45 %          |  44/ 56/  0  vs   45/ 55/  0   1.5/1.9
+  figuras bajistas            9012  -0.64%  -0.74%  +0.10%   +0.5       39/ 37 %          |  39/ 61/  0  vs   37/ 63/  0   1.5/1.7
+  rupturas alcistas          67526  -0.01%  +0.48%  -0.50%   -4.2       41/ 45 %          |  41/ 59/  0  vs   45/ 55/  0   1.5/2.0
+  rupturas bajistas          34886  -0.90%  -0.82%  -0.07%   -0.2       39/ 40 %          |  40/ 60/  0  vs   40/ 60/  0   1.5/1.4
+  velas alcistas             34052  +0.48%  +0.56%  -0.08%   -0.3       48/ 48 %          |  48/ 51/  0  vs   49/ 51/  0   1.5/1.5
+  velas bajistas             45496  -0.66%  -0.72%  +0.07%   +0.4       37/ 36 %          |  37/ 63/  0  vs   37/ 63/  0   1.5/1.7
+  directrices alcistas        5611  +0.63%  +0.47%  +0.17%   +0.7       49/ 47 %          |  50/ 50/  0  vs   48/ 52/  0   1.5/1.6
+  directrices bajistas        7443  -0.83%  -0.72%  -0.11%   -0.5       37/ 37 %          |  37/ 62/  0  vs   37/ 63/  0   1.5/1.7
+  rebotes alcistas            1633  +0.41%  +0.48%  -0.06%   -0.4       47/ 46 %          |  48/ 52/  0  vs   47/ 53/  0   1.5/1.7
+  rebotes bajistas            1910  -0.40%  -0.59%  +0.19%   +0.9       37/ 36 %          |  38/ 62/  0  vs   37/ 63/  0   1.5/1.9
+  los 10 patrones de mayor |t|:
+    ▲ donch252_up               10645  -0.12%  +0.54%  -0.66%   -4.6   ganan  40 % (azar  45 %)
+    ▲ donch100_up               15028  -0.03%  +0.55%  -0.59%   -4.5   ganan  40 % (azar  45 %)
+    ▲ donch55_up                19241  +0.03%  +0.52%  -0.49%   -3.6   ganan  41 % (azar  45 %)
+    ▲ base_near_high             5199  -0.12%  +0.32%  -0.43%   -3.2   ganan  36 % (azar  41 %)
+    ▲ bb_squeeze_up              6898  -0.01%  +0.40%  -0.41%   -2.9   ganan  42 % (azar  44 %)
+    ▲ cup_handle                  468  -0.49%  +0.46%  -0.94%   -2.6   ganan  37 % (azar  46 %)
+    ▼ triple_top                  197  -1.38%  -0.59%  -0.79%   -2.6   ganan  32 % (azar  38 %)
+    ▲ doji_star_bull               24  -2.40%  +0.16%  -2.56%   -2.5   ganan  25 % (azar  44 %)
+    ▲ atr_squeeze_up               36  -1.55%  +0.43%  -1.98%   -2.3   ganan  36 % (azar  46 %)
+    ▲ box_up                    10479  +0.11%  +0.41%  -0.30%   -2.1   ganan  44 % (azar  45 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.138 % · con exceso positivo 39 % · |t| ≥ 3,35: 3 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== PLAN CLÁSICO sin límites: stop al otro lado de la figura y objetivo por la medida clásica (referencia: da stops del 10–40 %) · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     218458  -0.24%  -0.09%  -0.15%   -1.9       39/ 40 %          |  33/ 58/  9  vs   34/ 57/  9   1.7/3.1
+  figuras alcistas           11440  +0.67%  +0.97%  -0.30%   -1.0       48/ 49 %          |  30/ 44/ 26  vs   31/ 42/ 26   2.9/5.2
+  figuras bajistas            9056  -1.54%  -1.60%  +0.06%   +0.2       39/ 39 %          |  24/ 49/ 27  vs   23/ 49/ 28   3.2/5.1
+  rupturas alcistas          68017  +0.27%  +0.75%  -0.49%   -2.5       44/ 48 %          |  38/ 53/ 10  vs   41/ 49/ 10   2.0/3.5
+  rupturas bajistas          34939  -1.78%  -1.54%  -0.24%   -0.5       35/ 37 %          |  29/ 60/ 11  vs   30/ 58/ 12   2.0/3.4
+  velas alcistas             33368  +0.67%  +0.54%  +0.13%   +0.4       41/ 40 %          |  37/ 58/  6  vs   36/ 59/  5   1.1/2.1
+  velas bajistas             44936  -0.53%  -0.65%  +0.11%   +0.9       31/ 30 %          |  29/ 68/  3  vs   28/ 69/  3   1.0/2.0
+  directrices alcistas        5651  +0.91%  +0.63%  +0.28%   +1.0       42/ 40 %          |  39/ 58/  3  vs   37/ 60/  3   1.5/3.0
+  directrices bajistas        7489  -0.82%  -0.86%  +0.04%   +0.2       30/ 29 %          |  28/ 70/  2  vs   28/ 70/  2   1.5/3.0
+  rebotes alcistas            1641  +0.37%  +0.46%  -0.09%   -0.4       39/ 39 %          |  37/ 60/  3  vs   37/ 60/  3   1.3/2.6
+  rebotes bajistas            1921  -0.41%  -0.65%  +0.24%   +1.3       32/ 30 %          |  29/ 67/  3  vs   28/ 69/  3   1.3/2.6
+  los 10 patrones de mayor |t|:
+    ▲ donch252_up               10723  +0.10%  +0.80%  -0.69%   -3.1   ganan  37 % (azar  43 %)
+    ▲ counter_bull                 21  -2.01%  +1.05%  -3.06%   -2.9   ganan  24 % (azar  40 %)
+    ▲ donch100_up               15160  +0.24%  +0.79%  -0.55%   -2.6   ganan  39 % (azar  43 %)
+    ▲ base_near_high             5232  +0.13%  +0.82%  -0.69%   -2.4   ganan  59 % (azar  64 %)
+    ▲ donch55_up                19410  +0.28%  +0.78%  -0.50%   -2.1   ganan  39 % (azar  43 %)
+    ▲ cup_handle                  482  -0.49%  +1.11%  -1.60%   -2.1   ganan  37 % (azar  44 %)
+    ▲ asc_triangle                497  -0.11%  +0.69%  -0.80%   -2.1   ganan  42 % (azar  48 %)
+    ▼ harami_bear                 751  -0.05%  -0.44%  +0.40%   +2.0   ganan  34 % (azar  30 %)
+    ▲ bb_squeeze_up              6958  +0.22%  +0.58%  -0.36%   -2.0   ganan  39 % (azar  41 %)
+    ▲ inside_break_up            2343  +0.19%  +0.71%  -0.53%   -2.0   ganan  39 % (azar  41 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.067 % · con exceso positivo 44 % · |t| ≥ 3,35: 0 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== FIJO: stop 1.5 ATR y objetivo 3.0 ATR para todos los patrones · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     219795  -0.24%  -0.13%  -0.12%   -2.1       34/ 35 %          |  32/ 65/  2  vs   33/ 64/  2   1.5/3.0
+  figuras alcistas           11385  +0.29%  +0.41%  -0.12%   -0.7       39/ 39 %          |  37/ 61/  2  vs   38/ 60/  2   1.5/3.0
+  figuras bajistas            9022  -0.82%  -0.95%  +0.12%   +0.6       31/ 29 %          |  29/ 69/  3  vs   27/ 70/  3   1.5/3.0
+  rupturas alcistas          67888  +0.07%  +0.43%  -0.37%   -2.9       37/ 40 %          |  35/ 63/  2  vs   39/ 59/  2   1.5/3.0
+  rupturas bajistas          34932  -1.23%  -1.10%  -0.13%   -0.4       28/ 29 %          |  26/ 71/  3  vs   27/ 70/  3   1.5/3.0
+  velas alcistas             34166  +0.66%  +0.74%  -0.09%   -0.3       40/ 40 %          |  37/ 59/  4  vs   37/ 59/  4   1.5/3.0
+  velas bajistas             45695  -0.72%  -0.82%  +0.10%   +0.7       30/ 29 %          |  29/ 69/  2  vs   28/ 70/  2   1.5/3.0
+  directrices alcistas        5651  +0.91%  +0.63%  +0.28%   +1.0       42/ 40 %          |  39/ 58/  3  vs   37/ 60/  3   1.5/3.0
+  directrices bajistas        7489  -0.82%  -0.86%  +0.04%   +0.2       30/ 29 %          |  28/ 70/  2  vs   28/ 70/  2   1.5/3.0
+  rebotes alcistas            1642  +0.67%  +0.50%  +0.17%   +0.8       41/ 39 %          |  39/ 59/  2  vs   37/ 60/  3   1.5/3.0
+  rebotes bajistas            1925  -0.36%  -0.64%  +0.28%   +1.4       32/ 30 %          |  30/ 67/  2  vs   29/ 69/  2   1.5/3.0
+  los 10 patrones de mayor |t|:
+    ▲ kicker_bull                  71  +3.32%  +0.43%  +2.89%   +4.7   ganan  58 % (azar  39 %)
+    ▲ donch252_up               10692  -0.07%  +0.45%  -0.52%   -3.5   ganan  35 % (azar  40 %)
+    ▲ donch100_up               15116  +0.03%  +0.47%  -0.44%   -3.2   ganan  36 % (azar  41 %)
+    ▼ rising_wedge               2279  -0.11%  -0.58%  +0.47%   +2.9   ganan  34 % (azar  29 %)
+    ▲ cup_handle                  477  -0.56%  +0.48%  -1.03%   -2.8   ganan  31 % (azar  39 %)
+    ▼ triple_top                  200  -1.52%  -0.49%  -1.02%   -2.7   ganan  24 % (azar  32 %)
+    ▲ base_near_high             5204  -0.05%  +0.28%  -0.33%   -2.6   ganan  37 % (azar  41 %)
+    ▲ donch55_up                19351  +0.08%  +0.46%  -0.38%   -2.6   ganan  37 % (azar  41 %)
+    ▼ sym_tri_dn                  233  +0.40%  -0.43%  +0.83%   +2.5   ganan  38 % (azar  30 %)
+    ▲ three_outside_up           1304  -0.05%  +0.59%  -0.65%   -2.1   ganan  37 % (azar  39 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.028 % · con exceso positivo 49 % · |t| ≥ 3,35: 2 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== STOP QUE PERSIGUE a 3 ATR del mejor cierre desde la entrada, sin asegurar nada, hasta 60 sesiones · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     220333  -0.31%  -0.11%  -0.20%   -1.4       36/ 37 %          |   0/ 92/  8  vs    0/ 92/  8   3.0/0.0
+  figuras alcistas           11392  +0.84%  +1.09%  -0.25%   -0.7       40/ 41 %          |   0/ 91/  9  vs    0/ 91/  9   3.0/0.0
+  figuras bajistas            9045  -1.75%  -1.89%  +0.14%   +0.3       31/ 30 %          |   0/ 94/  6  vs    0/ 94/  6   3.0/0.0
+  rupturas alcistas          67973  +0.38%  +1.23%  -0.85%   -3.0       38/ 42 %          |   0/ 93/  7  vs    0/ 91/  9   3.0/0.0
+  rupturas bajistas          35077  -2.49%  -2.26%  -0.23%   -0.4       28/ 30 %          |   0/ 94/  6  vs    0/ 93/  7   3.0/0.0
+  velas alcistas             34416  +2.01%  +1.68%  +0.34%   +0.5       43/ 42 %          |   0/ 85/ 15  vs    0/ 87/ 13   3.0/0.0
+  velas bajistas             45749  -1.47%  -1.65%  +0.18%   +0.6       31/ 30 %          |   0/ 94/  6  vs    0/ 95/  5   3.0/0.0
+  directrices alcistas        5640  +2.00%  +1.38%  +0.62%   +1.0       44/ 42 %          |   0/ 87/ 13  vs    0/ 89/ 11   3.0/0.0
+  directrices bajistas        7479  -1.78%  -1.72%  -0.06%   -0.2       30/ 30 %          |   0/ 94/  6  vs    0/ 94/  6   3.0/0.0
+  rebotes alcistas            1640  +1.26%  +1.33%  -0.07%   -0.1       42/ 41 %          |   0/ 91/  9  vs    0/ 89/ 11   3.0/0.0
+  rebotes bajistas            1922  -1.25%  -1.47%  +0.22%   +0.6       31/ 31 %          |   0/ 93/  7  vs    0/ 95/  5   3.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ donch252_up               10716  +0.16%  +1.40%  -1.24%   -3.5   ganan  37 % (azar  43 %)
+    ▲ kicker_bull                  78  +7.32%  +2.04%  +5.29%   +3.4   ganan  59 % (azar  43 %)
+    ▲ base_near_high             5238  +0.02%  +0.82%  -0.80%   -3.1   ganan  38 % (azar  43 %)
+    ▲ donch100_up               15124  +0.38%  +1.33%  -0.94%   -3.0   ganan  38 % (azar  43 %)
+    ▼ triple_top                  197  -2.67%  -1.29%  -1.38%   -2.9   ganan  25 % (azar  33 %)
+    ▲ donch55_up                19367  +0.48%  +1.29%  -0.81%   -2.6   ganan  38 % (azar  42 %)
+    ▲ homing_pigeon               418  +1.01%  +2.58%  -1.56%   -2.3   ganan  38 % (azar  44 %)
+    ▲ inside_break_up            2335  +0.39%  +1.35%  -0.96%   -2.3   ganan  38 % (azar  42 %)
+    ▲ bb_squeeze_up              6943  +0.41%  +1.06%  -0.65%   -2.3   ganan  39 % (azar  41 %)
+    ▲ channel_up_up               315  -0.01%  +0.97%  -0.99%   -2.1   ganan  39 % (azar  42 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.008 % · con exceso positivo 54 % · |t| ≥ 3,35: 2 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
+
+=== STOP QUE PERSIGUE a 5 ATR del mejor cierre, sin asegurar nada, hasta 60 sesiones · las 300 más negociadas ===
+  grupo                          n   media    azar  exceso      t   ganan señal/azar   | asegurado/stop/tiempo señal vs azar   stop/obj (ATR)
+  todos                     220333  -0.33%  +0.01%  -0.34%   -1.8       41/ 42 %          |   0/ 65/ 35  vs    0/ 64/ 36   5.0/0.0
+  figuras alcistas           11392  +1.65%  +2.03%  -0.38%   -0.6       46/ 48 %          |   0/ 62/ 38  vs    0/ 61/ 39   5.0/0.0
+  figuras bajistas            9045  -2.86%  -2.99%  +0.14%   +0.2       33/ 33 %          |   0/ 70/ 30  vs    0/ 69/ 31   5.0/0.0
+  rupturas alcistas          67973  +1.15%  +2.29%  -1.14%   -2.2       44/ 49 %          |   0/ 66/ 34  vs    0/ 62/ 38   5.0/0.0
+  rupturas bajistas          35077  -4.17%  -3.47%  -0.70%   -1.0       32/ 34 %          |   0/ 69/ 31  vs    0/ 65/ 35   5.0/0.0
+  velas alcistas             34416  +3.09%  +2.98%  +0.11%   +0.1       50/ 50 %          |   0/ 54/ 46  vs    0/ 54/ 46   5.0/0.0
+  velas bajistas             45749  -2.15%  -2.67%  +0.52%   +0.8       35/ 33 %          |   0/ 70/ 30  vs    0/ 71/ 29   5.0/0.0
+  directrices alcistas        5640  +2.87%  +2.37%  +0.49%   +0.6       51/ 49 %          |   0/ 55/ 45  vs    0/ 57/ 43   5.0/0.0
+  directrices bajistas        7479  -2.85%  -2.68%  -0.17%   -0.3       33/ 33 %          |   0/ 70/ 30  vs    0/ 70/ 30   5.0/0.0
+  rebotes alcistas            1640  +2.17%  +2.41%  -0.25%   -0.4       50/ 48 %          |   0/ 58/ 42  vs    0/ 57/ 43   5.0/0.0
+  rebotes bajistas            1922  -2.06%  -2.23%  +0.17%   +0.3       34/ 34 %          |   0/ 68/ 32  vs    0/ 70/ 30   5.0/0.0
+  los 10 patrones de mayor |t|:
+    ▲ base_near_high             5238  +0.03%  +1.43%  -1.40%   -3.0   ganan  42 % (azar  49 %)
+    ▲ donch252_up               10716  +0.97%  +2.62%  -1.65%   -2.7   ganan  43 % (azar  50 %)
+    ▲ bb_squeeze_up              6943  +0.88%  +2.03%  -1.15%   -2.4   ganan  43 % (azar  48 %)
+    ▲ kicker_bull                  78 +10.95%  +3.76%  +7.20%   +2.2   ganan  67 % (azar  50 %)
+    ▲ donch100_up               15124  +1.30%  +2.50%  -1.20%   -2.2   ganan  44 % (azar  49 %)
+    ▲ doji_star_bull               24  -3.39%  +3.67%  -7.06%   -2.1   ganan  33 % (azar  55 %)
+    ▲ homing_pigeon               418  +1.60%  +3.98%  -2.38%   -2.1   ganan  44 % (azar  51 %)
+    ▼ triple_top                  197  -4.07%  -2.25%  -1.82%   -2.0   ganan  28 % (azar  36 %)
+    ▲ asc_triangle                496  +0.50%  +1.42%  -0.92%   -1.8   ganan  45 % (azar  48 %)
+    ▲ channel_up_up               315  +0.34%  +1.85%  -1.52%   -1.8   ganan  40 % (azar  48 %)
+  patrones con n ≥ 20: 104 · exceso medio -0.196 % · con exceso positivo 48 % · |t| ≥ 3,35: 0 (umbral orientativo; el del mejor de N está en el estudio de evidencia)
