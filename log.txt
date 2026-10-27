@@ -1,0 +1,68 @@
+  datos: 504 en caché, 0 por descargar (10y)
+  datos: OK 504 · fallidos 0
+/home/runner/work/vpscanner/vpscanner/vp/ml.py:92: RuntimeWarning: divide by zero encountered in divide
+  d = np.abs(price[:, None] - arr[jj]) / atr[:, None]
+    100/500 valores · 53s
+    200/500 valores · 101s
+    300/500 valores · 149s
+    400/500 valores · 197s
+/home/runner/work/vpscanner/vpscanner/vp/ml.py:92: RuntimeWarning: divide by zero encountered in divide
+  d = np.abs(price[:, None] - arr[jj]) / atr[:, None]
+    500/500 valores · 246s
+  panel: 712,268 filas · 1 combinaciones de reglas · 252s
+CONFIRMACIÓN DE LAS REGLAS CANDIDATAS · 500 acciones · 712,268 filas (las 300 más negociadas) · 2017-05-01 → 2026-10-12 · coste 0.15 %
+Reglas fijadas antes de mirar estas acciones (una hipótesis cada una, no se elige nada). Exceso = neto menos la media de todas las filas de ese día. p = fracción de repeticiones con los resultados desplazados en el calendario (al menos 300 sesiones) que igualan o superan lo observado.
+Universo: miembros actuales desde su incorporación al S&P 500. Salidas: op4a = stop 1,5 ATR · asegura +4 % · persigue 3 ATR · op4b = stop 2,5 ATR · asegura +4 % · persigue 3 ATR · op6a = stop 1,5 ATR · asegura +6 % · persigue 4 ATR · op6b = stop 2,5 ATR · asegura +6 % · persigue 4 ATR · run5 = stop que persigue 5 ATR sin asegurar · h10 = cierre a 10 sesiones sin stop · esc = escalera: stop 2,5 ATR · asegura +4 % y deja correr · asegura +10 % y persigue 2 ATR · esca = escalera con stop inicial 1,5 ATR · esc6 = escalera con stop inicial al 6 % del precio · esc10 = escalera con stop inicial al 10 % del precio
+
+C1 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op4b
+   n 13,697 (374 valores) · exceso +0.990 % (t +3.4; nulo p95 +0.451 % / t +1.9; p exceso 0.0, p t 0.0) · neto +2.403 % (azar mismas fechas +1.413 %) · ganan 72.0 % (todas las filas 58.5 %)
+   fiabilidad +7.6 puntos sobre el azar del día (t +6.5, p 0.0) · aseguró +4 % 73.0 %, +10 % 0.0 %, stop inicial 26.5 % · ganancia media 6.84 % / pérdida media -9.02 % · factor de beneficio 1.95
+   años positivos 9/10: 17:-1.3 18:+0.3 19:+1.0 20:+0.7 21:+0.9 22:+0.8 23:+1.3 24:+0.5 25:+1.9 26:+2.2
+C2 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · op6b
+   n 13,679 (374 valores) · exceso +1.095 % (t +3.6; nulo p95 +0.552 % / t +2.0; p exceso 0.0, p t 0.0) · neto +2.657 % (azar mismas fechas +1.562 %) · ganan 66.0 % (todas las filas 51.3 %)
+   fiabilidad +8.1 puntos sobre el azar del día (t +5.8, p 0.0) · aseguró +4 % 65.9 %, +10 % 0.0 %, stop inicial 32.7 % · ganancia media 8.75 % / pérdida media -9.17 % · factor de beneficio 1.85
+   años positivos 9/10: 17:-1.0 18:+0.4 19:+1.7 20:+0.7 21:+1.0 22:+0.9 23:+1.9 24:+0.4 25:+1.4 26:+2.3
+C3 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · h10
+   n 13,729 (374 valores) · exceso +0.735 % (t +4.2; nulo p95 +0.340 % / t +2.0; p exceso 0.0, p t 0.0) · neto +1.849 % (azar mismas fechas +1.115 %) · ganan 60.3 % (todas las filas 53.3 %)
+   fiabilidad +2.8 puntos sobre el azar del día (t +3.2, p 0.007) · aseguró +4 % 0.0 %, +10 % 0.0 %, stop inicial 0.0 % · ganancia media 6.8 % / pérdida media -5.66 % · factor de beneficio 1.82
+   años positivos 9/10: 17:-0.5 18:+0.7 19:+0.5 20:+0.3 21:+1.1 22:+0.8 23:+0.4 24:+1.3 25:+1.4 26:+1.2
+C4 · impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · h10
+   n 10,273 (404 valores) · exceso +0.800 % (t +4.1; nulo p95 +0.315 % / t +2.1; p exceso 0.0, p t 0.0) · neto +1.414 % (azar mismas fechas +0.614 %) · ganan 58.3 % (todas las filas 53.3 %)
+   fiabilidad +3.4 puntos sobre el azar del día (t +3.8, p 0.003) · aseguró +4 % 0.0 %, +10 % 0.0 %, stop inicial 0.0 % · ganancia media 6.02 % / pérdida media -5.03 % · factor de beneficio 1.68
+   años positivos 10/10: 17:+0.2 18:+1.1 19:+0.3 20:+1.1 21:+0.2 22:+1.2 23:+0.5 24:+1.0 25:+0.2 26:+1.6
+C5 · impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · h10
+   n 14,987 (422 valores) · exceso +0.681 % (t +3.9; nulo p95 +0.195 % / t +1.9; p exceso 0.0, p t 0.0) · neto +0.932 % (azar mismas fechas +0.251 %) · ganan 56.8 % (todas las filas 53.3 %)
+   fiabilidad +3.7 puntos sobre el azar del día (t +3.8, p 0.0) · aseguró +4 % 0.0 %, +10 % 0.0 %, stop inicial 0.0 % · ganancia media 5.73 % / pérdida media -5.37 % · factor de beneficio 1.4
+   años positivos 9/10: 17:+0.5 18:+0.5 19:+0.5 20:+1.2 21:-0.1 22:+0.6 23:+0.3 24:+1.2 25:+0.6 26:+1.7
+C6 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc
+   n 13,702 (374 valores) · exceso +0.836 % (t +3.8; nulo p95 +0.400 % / t +2.0; p exceso 0.0, p t 0.0) · neto +1.972 % (azar mismas fechas +1.137 %) · ganan 72.2 % (todas las filas 58.6 %)
+   fiabilidad +7.6 puntos sobre el azar del día (t +6.4, p 0.0) · aseguró +4 % 73.0 %, +10 % 20.5 %, stop inicial 26.4 % · ganancia media 6.22 % / pérdida media -9.05 % · factor de beneficio 1.78
+   años positivos 9/10: 17:-0.3 18:+0.3 19:+0.6 20:+0.5 21:+0.9 22:+0.8 23:+0.9 24:+0.9 25:+1.1 26:+2.5
+C7 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc6
+   n 13,715 (374 valores) · exceso +0.499 % (t +3.0; nulo p95 +0.293 % / t +1.5; p exceso 0.0, p t 0.0) · neto +1.128 % (azar mismas fechas +0.628 %) · ganan 60.0 % (todas las filas 58.2 %)
+   fiabilidad +1.5 puntos sobre el azar del día (t +1.7, p 0.063) · aseguró +4 % 60.8 %, +10 % 16.5 %, stop inicial 39.0 % · ganancia media 6.13 % / pérdida media -6.38 % · factor de beneficio 1.44
+   años positivos 8/10: 17:-0.3 18:+0.1 19:+0.5 20:+0.5 21:+0.6 22:+0.5 23:+0.7 24:-0.0 25:+0.8 26:+0.6
+C8 · impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · esc
+   n 10,252 (404 valores) · exceso +0.752 % (t +3.4; nulo p95 +0.335 % / t +2.2; p exceso 0.0, p t 0.003) · neto +1.458 % (azar mismas fechas +0.706 %) · ganan 66.8 % (todas las filas 58.6 %)
+   fiabilidad +6.1 puntos sobre el azar del día (t +6.4, p 0.0) · aseguró +4 % 67.6 %, +10 % 17.2 %, stop inicial 32.0 % · ganancia media 6.03 % / pérdida media -7.75 % · factor de beneficio 1.57
+   años positivos 9/10: 17:+0.7 18:+0.7 19:+0.4 20:+0.9 21:-0.2 22:+1.2 23:+1.0 24:+0.5 25:+0.5 26:+1.5
+
+ROBUSTEZ POR VOLATILIDAD (descriptiva, no fijada de antemano): la misma regla base en valores tranquilos (ATR/precio en el 40 % más bajo del día) o muy volátiles (40 % más alto)
+V1 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad (ATR/precio) en el 40 % más bajo → largo · op4b
+   n 2,385 (163 valores) · exceso -0.107 % (t -0.3; p exceso 0.367, p t 0.387) · neto +2.409 % (azar mismas fechas +2.517 %) · ganan 70.5 % (todas las filas 58.5 %)
+   años positivos 3/6: 18:-0.9 19:+3.3 20:-0.7 22:+0.1 23:+0.3 25:-1.8
+V2 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad en el 40 % más alto → largo · op4b
+   n 9,249 (306 valores) · exceso +1.471 % (t +3.5; p exceso 0.0, p t 0.01) · neto +2.449 % (azar mismas fechas +0.978 %) · ganan 72.8 % (todas las filas 58.5 %)
+   años positivos 9/10: 17:-1.3 18:+0.5 19:+0.5 20:+2.7 21:+1.4 22:+1.3 23:+1.8 24:+0.5 25:+2.6 26:+2.3
+V3 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad (ATR/precio) en el 40 % más bajo → largo · h10
+   n 2,388 (163 valores) · exceso -0.069 % (t -0.2; p exceso 0.41, p t 0.407) · neto +2.161 % (azar mismas fechas +2.229 %) · ganan 64.8 % (todas las filas 53.3 %)
+   años positivos 3/6: 18:-1.4 19:+1.3 20:-0.5 22:+0.1 23:+0.3 25:-0.7
+V4 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad en el 40 % más alto → largo · h10
+   n 9,274 (306 valores) · exceso +1.095 % (t +4.3; p exceso 0.0, p t 0.0) · neto +1.773 % (azar mismas fechas +0.678 %) · ganan 58.5 % (todas las filas 53.3 %)
+   años positivos 9/10: 17:-0.6 18:+1.0 19:+0.2 20:+1.6 21:+1.2 22:+1.3 23:+0.4 24:+1.4 25:+1.8 26:+1.1
+V5 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad (ATR/precio) en el 40 % más bajo → largo · esc
+   n 2,385 (163 valores) · exceso -0.028 % (t -0.1; p exceso 0.32, p t 0.32) · neto +2.093 % (azar mismas fechas +2.121 %) · ganan 70.5 % (todas las filas 58.6 %)
+   años positivos 2/6: 18:-0.5 19:+2.3 20:-0.8 22:+0.4 23:-0.2 25:-0.8
+V6 · precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor Y volatilidad en el 40 % más alto → largo · esc
+   n 9,254 (306 valores) · exceso +1.202 % (t +4.2; p exceso 0.0, p t 0.0) · neto +1.966 % (azar mismas fechas +0.764 %) · ganan 73.0 % (todas las filas 58.6 %)
+   años positivos 9/10: 17:-0.3 18:+0.4 19:+0.2 20:+1.9 21:+1.3 22:+1.2 23:+1.3 24:+0.9 25:+1.5 26:+2.6
