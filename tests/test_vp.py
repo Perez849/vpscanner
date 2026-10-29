@@ -1175,6 +1175,9 @@ def test_cartera():
     assert 'ESTRUCTURAS DE CARTERA' in cartera.report(ev) and 'SENSIBILIDAD AL COSTE' in cartera.report(ev)
     assert {'p1', 'p1_r5', 'p1_dia', 'p1_dia_sc'} <= set(es) and es['p1']['operaciones'] < es['p5']['operaciones'] and es['p1_dia_sc']['operaciones'] <= es['todas']['operaciones'] and c['gan_media'] > 0 > c['perd_media'], es['p1']
     assert b['por_rango'] == {} or {'top1', 'resto', 'todas'} <= set(b['por_rango'])
+    orc = b['oraculo']                                                         # el techo con bola de cristal: solo las ganadoras; todas ganan y rinde más que la cartera real
+    assert orc['plan']['ganan'] == 100.0 and orc['plan']['anual'] > c['anual'] and orc['todas']['ganan'] == 100.0 and orc['filas_ganadoras'] < orc['filas_regla'] and orc['plan_r3']['anual'] > orc['plan']['anual'], orc
+    assert 'BOLA DE CRISTAL' in cartera.report(ev)
     assert set(ev['menu']['T']) == {'h10', 'esc'} and 'azar_universo' in ev['menu']['T']['esc'] and 'todas' in ev['menu']['T']['esc'] and ev['meta']['menu']['esc'].startswith('tu escalera')
     txt = cartera.report(ev)
     assert 'CASO BASE' in txt and 'MENÚ DE SALIDAS' in txt and 'azar del universo' in txt and 'todas las señales' in txt

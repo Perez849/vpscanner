@@ -421,6 +421,13 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
                         est[nm] = {'txt': txt, **metrics(s3['eq'], yrs, s3['trades'], s3['expo'])}
                     out['base']['estructuras'] = est
                     out['base']['por_rango'] = rank_stats(Wd, mask, e)
+                    # EL TECHO, mirando al futuro (imposible de conseguir): la misma cartera con solo las filas que acabaron en ganancia, como si una bola de cristal descartara todas las perdedoras antes de entrar
+                    ganadoras = mask & (np.nan_to_num(Wd.net_rows[e], nan=-1.0) > 0)
+                    so = simulate(Wd, ganadoras, e, 'fiab', rng, d0=d0)
+                    st_ = simulate(Wd, ganadoras, e, 'fiab', rng, max_pos=big, corr_min=2.0, d0=d0)
+                    sp = simulate(Wd, ganadoras, e, 'fiab', rng, d0=d0, risk=3.0)
+                    out['base']['oraculo'] = {'filas_regla': int((mask & np.isfinite(Wd.net_rows[e])).sum()), 'filas_ganadoras': int(ganadoras.sum()),
+                                              'plan': metrics(so['eq'], yrs, so['trades'], so['expo']), 'todas': metrics(st_['eq'], yrs, st_['trades'], st_['expo']), 'plan_r3': metrics(sp['eq'], yrs, sp['trades'], sp['expo'])}
                     cost = {}
                     for nm, kw in (('p5', {}), ('p20_sc', {'max_pos': 20, 'corr_min': 2.0}), ('todas', {'max_pos': big, 'corr_min': 2.0})):       # comisiones y deslizamiento: sensibilidad al coste de ida y vuelta
                         cost[nm] = {}
@@ -464,6 +471,12 @@ def report(ev: Dict) -> str:
             for k_, v in b['estructuras'].items():
                 L.append(('   ' + v['txt']).ljust(70) + f"{v['anual']:+8.1f}{v['caida_max']:+8.1f}{v['sharpe']:8.2f}{(v['mar'] or 0):6.2f}{v['exposicion_media']:6.0f}{v['operaciones']:6d}{v['por_año_ops']:8.0f}{v['tamaño_medio']:6.1f}"
                          + (f"{v['ganan']:7.1f}{v['neto_medio']:+9.2f}" + f"  {v['gan_media']:+.1f}/{v['perd_media']:+.1f}".rjust(15) if v.get('ganan') is not None and v.get('gan_media') is not None and v.get('perd_media') is not None else ''))
+        if b.get('oraculo'):
+            o_ = b['oraculo']
+            L += ['', f"EL TECHO CON BOLA DE CRISTAL (mirando al futuro, imposible de conseguir): la misma cartera con solo las operaciones que acabaron en ganancia ({o_['filas_ganadoras']:,} de {o_['filas_regla']:,} filas de la regla)"]
+            for k_, t_ in (('plan', 'plan de 5, riesgo 1 %'), ('plan_r3', 'plan de 5, riesgo 3 %'), ('todas', 'todas las señales ganadoras, riesgo 1 %')):
+                v = o_[k_]
+                L.append(f"   {t_:42s} {v['anual']:+7.1f} %/año · caída {v['caida_max']:+.1f} % · {v['operaciones']} operaciones · ganan {v['ganan']} % · neto medio {v['neto_medio']:+.2f} % · invertido {v['exposicion_media']:.0f} %")
         if b.get('por_rango'):
             L += ['', '¿GANA MÁS LA OPERACIÓN DE MAYOR FIABILIDAD DE CADA DÍA? (por operación, sin límites de cartera; filas de la regla con volatilidad alta y modelo fuera de muestra)']
             L.append('   puesto en el ranking del día'.ljust(34) + 'n'.rjust(7) + 'neto'.rjust(8) + 'azar día'.rjust(10) + 'exceso'.rjust(8) + 't'.rjust(6) + 'ganan'.rjust(7) + 'gana/pierde'.rjust(15))
