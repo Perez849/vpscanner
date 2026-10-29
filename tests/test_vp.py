@@ -1301,6 +1301,95 @@ def test_autopsia():
     print(f"ok · autopsia: camino coherente con el simulador, patrón plantado hallado y confirmado fuera de muestra (neto {sm['neto_todas']:+.2f} → {sm['neto_quedan']:+.2f}), nada en ruido, recorrido completo ({a['n']} operaciones)")
 
 
+def test_factores():
+    """Otras familias de estrategias: la contabilidad de la cartera diaria cuadra (entrada en la apertura siguiente a la orden, salida de cierre a apertura, coste por lado, sin apalancamiento), nada mira al
+    futuro, un momento plantado aparece y en paseos aleatorios no hay alfa, los eventos respetan huecos y plazos, y el recorrido completo con la regla de rebote funciona."""
+    from vp import factores as F
+
+    def universe(n, T, seed, drift_sd=0.0, gaps=False):
+        bars = {}
+        rng = np.random.default_rng(seed)
+        for j in range(n):
+            b = walk(T, seed=seed * 1000 + j, mu=rng.normal(0, drift_sd), sig=0.015, t0=1400000000)
+            if gaps:
+                for d in np.random.default_rng(j).choice(np.arange(300, T - 50), 8, replace=False):
+                    b['o'][d] = b['c'][d - 1] * 1.06
+                    b['c'][d] = max(b['c'][d], b['o'][d] * 1.01)
+                    b['h'][d] = max(b['h'][d], b['c'][d])
+                    b['v'][d] *= 4
+            bars[f'S{j}'] = b
+        return bars
+    # 1. contabilidad: una posición comprada al cierre del día 10 entra en la apertura del 11, se deja correr y sale en la apertura siguiente a la orden de salida
+    P = F.Panel(universe(5, 400, 3))
+    tgt = np.zeros((P.nd, P.ns))
+    trade = np.zeros((P.nd, P.ns), bool)
+    tgt[10, 0], trade[10, 0] = 1.0, True
+    r0 = F.run_weights(P, tgt, trade, cost=0.0)['ret']
+    assert abs(np.prod(1 + r0[11:]) - P.C[-1, 0] / P.O[11, 0]) < 1e-9 and (r0[:11] == 0).all()
+    tgt[20, 0], trade[20, 0] = 0.0, True
+    r1 = F.run_weights(P, tgt, trade, cost=0.0)['ret']
+    assert abs(np.prod(1 + r1[11:22]) - P.O[21, 0] / P.O[11, 0]) < 1e-9 and (r1[22:] == 0).all()
+    c = 0.002
+    r2 = F.run_weights(P, tgt, trade, cost=c)['ret']
+    x = 1.0 / (1.0 + c)                                                                       # el coste de entrada sale de la caja: se compra 1/(1+c)
+    assert abs(np.prod(1 + r2[11:22]) - x * (P.O[21, 0] - c * P.C[20, 0]) / P.O[11, 0]) < 1e-9, (np.prod(1 + r2[11:22]), x)
+    # 2. sin apalancamiento y huecos de los eventos
+    ub = universe(60, 1800, 1, 0.0008, True)
+    P = F.Panel(ub)
+    st = F.strategies(P)
+    res = {k: F.run_weights(P, *v) for k, v in st.items()}
+    assert all(r['expo'].max() <= 1.0 + 1e-9 and r['expo'].min() >= -1e-12 for r in res.values()), {k: r['expo'].max() for k, r in res.items()}
+    tg, tr = st['hueco_alza']
+    ent = list(zip(*np.nonzero(tr & (tg > 0))))
+    assert len(ent) >= 20
+    for d, j in ent:
+        if d + 20 < P.nd:
+            assert tr[d + 20, j] and tg[d + 20, j] == 0.0                                      # sale exactamente 20 sesiones después
+    n_in = np.zeros(P.nd)
+    for d, j in ent:
+        n_in[d] += 1
+        if d + 20 < P.nd:
+            n_in[d + 20] -= 1
+    assert np.cumsum(n_in).max() <= F.SLOTS and res['hueco_alza']['expo'].max() <= 1.0 + 1e-9
+    for d, j in ent[:50]:
+        assert P.O[d, j] / P.C[d - 1, j] - 1.0 >= 0.04 - 1e-9 and P.C[d, j] > P.O[d, j]
+    # 3. nada mira al futuro: con los datos cortados, los rendimientos anteriores al corte son idénticos
+    cut = 1500
+    Pc = F.Panel({s: {k: v[:cut] for k, v in b.items()} for s, b in ub.items()})
+    stc = F.strategies(Pc)
+    for k in st:
+        a = F.run_weights(P, *st[k])['ret'][:cut - 3]
+        b = F.run_weights(Pc, *stc[k])['ret'][:cut - 3]
+        assert np.allclose(a, b, atol=1e-12), k
+    # 4. un momento plantado se ve (alfa con t grande) y en paseos aleatorios no hay alfa
+    def alpha_of(drift_sd, seed):
+        Pm = F.Panel(universe(60, 1800, seed, drift_sd))
+        r = F.run_weights(Pm, *F.strategies(Pm)['mom_12_1'])['ret']
+        return F.alpha_beta(r[400:], Pm.mret[400:])
+    pl = alpha_of(0.002, 11)
+    assert pl['t_alfa'] > 3 and pl['alfa'] > 5, pl
+    nulls = [alpha_of(0.0, s) for s in (21, 22, 23)]
+    assert all(abs(n_['t_alfa']) < 3 for n_ in nulls), nulls
+    # 5. ayudas: t por bloques, mezcla y rentabilidad a una caída fija
+    rg = np.random.default_rng(4)
+    z = rg.normal(0, 0.01, 4000)
+    assert abs(F.block_t(z)) < 4 and F.block_t(z + 0.004) > 8
+    assert np.allclose(F.blend({'a': z, 'b': z}, ['a', 'b']), z)
+    h = F.at_drawdown(rg.normal(0.0006, 0.012, 2500), 0.25)
+    assert h['L'] and abs(h['anual']) < 200 and h['L'] > 0
+    eq = np.cumprod(1 + F.lever(rg.normal(0.0006, 0.012, 2500), 1.0))
+    assert abs(float((eq / np.maximum.accumulate(eq) - 1).min())) > 0
+    zero = F.at_drawdown(np.zeros(500), 0.25)
+    assert zero['anual'] is None or zero['anual'] <= 0.0                                        # apalancar una cartera parada solo cuesta el dinero prestado
+    # 6. recorrido completo con la regla de rebote (datos sintéticos con reversión)
+    bars = {f'S{j}': _walk_ar(1500, 5000 + j, 0.25) for j in range(40)}
+    ev = F.analyze(bars, join=None, workers=1, with_rule=True, k=40)
+    assert set(ev['carteras']) >= set(F.DESC) | {'regla_todas', 'regla_plan'} and 'mezclas' in ev and 'todas_las_familias' in ev['mezclas'] and ev['correlacion_regla']
+    txt = F.report(ev)
+    assert 'CARTERAS (ventana común)' in txt and 'MEZCLAS A IGUAL RIESGO' in txt and 'CORRELACIÓN DIARIA CON LA REGLA' in txt
+    print(f"ok · factores: contabilidad exacta, sin apalancamiento, sin mirar al futuro, momento plantado t {pl['t_alfa']:+.1f} y nada en paseos aleatorios, {len(ev['carteras'])} carteras y {len(ev['mezclas'])} mezclas")
+
+
 def test_web_impulso_constants():
     """La web copia las condiciones y las salidas de la regla de impulso: tienen que ser exactamente las de vp/search.py, y las dos partes (figuras / impulso) tienen sus propias rutas y pestañas."""
     import re
@@ -1319,7 +1408,7 @@ def test_web_impulso_constants():
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_autopsia, test_web_impulso_constants]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_autopsia, test_factores, test_web_impulso_constants]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»

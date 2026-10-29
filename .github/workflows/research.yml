@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       cmd:
-        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado) | search (búsqueda de la regla que más gana sobre el azar, con selección hacia delante) | confirm (evalúa en el universo elegido las reglas candidatas fijadas de antemano) | screen (cribador: qué acciones cumplen hoy las reglas candidatas) | fiab (modelo de fiabilidad walk-forward de la escalera del operador) | cartera (cartera simulada con la disciplina del plan de hoy y menú de salidas) | autopsia (por qué pierden las perdedoras, patrones con validación fuera de muestra y mitigación)'
+        description: 'lab (analiza la lista de seguimiento y vuelca las series completas) | study (estudio de evidencia) | plan (estudio del plan completo con stop y objetivo) | ml (aprendizaje automático fuera de muestra) | context (contexto, confluencia y meta-etiquetado) | search (búsqueda de la regla que más gana sobre el azar, con selección hacia delante) | confirm (evalúa en el universo elegido las reglas candidatas fijadas de antemano) | screen (cribador: qué acciones cumplen hoy las reglas candidatas) | fiab (modelo de fiabilidad walk-forward de la escalera del operador) | cartera (cartera simulada con la disciplina del plan de hoy y menú de salidas) | autopsia (por qué pierden las perdedoras, patrones con validación fuera de muestra y mitigación) | factores (otras familias de estrategias: factores, eventos y mercado, y su mezcla con la regla de rebote)'
         default: 'lab'
       symbols:
         description: 'valores separados por comas (vacío = lista por defecto del lab o S&P 500 + Nasdaq-100 en el estudio)'
@@ -70,6 +70,8 @@ jobs:
             python -u -m vp screen --symbols "$INPUT_SYMBOLS" --out /tmp/out $RP 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "autopsia" ]; then
             python -u -m vp autopsia --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-300}" --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
+          elif [ "$CMD" = "factores" ]; then
+            python -u -m vp factores --symbols "$INPUT_SYMBOLS" --out /tmp/out --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "cartera" ]; then
             python -u -m vp cartera --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-20}" --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "confirm" ]; then
