@@ -1,0 +1,37 @@
+  datos: 504 en caché, 0 por descargar (10y)
+  datos: OK 504 · fallidos 0
+  registro replanificado con la cartera de 5 huecos: 2026-10-26: abiertas [] → entra ['FIX', 'ON', 'FCX', 'MRK', 'NEM'] · 2026-10-27: abiertas ['FCX', 'FIX', 'MRK', 'NEM', 'ON'] → entra []
+/home/runner/work/vpscanner/vpscanner/vp/ml.py:92: RuntimeWarning: divide by zero encountered in divide
+  d = np.abs(price[:, None] - arr[jj]) / atr[:, None]
+    100/500 valores · 53s
+    200/500 valores · 102s
+    300/500 valores · 150s
+    400/500 valores · 199s
+/home/runner/work/vpscanner/vpscanner/vp/ml.py:92: RuntimeWarning: divide by zero encountered in divide
+  d = np.abs(price[:, None] - arr[jj]) / atr[:, None]
+    500/500 valores · 248s
+  panel: 715,063 filas · 1 combinaciones de reglas · 254s
+CRIBADOR DE LA REGLA DE IMPULSO · 2026-10-28 · 300 acciones en el universo (las 300 más negociadas) · 61.0 % sobre su media de 200 · fiabilidad: {'filas_entrenamiento': 694963, 'hasta': '2026-07-24', 'base_hoy': 63.5}
+  Impulso alto y bajo su media de 200 (imp_bajo200: precio bajo su media de 200 Y impulso 12-1 meses en el 20 % mejor → largo · esc): 15 hoy (0 nuevas)
+  Impulso alto y 2 o más señales bajistas (imp_bajistas: impulso 12-1 meses en el 20 % mejor Y 2 o más patrones bajistas a la vez → largo · esc): 10 hoy (0 nuevas)
+  Impulso alto y RSI(2) ≤ 10 (imp_rsi2: impulso 12-1 meses en el 20 % mejor Y RSI(2) ≤ 10 → largo · esc): 0 hoy (0 nuevas)
+    FLEX       93.03  fiab 77.4  vol  98  impulso  88  vs 200   -9.6 %  grupo 2  stop -17.9 %  imp_bajo200,imp_bajistas
+    COHR      239.59  fiab 77.2  vol  99  impulso  94  vs 200  -19.1 %  grupo 2  stop -20.6 %  imp_bajo200
+    CIEN      363.21  fiab 77.1  vol  98  impulso  92  vs 200  -10.1 %  grupo 2  stop -17.2 %  imp_bajo200
+    FIX      1345.77  fiab 77.0  vol  96  impulso  87  vs 200  -16.1 %  grupo 2  stop -15.9 %  imp_bajo200,imp_bajistas
+    TER       313.24  fiab 75.4  vol  97  impulso  96  vs 200  -10.2 %  grupo 2  stop -17.1 %  imp_bajo200
+    GLW       131.20  fiab 75.4  vol  94  impulso  90  vs 200  -15.5 %  grupo 2  stop -14.8 %  imp_bajo200
+    LRCX      253.82  fiab 75.3  vol  93  impulso  93  vs 200  -10.6 %  grupo 2  stop -14.1 %  imp_bajo200
+    ARM       235.90  fiab 75.2  vol  95  impulso  90  vs 200   +3.5 %  grupo 2  stop -15.4 %  imp_bajistas
+    KLAC      158.77  fiab 72.3  vol  88  impulso  87  vs 200  -12.7 %  grupo 2  stop -12.1 %  imp_bajo200,imp_bajistas
+    WDC       396.42  fiab 72.3  vol  96  impulso  98  vs 200   -5.0 %  grupo 6  stop -15.8 %  imp_bajo200
+    AKAM       98.10  fiab 72.3  vol  91  impulso  85  vs 200  -12.8 %  grupo 1  stop -13.2 %  imp_bajo200
+    ON         75.63  fiab 71.3  vol  86  impulso  86  vs 200   -8.1 %  grupo 2  stop -11.8 %  imp_bajo200
+    GEV       878.03  fiab 70.6  vol  91  impulso  88  vs 200   -6.8 %  grupo 2  stop -13.4 %  imp_bajo200,imp_bajistas
+    AMAT      416.00  fiab 70.4  vol  87  impulso  95  vs 200   -6.2 %  grupo 2  stop -11.8 %  imp_bajo200
+    PWR       606.89  fiab 69.4  vol  85  impulso  83  vs 200   -2.8 %  grupo 2  stop -11.5 %  imp_bajo200,imp_bajistas
+    FCX        66.60  fiab 68.5  vol  74  impulso  88  vs 200   +2.2 %  grupo 3  stop -9.3 %  imp_bajistas
+    CAT       713.38  fiab 67.5  vol  74  impulso  81  vs 200  -11.9 %  grupo 2  stop -9.2 %  imp_bajo200,imp_bajistas
+    TGT       148.96  fiab 66.2  vol  54  impulso  89  vs 200  +11.5 %  grupo 5  stop -7.2 %  imp_bajistas
+    NEM       113.92  fiab 65.9  vol  67  impulso  84  vs 200   +1.3 %  grupo 4  stop -8.4 %  imp_bajistas
+  plan de hoy: abiertas ['FCX', 'FIX', 'MRK', 'NEM'] · huecos 1 · entran ['ARM'] · cartera del plan: {'n': 6, 'cerradas': 1, 'abiertas': 4, 'pendientes': 1, 'ganan': 1, 'pct_ganan': 100.0, 'asegura4': 1, 'asegura10': 0, 'stop': 0, 'media_neta': 1.482, 'suma_neta': 1.48, 'gan_media': 1.48, 'perd_media': None, 'abiertas_media': 2.91, 'asegurado_abiertas': 1} · todas las señales: {'n': 25, 'cerradas': 1, 'abiertas': 24, 'pendientes': 0, 'ganan': 1, 'pct_ganan': 100.0, 'asegura4': 1, 'asegura10': 0, 'stop': 0, 'media_neta': 1.482, 'suma_neta': 1.48, 'gan_media': 1.48, 'perd_media': None, 'abiertas_media': 4.04, 'asegurado_abiertas': 12}
