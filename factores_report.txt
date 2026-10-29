@@ -1,0 +1,235 @@
+OTRAS FAMILIAS DE ESTRATEGIAS · 504 acciones · 295 operables por día (las más negociadas) · 2016-10-24 → 2026-10-28 · coste 0.15 % ida y vuelta · miembros en la fecha
+Ventana común con la regla de rebote: desde 2020-01-02. Decisión al cierre, ejecución en la apertura siguiente, sin apalancamiento, caja sin interés. Beta, alfa y exceso se miden contra el universo a partes iguales SIN costes.
+«a 25 %»: rentabilidad anual al escalar la cartera hasta una caída máxima de 25 % (por encima de 1× se paga 4 % anual por lo prestado). Con ~30 carteras miradas a la vez, una t de alfa por debajo de 3.1 no distingue mérito de suerte de elegir la mejor.
+
+CARTERAS (ventana común) · beta y alfa frente al universo a partes iguales
+   cartera                  %/año   caída Sharpe   a/c  inv.  beta   alfa  t alfa  exceso t exc.   rot.         a 25 %
+   mercado                  +12.1   -38.7   0.56  0.31   100  0.99   -0.4   -1.38    -0.6  -2.18    128      +7.8 ×0.6
+   mom_12_1                 +18.9   -36.4   0.58  0.52   100  1.05   +7.0   +1.01    +7.7  +1.12    725    +13.3 ×0.66
+   mom_6_1                  +18.9   -39.9   0.58  0.47   100  1.06   +6.8   +0.97    +7.6  +1.10   1070    +12.0 ×0.59
+   rev_1m                    +7.7   -53.2   0.25  0.14   100  1.26   -6.1   -1.16    -2.3  -0.41   2102      +4.1 ×0.4
+   rev_1s                   +17.0   -59.0   0.50  0.29   100  1.28   +2.4   +0.46    +6.3  +1.11   9069     +6.7 ×0.34
+   cerca_max                 +6.0   -28.1   0.31  0.21   100  0.66   -1.8   -0.48    -6.7  -1.44   1741     +5.5 ×0.88
+   baja_vol                  +6.4   -31.6   0.39  0.20   100  0.58   -0.8   -0.25    -6.8  -1.48    816     +5.1 ×0.77
+   tendencia                 +4.5   -28.4   0.34  0.16    82  0.38   -0.1   -0.02    -8.9  -1.98   1002     +4.0 ×0.86
+   panico_todo               +4.6   -26.7   0.31  0.17    11  0.47   -1.3   -0.35    -8.8  -1.51    176     +4.3 ×0.93
+   panico_30                 +5.4   -38.0   0.24  0.14    11  0.68   -1.9   -0.38    -6.6  -1.08    176     +4.0 ×0.63
+   hueco_alza                +3.4   -35.1   0.19  0.10    41  0.63   -4.0   -1.02    -9.3  -1.75   1035     +2.7 ×0.68
+   hueco_baja                +1.8   -46.4   0.10  0.04    33  0.58   -4.9   -1.36   -11.0  -2.11   1660     +1.2 ×0.48
+   ruptura_max               +7.9   -23.9   0.47  0.33    79  0.49   +2.1   +0.53    -5.2  -0.87   1994     +8.1 ×1.05
+   bh_BTC-USD               +43.4   -76.6   0.60  0.57   100  1.03  +39.0   +1.79   +39.4  +1.81 n/d    +11.8 ×0.23
+   tend_BTC-USD             +40.1   -59.0   0.73  0.68    67  0.31  +39.8   +2.22   +30.0  +1.70 n/d    +16.2 ×0.37
+   bh_ETH-USD               +53.5   -78.4   0.53  0.68   100  1.40  +55.3   +2.02   +61.0  +2.17 n/d    +15.8 ×0.21
+   tend_ETH-USD             +38.9   -66.8   0.54  0.58    60  0.44  +45.2   +1.99   +37.2  +1.67 n/d    +15.4 ×0.31
+   bh_GLD                   +15.0   -26.4   0.75  0.57   100  0.13  +14.0   +2.33    +1.6  +0.22 n/d    +14.3 ×0.94
+   tend_GLD                  +9.8   -30.6   0.57  0.32    74  0.06   +9.9   +1.85    -3.5  -0.42 n/d     +8.0 ×0.79
+   bh_QQQ                   +19.5   -35.6   0.72  0.55   100  0.97   +7.3   +1.35    +6.9  +1.26 n/d    +13.8 ×0.68
+   tend_QQQ                 +18.2   -23.3   0.93  0.78    81  0.43  +12.5   +2.26    +4.4  +0.69 n/d    +19.6 ×1.08
+   bh_SOXL                  +28.5   -90.5   0.22  0.32   100  3.99  +36.2   +1.32   +78.7  +2.38 n/d    +14.2 ×0.16
+   tend_SOXL                 +9.6   -79.9   0.11  0.12    64  1.31  +24.8   +0.91   +29.2  +1.06 n/d     +8.1 ×0.21
+   bh_SPY                   +13.6   -34.1   0.63  0.40   100  0.92   +1.8   +0.81    +0.6  +0.29 n/d      +9.9 ×0.7
+   tend_SPY                  +9.0   -23.1   0.68  0.39    79  0.33   +4.9   +1.23    -4.7  -0.91 n/d     +9.4 ×1.08
+   bh_TLT                    -7.4   -55.1  -0.47 -0.14   100 -0.09   -4.9   -0.93   -20.5  -2.44 n/d     -2.5 ×0.38
+   tend_TLT                  -4.5   -41.5  -0.46 -0.11    31 -0.14   -2.0   -0.63   -18.1  -2.30 n/d     -2.2 ×0.54
+   bh_TQQQ                  +31.3   -81.8   0.37  0.38   100  2.86  +14.4   +0.89   +40.9  +1.99 n/d    +11.3 ×0.22
+   tend_TQQQ                +41.7   -57.8   0.64  0.72    81  1.28  +31.9   +1.93   +35.9  +2.14 n/d    +17.7 ×0.36
+   bh_UPRO                  +23.5   -76.8   0.35  0.31   100  2.75   +0.6   +0.12   +25.5  +1.89 n/d     +8.7 ×0.24
+   tend_UPRO                +19.3   -55.9   0.47  0.35    79  0.97  +11.2   +0.96   +10.9  +0.93 n/d     +8.6 ×0.36
+   tend_cartera             +11.3   -16.3   1.11  0.69    65  0.16   +9.0   +2.78    -2.9  -0.49 n/d    +14.7 ×1.47
+   regla_todas              +14.0   -34.2   0.57  0.41    59  0.87   +3.4   +0.72    +1.5  +0.31 n/d     +10.2 ×0.7
+   regla_plan                +6.8   -17.2   0.63  0.40    34  0.31   +2.8   +1.01    -7.1  -1.44 n/d     +7.7 ×1.42
+   regla_bajistas           +15.2   -32.8   0.63  0.47    72  0.78   +5.6   +0.99    +2.5  +0.41 n/d    +11.6 ×0.74
+   regla_rsi2               +16.9   -33.3   0.65  0.51    79  0.83   +6.6   +1.26    +4.3  +0.80 n/d    +12.6 ×0.72
+   regla_run5               +23.6   -35.0   0.78  0.67    84  1.07   +9.7   +1.71   +10.6  +1.89 n/d    +16.5 ×0.68
+   relleno_regla_todas      +20.8   -35.8   0.69  0.58 n/d  1.17   +6.0   +1.41    +8.4  +2.03 n/d    +14.5 ×0.67
+   relleno_regla_plan       +15.6   -39.0   0.63  0.40 n/d  1.04   +2.3   +0.96    +2.9  +1.18 n/d      +9.8 ×0.6
+   vt_regla_todas            +9.6   -19.4   0.60  0.50 n/d  0.45   +3.9   +1.03    -3.9  -0.73 n/d    +10.9 ×1.32
+   vt_mercado                +9.2   -20.0   0.55  0.46 n/d  0.64   +1.1   +0.40    -4.1  -1.42 n/d     +10.0 ×1.2
+   vt_relleno_regla_todas   +13.3   -17.8   0.76  0.75 n/d  0.57   +5.8   +1.58    -0.3  -0.06 n/d    +16.6 ×1.41
+
+AÑO A AÑO (ventana común, %)
+   mercado                20:+11 21:+28 22:-12 23:+17 24:+13 25:+14 26:+16
+   mom_12_1               20:+16 21:+17 22:+2 23:+8 24:+26 25:+16 26:+48
+   mom_6_1                20:+12 21:+34 22:-7 23:+19 24:+20 25:+11 26:+48
+   rev_1m                 20:-6 21:+38 22:-24 23:+34 24:-2 25:+6 26:+19
+   rev_1s                 20:+29 21:+24 22:-7 23:+25 24:+10 25:+8 26:+31
+   cerca_max              20:+22 21:+16 22:-12 23:-3 24:+16 25:+8 26:-2
+   baja_vol               20:+9 21:+18 22:-1 23:+2 24:+12 25:+3 26:+4
+   tendencia              20:-12 21:+28 22:-15 23:+6 24:+13 25:+2 26:+14
+   panico_todo            20:+9 21:+0 22:+4 23:+5 24:+0 25:+14 26:+0
+   panico_30              20:+9 21:+0 22:+1 23:+5 24:+0 25:+23 26:+0
+   hueco_alza             20:-11 21:-6 22:-2 23:+8 24:+19 25:+6 26:+12
+   hueco_baja             20:-31 21:-0 22:+15 23:+6 24:+0 25:+12 26:+19
+   ruptura_max            20:-2 21:+9 22:-13 23:+12 24:+14 25:+15 26:+24
+   bh_BTC-USD             20:+315 21:+60 22:-64 23:+154 24:+122 25:-6 26:-7
+   tend_BTC-USD           20:+209 21:+11 22:-6 23:+49 24:+104 25:-3 26:+4
+   bh_ETH-USD             20:+479 21:+399 22:-67 23:+92 24:+45 25:-11 26:-21
+   tend_ETH-USD           20:+296 21:+399 22:-23 23:+3 24:+3 25:-30 26:-18
+   bh_GLD                 20:+24 21:-4 22:-1 23:+13 24:+27 25:+64 26:-6
+   tend_GLD               20:+9 21:-14 22:-9 23:+7 24:+27 25:+64 26:-0
+   bh_QQQ                 20:+45 21:+27 22:-33 23:+54 24:+25 25:+20 26:+18
+   tend_QQQ               20:+31 21:+27 22:-15 23:+34 24:+25 25:+15 26:+15
+   bh_SOXL                20:+60 21:+119 22:-86 23:+225 24:-13 25:+54 26:+155
+   tend_SOXL              20:-17 21:+79 22:-40 23:+27 24:-10 25:+49 26:+23
+   bh_SPY                 20:+15 21:+27 22:-19 23:+24 24:+23 25:+16 26:+13
+   tend_SPY               20:+6 21:+27 22:-17 23:+9 24:+23 25:+10 26:+10
+   bh_TLT                 20:+15 21:-6 22:-33 23:-1 24:-12 25:-0 26:-7
+   tend_TLT               20:+16 21:-4 22:-3 23:-8 24:-19 25:-4 26:-5
+   bh_TQQQ                20:+100 21:+83 22:-79 23:+193 24:+56 25:+33 26:+37
+   tend_TQQQ              20:+82 21:+83 22:-39 23:+101 24:+56 25:+31 26:+29
+   bh_UPRO                20:+7 21:+98 22:-57 23:+67 24:+62 25:+31 26:+31
+   tend_UPRO              20:+11 21:+98 22:-44 23:+15 24:+62 25:+19 26:+22
+   tend_cartera           20:+33 21:+21 22:-11 23:+9 24:+14 25:+13 26:+3
+   regla_todas            20:+7 21:+20 22:-3 23:+26 24:+9 25:+24 26:+15
+   regla_plan             20:+3 21:+14 22:-11 23:+17 24:+12 25:+9 26:+6
+   regla_bajistas         20:-4 21:+10 22:+12 23:+10 24:+32 25:+10 26:+41
+   regla_rsi2             20:+9 21:+17 22:-19 23:+23 24:+18 25:+39 26:+38
+   regla_run5             20:+26 21:+33 22:+15 23:+38 24:+6 25:+30 26:+15
+   relleno_regla_todas    20:+30 21:+33 22:-8 23:+27 24:+10 25:+31 26:+25
+   relleno_regla_plan     20:+13 21:+34 22:-16 23:+27 24:+20 25:+18 26:+17
+   vt_regla_todas         20:+3 21:+21 22:-4 23:+18 24:+6 25:+18 26:+5
+   vt_mercado             20:+7 21:+21 22:-12 23:+11 24:+12 25:+8 26:+18
+   vt_relleno_regla_todas 20:+13 21:+28 22:-5 23:+15 24:+6 25:+20 26:+17
+
+DESDE EL PRINCIPIO DE SUS DATOS (antes de 2020; la regla de rebote no existe antes de 2020)
+   mercado                desde 2017-01-03: +12.5 %/año · caída -38.7 % · Sharpe 0.64
+   mom_12_1               desde 2017-11-01: +17.2 %/año · caída -36.4 % · Sharpe 0.57
+   mom_6_1                desde 2017-05-01: +17.1 %/año · caída -39.9 % · Sharpe 0.59
+   rev_1m                 desde 2017-01-03: +10.2 %/año · caída -53.2 % · Sharpe 0.37
+   rev_1s                 desde 2016-12-19: +15.1 %/año · caída -59.0 % · Sharpe 0.51
+   cerca_max              desde 2017-09-01: +6.2 %/año · caída -28.1 % · Sharpe 0.34
+   baja_vol               desde 2017-02-01: +8.1 %/año · caída -31.6 % · Sharpe 0.54
+   tendencia              desde 2017-06-14: +5.4 %/año · caída -28.4 % · Sharpe 0.43
+   panico_todo            desde 2018-12-18: +4.9 %/año · caída -26.7 % · Sharpe 0.35
+   panico_30              desde 2018-12-18: +6.2 %/año · caída -38.0 % · Sharpe 0.29
+   hueco_alza             desde 2016-12-23: +3.2 %/año · caída -36.4 % · Sharpe 0.2
+   hueco_baja             desde 2017-01-09: +1.1 %/año · caída -49.3 % · Sharpe 0.07
+   ruptura_max            desde 2017-08-16: +6.3 %/año · caída -27.1 % · Sharpe 0.4
+   bh_BTC-USD             desde 2016-10-25: +62.0 %/año · caída -83.0 % · Sharpe 0.72
+   tend_BTC-USD           desde 2017-06-14: +47.2 %/año · caída -65.4 % · Sharpe 0.72
+   bh_ETH-USD             desde 2017-11-10: +26.0 %/año · caída -93.5 % · Sharpe 0.27
+   tend_ETH-USD           desde 2019-05-14: +26.7 %/año · caída -66.8 % · Sharpe 0.39
+   bh_GLD                 desde 2016-10-25: +11.9 %/año · caída -26.4 % · Sharpe 0.68
+   tend_GLD               desde 2017-06-14: +9.0 %/año · caída -30.6 % · Sharpe 0.58
+   bh_QQQ                 desde 2016-10-25: +19.8 %/año · caída -35.6 % · Sharpe 0.8
+   tend_QQQ               desde 2017-06-14: +16.9 %/año · caída -23.3 % · Sharpe 0.9
+   bh_SOXL                desde 2016-10-25: +42.5 %/año · caída -90.5 % · Sharpe 0.34
+   tend_SOXL              desde 2017-06-14: +12.8 %/año · caída -79.9 % · Sharpe 0.16
+   bh_SPY                 desde 2016-10-25: +13.7 %/año · caída -34.1 % · Sharpe 0.71
+   tend_SPY               desde 2017-06-14: +8.2 %/año · caída -23.1 % · Sharpe 0.64
+   bh_TLT                 desde 2016-10-25: -4.8 %/año · caída -55.1 % · Sharpe -0.34
+   tend_TLT               desde 2017-06-14: -2.8 %/año · caída -41.5 % · Sharpe -0.29
+   bh_TQQQ                desde 2016-10-25: +39.0 %/año · caída -81.8 % · Sharpe 0.49
+   tend_TQQQ              desde 2017-06-14: +39.5 %/año · caída -57.8 % · Sharpe 0.64
+   bh_UPRO                desde 2016-10-25: +29.0 %/año · caída -76.8 % · Sharpe 0.47
+   tend_UPRO              desde 2017-06-14: +18.5 %/año · caída -55.9 % · Sharpe 0.46
+   tend_cartera           desde 2017-06-14: +10.8 %/año · caída -16.3 % · Sharpe 1.13
+
+CORRELACIÓN DIARIA CON LA REGLA DE REBOTE (todas las señales)
+   mom_12_1 +0.68 · mom_6_1 +0.62 · rev_1m +0.78 · rev_1s +0.74 · cerca_max +0.46 · baja_vol +0.49 · tendencia +0.37 · panico_todo +0.62 · panico_30 +0.59 · hueco_alza +0.57 · hueco_baja +0.64 · ruptura_max +0.36 · regla_plan +0.81 · regla_bajistas +0.77 · regla_rsi2 +0.75 · regla_run5 +0.91 · mercado +0.78 · tend_cartera +0.21
+
+MEZCLAS A IGUAL RIESGO (cada una pesa lo inverso de su volatilidad; los pesos suman 1; ventana común)
+   regla sola                            +14.0 %/año · caída  -34.2 % · Sharpe 0.57 · a/c 0.41 · a 25 %: +10.2
+   regla_todas+mom_12_1                  +16.8 %/año · caída  -34.2 % · Sharpe 0.65 · a/c 0.49 · beta 0.95 · a 25 %: +12.3
+   regla_todas+mom_6_1                   +16.9 %/año · caída  -36.1 % · Sharpe 0.67 · a/c 0.47 · beta 0.95 · a 25 %: +11.6
+   regla_todas+rev_1m                    +11.7 %/año · caída  -42.9 % · Sharpe 0.45 · a/c 0.27 · beta 1.04 · a 25 %: +6.8
+   regla_todas+rev_1s                    +15.9 %/año · caída  -45.5 % · Sharpe 0.6 · a/c 0.35 · beta 1.04 · a 25 %: +8.4
+   regla_todas+cerca_max                 +10.2 %/año · caída  -29.6 % · Sharpe 0.55 · a/c 0.34 · beta 0.75 · a 25 %: +8.6
+   regla_todas+baja_vol                  +10.0 %/año · caída  -31.9 % · Sharpe 0.59 · a/c 0.31 · beta 0.70 · a 25 %: +7.8
+   regla_todas+tendencia                  +8.4 %/año · caída  -23.9 % · Sharpe 0.59 · a/c 0.35 · beta 0.55 · a 25 %: +8.6
+   regla_todas+panico_todo                +8.5 %/año · caída  -27.9 % · Sharpe 0.52 · a/c 0.30 · beta 0.62 · a 25 %: +7.6
+   regla_todas+panico_30                 +10.1 %/año · caída  -35.3 % · Sharpe 0.48 · a/c 0.29 · beta 0.77 · a 25 %: +7.2
+   regla_todas+hueco_alza                 +8.4 %/año · caída  -34.4 % · Sharpe 0.45 · a/c 0.24 · beta 0.73 · a 25 %: +6.1
+   regla_todas+hueco_baja                 +7.2 %/año · caída  -41.3 % · Sharpe 0.39 · a/c 0.17 · beta 0.70 · a 25 %: +4.4
+   regla_todas+ruptura_max               +11.1 %/año · caída  -27.4 % · Sharpe 0.67 · a/c 0.41 · beta 0.65 · a 25 %: +10.1
+   regla_todas+regla_plan                 +9.3 %/año · caída  -19.1 % · Sharpe 0.65 · a/c 0.49 · beta 0.48 · a 25 %: +10.7
+   regla_todas+regla_bajistas            +15.0 %/año · caída  -33.2 % · Sharpe 0.65 · a/c 0.45 · beta 0.82 · a 25 %: +11.2
+   regla_todas+regla_rsi2                +15.8 %/año · caída  -31.1 % · Sharpe 0.67 · a/c 0.51 · beta 0.85 · a 25 %: +12.6
+   regla_todas+regla_run5                +18.5 %/año · caída  -34.4 % · Sharpe 0.7 · a/c 0.54 · beta 0.96 · a 25 %: +13.3
+   regla_todas+mercado                   +13.3 %/año · caída  -36.1 % · Sharpe 0.61 · a/c 0.37 · beta 0.93 · a 25 %: +9.1
+   regla_todas+tend_cartera              +12.7 %/año · caída  -18.4 % · Sharpe 1.13 · a/c 0.69 · beta 0.37 · a 25 %: +16.1
+   todas_las_familias                     +8.6 %/año · caída  -32.6 % · Sharpe 0.55 · a/c 0.27 · beta 0.69 · a 25 %: +6.6 · regla_todas, mom_12_1, mom_6_1, rev_1m, rev_1s, cerca_max, baja_vol, tendencia, panico_todo, panico_30, hueco_alza, hueco_baja, ruptura_max
+   reglas_juntas                         +13.9 %/año · caída  -24.9 % · Sharpe 0.76 · a/c 0.56 · beta 0.67 · a 25 %: +13.9 · regla_todas, regla_plan, regla_bajistas, regla_rsi2, regla_run5
+   regla+positivas                       +15.3 %/año · caída  -35.6 % · Sharpe 0.68 · a/c 0.43 · beta 0.88 · a 25 %: +10.6 · regla_todas, mom_12_1, mom_6_1, rev_1s, ruptura_max
+
+ROBUSTEZ DE LA TENDENCIA (cartera de tendencias a igual riesgo con otras medias, sin cripto y solo cripto; ventana común)
+   variante                     %/año   caída Sharpe  beta   alfa  t alfa         a 25 %
+   tend_cartera_ma100           +11.1   -14.8   1.10  0.16   +8.8   +2.70     +15.2 ×1.6
+   tend_cartera_ma150           +10.3   -15.0   1.01  0.17   +7.9   +2.39    +13.9 ×1.61
+   tend_cartera_ma250           +10.3   -19.1   1.00  0.17   +8.0   +2.33    +12.1 ×1.28
+   tend_cartera_sin_cripto       +6.8   -12.0   0.83  0.14   +5.1   +2.06     +9.0 ×1.87
+   tend_cripto                  +43.0   -52.5   0.73  0.37  +42.5   +2.33    +19.7 ×0.42
+
+POR SUBPERIODOS (%/año · caída · Sharpe; la cuenta empieza en 1 al inicio de cada subperiodo)
+   cartera                                       2017-2019                    2020-2022                    2023-2026                    2020-2026
+   mercado                      +13.2   -19.5   1.01       +7.9   -38.7   0.29      +15.7   -17.8   1.04      +12.1   -38.7   0.56   
+   bh_SPY                       +12.7   -20.2   0.93       +5.6   -34.1   0.22      +20.4   -19.0   1.26      +13.6   -34.1   0.63   
+   bh_QQQ                       +21.2   -23.2   1.11       +7.2   -35.6   0.23      +30.4   -22.9   1.33      +19.5   -35.6   0.72   
+   tend_QQQ                     +10.3   -16.0   0.70      +12.3   -23.3   0.61      +23.2   -13.6   1.22      +18.2   -23.3   0.93   
+   tend_cartera                  +7.5    -7.6   1.04      +12.7   -14.5   1.15      +10.2    -7.1   1.07      +11.3   -16.3   1.11   
+   bh_BTC-USD                   +90.6   -83.0   0.81      +33.5   -76.6   0.39      +51.6   -53.1   0.88      +43.4   -76.6   0.60   
+   tend_BTC-USD                 +51.5   -65.4   0.63      +47.6   -54.7   0.75      +34.4   -30.9   0.73      +40.1   -59.0   0.73   
+   tend_TQQQ                    +25.1   -43.4   0.53      +26.7   -57.8   0.41      +54.8   -37.4   0.85      +41.7   -57.8   0.64   
+   tend_cartera_ma100           +10.8    -7.9   1.56       +9.4   -14.8   0.86      +12.4    -7.1   1.32      +11.1   -14.8   1.10   
+   tend_cartera_ma150            +9.6   -10.1   1.33      +10.3   -15.0   0.92      +10.3    -7.3   1.10      +10.3   -15.0   1.01   
+   tend_cartera_ma250            +5.8    -8.9   0.84      +10.4   -17.6   0.91      +10.2    -8.1   1.09      +10.3   -19.1   1.00   
+   tend_cartera_sin_cripto       +5.0    -6.1   0.84       +3.6   -11.2   0.45       +9.3    -7.3   1.11       +6.8   -12.0   0.83   
+   tend_cripto                  +21.4   -50.6   0.47      +98.0   -52.5   1.15      +10.7   -38.4   0.26      +43.0   -52.5   0.73   
+
+ALFA PURO: cada cartera menos su beta por el universo a partes iguales (la cobertura se supone gratis), escalada hasta una caída de 25 % con el dinero prestado a 4 % anual
+   cartera                 beta   alfa  t alfa Sharpe   caída         a 25 %
+   mom_12_1                1.05   +7.0   +1.01   0.24   -29.3     +4.5 ×0.84
+   mom_6_1                 1.06   +6.8   +0.97   0.24   -27.3     +4.6 ×0.91
+   rev_1m                  1.26   -6.1   -1.16  -0.49   -48.4     -2.9 ×0.46
+   rev_1s                  1.28   +2.4   +0.46   0.07   -27.5      +1.1 ×0.9
+   cerca_max               0.66   -1.8   -0.48  -0.21   -31.5     -1.9 ×0.77
+   baja_vol                0.58   -0.8   -0.25  -0.12   -23.7     -1.7 ×1.05
+   tendencia               0.38   -0.1   -0.02  -0.07   -27.9     -0.5 ×0.88
+   panico_todo             0.47   -1.3   -0.35  -0.17   -24.8     -1.8 ×1.01
+   panico_30               0.68   -1.9   -0.38  -0.20   -37.6     -1.8 ×0.62
+   hueco_alza              0.63   -4.0   -1.02  -0.40   -39.5     -2.6 ×0.59
+   hueco_baja              0.58   -4.9   -1.36  -0.47   -45.9     -2.5 ×0.48
+   ruptura_max             0.49   +2.1   +0.53   0.10   -26.9     +1.2 ×0.93
+   tend_BTC-USD            0.31  +39.8   +2.22   0.65   -59.8    +14.0 ×0.36
+   tend_ETH-USD            0.44  +45.2   +1.99   0.45   -71.4    +11.5 ×0.27
+   tend_GLD                0.06   +9.9   +1.85   0.52   -32.0     +7.0 ×0.75
+   tend_QQQ                0.43  +12.5   +2.26   0.71   -17.4    +14.4 ×1.39
+   tend_SOXL               1.31  +24.8   +0.91  -0.07   -80.7     +4.0 ×0.21
+   tend_SPY                0.33   +4.9   +1.23   0.39   -20.9     +4.3 ×1.19
+   tend_TLT               -0.14   -2.0   -0.63  -0.26   -34.8     -1.5 ×0.68
+   tend_TQQQ               1.28  +31.9   +1.93   0.44   -46.5    +14.0 ×0.49
+   tend_UPRO               0.97  +11.2   +0.96   0.19   -52.0     +3.8 ×0.41
+   tend_cartera            0.16   +9.0   +2.78   0.94   -15.6    +11.3 ×1.52
+   regla_todas             0.87   +3.4   +0.72   0.17   -27.0     +2.3 ×0.92
+   regla_plan              0.31   +2.8   +1.01   0.29   -12.4     +0.9 ×1.71
+   regla_bajistas          0.78   +5.6   +0.99   0.28   -29.6     +3.9 ×0.83
+   regla_rsi2              0.83   +6.6   +1.26   0.32   -35.2     +4.0 ×0.68
+   regla_run5              1.07   +9.7   +1.71   0.55   -19.2      +9.7 ×1.3
+
+QUÉ ES CADA CARTERA
+   mercado                universo líquido a partes iguales, reequilibrado cada mes (la referencia)
+   mom_12_1               momento: los 30 que más han subido de hace 12 meses a hace 1 mes, cada mes
+   mom_6_1                momento: los 30 que más han subido de hace 6 meses a hace 1 mes, cada mes
+   rev_1m                 reversión mensual: los 30 que más han caído en el último mes, cada mes
+   rev_1s                 reversión semanal: los 30 que más han caído en la última semana, cada semana
+   cerca_max              cercanía al máximo anual: los 30 más cerca de su máximo de 252 sesiones, cada mes
+   baja_vol               baja volatilidad: los 30 menos volátiles de 60 sesiones, cada mes
+   tendencia              tendencia del mercado: el universo a partes iguales solo mientras supera su media de 200 sesiones
+   panico_todo            pánico: el universo a partes iguales mientras la amplitud (% sobre su media de 200) baja de 30 % hasta que pasa de 45 %
+   panico_30              pánico: en esos mismos tramos, los 30 que más han caído en 20 sesiones
+   hueco_alza             hueco al alza con volumen: sube ≥ 4 % en la apertura, con volumen ≥ 2 veces la media y cierra por encima de la apertura; se mantiene 20 sesiones
+   hueco_baja             hueco a la baja con volumen: cae ≥ 5 % en la apertura con volumen ≥ 2 veces la media; se mantiene 10 sesiones
+   ruptura_max            ruptura del máximo anual con volumen ≥ 1,5 veces la media; se mantiene 20 sesiones
+   regla_todas            regla de rebote (impulso alto y bajo su media de 200) con la escalera, todas las señales
+   regla_plan             la misma regla con el plan de 5 huecos (orden por volatilidad)
+   regla_bajistas         variante de entrada: impulso alto y 2 o más señales bajistas; escalera, todas las señales
+   regla_rsi2             variante de entrada: impulso alto y RSI(2) ≤ 10; escalera, todas las señales
+   regla_run5             la regla base con la salida «run5» (la que más da por operación del menú; elegida mirando el menú de 13 salidas); todas las señales
+   relleno_regla_todas    regla de rebote, todas las señales, con la caja no invertida puesta en el universo a partes iguales
+   relleno_regla_plan     plan de 5 huecos, con la caja no invertida puesta en el universo a partes iguales
+   bh_                    comprar y mantener el activo (SPY, QQQ: índices; TLT: bonos largos; GLD: oro; BTC-USD y ETH-USD: cripto; TQQQ, UPRO, SOXL: ETF apalancados ×3)
+   tend_                  solo con tendencia: el activo mientras su cierre supere su media de 200 sesiones (TQQQ con la media de QQQ y UPRO con la de SPY), si no, en caja
+   tend_cartera           cartera de tendencias a igual riesgo: SPY, QQQ, TLT, GLD, BTC-USD y ETH-USD (cada uno con su propia tendencia)
+   vt_regla_todas         regla de rebote (todas las señales) con control de volatilidad: apalancamiento = 15 % / volatilidad de las últimas 20 sesiones, entre 0 y 1,5
+   vt_mercado             universo a partes iguales con el mismo control de volatilidad
+   vt_relleno_regla_todas regla de rebote con la caja en el universo y el mismo control de volatilidad
