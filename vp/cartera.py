@@ -147,12 +147,13 @@ class World:
 
 
 def simulate(Wd: World, mask: np.ndarray, exit_name: str, order: str = 'vol', rng: Optional[np.random.Generator] = None, risk: float = RISK_PCT, max_pos: int = MAX_POS,
-             corr_min: float = CORR_MIN, schedule: Optional[np.ndarray] = None, d0: Optional[int] = None, d1: Optional[int] = None, extra_cost: float = 0.0) -> Dict:
+             corr_min: float = CORR_MIN, schedule: Optional[np.ndarray] = None, d0: Optional[int] = None, d1: Optional[int] = None, extra_cost: float = 0.0, risk_rows: Optional[np.ndarray] = None) -> Dict:
     """Un recorrido de la cartera. `mask`: filas candidatas (regla y volatilidad). `order`: 'fiab' = por fiabilidad fuera de muestra descendente (como el plan de hoy; donde no hay modelo, por
     volatilidad), 'vol' = por volatilidad del día descendente (y luego impulso), 'azar' = al azar.
     `schedule`: entradas máximas por día (para que la cartera al azar entre los mismos días y el mismo número de veces que la de la regla). Entrada en la apertura siguiente al día de la señal,
     tamaño = riesgo / distancia al stop (acotado al 20 % de la cuenta y al efectivo disponible), valoración diaria a cierre, cierre con el resultado real de la salida. `extra_cost`: puntos
-    porcentuales de coste de ida y vuelta que se restan a cada operación además del 0,15 % ya descontado (sensibilidad a comisiones y deslizamiento)."""
+    porcentuales de coste de ida y vuelta que se restan a cada operación además del 0,15 % ya descontado (sensibilidad a comisiones y deslizamiento). `risk_rows`: multiplicador del riesgo
+    por fila del panel (p. ej. arriesgar el doble los días de pánico y la mitad los demás)."""
     D = Wd.D
     nd = Wd.nd
     d0 = 0 if d0 is None else d0
@@ -218,7 +219,7 @@ def simulate(Wd: World, mask: np.ndarray, exit_name: str, order: str = 'vol', rn
             stop_pct = SIZE_STOP_ATR * float(Wd.atrp[r])
             if not stop_pct > 0:
                 continue
-            frac = min(risk / stop_pct, CAP_POS)
+            frac = min(risk * (1.0 if risk_rows is None else float(risk_rows[r])) / stop_pct, CAP_POS)
             basis = min(frac * equity, cash)
             if basis <= 1e-9:
                 continue

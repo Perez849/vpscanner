@@ -610,6 +610,16 @@ def portfolio(D, Wd, T, excl_greedy: np.ndarray, excl_tree: np.ndarray, test_yea
             s7 = cartera.simulate(Wd, mask & rmask, EXIT, 'vol', rng, d0=d0, **kw)
             reg[nm][key] = cartera.metrics(s7['eq'], yrs, s7['trades'], s7['expo'])
     out['regimen'] = reg
+    # (c) arriesgar según el régimen: más en pánico, menos en días normales (pesos fijados antes de simular; mismo plan de 5 y todas las señales; el régimen se definió mirando la tabla)
+    sizing = {}
+    pesos = (('base', 'riesgo 1 % siempre', 1.0, 1.0), ('x2_x1', 'pánico ×2, resto ×1', 2.0, 1.0), ('x2_x05', 'pánico ×2, resto ×0,5', 2.0, 0.5), ('x3_x05', 'pánico ×3, resto ×0,5', 3.0, 0.5), ('x1_x05', 'pánico ×1, resto ×0,5', 1.0, 0.5))
+    for nm, kw in cases:
+        sizing[nm] = {}
+        for key, txt, a_, b_ in pesos:
+            rr = np.where(panico, a_, b_)
+            s8 = cartera.simulate(Wd, mask, EXIT, 'vol', rng, d0=d0, risk_rows=rr, **kw)
+            sizing[nm][key] = {'txt': txt, **cartera.metrics(s8['eq'], yrs, s8['trades'], s8['expo'])}
+    out['sizing'] = sizing
     return out
 
 
@@ -750,6 +760,11 @@ def report(ev: Dict) -> str:
             for ex_, v in d_.items():
                 x = v['mismo_tamaño']
                 L.append(f"   {nm:6s} {ex_:5s} mismo tamaño: {x['anual']:+6.1f} %/año · caída {x['caida_max']:+5.1f} % · Sharpe {x['sharpe']} · ganan {x['ganan']} % · neto/op {x['neto_medio']:+.2f} %" + (f" | mismo riesgo: {v['mismo_riesgo']['anual']:+6.1f} %/año · caída {v['mismo_riesgo']['caida_max']:+5.1f} % · Sharpe {v['mismo_riesgo']['sharpe']}" if 'mismo_riesgo' in v else ''))
+    if ev.get('cartera', {}).get('sizing'):
+        L += ['', 'ARRIESGAR SEGÚN EL RÉGIMEN (más en pánico, menos en días normales; riesgo base 1 %; ventana de prueba; el régimen se definió mirando la tabla)']
+        for nm, d_ in ev['cartera']['sizing'].items():
+            for k_, v in d_.items():
+                L.append(f"   {nm:6s} {v['txt']:26s} {v['anual']:+6.1f} %/año · caída {v['caida_max']:+5.1f} % · Sharpe {v['sharpe']} · anual/caída {v['mar']} · invertido {v['exposicion_media']:.0f} % · por año: " + ' '.join(f"{str(a_)[2:]}:{r_:+.0f}" for a_, r_ in v['por_año'].items()))
     if ev.get('cartera', {}).get('regimen'):
         L += ['', 'RÉGIMEN DE PÁNICO EN LA CARTERA (operar solo cuando amplitud < 30 %, mercado < −5 % o 16+ señales, o solo fuera de ello; ventana de prueba; mirado después de ver la tabla)']
         for nm, d_ in ev['cartera']['regimen'].items():

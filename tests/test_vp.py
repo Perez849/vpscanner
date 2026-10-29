@@ -1263,6 +1263,9 @@ def test_autopsia():
     a = ev['autopsia']
     assert a['n'] > 2000 and a['perdidas'] > 200 and a['por_tipo'] and a['stop_inicial']['n'] > 20 and len(a['por_año']) >= 4 and ev['univariado']['ranking'] and ev['salidas']['variantes'][0]['dif_con_escalera'] == 0.0, a['n']
     assert ev['cartera']['carteras']['plan']['sin_filtro']['operaciones'] > 50 and 'todas' in ev['cartera']['carteras']
+    sz = ev['cartera']['sizing']['plan']                                                  # arriesgar según el régimen: pesos 1 en todas partes dan lo mismo que la base; el doble en todas partes sube el tamaño
+    assert abs(sz['base']['anual'] - ev['cartera']['carteras']['plan']['sin_filtro']['anual']) < 1e-9 and sz['x2_x1']['tamaño_medio'] >= sz['base']['tamaño_medio'] and sz['x1_x05']['tamaño_medio'] <= sz['base']['tamaño_medio'], sz
+    assert set(ev['cartera']['stops_anchos']['plan']) == {'esc', 'esc3', 'esc4', 'esc5'} and 'mismo_riesgo' in ev['cartera']['stops_anchos']['plan']['esc4']
     txt = A.report(ev)
     assert 'CÓMO PIERDEN' in txt and 'FILTROS ELEGIDOS HACIA DELANTE' in txt and 'VARIANTES DE SALIDA' in txt
     print(f"ok · autopsia: camino coherente con el simulador, patrón plantado hallado y confirmado fuera de muestra (neto {sm['neto_todas']:+.2f} → {sm['neto_quedan']:+.2f}), nada en ruido, recorrido completo ({a['n']} operaciones)")
