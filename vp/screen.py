@@ -283,9 +283,10 @@ def plan_abiertas(tr: Dict) -> List[str]:
     return sorted({o['sym'] for o in tr.get('plan_ops', []) if o['res'] in ('open', 'pendiente')})
 
 
-def replan_history(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], max_pos: int = MAX_POS) -> List[Dict]:
+def replan_history(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], max_pos: int = MAX_POS, keep_until: Optional[str] = None) -> List[Dict]:
     """Vuelve a calcular el plan de cada día del registro con la regla de la cartera (huecos, abiertas, correlación), en orden y solo con lo que se sabía ese día (las candidatas guardadas con su
-    fiabilidad y volatilidad, las barras hasta esa fecha). Sirve para pasar un registro hecho con el plan sin estado al plan con estado; con el mismo código es idempotente."""
+    fiabilidad y volatilidad, las barras hasta esa fecha). Sirve para pasar un registro hecho con el plan sin estado al plan con estado; con el mismo código es idempotente. Los días hasta
+    `keep_until` conservan el plan que se publicó (lo que el operador pudo comprar no se reescribe): solo se les anotan las abiertas, y desde ahí la regla de la cartera sigue con ese estado."""
     out: List[Dict] = []
     for h in hist:
         prev = out + []
@@ -300,13 +301,16 @@ def replan_history(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], max
         picks = [{'sym': s_, **v} for s_, v in (h.get('picks') or {}).items()]
         picks.sort(key=lambda p: (-(p['fiab'] if p.get('fiab') is not None else -1), p['sym']))
         syms_all = [p['sym'] for p in picks] + [a for a in ab if a not in {p['sym'] for p in picks}]
+        if keep_until and h['date'] <= keep_until:
+            out.append({**h, 'plan_hoy': [s_ for s_ in h.get('plan_hoy', []) if s_ not in ab], 'plan_abiertas': ab})
+            continue
         corr = corr_matrix(bars, syms_all, upto=day) if syms_all else None
         pl = daily_plan(picks, tuple(ab), corr, syms_all, max_pos)
         out.append({**h, 'plan_hoy': pl['nuevas'], 'plan_abiertas': pl['abiertas']})
     return out
 
 
-def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2, replan: bool = False) -> Dict:
+def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2, replan: bool = False, replan_keep: Optional[str] = None) -> Dict:
     from . import data
     bars, failed = data.fetch_many(symbols, rng=rng, workers=4, cache_dir=cache_dir, max_age_h=12, verbose=True)
     if len(bars) < 0.9 * len(symbols):
@@ -318,7 +322,7 @@ def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[
     except (OSError, ValueError):
         prev = []
     if replan and prev:
-        prev = replan_history(prev, bars)
+        prev = replan_history(prev, bars, keep_until=replan_keep)
         json.dump(prev, open(hpath, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
         print(f'  registro replanificado con la cartera de {MAX_POS} huecos: ' + ' · '.join(f"{h['date']}: abiertas {h.get('plan_abiertas')} → entra {h['plan_hoy']}" for h in prev), flush=True)
     abiertas = plan_abiertas(track(prev, bars)) if prev else []

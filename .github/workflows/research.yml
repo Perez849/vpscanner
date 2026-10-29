@@ -21,7 +21,7 @@ on:
         description: 'study: large (S&P 500 + Nasdaq-100) | smallmid (S&P 400 + 600) | mixed (cripto, divisas, materias primas, índices)'
         default: 'large'
       replan:
-        description: 'screen: yes = antes de cribar, recalcula el plan de cada día del registro con la regla de la cartera de 5 huecos'
+        description: 'screen: yes = antes de cribar, recalcula el plan de cada día del registro con la regla de la cartera de 5 huecos; una fecha AAAA-MM-DD = igual, conservando el plan publicado hasta esa fecha'
         default: 'no'
 
 permissions:
@@ -66,7 +66,7 @@ jobs:
             python -u -m vp fiab --symbols "$INPUT_SYMBOLS" --out /tmp/out --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "screen" ]; then
             cp data/impulso_hist.json /tmp/out/ 2>/dev/null || true
-            if [ "${INPUT_REPLAN:-no}" = "yes" ]; then RP=--replan; else RP=; fi
+            case "${INPUT_REPLAN:-no}" in no|'') RP=;; yes) RP=--replan;; *) RP="--replan --replan-keep $INPUT_REPLAN";; esac
             python -u -m vp screen --symbols "$INPUT_SYMBOLS" --out /tmp/out $RP 2>&1 | tee /tmp/out/log.txt
           elif [ "$CMD" = "cartera" ]; then
             python -u -m vp cartera --symbols "$INPUT_SYMBOLS" --out /tmp/out --reps "${INPUT_REPS:-20}" --members "${INPUT_MEMBERS:-asof}" 2>&1 | tee /tmp/out/log.txt

@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       replan:
-        description: 'yes = antes de cribar, recalcula el plan de cada día del registro con la regla de la cartera de 5 huecos (solo tras cambiar esa regla)'
+        description: 'yes = antes de cribar, recalcula el plan de cada día del registro con la regla de la cartera de 5 huecos (solo tras cambiar esa regla); una fecha AAAA-MM-DD = igual, pero los días hasta esa fecha conservan el plan publicado'
         default: 'no'
 
 permissions:
@@ -42,7 +42,11 @@ jobs:
         env:
           INPUT_REPLAN: ${{ github.event.inputs.replan }}
         run: |
-          if [ "${INPUT_REPLAN:-no}" = "yes" ]; then python -u -m vp screen --out data --replan; else python -u -m vp screen --out data; fi
+          case "${INPUT_REPLAN:-no}" in
+            no|'') python -u -m vp screen --out data ;;
+            yes) python -u -m vp screen --out data --replan ;;
+            *) python -u -m vp screen --out data --replan --replan-keep "$INPUT_REPLAN" ;;
+          esac
       - name: Guardar datos
         run: |
           git config user.name  "vp-scanner-bot"

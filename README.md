@@ -331,44 +331,46 @@ Las estadísticas por operación no dicen qué pasa en una cuenta. `python -m vp
 
 Se mide rentabilidad anual compuesta, caída máxima, Sharpe, rentabilidad por año, operaciones al año, % que ganan, exposición media, y variantes de la misma cartera (riesgo 0,5 % y 2 %, 3 y 10 posiciones, sin grupos, sin filtro de volatilidad). El **menú de salidas** opera la misma entrada con 13 salidas fijadas de antemano (la escalera; con colchón: asegura +4 % al cerrar a +6 % y +10 % al cerrar a +12 %; que deja correr hasta +20 %; con persecución a 3 ATR; alta: +6 % → +15 %; asegura +4 % o +6 % y persigue; stop que persigue a 3 o 5 ATR; stop fijo y 20 sesiones; cierre a 10, 20 o 40 sesiones), por operación (neto, azar del mismo día, exceso con t agrupada, ganan, niveles asegurados, ganancia y pérdida medias, sesiones y **neto por 100 sesiones de capital ocupado**) y en cartera. Es una comparación hecha después de ver los datos: la mejor fila es una referencia, no una regla nueva. Con una reversión plantada la cartera de la regla gana a las carteras al azar (p = 0) y en paseos aleatorios no (pruebas).
 
-#### Resultados de la cartera simulada (27-oct-2026: 500 acciones desde su incorporación al S&P 500, mayo 2017 → octubre 2026, 20 carteras al azar)
+#### Resultados de la cartera simulada (29-oct-2026: 500 acciones desde su incorporación al S&P 500; ventana con modelo 2 ene 2020 → 14 oct 2026, 6,8 años; 20 carteras al azar)
 
-| cartera | al año | caída máxima | Sharpe | anual / caída | años + | peor año | operaciones |
-|---|---|---|---|---|---|---|---|
-| **«bajo 200» con la escalera y la disciplina del plan de hoy** | **+7,0 %** (+89 % en total) | **−17,2 %** | 0,66 | 0,40 | 7/10 | −10,7 % | 665 (70 al año) · ganan 71 % · neto medio +1,1 % · 13 sesiones · cuenta invertida el 36 % de media |
-| al azar en el universo (volatilidad alta), mismas fechas y mismo número de entradas | +2,4 % (p05 −0,5 %, p95 +6,3 %) · **p 0,05** | −21,0 % | | | | | 566 |
-| las mismas acciones de la regla en orden al azar | +5,9 % (p 0,15) | −17,3 % | | | | | |
-| comprar y mantener el universo a partes iguales (sin costes) | +12,7 % | −39,1 % | 0,63 | 0,33 | 8/10 | −11,3 % | — |
+| cartera | al año | caída máxima | Sharpe | anual / caída | años + | peor año | invertido | operaciones |
+|---|---|---|---|---|---|---|---|---|
+| **Solo las 5 del plan (por fiabilidad, huecos con estado)** | **+6,2 %** | **−17,4 %** | 0,59 | 0,35 | 6/7 | −12,8 % | 35 % | 491 (73 al año) · ganan 71 % · neto medio +1,0 % |
+| **Todas las señales de la regla** (sin límite, con lo que haya en caja) | **+14,8 %** | −34,8 % | 0,62 | 0,43 | 6/7 | −4,0 % | 60 % | 1.061 · ganan 72 % · neto medio +1,8 % |
+| Las mismas 5, en orden de volatilidad | +6,9 % | −17,2 % | 0,64 | 0,40 | 6/7 | −10,7 % | 34 % | 515 |
+| Las mismas 5, en orden al azar | +6,1 % (p05 +4,8 %, p95 +8,8 %) · **p 0,45** | −14,9 % | | | | | | |
+| al azar en el universo (volatilidad alta), mismas fechas y mismo número de entradas | +1,5 % (p05 −3,0 %, p95 +5,3 %) · **p 0,05** | −18,6 % | | | | | | 426 |
+| comprar y mantener el universo a partes iguales (sin costes) | +12,5 % | −39,1 % | 0,56 | 0,32 | 6/7 | −11,3 % | 100 % | — |
 
-Por año (cartera / mercado / azar): 2017 −1,2 / +13,4 / +4,8 · 2018 −1,3 / −6,9 / −2,4 · 2019 +24,0 / +30,0 / +15,8 · 2020 +2,1 / +13,4 / +4,0 · 2021 +14,1 / +28,6 / +9,2 · 2022 −10,7 / −11,3 / −8,3 · 2023 +17,0 / +16,6 / +5,5 · 2024 +12,0 / +13,2 / −0,7 · 2025 +8,5 / +14,4 / +2,2 · 2026 +5,5 / +15,2 / +1,2. Variantes: riesgo 2 % → +11,3 %/año con caída −28,9 %; riesgo 0,5 % → +3,6 % y −8,9 %; 3 posiciones → +5,1 % y −13,3 %; 10 posiciones → +7,2 % y −27,3 %; sin la regla de un valor por grupo → +6,8 % y −19,9 %; sin el filtro de volatilidad → +6,7 % y −17,7 %.
+Por año (plan / todas / mercado / azar): 2020 +5,2 / +6,3 / +12,8 / −0,1 · 2021 +12,5 / +20,2 / +28,6 / +10,6 · 2022 −12,8 / −4,0 / −11,3 / −10,9 · 2023 +16,3 / +35,0 / +16,6 / +8,9 · 2024 +9,9 / +9,4 / +13,2 / +0,4 · 2025 +10,7 / +23,6 / +14,5 / +0,3 · 2026 +2,7 / +13,8 / +14,0 / +4,9. Variantes del plan: riesgo 2 % → +10,3 %/año con caída −28,5 %; riesgo 0,5 % → +3,2 % y −9,0 %; 3 huecos → +5,1 % y −13,8 %; 10 huecos → +6,2 % y −18,0 %; sin la regla de correlación → +6,2 % y −18,6 %; sin el filtro de volatilidad → +6,8 % y −20,8 %. Toda la historia desde mayo de 2017, sin modelo (orden por volatilidad): plan +7,0 %/año (caída −17,2 %), todas las señales +10,6 % (−36,4 %), mercado +12,6 % (−39,1 %).
 
 Lectura:
 
-1. **La regla gana a elegir al azar las mismas fechas** (+7,0 % frente a +2,4 % al año, p 0,05: en el borde) y con menos caída (−17 % frente a −21 %). Es la prueba de que la selección vale algo en una cuenta, no solo por operación.
-2. **No gana al mercado a partes iguales en rentabilidad bruta** (+12,7 %) porque la cuenta está invertida solo el 36 % de media con riesgo del 1 % y stops anchos; por unidad de caída máxima sí (0,40 frente a 0,33). Subir el riesgo al 2 % da +11,3 %/año con −29 % de caída: la relación no cambia. **Para vivir de esto no da**: 7 % al año con dos años negativos seguidos (2017–2018) y un −11 % en 2022.
-3. **La ventaja por operación está concentrada en rachas** (rebotes tras caídas del mercado, cuando muchas acciones cumplen la regla el mismo día): una cuenta con 5 huecos solo coge una parte. El neto medio de las operaciones que de verdad hace la cartera es +1,1 %, frente al +2,0 % de todas las filas de la regla.
-4. **El orden por volatilidad aporta poco** (+7,0 % frente a +5,9 % en orden al azar, p 0,15), igual que el modelo de fiabilidad.
-5. **Las otras dos entradas no se distinguen del azar en cartera** («2+ bajistas» +3,2 %/año, p 0,5; «RSI(2) ≤ 10» +3,2 %, p 0,45) aunque su exceso por operación sea positivo: con 5 huecos y la escalera, lo que aguanta es «bajo 200».
+1. **La regla aporta algo real**: el plan de 5 gana a las carteras al azar del universo con las mismas fechas (+6,2 % frente a +1,5 % al año, p 0,05) y con menos caída.
+2. **La fiabilidad no aporta nada al elegir**: las mismas 5 en orden al azar dan +6,1 % (p 0,45) y en orden de volatilidad +6,9 %. El modelo sirve para ordenar la tabla, no mejora la cartera. Es lo mismo que decía la sección 8 (el modelo apenas supera al control de volatilidad), ahora en una cuenta.
+3. **Comprar todas las señales rinde más que elegir 5** (+14,8 % frente a +6,2 % al año; caída −35 % frente a −17 %; por unidad de caída 0,43 frente a 0,35). Lo que cuesta es el **límite de 5 huecos**: la ventaja de la regla viene en rachas (rebotes tras caídas del mercado, cuando muchas acciones cumplen la regla a la vez) y con 5 huecos se dejan fuera justo las señales de los mejores días. Sin límite la cuenta está invertida al 60 % de media (frente al 35 %) y rinde más que el mercado a partes iguales con la mitad de caída.
+4. **Para vivir de esto no da** con riesgo del 1 % por operación: +6 % al año con un −13 % en 2022. Con 2 % sube a +10 % y la caída a −29 %: la relación no cambia.
+5. **Las otras dos entradas**: con la escalera, «2+ bajistas» da +5,0 %/año (p 0,1) y «RSI(2) ≤ 10» +8,2 % (p < 0,05) en plan de 5; comprando todas sus señales, +16,1 % y +20,9 %.
 
-#### Menú de salidas sobre la entrada «bajo 200» (volatilidad alta; ordenado por lo que da en cartera)
+#### Menú de salidas sobre la entrada «bajo 200» (volatilidad alta; ventana con modelo 2020–2026; ordenado por lo que da el plan de 5)
 
-| salida | n | neto (azar del día) | exceso (t) | ganan (azar) | 1º / 2º / stop | sesiones | neto / 100 ses. | cartera: al año | caída | azar (p) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| asegura +6 % y persigue 4 ATR | 9.238 | +2,65 % (+1,06 %) | +1,59 % (3,8) | 67 % (54) | 67 / 0 / 32 | 19 | +13,7 | **+7,6 %** | −17,8 % | +2,4 % (< 0,05) |
-| **tu escalera** (+4 % plano → +10 % persigue 2 ATR) | 9.254 | +1,97 % (+0,76 %) | +1,20 % (4,2) | **73 %** (61) | 74 / 22 / 26 | **13** | **+15,6** | **+7,0 %** | **−17,2 %** | +2,4 % (0,05) |
-| escalera alta (+6 % → +15 %) | 9.244 | +2,28 % (+0,90 %) | +1,38 % (4,4) | 67 % (54) | 67 / 16 / 32 | 16 | +14,2 | +6,5 % | −19,4 % | +2,2 % (0,05) |
-| escalera con persecución a 3 ATR | 9.254 | +2,04 % (+0,79 %) | +1,25 % (4,3) | 73 % (61) | 74 / 22 / 26 | 13 | +15,7 | +6,3 % | −17,1 % | +2,5 % (0,05) |
-| escalera que deja correr (+4 → +10 → +20) | 9.254 | +1,80 % (+0,73 %) | +1,07 % (4,4) | 73 % (61) | 69 / 17 / 26 | 12 | +15,0 | +6,3 % | −17,1 % | +2,6 % (0,05) |
-| stop 5 ATR que persigue a 5 ATR, sin asegurar | 9.126 | +5,91 % (+2,83 %) | +3,08 % (2,8) | 55 % (48) | 0 / 0 / 45 | 48 | +12,2 | +5,6 % | −24,8 % | +4,5 % (0,35) |
-| asegura +4 % y persigue 3 ATR | 9.249 | +2,45 % (+0,98 %) | +1,47 % (3,5) | 73 % (61) | 74 / 0 / 26 | 16 | +15,3 | +5,5 % | −17,8 % | +3,4 % (0,05) |
-| escalera con colchón (+6 % asegura +4; +12 % asegura +10) | 9.236 | +2,63 % (+1,07 %) | +1,56 % (3,9) | 67 % (54) | 67 / 30 / 32 | 19 | +13,9 | +4,9 % | −18,2 % | +3,0 % (0,2) |
-| cierre a 20 sesiones, sin stop | 9.222 | +3,12 % (+1,60 %) | +1,52 % (3,8) | 59 % (56) | — | 20 | +15,6 | +3,9 % | −20,2 % | +3,0 % (0,3) |
-| cierre a 40 sesiones, sin stop | 9.094 | +5,99 % (+3,31 %) | +2,68 % (3,5) | 62 % (58) | — | 40 | +15,0 | +3,6 % | −24,2 % | +4,7 % (0,6) |
-| stop 2,5 ATR que persigue a 3 ATR, sin asegurar | 9.225 | +4,07 % (+1,91 %) | +2,17 % (2,7) | 46 % (40) | 0 / 0 / 80 | 31 | +13,1 | +2,3 % | −21,3 % | +3,8 % (0,85) |
-| cierre a 10 sesiones, sin stop | 9.274 | +1,77 % (+0,68 %) | +1,09 % (4,3) | 58 % (55) | — | 10 | +17,7 | +1,9 % | −23,2 % | +2,1 % (0,55) |
-| stop 2,5 ATR fijo y cierre a 20 sesiones | 9.244 | +2,38 % (+1,21 %) | +1,17 % (2,8) | 54 % (50) | 0 / 0 / 29 | 17 | +13,9 | +1,7 % | −20,6 % | +3,0 % (0,65) |
+| salida | n | neto (azar del día) | exceso (t) | ganan (azar) | 1º / 2º / stop | sesiones | neto / 100 ses. | plan de 5: al año | caída | todas: al año | azar (p) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| stop 5 ATR que persigue a 5 ATR, sin asegurar | 9.129 | +5,90 % (+2,83 %) | +3,07 % (2,8) | 55 % (48) | 0 / 0 / 45 | 48 | +12,2 | **+9,9 %** | −17,4 % | +20,4 % | +6,7 % (0,1) |
+| asegura +6 % y persigue 4 ATR | 9.252 | +2,64 % (+1,06 %) | +1,58 % (3,8) | 67 % (54) | 67 / 0 / 32 | 19 | +13,7 | +9,0 % | −12,7 % | +17,0 % | +1,4 % (< 0,05) |
+| asegura +4 % y persigue 3 ATR | 9.262 | +2,44 % (+0,98 %) | +1,46 % (3,5) | 73 % (61) | 74 / 0 / 26 | 16 | +15,2 | +7,5 % | −15,1 % | +17,5 % | +4,2 % (0,05) |
+| escalera con colchón (+6 % asegura +4; +12 % asegura +10) | 9.249 | +2,63 % (+1,08 %) | +1,55 % (3,9) | 67 % (54) | 67 / 30 / 32 | 19 | +13,8 | +7,1 % | −12,4 % | +13,3 % | +0,7 % (< 0,05) |
+| escalera alta (+6 % → +15 %) | 9.262 | +2,27 % (+0,90 %) | +1,38 % (4,4) | 67 % (54) | 67 / 16 / 32 | 16 | +14,2 | +6,8 % | −11,6 % | +12,3 % | +1,3 % (0,05) |
+| cierre a 40 sesiones, sin stop | 9.105 | +5,98 % (+3,31 %) | +2,67 % (3,5) | 62 % (58) | — | 40 | +15,0 | +6,8 % | −20,5 % | +16,1 % | +6,9 % (0,5) |
+| escalera que deja correr (+4 → +10 → +20) | 9.269 | +1,79 % (+0,73 %) | +1,06 % (4,4) | 73 % (61) | 69 / 17 / 26 | 12 | +14,9 | +6,5 % | −18,9 % | +14,4 % | +0,6 % (< 0,05) |
+| cierre a 20 sesiones, sin stop | 9.233 | +3,12 % (+1,60 %) | +1,52 % (3,9) | 59 % (56) | — | 20 | +15,6 | +6,5 % | −17,3 % | +15,6 % | +1,8 % (0,05) |
+| stop 2,5 ATR que persigue a 3 ATR, sin asegurar | 9.233 | +4,06 % (+1,91 %) | +2,15 % (2,6) | 46 % (40) | 0 / 0 / 80 | 31 | +13,1 | +6,3 % | −13,2 % | +14,9 % | +3,2 % (0,1) |
+| **tu escalera** (+4 % plano → +10 % persigue 2 ATR) | 9.269 | +1,96 % (+0,77 %) | +1,19 % (4,2) | **73 %** (61) | 74 / 22 / 26 | **13** | **+15,6** | +6,2 % | −17,4 % | +14,8 % | +1,5 % (0,05) |
+| escalera con persecución a 3 ATR | 9.269 | +2,03 % (+0,79 %) | +1,24 % (4,2) | 73 % (61) | 74 / 22 / 26 | 13 | +15,6 | +5,4 % | −19,9 % | +13,6 % | +1,3 % (0,15) |
+| cierre a 10 sesiones, sin stop | 9.292 | +1,77 % (+0,68 %) | +1,09 % (4,4) | 58 % (55) | — | 10 | +17,7 | +3,0 % | −13,5 % | +8,8 % | +1,7 % (0,1) |
+| stop 2,5 ATR fijo y cierre a 20 sesiones | 9.258 | +2,37 % (+1,21 %) | +1,16 % (2,9) | 54 % (50) | — | 17 | +13,8 | +2,0 % | −13,9 % | +11,7 % | +2,6 % (0,65) |
 
-Lectura del menú: **tu escalera queda segunda de 13 en cartera** (+7,0 % frente a +7,6 % de asegurar +6 % y perseguir a 4 ATR, una diferencia dentro del ruido de una comparación hecha después) y es la que más gana por sesión de capital ocupado entre las que aseguran algo, con la caída más baja. Las salidas que ganan más por operación (perseguir a 5 ATR +5,9 %, cierre a 40 sesiones +6,0 %) duran 40–48 sesiones, en cartera rinden menos y con más caída, y **no se distinguen del azar** (p 0,35–0,85): su ganancia la pone el mercado de esos días. El colchón (asegurar +4 % al cerrar a +6 %) no mejora nada: asegura menos veces y en cartera da +4,9 %. Las salidas por tiempo sin stop, que por operación parecían buenas (sección de confirmación), en una cartera con 5 huecos no aportan nada sobre el azar. **No hay una salida mejor escondida**: con esta entrada, la escalera que ya usas es de las mejores que se pueden poner.
+Lectura del menú: en la ventana con modelo **tu escalera queda a mitad de tabla** (+6,2 % al año en plan de 5; con toda la historia desde 2017 y orden por volatilidad era segunda, +7,0 %): las diferencias entre salidas que aseguran algo (de +5,4 % a +9,0 %) están dentro del ruido de una comparación hecha después, con 13 salidas y 6,8 años. Lo que sí se ve: asegurar más tarde (+6 % y perseguir, o la escalera alta) da menos caída (−12 %) con parecida rentabilidad; las salidas sin asegurar (perseguir 5 ATR, cierre a 40) ganan más por operación pero duran 40–48 sesiones y su ventaja sobre el azar es dudosa (p 0,1–0,5). **No hay una salida mejor escondida**: la tuya es de las que más ganan por sesión de capital ocupado y la que más veces acierta; lo que mueve la aguja no es la salida sino cuántas señales se compran (columna «todas»).
 
 ### El cribador diario, el plan de hoy y el seguimiento (`vp/screen.py`)
 

@@ -1117,6 +1117,10 @@ def test_track_and_clusters():
         assert set(h['plan_abiertas']) == want and not (set(h['plan_hoy']) & want) and len(h['plan_hoy']) <= 2 - len(want), (h['date'], h['plan_hoy'], h['plan_abiertas'], want)
     assert rp[1]['plan_hoy'] == ['S2'] and 'S0' in rp[1]['plan_abiertas'], rp[1]                                      # S0 sigue abierta el 505: ocupa hueco y no se repite; S2 entra
     assert screen.replan_history(rp, bars, max_pos=2) == rp                                                          # idempotente
+    h3 = [dict(h) for h in h2]
+    h3[0]['plan_hoy'] = ['S1']                                                                                       # lo publicado el primer día se conserva con keep_until, y la regla sigue desde ese estado
+    rk = screen.replan_history(h3, bars, max_pos=2, keep_until=h3[0]['date'])
+    assert rk[0]['plan_hoy'] == ['S1'] and rk[0]['plan_abiertas'] == [] and 'S1' not in rk[1]['plan_hoy'] and (rk[1]['plan_abiertas'] == ['S1'] or len(rk[1]['plan_hoy']) <= 2), rk[:2]
     print(f"ok · seguimiento hacia delante: {T['cerradas']} cerradas y {T['abiertas']} abiertas, idéntico a la escalera de la web; señales repetidas anotadas en la operación abierta; grupos de correlación correctos")
 
 
