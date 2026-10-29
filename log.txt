@@ -1,0 +1,186 @@
+  datos: 508 en caché, 0 por descargar (10y)
+  datos: OK 508 · fallidos 0
+/home/runner/work/vpscanner/vpscanner/vp/ml.py:92: RuntimeWarning: divide by zero encountered in divide
+  d = np.abs(price[:, None] - arr[jj]) / atr[:, None]
+    100/504 valores · 53s
+    200/504 valores · 102s
+    300/504 valores · 149s
+    400/504 valores · 197s
+/home/runner/work/vpscanner/vpscanner/vp/ml.py:92: RuntimeWarning: divide by zero encountered in divide
+  d = np.abs(price[:, None] - arr[jj]) / atr[:, None]
+    500/504 valores · 247s
+  panel: 712,573 filas · 1 combinaciones de reglas · 253s
+  listo · 274s
+REGLA DE IMPULSO EN ETF APALANCADOS · TQQQ (Nasdaq-100 ×3), SQQQ (Nasdaq-100 ×3 inverso), SOXL (semiconductores ×3), SOXS (semiconductores ×3 inverso) · más 500 acciones del universo · 2017-05-02 → 2026-10-14 · coste 0.15 % · miembros en la fecha
+Mismo mundo que la cartera simulada: los percentiles de impulso y volatilidad del día se calculan con todo el universo, ETF incluidos. Entradas = las tres de la web; salida base = la escalera; disciplina del plan de hoy (5 huecos, correlación < 0,6, 1 % de riesgo). El orden de entrada es por volatilidad, así que, al ser los más volátiles, los ETF pasan por delante de las acciones cuando coinciden. Datos de los ETF desde: TQQQ 2017-05-02 · SQQQ 2017-05-02 · SOXL 2018-03-27 · SOXS 2022-02-15
+
+LO QUE GANA CADA SEÑAL CON LA ESCALERA, EN % SOBRE LO INVERTIDO EN ELLA (no depende de cuánto dinero se ponga; la entrada es la apertura siguiente a la señal y el stop inicial está a 2,5 ATR)
+  Impulso alto y bajo su media de 200
+     acciones  n 9,020 · media +1.95 % · mediana +3.85 % · aciertos 72.9 % · gana +6.45 % de media / pierde -10.18 % · mejor +117 % / peor -37 % · duran 12.5 sesiones · stop a 11.3 % · por cada 1.000 invertidos en la señal: +20
+               sale por el stop inicial: 25.7 % de las veces, -10.49 % de media | aseguró +4 % y salió en ese nivel: 52.1 % de las veces, +3.47 % de media | aseguró +10 % y salió persiguiendo: 21.6 % de las veces, +13.22 % de media | cierre por tiempo (60 sesiones) sin asegurar: 0.5 % de las veces, -2.06 % de media
+     etfs      n   405 · media +4.83 % · mediana +3.85 % · aciertos 77.5 % · gana +11.12 % de media / pierde -16.88 % · mejor +165 % / peor -52 % · duran 9.5 sesiones · stop a 27.8 % · por cada 1.000 invertidos en la señal: +48
+               sale por el stop inicial: 15.6 % de las veces, -21.64 % de media | aseguró +4 % y salió en ese nivel: 44.4 % de las veces, +2.26 % de media | aseguró +10 % y salió persiguiendo: 40.0 % de las veces, +17.97 % de media
+     TQQQ      n   114 · media +5.88 % · mediana +3.85 % · aciertos 70.2 % · gana +15.51 % de media / pierde -16.77 % · mejor +157 % / peor -33 % · duran 9.7 sesiones · stop a 24.6 % · por cada 1.000 invertidos en la señal: +59
+               sale por el stop inicial: 23.7 % de las veces, -18.58 % de media | aseguró +4 % y salió en ese nivel: 37.7 % de las veces, +2.11 % de media | aseguró +10 % y salió persiguiendo: 38.6 % de las veces, +24.57 % de media
+     SQQQ      n    78 · media +1.46 % · mediana +3.85 % · aciertos 76.9 % · gana +6.92 % de media / pierde -16.73 % · mejor +31 % / peor -20 % · duran 10.5 sesiones · stop a 20.5 % · por cada 1.000 invertidos en la señal: +15
+               sale por el stop inicial: 20.5 % de las veces, -18.55 % de media | aseguró +4 % y salió en ese nivel: 41.0 % de las veces, +3.01 % de media | aseguró +10 % y salió persiguiendo: 38.5 % de las veces, +10.49 % de media
+     SOXL      n   186 · media +6.58 % · mediana +3.85 % · aciertos 81.7 % · gana +11.32 % de media / pierde -14.62 % · mejor +165 % / peor -44 % · duran 8.6 sesiones · stop a 30.8 % · por cada 1.000 invertidos en la señal: +66
+               sale por el stop inicial: 9.1 % de las veces, -24.29 % de media | aseguró +4 % y salió en ese nivel: 47.3 % de las veces, +2.11 % de media | aseguró +10 % y salió persiguiendo: 43.5 % de las veces, +17.91 % de media
+     SOXS      n    27 · media -1.94 % · mediana +3.85 % · aciertos 81.5 % · gana +5.22 % de media / pierde -33.46 % · mejor +10 % / peor -52 % · duran 11.8 sesiones · stop a 41.7 % · por cada 1.000 invertidos en la señal: -19
+               sale por el stop inicial: 11.1 % de las veces, -50.56 % de media | aseguró +4 % y salió en ese nivel: 63.0 % de las veces, +2.05 % de media | aseguró +10 % y salió persiguiendo: 25.9 % de las veces, +9.19 % de media
+  Impulso alto y 2 o más señales bajistas
+     acciones  n 6,097 · media +1.80 % · mediana +3.85 % · aciertos 70.6 % · gana +6.43 % de media / pierde -9.34 % · mejor +169 % / peor -37 % · duran 13.0 sesiones · stop a 10.2 % · por cada 1.000 invertidos en la señal: +18
+               sale por el stop inicial: 28.2 % de las veces, -9.56 % de media | aseguró +4 % y salió en ese nivel: 51.4 % de las veces, +3.52 % de media | aseguró +10 % y salió persiguiendo: 19.9 % de las veces, +13.56 % de media | cierre por tiempo (60 sesiones) sin asegurar: 0.4 % de las veces, -2.66 % de media
+     etfs      n   213 · media +5.41 % · mediana +3.85 % · aciertos 73.7 % · gana +13.43 % de media / pierde -17.06 % · mejor +165 % / peor -52 % · duran 9.0 sesiones · stop a 26.0 % · por cada 1.000 invertidos en la señal: +54
+               sale por el stop inicial: 18.8 % de las veces, -20.00 % de media | aseguró +4 % y salió en ese nivel: 42.3 % de las veces, +1.74 % de media | aseguró +10 % y salió persiguiendo: 39.0 % de las veces, +21.64 % de media
+     TQQQ      n    93 · media +5.04 % · mediana +3.85 % · aciertos 71.0 % · gana +12.25 % de media / pierde -12.57 % · mejor +157 % / peor -33 % · duran 8.9 sesiones · stop a 18.7 % · por cada 1.000 invertidos en la señal: +50
+               sale por el stop inicial: 22.6 % de las veces, -12.91 % de media | aseguró +4 % y salió en ese nivel: 41.9 % de las veces, +1.87 % de media | aseguró +10 % y salió persiguiendo: 35.5 % de las veces, +20.22 % de media
+     SQQQ      n    21 · media -0.79 % · mediana +3.67 % · aciertos 76.2 % · gana +5.00 % de media / pierde -19.33 % · mejor +10 % / peor -21 % · duran 8.6 sesiones · stop a 22.0 % · por cada 1.000 invertidos en la señal: -8
+               sale por el stop inicial: 23.8 % de las veces, -19.33 % de media | aseguró +4 % y salió en ese nivel: 52.4 % de las veces, +3.43 % de media | aseguró +10 % y salió persiguiendo: 23.8 % de las veces, +8.44 % de media
+     SOXL      n    88 · media +9.23 % · mediana +3.85 % · aciertos 76.1 % · gana +17.61 % de media / pierde -17.51 % · mejor +165 % / peor -44 % · duran 8.5 sesiones · stop a 32.4 % · por cada 1.000 invertidos en la señal: +92
+               sale por el stop inicial: 12.5 % de las veces, -25.52 % de media | aseguró +4 % y salió en ese nivel: 38.6 % de las veces, +0.70 % de media | aseguró +10 % y salió persiguiendo: 48.9 % de las veces, +24.86 % de media
+     SOXS      n    11 · media -10.16 % · mediana +3.85 % · aciertos 72.7 % · gana +4.99 % de media / pierde -50.56 % · mejor +10 % / peor -52 % · duran 13.8 sesiones · stop a 44.1 % · por cada 1.000 invertidos en la señal: -102
+               sale por el stop inicial: 27.3 % de las veces, -50.56 % de media | aseguró +4 % y salió en ese nivel: 54.5 % de las veces, +3.73 % de media | aseguró +10 % y salió persiguiendo: 18.2 % de las veces, +8.78 % de media
+  Impulso alto y RSI(2) ≤ 10
+     acciones  n 8,626 · media +1.16 % · mediana +3.85 % · aciertos 68.2 % · gana +5.94 % de media / pierde -9.09 % · mejor +117 % / peor -37 % · duran 12.0 sesiones · stop a 9.8 % · por cada 1.000 invertidos en la señal: +12
+               sale por el stop inicial: 30.7 % de las veces, -9.26 % de media | aseguró +4 % y salió en ese nivel: 51.2 % de las veces, +3.50 % de media | aseguró +10 % y salió persiguiendo: 17.7 % de las veces, +12.50 % de media | cierre por tiempo (60 sesiones) sin asegurar: 0.3 % de las veces, -2.61 % de media
+     etfs      n   241 · media +1.15 % · mediana +3.85 % · aciertos 72.6 % · gana +6.79 % de media / pierde -13.81 % · mejor +51 % / peor -33 % · duran 7.9 sesiones · stop a 18.8 % · por cada 1.000 invertidos en la señal: +11
+               sale por el stop inicial: 22.4 % de las veces, -15.74 % de media | aseguró +4 % y salió en ese nivel: 47.3 % de las veces, +2.40 % de media | aseguró +10 % y salió persiguiendo: 30.3 % de las veces, +11.69 % de media
+     TQQQ      n   123 · media +1.54 % · mediana +3.85 % · aciertos 72.4 % · gana +6.70 % de media / pierde -11.98 % · mejor +51 % / peor -23 % · duran 8.1 sesiones · stop a 13.8 % · por cada 1.000 invertidos en la señal: +15
+               sale por el stop inicial: 24.4 % de las veces, -12.50 % de media | aseguró +4 % y salió en ese nivel: 45.5 % de las veces, +2.60 % de media | aseguró +10 % y salió persiguiendo: 30.1 % de las veces, +11.32 % de media
+     SQQQ      n    16 · media -0.81 % · mediana +3.85 % · aciertos 68.8 % · gana +5.86 % de media / pierde -15.50 % · mejor +10 % / peor -19 % · duran 8.0 sesiones · stop a 22.3 % · por cada 1.000 invertidos en la señal: -8
+               sale por el stop inicial: 25.0 % de las veces, -18.86 % de media | aseguró +4 % y salió en ese nivel: 50.0 % de las veces, +3.05 % de media | aseguró +10 % y salió persiguiendo: 25.0 % de las veces, +9.50 % de media
+     SOXL      n    97 · media +1.11 % · mediana +3.85 % · aciertos 75.3 % · gana +7.05 % de media / pierde -16.96 % · mejor +45 % / peor -33 % · duran 7.8 sesiones · stop a 23.6 % · por cada 1.000 invertidos en la señal: +11
+               sale por el stop inicial: 20.6 % de las veces, -19.99 % de media | aseguró +4 % y salió en ese nivel: 47.4 % de las veces, +2.59 % de media | aseguró +10 % y salió persiguiendo: 32.0 % de las veces, +12.51 % de media
+     SOXS      n     5 · media -1.40 % · mediana -2.18 % · aciertos 40.0 % · gana +6.32 % de media / pierde -6.54 % · mejor +9 % / peor -13 % · duran 5.4 sesiones · stop a 38.7 % · por cada 1.000 invertidos en la señal: -14
+               aseguró +4 % y salió en ese nivel: 80.0 % de las veces, -3.95 % de media | aseguró +10 % y salió persiguiendo: 20.0 % de las veces, +8.80 % de media
+
+SEÑALES DEL TQQQ Y SOXL POR AÑO (regla base: operaciones y resultado medio)
+   TQQQ: 2018: 29 (-0.1 %) · 2020: 20 (+17.9 %) · 2022: 25 (-4.5 %) · 2023: 4 (+48.4 %) · 2024: 5 (+9.6 %) · 2025: 10 (-1.2 %) · 2026: 21 (+9.5 %)
+   SOXL: 2018: 28 (+7.7 %) · 2020: 25 (+19.5 %) · 2021: 8 (+6.0 %) · 2022: 22 (+1.7 %) · 2023: 22 (+13.1 %) · 2024: 72 (+0.6 %) · 2026: 9 (+12.2 %)
+
+SEÑALES Y RESULTADO POR OPERACIÓN CON LA ESCALERA (neto tras costes; exceso = frente a la media del universo ese día con la misma salida; t con errores agrupados)
+   bajo 200   solo ETF  n   405 · neto +4.83 % · exceso +4.14 % (t 2.07) · ganan 77.5 %
+   bajo 200   acciones  n 9,020 · neto +1.95 % · exceso +1.20 % (t 4.11) · ganan 72.9 %
+             por ETF: TQQQ n 114 neto +5.88 % ganan 70.2 % · SQQQ n 78 neto +1.46 % ganan 76.9 % · SOXL n 186 neto +6.58 % ganan 81.7 % · SOXS n 27 neto -1.94 % ganan 81.5 %
+   2+ bajistas solo ETF  n   213 · neto +5.41 % · exceso +4.49 % (t 1.68) · ganan 73.7 %
+   2+ bajistas acciones  n 6,097 · neto +1.80 % · exceso +1.18 % (t 3.57) · ganan 70.6 %
+             por ETF: TQQQ n 93 neto +5.04 % ganan 71.0 % · SQQQ n 21 neto -0.79 % ganan 76.2 % · SOXL n 88 neto +9.23 % ganan 76.1 % · SOXS n 11 neto -10.16 % ganan 72.7 %
+   RSI(2) ≤ 10 solo ETF  n   241 · neto +1.15 % · exceso +0.82 % (t 0.96) · ganan 72.6 %
+   RSI(2) ≤ 10 acciones  n 8,626 · neto +1.16 % · exceso +0.78 % (t 3.28) · ganan 68.2 %
+             por ETF: TQQQ n 123 neto +1.54 % ganan 72.4 % · SQQQ n 16 neto -0.81 % ganan 68.8 % · SOXL n 97 neto +1.11 % ganan 75.3 % · SOXS n 5 neto -1.40 % ganan 40.0 %
+
+COMPRAR Y MANTENER (de referencia)
+   desde_2020  TQQQ       +31.9 %/año · caída  -81.8 % · Sharpe 0.37 · 20:+100 21:+83 22:-79 23:+193 24:+56 25:+33 26:+41
+   desde_2020  SQQQ       -58.3 %/año · caída  -99.8 % · Sharpe -1.18 · 20:-86 21:-61 22:+82 23:-75 24:-54 25:-56 26:-47
+   desde_2020  SOXL       +29.3 %/año · caída  -90.5 % · Sharpe 0.22 · 20:+60 21:+119 22:-86 23:+225 24:-13 25:+54 26:+163
+   desde_2020  SOXS       -82.1 %/año · caída -100.0 % · Sharpe -1.43 · 20:-92 21:-81 22:+16 23:-85 24:-61 25:-86 26:-93
+   desde_2020  universo   +12.4 %/año · caída  -39.2 % · Sharpe 0.56 · 20:+13 21:+29 22:-11 23:+16 24:+13 25:+14 26:+14
+   desde_2017  TQQQ       +35.9 %/año · caída  -81.8 % · Sharpe 0.44 · 17:+41 18:-20 19:+134 20:+110 21:+83 22:-79 23:+193 24:+56 25:+33 26:+41
+   desde_2017  SQQQ       -56.0 %/año · caída -100.0 % · Sharpe -1.19 · 17:-35 18:-22 19:-67 20:-86 21:-61 22:+82 23:-75 24:-54 25:-56 26:-47
+   desde_2017  SOXL       +38.6 %/año · caída  -90.5 % · Sharpe 0.31 · 17:+81 18:-40 19:+230 20:+70 21:+119 22:-86 23:+225 24:-13 25:+54 26:+163
+   desde_2017  SOXS       -78.7 %/año · caída -100.0 % · Sharpe -1.41 · 17:-56 18:-20 19:-84 20:-93 21:-81 22:+16 23:-85 24:-61 25:-86 26:-93
+   desde_2017  universo   +12.5 %/año · caída  -39.2 % · Sharpe 0.63 · 17:+13 18:-7 19:+30 20:+13 21:+29 22:-11 23:+16 24:+13 25:+14 26:+14
+
+CARTERA SIMULADA · desde_2020 · salida: esc
+  Impulso alto y bajo su media de 200
+     acciones      plan     +6.6 %/año · caída  -16.7 % · Sharpe 0.61 · 503 ops · ganan 71.2 % · invertido 34 % · 20:+2 21:+17 22:-10 23:+18 24:+13 25:+2 26:+7
+     acciones      todas   +13.0 %/año · caída  -34.2 % · Sharpe 0.53 · 1083 ops · ganan 72.1 % · invertido 58 % · 20:+3 21:+20 22:+0 23:+29 24:+10 25:+17 26:+10
+     acciones+etf  plan     +3.7 %/año · caída  -20.7 % · Sharpe 0.35 · 504 ops · ganan 69.8 % · invertido 33 % · 20:+1 21:+21 22:-13 23:+2 24:+10 25:+0 26:+7
+     acciones+etf  todas   +14.1 %/año · caída  -34.6 % · Sharpe 0.55 · 1136 ops · ganan 71.9 % · invertido 59 % · 20:+6 21:+21 22:-2 23:+31 24:+12 25:+15 26:+15
+     solo_etf      plan     +0.1 %/año · caída   -6.0 % · Sharpe 0.07 · 50 ops · ganan 66.0 % · invertido 1 % · 20:+2 21:+1 22:-3 23:-0 24:+1 25:-2 26:+3
+     solo_etf      todas    +1.2 %/año · caída   -4.1 % · Sharpe 0.43 · 67 ops · ganan 70.1 % · invertido 2 % · 20:+3 21:+1 22:-2 23:+4 24:+1 25:-2 26:+3
+     TQQQ solo     todas    +0.9 %/año · caída   -3.5 % · Sharpe 0.57 · 20 ops · ganan 65.0 % · invertido 1 % · 20:+1 21:+0 22:-2 23:+4 24:+1 25:-1 26:+3
+     SQQQ solo     todas    -0.1 %/año · caída   -2.4 % · Sharpe -0.11 · 8 ops · ganan 75.0 % · invertido 0 % · 20:+0 21:+0 22:+1 23:-1 24:+0 25:+0 26:+0
+     SOXL solo     todas    +0.6 %/año · caída   -1.9 % · Sharpe 0.39 · 35 ops · ganan 77.1 % · invertido 0 % · 20:+2 21:+1 22:-1 23:+1 24:+1 25:+0 26:+0
+     SOXS solo     todas    -0.2 %/año · caída   -1.4 % · Sharpe -0.4 · 4 ops · ganan 25.0 % · invertido 0 % · 20:+0 21:+0 22:-0 23:+0 24:+0 25:-1 26:+0
+  Impulso alto y 2 o más señales bajistas
+     acciones      plan     +1.4 %/año · caída  -21.3 % · Sharpe 0.11 · 554 ops · ganan 65.0 % · invertido 41 % · 20:-1 21:+4 22:-2 23:-8 24:+22 25:-3 26:+1
+     acciones      todas   +18.6 %/año · caída  -32.5 % · Sharpe 0.75 · 1187 ops · ganan 68.6 % · invertido 71 % · 20:-5 21:+13 22:+17 23:+10 24:+46 25:+10 26:+43
+     acciones+etf  plan     +1.0 %/año · caída  -24.0 % · Sharpe 0.08 · 557 ops · ganan 65.0 % · invertido 40 % · 20:-4 21:+2 22:-5 23:-4 24:+26 25:-5 26:+1
+     acciones+etf  todas   +17.6 %/año · caída  -34.1 % · Sharpe 0.69 · 1259 ops · ganan 68.6 % · invertido 71 % · 20:-6 21:+14 22:+16 23:+3 24:+44 25:+9 26:+47
+     solo_etf      plan     +0.7 %/año · caída   -4.4 % · Sharpe 0.32 · 55 ops · ganan 69.1 % · invertido 1 % · 20:+3 21:+1 22:-2 23:+1 24:+0 25:-1 26:+2
+     solo_etf      todas    +0.8 %/año · caída   -6.7 % · Sharpe 0.25 · 78 ops · ganan 67.9 % · invertido 2 % · 20:+2 21:-0 22:-1 23:+5 24:-2 25:-1 26:+2
+  Impulso alto y RSI(2) ≤ 10
+     acciones      plan     +5.6 %/año · caída  -22.9 % · Sharpe 0.46 · 597 ops · ganan 68.7 % · invertido 42 % · 20:-1 21:+5 22:-13 23:+12 24:+9 25:+17 26:+12
+     acciones      todas   +18.4 %/año · caída  -34.0 % · Sharpe 0.69 · 1527 ops · ganan 69.5 % · invertido 79 % · 20:+6 21:+9 22:-18 23:+33 24:+22 25:+42 26:+43
+     acciones+etf  plan     +8.8 %/año · caída  -25.7 % · Sharpe 0.7 · 608 ops · ganan 70.4 % · invertido 42 % · 20:-1 21:+1 22:-8 23:+9 24:+16 25:+22 26:+25
+     acciones+etf  todas   +18.1 %/año · caída  -34.0 % · Sharpe 0.66 · 1575 ops · ganan 69.2 % · invertido 79 % · 20:+5 21:+15 22:-19 23:+30 24:+23 25:+40 26:+41
+     solo_etf      plan     +0.3 %/año · caída   -7.4 % · Sharpe 0.11 · 71 ops · ganan 70.4 % · invertido 2 % · 20:-2 21:-1 22:-0 23:-2 24:+4 25:+1 26:+2
+     solo_etf      todas    +0.7 %/año · caída   -9.5 % · Sharpe 0.18 · 107 ops · ganan 69.2 % · invertido 3 % · 20:-3 21:+1 22:-1 23:+0 24:+6 25:+1 26:+1
+  Control: entrar al azar en los mismos ETF con el mismo calendario: +0.7 %/año (p05 -0.3, p95 +1.8), caída mediana -3.5 % · p(azar ≥ regla) = 0.24 (100 repeticiones)
+
+CARTERA SIMULADA · desde_2017 · salida: esc
+  Impulso alto y bajo su media de 200
+     acciones      plan     +6.4 %/año · caída  -18.1 % · Sharpe 0.61 · 651 ops · ganan 70.5 % · invertido 36 % · 17:-1 18:-4 19:+24 20:+1 21:+17 22:-10 23:+18 24:+13 25:+2 26:+7
+     acciones      todas   +10.1 %/año · caída  -34.9 % · Sharpe 0.46 · 1359 ops · ganan 71.1 % · invertido 58 % · 17:-3 18:-11 19:+27 20:+1 21:+20 22:+0 23:+29 24:+10 25:+17 26:+10
+     acciones+etf  plan     +3.8 %/año · caída  -20.7 % · Sharpe 0.37 · 654 ops · ganan 69.1 % · invertido 35 % · 17:-1 18:-4 19:+18 20:+1 21:+21 22:-13 23:+2 24:+10 25:+0 26:+7
+     acciones+etf  todas   +11.6 %/año · caída  -34.9 % · Sharpe 0.5 · 1434 ops · ganan 71.1 % · invertido 59 % · 17:-3 18:-11 19:+36 20:+4 21:+21 22:-2 23:+31 24:+12 25:+15 26:+15
+     solo_etf      plan     -0.1 %/año · caída   -7.2 % · Sharpe -0.06 · 66 ops · ganan 66.7 % · invertido 1 % · 17:+0 18:-1 19:-1 20:+2 21:+1 22:-3 23:-0 24:+1 25:-2 26:+3
+     solo_etf      todas    +0.7 %/año · caída   -4.6 % · Sharpe 0.27 · 83 ops · ganan 69.9 % · invertido 1 % · 17:+0 18:-1 19:-1 20:+3 21:+1 22:-2 23:+4 24:+1 25:-2 26:+3
+     TQQQ solo     todas    +0.4 %/año · caída   -4.0 % · Sharpe 0.29 · 30 ops · ganan 63.3 % · invertido 1 % · 17:+0 18:-2 19:+0 20:+1 21:+0 22:-2 23:+4 24:+1 25:-1 26:+3
+     SQQQ solo     todas    -0.2 %/año · caída   -2.6 % · Sharpe -0.27 · 9 ops · ganan 66.7 % · invertido 0 % · 17:+0 18:+0 19:-1 20:+0 21:+0 22:+1 23:-1 24:+0 25:+0 26:+0
+     SOXL solo     todas    +0.5 %/año · caída   -1.9 % · Sharpe 0.4 · 40 ops · ganan 80.0 % · invertido 0 % · 17:+0 18:+1 19:+0 20:+2 21:+1 22:-1 23:+1 24:+1 25:+0 26:+0
+     SOXS solo     todas    -0.1 %/año · caída   -1.4 % · Sharpe -0.34 · 4 ops · ganan 25.0 % · invertido 0 % · 17:+0 18:+0 19:+0 20:+0 21:+0 22:-0 23:+0 24:+0 25:-1 26:+0
+  Impulso alto y 2 o más señales bajistas
+     acciones      plan     +2.7 %/año · caída  -21.3 % · Sharpe 0.23 · 719 ops · ganan 65.6 % · invertido 42 % · 17:+1 18:-4 19:+16 20:+3 21:+4 22:-2 23:-8 24:+22 25:-3 26:+1
+     acciones      todas   +17.2 %/año · caída  -31.9 % · Sharpe 0.76 · 1492 ops · ganan 68.5 % · invertido 69 % · 17:+0 18:+3 19:+30 20:-0 21:+13 22:+17 23:+10 24:+46 25:+10 26:+43
+     acciones+etf  plan     +2.3 %/año · caída  -24.0 % · Sharpe 0.19 · 720 ops · ganan 65.4 % · invertido 42 % · 17:+1 18:-6 19:+16 20:+0 21:+2 22:-5 23:-4 24:+26 25:-5 26:+1
+     acciones+etf  todas   +16.4 %/año · caída  -33.3 % · Sharpe 0.71 · 1564 ops · ganan 68.6 % · invertido 70 % · 17:+0 18:+2 19:+32 20:-2 21:+14 22:+16 23:+3 24:+44 25:+9 26:+47
+     solo_etf      plan     +0.6 %/año · caída   -4.4 % · Sharpe 0.27 · 65 ops · ganan 67.7 % · invertido 1 % · 17:+0 18:-2 19:+2 20:+2 21:+1 22:-2 23:+1 24:+0 25:-1 26:+2
+     solo_etf      todas    +0.6 %/año · caída   -6.7 % · Sharpe 0.23 · 89 ops · ganan 67.4 % · invertido 1 % · 17:+0 18:-1 19:+2 20:+2 21:-0 22:-1 23:+5 24:-2 25:-1 26:+2
+  Impulso alto y RSI(2) ≤ 10
+     acciones      plan     +2.3 %/año · caída  -31.6 % · Sharpe 0.2 · 793 ops · ganan 66.6 % · invertido 43 % · 17:+1 18:-23 19:+8 20:+1 21:+5 22:-13 23:+12 24:+9 25:+17 26:+12
+     acciones      todas   +13.0 %/año · caída  -34.0 % · Sharpe 0.54 · 1911 ops · ganan 68.1 % · invertido 76 % · 17:+3 18:-19 19:+21 20:+6 21:+9 22:-18 23:+33 24:+22 25:+42 26:+43
+     acciones+etf  plan     +4.1 %/año · caída  -34.7 % · Sharpe 0.34 · 813 ops · ganan 67.5 % · invertido 43 % · 17:+1 18:-24 19:+7 20:-2 21:+1 22:-8 23:+9 24:+16 25:+22 26:+25
+     acciones+etf  todas   +12.5 %/año · caída  -34.0 % · Sharpe 0.51 · 1968 ops · ganan 68.0 % · invertido 76 % · 17:+3 18:-21 19:+21 20:+5 21:+15 22:-19 23:+30 24:+23 25:+40 26:+41
+     solo_etf      plan     +0.7 %/año · caída   -8.1 % · Sharpe 0.29 · 89 ops · ganan 70.8 % · invertido 2 % · 17:+1 18:+1 19:+3 20:-2 21:-1 22:-0 23:-2 24:+4 25:+1 26:+2
+     solo_etf      todas    +1.4 %/año · caída  -10.5 % · Sharpe 0.38 · 128 ops · ganan 70.3 % · invertido 3 % · 17:+1 18:+3 19:+5 20:-4 21:+1 22:-1 23:+0 24:+6 25:+1 26:+1
+  Control: entrar al azar en los mismos ETF con el mismo calendario: +0.3 %/año (p05 -0.6, p95 +0.8), caída mediana -5.0 % · p(azar ≥ regla) = 0.13 (100 repeticiones)
+
+MÁS RIESGO EN LOS ETF · desde_2020 · regla base, todas las señales; los ETF arriesgan ×k el 1 % por operación (tope del 20 % de la cuenta por posición) y las acciones siguen en el 1 %
+   esc   ×1  solo ETF   +1.2 %/año caída   -4.1 % Sharpe  0.43 invertido   2 %  |  acciones+ETF  +14.1 %/año caída  -34.6 % Sharpe  0.55 invertido  59 %
+   esc   ×2  solo ETF   +2.3 %/año caída   -8.1 % Sharpe  0.42 invertido   3 %  |  acciones+ETF  +15.5 %/año caída  -34.8 % Sharpe  0.58 invertido  60 %
+   esc   ×3  solo ETF   +3.2 %/año caída  -11.9 % Sharpe  0.39 invertido   5 %  |  acciones+ETF  +16.8 %/año caída  -33.4 % Sharpe  0.60 invertido  60 %
+   esc   ×5  solo ETF   +3.9 %/año caída  -17.4 % Sharpe  0.32 invertido   6 %  |  acciones+ETF  +17.9 %/año caída  -34.1 % Sharpe  0.60 invertido  60 %
+   op4b  ×1  solo ETF   +2.4 %/año caída   -4.7 % Sharpe  0.71 invertido   2 %  |  acciones+ETF  +18.5 %/año caída  -35.8 % Sharpe  0.66 invertido  68 %
+   op4b  ×2  solo ETF   +4.5 %/año caída   -9.2 % Sharpe  0.69 invertido   4 %  |  acciones+ETF  +20.0 %/año caída  -36.5 % Sharpe  0.69 invertido  68 %
+   op4b  ×3  solo ETF   +6.6 %/año caída  -13.4 % Sharpe  0.68 invertido   6 %  |  acciones+ETF  +22.3 %/año caída  -36.5 % Sharpe  0.73 invertido  68 %
+   op4b  ×5  solo ETF   +8.7 %/año caída  -16.2 % Sharpe  0.61 invertido   8 %  |  acciones+ETF  +23.5 %/año caída  -38.5 % Sharpe  0.73 invertido  69 %
+   h20   ×1  solo ETF   +1.3 %/año caída   -5.0 % Sharpe  0.41 invertido   2 %  |  acciones+ETF  +16.8 %/año caída  -32.8 % Sharpe  0.60 invertido  62 %
+   h20   ×2  solo ETF   +2.5 %/año caída   -9.9 % Sharpe  0.39 invertido   3 %  |  acciones+ETF  +18.4 %/año caída  -33.7 % Sharpe  0.64 invertido  62 %
+   h20   ×3  solo ETF   +3.7 %/año caída  -14.1 % Sharpe  0.38 invertido   5 %  |  acciones+ETF  +16.1 %/año caída  -34.1 % Sharpe  0.55 invertido  62 %
+   h20   ×5  solo ETF   +4.5 %/año caída  -21.7 % Sharpe  0.31 invertido   7 %  |  acciones+ETF  +16.3 %/año caída  -34.6 % Sharpe  0.54 invertido  63 %
+
+MÁS RIESGO EN LOS ETF · desde_2017 · regla base, todas las señales; los ETF arriesgan ×k el 1 % por operación (tope del 20 % de la cuenta por posición) y las acciones siguen en el 1 %
+   esc   ×1  solo ETF   +0.7 %/año caída   -4.6 % Sharpe  0.27 invertido   1 %  |  acciones+ETF  +11.6 %/año caída  -34.9 % Sharpe  0.50 invertido  59 %
+   esc   ×2  solo ETF   +1.2 %/año caída   -9.1 % Sharpe  0.25 invertido   3 %  |  acciones+ETF  +11.4 %/año caída  -38.7 % Sharpe  0.48 invertido  59 %
+   esc   ×3  solo ETF   +1.7 %/año caída  -13.4 % Sharpe  0.23 invertido   4 %  |  acciones+ETF  +12.0 %/año caída  -39.4 % Sharpe  0.48 invertido  59 %
+   esc   ×5  solo ETF   +2.1 %/año caída  -17.4 % Sharpe  0.20 invertido   5 %  |  acciones+ETF  +13.4 %/año caída  -36.5 % Sharpe  0.50 invertido  60 %
+   op4b  ×1  solo ETF   +1.4 %/año caída   -5.8 % Sharpe  0.49 invertido   2 %  |  acciones+ETF  +14.2 %/año caída  -36.0 % Sharpe  0.57 invertido  66 %
+   op4b  ×2  solo ETF   +2.7 %/año caída  -11.4 % Sharpe  0.47 invertido   4 %  |  acciones+ETF  +14.8 %/año caída  -36.7 % Sharpe  0.57 invertido  67 %
+   op4b  ×3  solo ETF   +3.9 %/año caída  -16.6 % Sharpe  0.46 invertido   5 %  |  acciones+ETF  +16.1 %/año caída  -38.1 % Sharpe  0.59 invertido  67 %
+   op4b  ×5  solo ETF   +5.2 %/año caída  -21.4 % Sharpe  0.43 invertido   7 %  |  acciones+ETF  +16.7 %/año caída  -40.8 % Sharpe  0.59 invertido  67 %
+   h20   ×1  solo ETF   +1.0 %/año caída   -5.5 % Sharpe  0.34 invertido   2 %  |  acciones+ETF  +13.2 %/año caída  -34.7 % Sharpe  0.53 invertido  61 %
+   h20   ×2  solo ETF   +1.9 %/año caída  -10.9 % Sharpe  0.32 invertido   3 %  |  acciones+ETF  +14.8 %/año caída  -34.1 % Sharpe  0.57 invertido  61 %
+   h20   ×3  solo ETF   +2.8 %/año caída  -15.8 % Sharpe  0.31 invertido   5 %  |  acciones+ETF  +13.2 %/año caída  -34.3 % Sharpe  0.49 invertido  62 %
+   h20   ×5  solo ETF   +3.4 %/año caída  -23.3 % Sharpe  0.26 invertido   6 %  |  acciones+ETF  +13.1 %/año caída  -35.9 % Sharpe  0.48 invertido  62 %
+
+MENÚ DE SALIDAS CON LA REGLA BASE, SOLO ETF (todas las señales; ventana desde 2020)
+   salida        n    neto  exceso     t  ganan |   %/año   caída  ops   acciones: neto exceso t
+   esc         405  +4.83%  +4.14%   2.1  77.5% |    +1.2    -4.1   67   +1.95% +1.20% 4.1
+   esc3        405  +4.73%  +3.94%   2.0  78.8% |    +1.2    -4.4   63   +2.19% +1.34% 4.4
+   esc4        405  +5.65%  +4.69%   2.1  81.7% |    +0.8    -5.5   54   +2.54% +1.52% 4.6
+   esc5        405  +5.98%  +4.83%   1.9  82.7% |    +0.8    -5.9   47   +2.82% +1.58% 4.3
+   colchon     405  +5.28%  +4.52%   2.1  75.3% |    +1.3    -6.3   61   +2.63% +1.57% 3.8
+   corre       405  +2.87%  +2.24%   2.0  77.8% |    +0.8    -4.0   70   +1.78% +1.07% 4.3
+   ancha       405  +5.24%  +4.51%   1.9  77.5% |    +1.5    -4.2   67   +2.02% +1.25% 4.2
+   alta        405  +4.48%  +3.81%   2.1  76.0% |    +0.7    -6.0   69   +2.27% +1.39% 4.3
+   op4b        405  +7.35%  +6.38%   2.0  76.3% |    +2.4    -4.7   60   +2.46% +1.49% 3.4
+   op6b        405  +6.56%  +5.62%   1.8  75.1% |    +1.9    -5.7   58   +2.65% +1.60% 3.8
+   trail3      404 +10.06%  +8.08%   0.9  40.3% |    +1.9    -7.4   37   +4.08% +2.17% 2.6
+   run5        404  +7.87%  +4.95%   0.5  41.1% |    +3.0    -8.1   23   +5.96% +3.15% 2.8
+   stop20      404  +6.87%  +5.84%   1.5  53.5% |    +1.5    -5.4   39   +2.37% +1.21% 2.9
+   h10         405  +4.70%  +3.61%   1.8  58.0% |    +0.2    -5.3   54   +1.76% +1.11% 4.4
+   h20         404  +9.12%  +7.46%   2.1  57.2% |    +1.3    -5.0   35   +3.13% +1.58% 3.9
+   h40         399 +12.64%  +9.49%   1.2  48.9% |    +2.8    -5.3   24   +6.04% +2.77% 3.5
