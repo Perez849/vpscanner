@@ -1056,25 +1056,35 @@ def test_track_and_clusters():
     rng = np.random.default_rng(9)
     c5 = b0['c'] * np.exp(rng.normal(0, 0.002, 700))
     bars['S5'] = {'t': b0['t'].copy(), 'o': b0['o'] * c5 / b0['c'], 'h': b0['h'] * c5 / b0['c'], 'l': b0['l'] * c5 / b0['c'], 'c': c5, 'v': b0['v'].copy()}
+    b6 = {k: v.copy() for k, v in bars['S4'].items()}                          # S6: la apertura siguiente a la señal del día 520 ya está por debajo del stop: la operación no llega a abrirse
+    b6['o'][521] = b6['c'][520] * 0.4
+    bars['S6'] = b6
     g = screen.clusters(bars, list(bars))
     assert g['S0'] == g['S5'] and len({g[s] for s in ('S0', 'S1', 'S2', 'S3', 'S4')}) == 5, g
     days = lambda i: str(np.datetime64(int((b0['t'][i] + 5 * 3600) // 86400), 'D'))
     hist = [{'date': days(500), 'reglas': {'C6': ['S0', 'S1'], 'C1': ['S1']}, 'picks': {'S0': {'fiab': 70.0, 'vol': 0.8, 'reglas': ['C6']}, 'S1': {'fiab': 55.0, 'vol': 0.3, 'reglas': ['C6', 'C1']}}, 'plan_hoy': ['S0']},
-            {'date': days(505), 'reglas': {'C6': ['S0', 'S2']}, 'picks': {}, 'plan_hoy': []},                     # S0 sigue abierta: no se abre otra; S2 sí
+            {'date': days(505), 'reglas': {'C6': ['S0', 'S2']}, 'picks': {}, 'plan_hoy': ['S0']},                # S0 sigue abierta: no se abre otra (se anota que volvió al plan); S2 sí
+            {'date': days(520), 'reglas': {'C6': ['S6']}, 'picks': {}, 'plan_hoy': []},                           # S6: la apertura ya está más allá del stop, no se abre
+            {'date': days(600), 'reglas': {'C6': ['S6']}, 'picks': {}, 'plan_hoy': ['S6']},                       # y por eso no bloquea la señal siguiente del mismo valor
             {'date': days(690), 'reglas': {'C6': ['S3']}, 'picks': {}, 'plan_hoy': []}]                              # S3 sin salida todavía: en curso
     tr = screen.track(hist, bars)
     ops = {(r['fecha'], r['sym']): r for r in tr['operaciones']}
-    assert set(ops) == {(days(500), 'S0'), (days(500), 'S1'), (days(505), 'S2'), (days(690), 'S3')}, set(ops)
+    assert set(ops) == {(days(500), 'S0'), (days(500), 'S1'), (days(505), 'S2'), (days(520), 'S6'), (days(600), 'S6'), (days(690), 'S3')}, set(ops)
+    assert ops[(days(520), 'S6')]['res'] == 'na' and ops[(days(600), 'S6')]['res'] != 'na' and ops[(days(600), 'S6')]['plan_hoy']
     for (dt, sym), r in ops.items():
+        if r['res'] == 'na':
+            continue
         F = ta.prepare(bars[sym])
         i = int(np.flatnonzero(((bars[sym]['t'] + 5 * 3600) // 86400).astype(np.int64) == np.datetime64(dt, 'D').astype(np.int64))[0])
         o = plan.outcome_ladder(F, i, 1, float(F['c'][i]) - 2.5 * float(F['atr'][i]))
         assert r['res'] == o['res'] and (o['res'] == 'open' or abs(r['net'] - o['net']) < 1e-9) and r['level'] == o.get('level', 0), (r, o)
     assert ops[(days(690), 'S3')]['res'] == 'open' and ops[(days(690), 'S3')]['ahora'] is not None
     assert ops[(days(500), 'S0')]['plan_hoy'] and not ops[(days(500), 'S1')]['plan_hoy'] and ops[(days(500), 'S1')]['fiab'] == 55.0
+    s0 = ops[(days(500), 'S0')]                                               # la señal repetida con S0 abierta se anota en su operación y no cuenta como operación nueva
+    assert s0['repite'] == [days(505)] and s0['plan_dias'] == [days(505)] and 'repite' not in ops[(days(505), 'S2')] and 'plan_dias' not in ops[(days(500), 'S1')], (s0, ops[(days(505), 'S2')])
     T = tr['todas']
-    assert T['n'] == 4 and T['cerradas'] + T['abiertas'] == 4 and tr['plan_hoy']['n'] == 1 and tr['por_regla']['C1']['n'] == 1 and tr['vol_alta']['n'] == 1
-    print(f"ok · seguimiento hacia delante: {T['cerradas']} cerradas y {T['abiertas']} abiertas, idéntico a la escalera de la web; grupos de correlación correctos")
+    assert T['n'] == 6 and T['cerradas'] + T['abiertas'] == 5 and tr['plan_hoy']['n'] == 2 and tr['por_regla']['C1']['n'] == 1 and tr['vol_alta']['n'] == 1, T
+    print(f"ok · seguimiento hacia delante: {T['cerradas']} cerradas y {T['abiertas']} abiertas, idéntico a la escalera de la web; señales repetidas anotadas en la operación abierta; grupos de correlación correctos")
 
 
 def test_fiab_model():
@@ -1134,7 +1144,7 @@ def test_web_impulso_constants():
     rules = json.loads(re.search(r'const RULES = (\{.*?\});\n', html).group(1))
     assert cond == search.DESC and exits == search.EXIT_TXT and rules == search.LABELS, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT), set(rules) ^ set(search.LABELS))
     for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "'impulso-seguimiento': 'imptrack'", "['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1', 'Asegurar +10 %', 'Plan de hoy',
-                   'La cartera simulada', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)'):
+                   'La cartera simulada', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)', 'ownTxt(p.sym)', 'r.plan_dias'):
         assert needle in html, needle
     assert 'C1 · C2 · C3 · C6 · C7</b>' not in html                        # los códigos no se enseñan como nombre
     for f in ('impulso.json', 'impulso_track.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json', 'fiab.json', 'cartera.json', 'plan_study.json'):
