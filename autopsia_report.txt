@@ -1,0 +1,417 @@
+AUTOPSIA DE LAS PERDEDORAS · regla bajo_200 + impulso12_alto + vol_alta · salida: escalera · 500 acciones · 2017-05-02 → 2026-10-14 · coste 0.15 %
+Operaciones: 9,269 · ganan 73.0 % (ganancia media +6.43 %) · pierden 2,506 (pérdida media -10.12 %) · neto medio +1.956 %
+
+CÓMO PIERDEN
+   salta el stop inicial                           2,381 ( 95.0 % de las perdedoras) · pérdida media -10.45 % · 98.0 % de lo perdido
+   aseguró +4 % y salió con pérdida (hueco)           92 (  3.7 % de las perdedoras) · pérdida media -3.70 % · 1.3 % de lo perdido
+   aseguró +10 % y salió con pérdida (hueco)           4 (  0.2 % de las perdedoras) · pérdida media -4.03 % · 0.1 % de lo perdido
+   cierre por tiempo sin asegurar                     29 (  1.2 % de las perdedoras) · pérdida media -4.77 % · 0.5 % de lo perdido
+   Stop inicial: 2,381 · 20.2 % por hueco de apertura (pérdida media -12.73 % frente a -9.87 % intradía) · distancia media del stop 9.8 % del precio
+   Con un día tipo «resultados» entre la entrada y la salida: 27.1 % de las que saltaron el stop frente a 12.8 % de las ganadoras; la salida cayó en un día así el 19.2 %
+   Rapidez del stop (sesiones hasta saltar): 1-2: 5.4 % · 3-5: 21.8 % · 6-10: 29.5 % · 11-20: 27.4 % · 21-40: 14.0 % · 41-60: 1.8 %
+
+CAMINO DE LAS QUE SALTARON EL STOP
+   Mejor cierre antes de caer, mediana +0.7 % · máximo intradía mediana +2.0 % · tocaron +2 % intradía el 50.3 %, +4 % el 17.1 %, +8 % el 1.0 % · cerraron en +2 % o más el 29.4 % · nunca pasaron de +1 % el 28.8 %
+   Las GANADORAS también sufren: caída máxima mediana -2.7 % · el 27.0 % cayó más de 5 % y el 5.3 % más de 10 % antes de ganar
+
+POR AÑO
+   2017                                         n    117 · pierden  25.6 % · neto medio +2.42 %
+   2018                                         n  1,292 · pierden  36.1 % · neto medio +0.13 %
+   2019                                         n    689 · pierden  24.4 % · neto medio +2.30 %
+   2020                                         n    777 · pierden  24.2 % · neto medio +3.65 %
+   2021                                         n    597 · pierden  25.6 % · neto medio +2.08 %
+   2022                                         n  2,083 · pierden  26.0 % · neto medio +1.55 %
+   2023                                         n  1,191 · pierden  33.8 % · neto medio +1.96 %
+   2024                                         n    604 · pierden  25.2 % · neto medio +1.96 %
+   2025                                         n  1,063 · pierden  20.7 % · neto medio +2.64 %
+   2026                                         n    856 · pierden  21.5 % · neto medio +2.89 %
+
+POR MES DEL AÑO
+   1                                            n    605 · pierden  26.6 % · neto medio +1.30 %
+   2                                            n    571 · pierden  37.3 % · neto medio -0.41 %
+   3                                            n  1,292 · pierden  31.0 % · neto medio +1.04 %
+   4                                            n    921 · pierden  18.6 % · neto medio +4.29 %
+   5                                            n    826 · pierden  19.0 % · neto medio +2.62 %
+   6                                            n    471 · pierden  23.1 % · neto medio +1.85 %
+   7                                            n    713 · pierden  20.2 % · neto medio +3.07 %
+   8                                            n    718 · pierden  27.0 % · neto medio +1.18 %
+   9                                            n    759 · pierden  36.2 % · neto medio +1.73 %
+   10                                           n    829 · pierden  30.2 % · neto medio +2.87 %
+   11                                           n    744 · pierden  33.3 % · neto medio +1.20 %
+   12                                           n    820 · pierden  22.4 % · neto medio +1.98 %
+
+POR DÍA DE LA SEMANA DE LA SEÑAL
+   lun                                          n  1,724 · pierden  27.1 % · neto medio +1.74 %
+   mar                                          n  1,870 · pierden  29.7 % · neto medio +1.44 %
+   mié                                          n  1,864 · pierden  26.9 % · neto medio +2.09 %
+   jue                                          n  1,923 · pierden  26.2 % · neto medio +2.20 %
+   vie                                          n  1,888 · pierden  25.4 % · neto medio +2.29 %
+
+POR AMPLITUD DEL MERCADO (% de acciones sobre su media de 200)
+   < 30 %                                       n  1,696 · pierden  12.4 % · neto medio +5.55 % · t +7.1
+   30-45 %                                      n  1,938 · pierden  26.1 % · neto medio +1.94 % · t +2.0
+   45-60 %                                      n  2,473 · pierden  32.6 % · neto medio +0.60 % · t +1.1
+   60-75 %                                      n  2,289 · pierden  32.3 % · neto medio +1.01 % · t +2.3
+   > 75 %                                       n    873 · pierden  27.9 % · neto medio +1.33 % · t +2.2
+
+POR RENDIMIENTO DEL MERCADO A 20 SESIONES
+   < −5 %                                       n  2,513 · pierden  19.2 % · neto medio +3.87 % · t +4.3
+   −5 a −2 %                                    n  1,920 · pierden  31.0 % · neto medio +1.43 % · t +2.0
+   −2 a 0 %                                     n  1,274 · pierden  29.8 % · neto medio +1.22 % · t +2.1
+   0 a 2 %                                      n  1,593 · pierden  32.6 % · neto medio +0.88 % · t +1.7
+   2 a 5 %                                      n  1,334 · pierden  29.5 % · neto medio +1.05 % · t +2.3
+   > 5 %                                        n    635 · pierden  21.6 % · neto medio +2.07 % · t +3.2
+
+POR NÚMERO DE SEÑALES DE LA REGLA ESE DÍA
+   1                                            n    454 · pierden  24.0 % · neto medio +2.35 % · t +3.8
+   2-3                                          n  1,463 · pierden  31.1 % · neto medio +0.98 % · t +2.4
+   4-7                                          n  2,975 · pierden  30.8 % · neto medio +0.82 % · t +2.1
+   8-15                                         n  2,761 · pierden  30.0 % · neto medio +1.52 % · t +1.9
+   16 o más                                     n  1,616 · pierden  12.1 % · neto medio +5.56 % · t +8.2
+
+POR HUECO DE LA APERTURA DE ENTRADA
+   < −3 %                                       n    436 · pierden  23.2 % · neto medio +3.36 % · t +2.2
+   −3 a −1 %                                    n  1,396 · pierden  23.0 % · neto medio +2.84 % · t +4.5
+   −1 a 0 %                                     n  2,359 · pierden  28.8 % · neto medio +1.61 % · t +3.7
+   0 a 1 %                                      n  2,962 · pierden  29.3 % · neto medio +1.55 % · t +4.0
+   1 a 3 %                                      n  1,692 · pierden  25.7 % · neto medio +1.96 % · t +4.0
+   > 3 %                                        n    424 · pierden  24.3 % · neto medio +2.35 % · t +2.6
+
+POR SESIONES DESDE EL ÚLTIMO DÍA TIPO «RESULTADOS» (los resultados vuelven cada ~63)
+   0-4                                          n  1,418 · pierden  23.6 % · neto medio +2.11 % · t +3.5
+   5-19                                         n  2,962 · pierden  29.1 % · neto medio +1.47 % · t +2.7
+   20-39                                        n  1,872 · pierden  26.3 % · neto medio +1.86 % · t +3.4
+   40-54                                        n    868 · pierden  21.1 % · neto medio +3.10 % · t +4.6
+   55-69                                        n    604 · pierden  27.6 % · neto medio +2.51 % · t +3.5
+   70 o más                                     n  1,523 · pierden  30.5 % · neto medio +1.99 % · t +3.1
+
+POR VOLATILIDAD (ATR/precio)
+   < 4 %                                        n  4,511 · pierden  32.8 % · neto medio +1.16 % · t +3.0
+   4-5 %                                        n  2,182 · pierden  25.3 % · neto medio +2.02 % · t +3.6
+   5-6 %                                        n  1,125 · pierden  21.5 % · neto medio +2.07 % · t +2.6
+   6-8 %                                        n    923 · pierden  18.9 % · neto medio +2.19 % · t +2.5
+   > 8 %                                        n    528 · pierden  11.4 % · neto medio +7.84 % · t +5.3
+
+POR SESIONES ESTIMADAS HASTA LOS PRÓXIMOS RESULTADOS (si vuelven cada 63; la operación dura unas 13)
+   1-6                                          n    346 · pierden  31.5 % · neto medio +2.15 % · t +2.3
+   7-13                                         n    440 · pierden  25.0 % · neto medio +2.55 % · t +3.7
+   14-25                                        n  1,075 · pierden  25.5 % · neto medio +2.40 % · t +3.6
+   26-45                                        n  2,569 · pierden  26.7 % · neto medio +1.72 % · t +3.7
+   46-63                                        n  4,817 · pierden  27.4 % · neto medio +1.91 % · t +4.0
+
+SEGÚN CÓMO TERMINÓ LA OPERACIÓN ANTERIOR DEL MISMO VALOR
+   la anterior ganó                             n  5,566 · pierden  27.3 % · neto medio +1.88 %
+   la anterior perdió                           n  2,319 · pierden  25.7 % · neto medio +2.44 %
+   sin anterior cerrada                         n  1,384 · pierden  28.3 % · neto medio +1.45 %
+
+SEGÚN HAYA UN DÍA TIPO «RESULTADOS» DURANTE LA OPERACIÓN (se sabe después)
+   sin día de resultados entre entrada y salida n  7,715 · pierden  23.5 % · neto medio +2.07 %
+   con día de resultados entre entrada y salida n  1,554 · pierden  44.5 % · neto medio +1.39 %
+
+ESTIMACIÓN DE RESULTADOS: con resultados previstos en las próximas 13 sesiones n 786 · de ellas, tuvieron un día de resultados durante la operación el 27.6 % · pierden 27.9 % · neto +2.38 % | sin previsión n 8,461 · tuvieron resultados el 15.8 % · pierden 27.0 % · neto +1.91 %
+
+RÉGIMEN DE PÁNICO POR AÑO (¿cuántos episodios hay detrás? mirado después de ver la tabla: es descripción, no evidencia)
+   amplitud del mercado < 30 %: n 1,696 en 136 días y 7 episodios · pierden 12.4 % · neto +5.55 % | resto: pierden 30.3 % · neto +1.15 %
+      2017: n 0 (resto +2.4 %) · 2018: n 208 7 % / +5.9 % (resto -1.0 %) · 2019: n 77 0 % / +6.8 % (resto +1.7 %) · 2020: n 408 20 % / +6.2 % (resto +0.8 %) · 2021: n 0 (resto +2.1 %) · 2022: n 888 12 % / +4.7 % (resto -0.8 %) · 2023: n 22 18 % / +11.4 % (resto +1.8 %) · 2024: n 0 (resto +2.0 %) · 2025: n 93 2 % / +7.7 % (resto +2.2 %) · 2026: n 0 (resto +2.9 %)
+   amplitud del mercado < 45 %: n 3,634 en 333 días y 11 episodios · pierden 19.7 % · neto +3.62 % | resto: pierden 31.8 % · neto +0.88 %
+      2017: n 0 (resto +2.4 %) · 2018: n 595 27 % / +1.6 % (resto -1.1 %) · 2019: n 175 3 % / +5.6 % (resto +1.2 %) · 2020: n 502 23 % / +4.7 % (resto +1.7 %) · 2021: n 0 (resto +2.1 %) · 2022: n 1539 20 % / +2.8 % (resto -2.0 %) · 2023: n 280 20 % / +7.2 % (resto +0.3 %) · 2024: n 0 (resto +2.0 %) · 2025: n 511 13 % / +4.7 % (resto +0.7 %) · 2026: n 32 9 % / +3.4 % (resto +2.9 %)
+   mercado a 20 sesiones < −5 %: n 2,513 en 210 días y 26 episodios · pierden 19.2 % · neto +3.87 % | resto: pierden 30.0 % · neto +1.24 %
+      2017: n 0 (resto +2.4 %) · 2018: n 448 24 % / +2.5 % (resto -1.1 %) · 2019: n 106 5 % / +5.7 % (resto +1.7 %) · 2020: n 422 30 % / +4.2 % (resto +3.1 %) · 2021: n 0 (resto +2.1 %) · 2022: n 911 17 % / +3.7 % (resto -0.1 %) · 2023: n 164 29 % / +2.7 % (resto +1.8 %) · 2024: n 14 (resto +1.9 %) · 2025: n 384 8 % / +5.5 % (resto +1.0 %) · 2026: n 64 11 % / +4.1 % (resto +2.8 %)
+   16 o más señales el mismo día: n 1,616 en 85 días y 11 episodios · pierden 12.1 % · neto +5.56 % | resto: pierden 30.2 % · neto +1.20 %
+      2017: n 0 (resto +2.4 %) · 2018: n 358 12 % / +4.5 % (resto -1.5 %) · 2019: n 64 0 % / +6.8 % (resto +1.8 %) · 2020: n 216 34 % / +3.6 % (resto +3.7 %) · 2021: n 0 (resto +2.1 %) · 2022: n 523 8 % / +5.0 % (resto +0.4 %) · 2023: n 117 22 % / +11.0 % (resto +1.0 %) · 2024: n 0 (resto +2.0 %) · 2025: n 303 3 % / +7.0 % (resto +0.9 %) · 2026: n 35 9 % / +4.9 % (resto +2.8 %)
+   cualquiera de las tres anteriores (amplitud < 30 %, mercado < −5 %, 16+ señales): n 3,085 en 266 días y 25 episodios · pierden 18.2 % · neto +4.10 % | resto: pierden 31.5 % · neto +0.89 %
+      2017: n 0 (resto +2.4 %) · 2018: n 563 23 % / +2.5 % (resto -1.7 %) · 2019: n 106 5 % / +5.7 % (resto +1.7 %) · 2020: n 484 26 % / +4.4 % (resto +2.5 %) · 2021: n 0 (resto +2.1 %) · 2022: n 1194 16 % / +3.8 % (resto -1.4 %) · 2023: n 259 27 % / +5.7 % (resto +0.9 %) · 2024: n 14 (resto +1.9 %) · 2025: n 401 7 % / +5.7 % (resto +0.8 %) · 2026: n 64 11 % / +4.1 % (resto +2.8 %)
+
+VARIABLES DE ENTRADA QUE MÁS SEPARAN GANADORAS DE PERDEDORAS (AUC de «pierde»: 0,5 = nada; desarrollo = años < 2023, prueba = el resto; misma dirección = el signo se mantiene)
+   amplitud del mercado (% sobre su media de 200)               AUC dev 0.606 · test 0.561 · misma dirección
+   volatilidad (ATR/precio)                                     AUC dev 0.404 · test 0.389 · misma dirección
+   distancia del stop inicial (% del precio)                    AUC dev 0.404 · test 0.389 · misma dirección
+   señales de la regla ese mismo día                            AUC dev 0.42 · test 0.441 · misma dirección
+   caída desde el máximo de 252 sesiones                        AUC dev 0.579 · test 0.584 · misma dirección
+   rendimiento a 60 sesiones                                    AUC dev 0.566 · test 0.609 · misma dirección
+   distancia a la media de 50                                   AUC dev 0.565 · test 0.559 · misma dirección
+   pendiente de la media de 50                                  AUC dev 0.565 · test 0.59 · misma dirección
+   rendimiento medio del mercado a 20 sesiones                  AUC dev 0.553 · test 0.539 · misma dirección
+   posición en el rango de 52 semanas                           AUC dev 0.548 · test 0.591 · misma dirección
+   distancia a la media de 200                                  AUC dev 0.539 · test 0.589 · misma dirección
+   rendimiento a 250 sesiones                                   AUC dev 0.535 · test 0.533 · misma dirección
+   rango de la sesión en ATR                                    AUC dev 0.531 · test 0.523 · misma dirección
+   rendimiento a 20 sesiones                                    AUC dev 0.53 · test 0.549 · misma dirección
+
+PATRONES MÁS FUERTES EN DESARROLLO (años < 2023, uno a uno) Y QUÉ PASÓ DESPUÉS (52 candidatos con efecto positivo; se mantienen 6 de los 12 primeros)
+   caída desde el máximo de 252 sesiones ≥ -0.181                 dev: n  1111 · excl. +0.32 % frente a +2.02 % (t 2.7) → test: n  490 · excl. +1.55 % frente a +2.49 % (t 1.2) SE MANTIENE
+   patrones alcistas vigentes ≥ 1                                 dev: n   588 · excl. +0.49 % frente a +1.82 % (t 2.4) → test: n  321 · excl. +1.55 % frente a +2.44 % (t 1.1) SE MANTIENE
+   distancia a la media de 50 ≥ -0.013                            dev: n   556 · excl. +0.03 % frente a +1.87 % (t 2.3) → test: n  253 · excl. +0.96 % frente a +2.47 % (t 1.1) SE MANTIENE
+   caída desde el máximo de 252 sesiones ≥ -0.158                 dev: n   556 · excl. +0.43 % frente a +1.82 % (t 2.1) → test: n  174 · excl. +1.75 % frente a +2.40 % (t 0.6) se pierde
+   sesiones desde que cerró la última operación del valor ≥ 173   dev: n   451 · excl. +0.44 % frente a +1.79 % (t 1.6) → test: n  836 · excl. +1.66 % frente a +2.57 % (t 1.3) SE MANTIENE
+   RSI(2) ≥ 82.9                                                  dev: n   556 · excl. +0.64 % frente a +1.80 % (t 1.5) → test: n  391 · excl. +2.45 % frente a +2.36 % (t -0.1) se pierde
+   volatilidad (ATR/precio) ≤ 3.1                                 dev: n  1111 · excl. +0.88 % frente a +1.88 % (t 1.3) → test: n  740 · excl. +2.07 % frente a +2.44 % (t 0.3) se pierde
+   distancia del stop inicial (% del precio) ≤ 7.74               dev: n  1111 · excl. +0.88 % frente a +1.88 % (t 1.3) → test: n  740 · excl. +2.07 % frente a +2.44 % (t 0.3) se pierde
+   volumen relativo (log) ≥ 0.478                                 dev: n   556 · excl. +0.96 % frente a +1.76 % (t 1.2) → test: n  423 · excl. +2.88 % frente a +2.30 % (t -0.8) se pierde
+   rendimiento a 60 sesiones ≥ -0.00455                           dev: n   556 · excl. +0.75 % frente a +1.79 % (t 1.1) → test: n  249 · excl. +1.06 % frente a +2.46 % (t 1.5) SE MANTIENE
+   RSI(14) ≥ 49.9                                                 dev: n   556 · excl. +0.90 % frente a +1.77 % (t 1.1) → test: n  296 · excl. +1.64 % frente a +2.43 % (t 0.6) se pierde
+   distancia a la media de 50 ≥ -0.0426                           dev: n  1111 · excl. +1.04 % frente a +1.84 % (t 1.1) → test: n  508 · excl. +1.28 % frente a +2.54 % (t 1.3) SE MANTIENE
+
+FILTROS ELEGIDOS HACIA DELANTE (cada año con lo anterior menos 95 días; hasta 3 filtros en cadena, t ≥ 2.0, ≤ 25 % de filas cada uno)
+   2020: 343 de 777 excluidas · neto todas +3.65 % · quedan +1.43 % · excluidas +6.47 % · rendimiento a 120 sesiones ≤ -0.141
+   2021: 217 de 597 excluidas · neto todas +2.08 % · quedan +1.75 % · excluidas +2.65 % · dónde cerró dentro del rango ≥ 0.799 + cuerpo de la vela en ATR ≤ -0.615
+   2022: 585 de 2083 excluidas · neto todas +1.55 % · quedan +1.55 % · excluidas +1.52 % · rendimiento a 60 sesiones ≥ -0.0678
+   2023: 321 de 1191 excluidas · neto todas +1.96 % · quedan +2.51 % · excluidas +0.47 % · caída desde el máximo de 252 sesiones ≥ -0.18 + distancia a la media de 50 ≥ -0.016 + dinero negociado (log) ≤ 18.9
+   2024: 115 de 604 excluidas · neto todas +1.96 % · quedan +1.90 % · excluidas +2.19 % · caída desde el máximo de 252 sesiones ≥ -0.179 + distancia a la media de 50 ≥ -0.0161
+   2025: 181 de 1063 excluidas · neto todas +2.64 % · quedan +2.64 % · excluidas +2.60 % · caída desde el máximo de 252 sesiones ≥ -0.181 + distancia a la media de 50 ≥ -0.0188
+   2026: 104 de 856 excluidas · neto todas +2.89 % · quedan +2.85 % · excluidas +3.20 % · caída desde el máximo de 252 sesiones ≥ -0.184 + patrones alcistas vigentes ≥ 1
+   CONJUNTO FUERA DE MUESTRA: 7,171 operaciones, 1,866 excluidas (26.0 %) · neto todas +2.244 % → quedan +2.111 % (excluidas +2.622 %) · ganan 74.3 % → 75.0 %
+   evita el 28.1 % de las perdedoras y pierde el 25.3 % de las ganadoras · diferencia -0.511 % (t -0.71) · excluir lo mismo al azar deja +2.239 % (p95 +2.352 %): p = 0.947
+
+ÁRBOL DE DECISIÓN (profundidad 3, ajustado con el desarrollo): resultado neto previsto por hoja y qué pasó después
+|--- breadth <= 24.17
+|   |--- dd252 <= -0.38
+|   |   |--- value: [11.38]
+|   |--- dd252 >  -0.38
+|   |   |--- rsi14 <= 35.92
+|   |   |   |--- value: [2.18]
+|   |   |--- rsi14 >  35.92
+|   |   |   |--- value: [6.15]
+|--- breadth >  24.17
+|   |--- nsig <= 15.50
+|   |   |--- breadth <= 76.09
+|   |   |   |--- value: [-0.37]
+|   |   |--- breadth >  76.09
+|   |   |   |--- value: [2.22]
+|   |--- nsig >  15.50
+|   |   |--- value: [3.53]
+   hoja  8: dev n  3280 neto -0.37 % pierden 36.9 % → test n  3098 neto +1.71 % pierden 28.0 %
+   hoja  4: dev n   327 neto +2.18 % pierden 23.9 % → test n    34 neto +5.88 % pierden 5.9 %
+   hoja  9: dev n   589 neto +2.22 % pierden 23.9 % → test n   146 neto -0.78 % pierden 36.3 %
+   hoja 10: dev n   440 neto +3.53 % pierden 15.0 % → test n   416 neto +7.83 % pierden 9.1 %
+   hoja  5: dev n   665 neto +6.15 % pierden 4.2 % → test n     2 neto +nan % pierden None %
+   hoja  2: dev n   254 neto +11.38 % pierden 9.8 % → test n    18 neto +nan % pierden None %
+   Hacia delante (se excluyen las hojas que en el entrenamiento rendían menos de la mitad de la media): 4,344 de 7,171 excluidas (60.6 %) · neto +2.244 % → +2.808 % (excluidas +1.877 %) · evita el 63.2 % de perdedoras y pierde el 59.7 % de ganadoras · t 1.09
+
+TIPOS DE CONDICIÓN CON POCO NETO, EXCLUIDOS HACIA DELANTE (cada año con lo anterior menos 95 días; tramos de amplitud, señales del día, mercado, hueco, resultados, volatilidad, mes y día de la semana con ≥ 100 operaciones)
+  [neto1] se excluye todo tipo de condición con neto medio < +1,0 % en el entrenamiento
+   2020: 777 de 777 excluidas · neto todas +3.65 % · quedan n/d % · excluidas +3.65 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · mercado a 20 sesiones: 2 a 5 % · hueco de la apertura de entrada: −1 a 0 % · hueco de la apertura de entrada: 0 a 1 % · sesiones desde el último día tipo resultados: 5-19 · sesiones desde el último día tipo resultados: 20-39 · volatilidad: < 4 % · volatilidad: 4-5 % · mes del año: 3 · mes del año: 8 · mes del año: 10 · mes del año: 11 · día de la semana: mar · día de la semana: mié · día de la semana: jue · día de la semana: vie
+   2021: 592 de 597 excluidas · neto todas +2.08 % · quedan -0.64 % · excluidas +2.10 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · hueco de la apertura de entrada: −1 a 0 % · volatilidad: < 4 % · volatilidad: 4-5 % · volatilidad: 5-6 % · volatilidad: 6-8 % · mes del año: 2 · mes del año: 8 · mes del año: 10 · mes del año: 11
+   2022: 2048 de 2083 excluidas · neto todas +1.55 % · quedan +1.76 % · excluidas +1.54 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · hueco de la apertura de entrada: −1 a 0 % · volatilidad: < 4 % · volatilidad: 4-5 % · volatilidad: 6-8 % · mes del año: 2 · mes del año: 7 · mes del año: 10 · mes del año: 11
+   2023: 1188 de 1191 excluidas · neto todas +1.96 % · quedan +9.85 % · excluidas +1.94 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 4-7 · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · volatilidad: < 4 % · mes del año: 2 · mes del año: 11
+   2024: 604 de 604 excluidas · neto todas +1.96 % · quedan n/d % · excluidas +1.96 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · mercado a 20 sesiones: 2 a 5 % · hueco de la apertura de entrada: 0 a 1 % · sesiones desde el último día tipo resultados: 5-19 · volatilidad: < 4 % · mes del año: 2 · mes del año: 8 · mes del año: 11 · día de la semana: mar
+   2025: 564 de 1063 excluidas · neto todas +2.64 % · quedan +4.84 % · excluidas +0.69 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · mercado a 20 sesiones: 0 a 2 % · mercado a 20 sesiones: 2 a 5 % · mes del año: 2 · mes del año: 11
+   2026: 856 de 856 excluidas · neto todas +2.89 % · quedan n/d % · excluidas +2.89 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · mes del año: 2 · mes del año: 3
+   CONJUNTO FUERA DE MUESTRA: 7,171 operaciones, 6,629 excluidas (92.4 %) · neto todas +2.244 % → quedan +4.615 % (excluidas +2.050 %) · ganan 74.3 % → 87.3 %
+   evita el 96.3 % de las perdedoras y pierde el 91.1 % de las ganadoras · diferencia +2.565 % (t 1.58) · excluir lo mismo al azar deja +2.532 % (p95 +3.045 %): p = 0.0
+  [neto05] igual, con el umbral en +0,5 %
+   2020: 760 de 777 excluidas · neto todas +3.65 % · quedan +6.78 % · excluidas +3.58 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: 0 a 2 % · mercado a 20 sesiones: 2 a 5 % · hueco de la apertura de entrada: −1 a 0 % · sesiones desde el último día tipo resultados: 5-19 · sesiones desde el último día tipo resultados: 20-39 · mes del año: 3 · mes del año: 8 · mes del año: 10 · mes del año: 11 · día de la semana: mar
+   2021: 514 de 597 excluidas · neto todas +2.08 % · quedan -0.60 % · excluidas +2.51 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: 0 a 2 % · volatilidad: 5-6 % · volatilidad: 6-8 % · mes del año: 2 · mes del año: 8 · mes del año: 10 · mes del año: 11
+   2022: 1868 de 2083 excluidas · neto todas +1.55 % · quedan +2.61 % · excluidas +1.42 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: 0 a 2 % · mes del año: 2 · mes del año: 7 · mes del año: 10 · mes del año: 11
+   2023: 1155 de 1191 excluidas · neto todas +1.96 % · quedan +9.14 % · excluidas +1.74 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 4-7 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: 0 a 2 % · mes del año: 2 · mes del año: 11
+   2024: 533 de 604 excluidas · neto todas +1.96 % · quedan -2.32 % · excluidas +2.53 % · los mismos tipos
+   2025: 483 de 1063 excluidas · neto todas +2.64 % · quedan +4.51 % · excluidas +0.39 % · amplitud del mercado: 45-60 % · señales de la regla ese día: 4-7 · mercado a 20 sesiones: 0 a 2 % · mes del año: 2
+   2026: 631 de 856 excluidas · neto todas +2.89 % · quedan +1.84 % · excluidas +3.26 % · amplitud del mercado: 45-60 % · mercado a 20 sesiones: 0 a 2 % · mes del año: 2
+   CONJUNTO FUERA DE MUESTRA: 7,171 operaciones, 5,944 excluidas (82.9 %) · neto todas +2.244 % → quedan +3.113 % (excluidas +2.065 %) · ganan 74.3 % → 79.3 %
+   evita el 86.2 % de las perdedoras y pierde el 81.7 % de las ganadoras · diferencia +1.049 % (t 0.98) · excluir lo mismo al azar deja +2.435 % (p95 +2.801 %): p = 0.0
+  [neto1_dos] igual que la primera, pero la operación debe caer en DOS tipos malos a la vez
+   2020: 732 de 777 excluidas · neto todas +3.65 % · quedan -1.72 % · excluidas +3.99 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · mercado a 20 sesiones: 2 a 5 % · hueco de la apertura de entrada: −1 a 0 % · hueco de la apertura de entrada: 0 a 1 % · sesiones desde el último día tipo resultados: 5-19 · sesiones desde el último día tipo resultados: 20-39 · volatilidad: < 4 % · volatilidad: 4-5 % · mes del año: 3 · mes del año: 8 · mes del año: 10 · mes del año: 11 · día de la semana: mar · día de la semana: mié · día de la semana: jue · día de la semana: vie
+   2021: 537 de 597 excluidas · neto todas +2.08 % · quedan +2.12 % · excluidas +2.07 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · hueco de la apertura de entrada: −1 a 0 % · volatilidad: < 4 % · volatilidad: 4-5 % · volatilidad: 5-6 % · volatilidad: 6-8 % · mes del año: 2 · mes del año: 8 · mes del año: 10 · mes del año: 11
+   2022: 1761 de 2083 excluidas · neto todas +1.55 % · quedan +3.27 % · excluidas +1.23 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · hueco de la apertura de entrada: −1 a 0 % · volatilidad: < 4 % · volatilidad: 4-5 % · volatilidad: 6-8 % · mes del año: 2 · mes del año: 7 · mes del año: 10 · mes del año: 11
+   2023: 1154 de 1191 excluidas · neto todas +1.96 % · quedan +8.60 % · excluidas +1.75 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 4-7 · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · volatilidad: < 4 % · mes del año: 2 · mes del año: 11
+   2024: 602 de 604 excluidas · neto todas +1.96 % · quedan -4.01 % · excluidas +1.98 % · amplitud del mercado: 30-45 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · señales de la regla ese día: 8-15 · mercado a 20 sesiones: −5 a −2 % · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · mercado a 20 sesiones: 2 a 5 % · hueco de la apertura de entrada: 0 a 1 % · sesiones desde el último día tipo resultados: 5-19 · volatilidad: < 4 % · mes del año: 2 · mes del año: 8 · mes del año: 11 · día de la semana: mar
+   2025: 489 de 1063 excluidas · neto todas +2.64 % · quedan +3.71 % · excluidas +1.38 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · mercado a 20 sesiones: 0 a 2 % · mercado a 20 sesiones: 2 a 5 % · mes del año: 2 · mes del año: 11
+   2026: 716 de 856 excluidas · neto todas +2.89 % · quedan +4.07 % · excluidas +2.66 % · amplitud del mercado: 45-60 % · amplitud del mercado: 60-75 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · mercado a 20 sesiones: −2 a 0 % · mercado a 20 sesiones: 0 a 2 % · mes del año: 2 · mes del año: 3
+   CONJUNTO FUERA DE MUESTRA: 7,171 operaciones, 5,991 excluidas (83.5 %) · neto todas +2.244 % → quedan +3.482 % (excluidas +2.000 %) · ganan 74.3 % → 81.4 %
+   evita el 88.1 % de las perdedoras y pierde el 82.0 % de las ganadoras · diferencia +1.482 % (t 1.41) · excluir lo mismo al azar deja +2.361 % (p95 +2.713 %): p = 0.0
+  [a_posteriori] techo optimista: tipos malos elegidos con TODOS los años y aplicados a los mismos años (mirando el resultado)
+   2020: 369 de 777 excluidas · neto todas +3.65 % · quedan +4.66 % · excluidas +2.54 % · amplitud del mercado: 45-60 % · señales de la regla ese día: 2-3 · señales de la regla ese día: 4-7 · mercado a 20 sesiones: 0 a 2 % · mes del año: 2
+   2021: 532 de 597 excluidas · neto todas +2.08 % · quedan +7.18 % · excluidas +1.45 % · los mismos tipos
+   2022: 954 de 2083 excluidas · neto todas +1.55 % · quedan +3.44 % · excluidas -0.69 % · los mismos tipos
+   2023: 916 de 1191 excluidas · neto todas +1.96 % · quedan +7.26 % · excluidas +0.37 % · los mismos tipos
+   2024: 480 de 604 excluidas · neto todas +1.96 % · quedan +3.73 % · excluidas +1.50 % · los mismos tipos
+   2025: 539 de 1063 excluidas · neto todas +2.64 % · quedan +4.81 % · excluidas +0.53 % · los mismos tipos
+   2026: 790 de 856 excluidas · neto todas +2.89 % · quedan +2.92 % · excluidas +2.89 % · los mismos tipos
+   CONJUNTO FUERA DE MUESTRA: 7,171 operaciones, 4,580 excluidas (63.9 %) · neto todas +2.244 % → quedan +4.408 % (excluidas +1.020 %) · ganan 74.3 % → 81.7 %
+   evita el 74.3 % de las perdedoras y pierde el 60.3 % de las ganadoras · diferencia +3.388 % (t 3.69) · excluir lo mismo al azar deja +2.204 % (p95 +2.474 %): p = 0.0
+
+VARIANTES DE SALIDA (mismas filas; fijadas de antemano; diferencia con la escalera por operación)
+   tu escalera: stop 2,5 ATR · +4 % plano · +10 % persigue a 2 ATR neto +1.956 % · ganan 73.0 % · gana +6.4 % / pierde -10.1 % · dif +0.000 % (t None) · dev +0.000 % · test +0.000 %
+   asegurar antes: +2 % plano · +10 % persigue                  neto +1.559 % · ganan 78.2 % · gana +4.6 % / pierde -9.3 % · dif -0.397 % (t -3.8) · dev -0.427 % · test -0.352 %
+   asegurar antes: +3 % plano · +10 % persigue                  neto +1.757 % · ganan 76.0 % · gana +5.5 % / pierde -10.0 % · dif -0.199 % (t -3.0) · dev -0.230 % · test -0.153 %
+   stop más ajustado: 2,0 ATR                                   neto +1.614 % · ganan 67.5 % · gana +6.4 % / pierde -8.4 % · dif -0.343 % (t -4.3) · dev -0.337 % · test -0.351 %
+   stop más ancho: 3,0 ATR                                      neto +2.191 % · ganan 76.7 % · gana +6.4 % / pierde -11.7 % · dif +0.221 % (t 3.1) · dev +0.202 % · test +0.248 %
+   stop más ancho: 4,0 ATR                                      neto +2.543 % · ganan 81.4 % · gana +6.4 % / pierde -14.2 % · dif +0.548 % (t 3.7) · dev +0.604 % · test +0.465 %
+
+VALORES QUE MÁS PIERDEN (308 valores; correlación entre su tasa de pérdida en desarrollo y en prueba, con ≥ 8 operaciones en cada: -0.01, 76 valores)
+   SMCI   n  91 · pierden 38.5 % · neto medio -0.51 % · 3.0 % de lo perdido
+   ALB    n 170 · pierden 31.2 % · neto medio +1.04 % · 2.5 % de lo perdido
+   NVDA   n 110 · pierden 38.2 % · neto medio -0.50 % · 2.3 % de lo perdido
+   AMD    n 130 · pierden 33.8 % · neto medio +1.31 % · 2.1 % de lo perdido
+   ALGN   n  69 · pierden 40.6 % · neto medio -1.79 % · 1.8 % de lo perdido
+   DXCM   n 111 · pierden 32.4 % · neto medio -1.12 % · 1.8 % de lo perdido
+   STX    n  68 · pierden 72.1 % · neto medio -4.49 % · 1.8 % de lo perdido
+   MOS    n 130 · pierden 30.8 % · neto medio -0.51 % · 1.7 % de lo perdido
+   EQT    n  87 · pierden 37.9 % · neto medio -1.19 % · 1.6 % de lo perdido
+   ANET   n 121 · pierden 28.9 % · neto medio +1.10 % · 1.6 % de lo perdido
+   MRNA   n  54 · pierden 31.5 % · neto medio -0.35 % · 1.5 % de lo perdido
+   CNC    n 105 · pierden 47.6 % · neto medio -0.43 % · 1.5 % de lo perdido
+
+EN LA CARTERA SIMULADA (años de prueba desde 2019-12-31; orden por volatilidad; riesgo 1 %): los filtros hacia delante frente a no filtrar y frente a excluir lo mismo al azar
+   plan   sin filtro                 +6.9 %/año · caída -17.2 % · Sharpe 0.64 · 515 operaciones · ganan 71.3 %
+   plan   filtros hacia delante      +2.0 %/año · caída -16.5 % · Sharpe 0.21 · 460 operaciones · ganan 68.7 %
+   plan   árbol hacia delante        +2.1 %/año · caída -14.9 % · Sharpe 0.29 · 247 operaciones · ganan 71.3 %
+   plan   excluyendo lo mismo al azar   +5.5 %/año (p05 +3.6, p95 +7.5) · p(azar ≥ filtros) = 1.0
+   todas  sin filtro                +14.1 %/año · caída -34.2 % · Sharpe 0.57 · 1092 operaciones · ganan 72.1 %
+   todas  filtros hacia delante      +7.3 %/año · caída -26.4 % · Sharpe 0.36 · 880 operaciones · ganan 71.8 %
+   todas  árbol hacia delante        +4.0 %/año · caída -33.6 % · Sharpe 0.21 · 575 operaciones · ganan 71.1 %
+   todas  excluyendo lo mismo al azar  +13.2 %/año (p05 +10.9, p95 +15.9) · p(azar ≥ filtros) = 1.0
+
+STOPS INICIALES MÁS ANCHOS EN LA CARTERA (escalera; mismo tamaño de posición = el de 2,5 ATR; mismo riesgo = posición más pequeña cuanto más ancho el stop)
+   plan   esc   mismo tamaño:   +6.9 %/año · caída -17.2 % · Sharpe 0.64 · ganan 71.3 % · neto/op +1.12 %
+   plan   esc3  mismo tamaño:   +4.0 %/año · caída -20.7 % · Sharpe 0.36 · ganan 73.6 % · neto/op +1.00 % | mismo riesgo:   +3.4 %/año · caída -17.4 % · Sharpe 0.37
+   plan   esc4  mismo tamaño:   +6.9 %/año · caída -15.1 % · Sharpe 0.59 · ganan 79.1 % · neto/op +1.54 % | mismo riesgo:   +4.3 %/año · caída  -9.6 % · Sharpe 0.61
+   plan   esc5  mismo tamaño:   +7.8 %/año · caída -15.6 % · Sharpe 0.67 · ganan 82.1 % · neto/op +1.96 % | mismo riesgo:   +4.0 %/año · caída  -8.0 % · Sharpe 0.7
+   todas  esc   mismo tamaño:  +14.1 %/año · caída -34.2 % · Sharpe 0.57 · ganan 72.1 % · neto/op +1.75 %
+   todas  esc3  mismo tamaño:  +13.2 %/año · caída -36.3 % · Sharpe 0.53 · ganan 75.3 % · neto/op +1.78 % | mismo riesgo:  +12.0 %/año · caída -32.7 % · Sharpe 0.53
+   todas  esc4  mismo tamaño:  +14.4 %/año · caída -37.1 % · Sharpe 0.56 · ganan 79.5 % · neto/op +2.03 % | mismo riesgo:   +8.8 %/año · caída -29.1 % · Sharpe 0.44
+   todas  esc5  mismo tamaño:  +12.5 %/año · caída -36.0 % · Sharpe 0.49 · ganan 81.9 % · neto/op +2.23 % | mismo riesgo:   +8.0 %/año · caída -26.2 % · Sharpe 0.44
+
+ARRIESGAR SEGÚN EL RÉGIMEN (más en pánico, menos en días normales; riesgo base 1 %; ventana de prueba; el régimen se definió mirando la tabla)
+   plan   riesgo 1 % siempre           +6.9 %/año · caída -17.2 % · Sharpe 0.64 · anual/caída 0.4 · invertido 34 % · por año: 20:+3 21:+14 22:-11 23:+17 24:+12 25:+9 26:+6
+   plan   pánico ×2, resto ×1          +9.1 %/año · caída -19.9 % · Sharpe 0.65 · anual/caída 0.46 · invertido 38 % · por año: 20:+0 21:+14 22:-8 23:+23 24:+13 25:+16 26:+6
+   plan   pánico ×2, resto ×0,5        +6.9 %/año · caída -14.5 % · Sharpe 0.63 · anual/caída 0.48 · invertido 23 % · por año: 20:-2 21:+7 22:-0 23:+17 24:+7 25:+15 26:+3
+   plan   pánico ×3, resto ×0,5        +8.4 %/año · caída -17.1 % · Sharpe 0.63 · anual/caída 0.49 · invertido 24 % · por año: 20:-2 21:+7 22:+2 23:+20 24:+7 25:+21 26:+4
+   plan   pánico ×1, resto ×0,5        +4.7 %/año · caída -10.3 % · Sharpe 0.68 · anual/caída 0.46 · invertido 19 % · por año: 20:+0 21:+7 22:-4 23:+12 24:+7 25:+8 26:+3
+   todas  riesgo 1 % siempre          +14.1 %/año · caída -34.2 % · Sharpe 0.57 · anual/caída 0.41 · invertido 60 % · por año: 20:+7 21:+20 22:-3 23:+26 24:+9 25:+24 26:+15
+   todas  pánico ×2, resto ×1         +16.5 %/año · caída -37.6 % · Sharpe 0.61 · anual/caída 0.44 · invertido 61 % · por año: 20:+12 21:+20 22:-0 23:+26 24:+10 25:+33 26:+14
+   todas  pánico ×2, resto ×0,5       +13.8 %/año · caída -35.4 % · Sharpe 0.58 · anual/caída 0.39 · invertido 43 % · por año: 20:+9 21:+16 22:+10 23:+14 24:+7 25:+29 26:+10
+   todas  pánico ×3, resto ×0,5       +12.9 %/año · caída -41.0 % · Sharpe 0.51 · anual/caída 0.31 · invertido 43 % · por año: 20:+0 21:+16 22:+14 23:+13 24:+7 25:+31 26:+9
+   todas  pánico ×1, resto ×0,5       +11.6 %/año · caída -32.1 % · Sharpe 0.55 · anual/caída 0.36 · invertido 41 % · por año: 20:+3 21:+16 22:+8 23:+15 24:+7 25:+21 26:+10
+
+RÉGIMEN DE PÁNICO EN LA CARTERA (operar solo cuando amplitud < 30 %, mercado < −5 % o 16+ señales, o solo fuera de ello; ventana de prueba; mirado después de ver la tabla)
+   plan   solo_panico   +3.6 %/año · caída  -8.3 % · 173 operaciones · ganan 78.6 % · invertido 8 % · por año: 20:-1 21:+0 22:+6 23:+6 24:-0 25:+13 26:+1
+   plan   sin_panico    +4.6 %/año · caída -17.2 % · 442 operaciones · ganan 69.9 % · invertido 32 % · por año: 20:+6 21:+14 22:-14 23:+12 24:+11 25:-0 26:+4
+   todas  solo_panico  +11.1 %/año · caída -31.3 % · 494 operaciones · ganan 78.1 % · invertido 19 % · por año: 20:+1 21:+0 22:+26 23:+19 24:-1 25:+30 26:+5
+   todas  sin_panico    +8.3 %/año · caída -29.2 % · 791 operaciones · ganan 70.2 % · invertido 52 % · por año: 20:+10 21:+20 22:-23 23:+24 24:+10 25:+8 26:+14
+
+COMBINAR FILTRO DE CONDICIONES × SALIDA × RIESGO POR RÉGIMEN EN LA CARTERA (ventana de prueba; orden por volatilidad; esc = stop 2,5 ATR, esc4 = 4 ATR, esc5 = 5 ATR, siempre con el mismo riesgo real; x2_x05 = pánico ×2 y resto ×0,5; x2_x1 = pánico ×2 y resto ×1)
+   plan   ninguno      esc   base      +6.9 %/año · caída -17.2 % · Sharpe 0.64 · anual/caída 0.4 · invertido 34 % · 515 op.
+   plan   ninguno      esc   x2_x05    +6.9 %/año · caída -14.5 % · Sharpe 0.63 · anual/caída 0.48 · invertido 23 % · 515 op.
+   plan   ninguno      esc   x2_x1     +9.1 %/año · caída -19.9 % · Sharpe 0.65 · anual/caída 0.46 · invertido 38 % · 515 op.
+   plan   ninguno      esc4  base      +4.3 %/año · caída  -9.6 % · Sharpe 0.61 · anual/caída 0.45 · invertido 23 % · 393 op.
+   plan   ninguno      esc4  x2_x05    +3.9 %/año · caída -11.6 % · Sharpe 0.6 · anual/caída 0.33 · invertido 14 % · 393 op.
+   plan   ninguno      esc4  x2_x1     +5.5 %/año · caída -14.0 % · Sharpe 0.62 · anual/caída 0.39 · invertido 25 % · 393 op.
+   plan   ninguno      esc5  base      +4.0 %/año · caída  -8.0 % · Sharpe 0.7 · anual/caída 0.5 · invertido 19 % · 340 op.
+   plan   ninguno      esc5  x2_x05    +3.3 %/año · caída  -8.2 % · Sharpe 0.68 · anual/caída 0.4 · invertido 12 % · 340 op.
+   plan   ninguno      esc5  x2_x1     +4.8 %/año · caída -10.7 % · Sharpe 0.71 · anual/caída 0.45 · invertido 20 % · 340 op.
+   plan   neto1        esc   base      +0.8 %/año · caída  -7.0 % · Sharpe 0.24 · anual/caída 0.11 · invertido 1 % · 41 op.
+   plan   neto1        esc   x2_x05    +2.5 %/año · caída  -7.7 % · Sharpe 0.46 · anual/caída 0.33 · invertido 2 % · 41 op.
+   plan   neto1        esc   x2_x1     +2.2 %/año · caída  -9.7 % · Sharpe 0.38 · anual/caída 0.23 · invertido 2 % · 41 op.
+   plan   neto1        esc4  base      +0.4 %/año · caída  -4.8 % · Sharpe 0.17 · anual/caída 0.08 · invertido 1 % · 36 op.
+   plan   neto1        esc4  x2_x05    +1.4 %/año · caída  -6.2 % · Sharpe 0.42 · anual/caída 0.22 · invertido 2 % · 36 op.
+   plan   neto1        esc4  x2_x1     +1.2 %/año · caída  -7.3 % · Sharpe 0.32 · anual/caída 0.16 · invertido 2 % · 36 op.
+   plan   neto1        esc5  base      +0.5 %/año · caída  -4.1 % · Sharpe 0.25 · anual/caída 0.11 · invertido 1 % · 28 op.
+   plan   neto1        esc5  x2_x05    +1.5 %/año · caída  -5.1 % · Sharpe 0.56 · anual/caída 0.3 · invertido 2 % · 28 op.
+   plan   neto1        esc5  x2_x1     +1.3 %/año · caída  -6.1 % · Sharpe 0.44 · anual/caída 0.21 · invertido 2 % · 28 op.
+   plan   neto05       esc   base      -0.3 %/año · caída  -9.4 % · Sharpe -0.06 · anual/caída -0.03 · invertido 11 % · 159 op.
+   plan   neto05       esc   x2_x05    +2.7 %/año · caída  -8.5 % · Sharpe 0.37 · anual/caída 0.31 · invertido 9 % · 159 op.
+   plan   neto05       esc   x2_x1     +1.5 %/año · caída  -9.7 % · Sharpe 0.19 · anual/caída 0.16 · invertido 13 % · 159 op.
+   plan   neto05       esc4  base      +0.5 %/año · caída  -6.7 % · Sharpe 0.14 · anual/caída 0.08 · invertido 8 % · 143 op.
+   plan   neto05       esc4  x2_x05    +2.3 %/año · caída  -6.2 % · Sharpe 0.48 · anual/caída 0.37 · invertido 7 % · 143 op.
+   plan   neto05       esc4  x2_x1     +1.9 %/año · caída  -7.3 % · Sharpe 0.33 · anual/caída 0.25 · invertido 10 % · 143 op.
+   plan   neto05       esc5  base      +1.0 %/año · caída  -6.1 % · Sharpe 0.31 · anual/caída 0.17 · invertido 8 % · 136 op.
+   plan   neto05       esc5  x2_x05    +2.9 %/año · caída  -5.1 % · Sharpe 0.7 · anual/caída 0.56 · invertido 6 % · 136 op.
+   plan   neto05       esc5  x2_x1     +2.6 %/año · caída  -6.1 % · Sharpe 0.54 · anual/caída 0.42 · invertido 9 % · 136 op.
+   plan   neto1_dos    esc   base      +2.3 %/año · caída  -9.3 % · Sharpe 0.45 · anual/caída 0.24 · invertido 7 % · 144 op.
+   plan   neto1_dos    esc   x2_x05    +5.1 %/año · caída  -9.3 % · Sharpe 0.66 · anual/caída 0.55 · invertido 7 % · 144 op.
+   plan   neto1_dos    esc   x2_x1     +4.9 %/año · caída  -9.3 % · Sharpe 0.59 · anual/caída 0.52 · invertido 9 % · 144 op.
+   plan   neto1_dos    esc4  base      +1.8 %/año · caída  -5.8 % · Sharpe 0.51 · anual/caída 0.32 · invertido 5 % · 120 op.
+   plan   neto1_dos    esc4  x2_x05    +3.7 %/año · caída  -5.2 % · Sharpe 0.75 · anual/caída 0.73 · invertido 5 % · 120 op.
+   plan   neto1_dos    esc4  x2_x1     +3.7 %/año · caída  -5.8 % · Sharpe 0.67 · anual/caída 0.64 · invertido 7 % · 120 op.
+   plan   neto1_dos    esc5  base      +1.4 %/año · caída  -5.7 % · Sharpe 0.46 · anual/caída 0.24 · invertido 5 % · 111 op.
+   plan   neto1_dos    esc5  x2_x05    +2.6 %/año · caída  -4.1 % · Sharpe 0.7 · anual/caída 0.65 · invertido 4 % · 111 op.
+   plan   neto1_dos    esc5  x2_x1     +2.6 %/año · caída  -5.6 % · Sharpe 0.61 · anual/caída 0.47 · invertido 6 % · 111 op.
+   plan   a_posteriori esc   base      +4.8 %/año · caída  -9.8 % · Sharpe 0.66 · anual/caída 0.49 · invertido 12 % · 213 op.
+   plan   a_posteriori esc   x2_x05    +4.5 %/año · caída -16.6 % · Sharpe 0.42 · anual/caída 0.27 · invertido 12 % · 213 op.
+   plan   a_posteriori esc   x2_x1     +6.2 %/año · caída -16.9 % · Sharpe 0.53 · anual/caída 0.37 · invertido 16 % · 213 op.
+   plan   a_posteriori esc4  base      +2.9 %/año · caída  -6.2 % · Sharpe 0.6 · anual/caída 0.47 · invertido 9 % · 175 op.
+   plan   a_posteriori esc4  x2_x05    +1.8 %/año · caída -10.9 % · Sharpe 0.25 · anual/caída 0.16 · invertido 9 % · 175 op.
+   plan   a_posteriori esc4  x2_x1     +3.1 %/año · caída -11.1 % · Sharpe 0.39 · anual/caída 0.28 · invertido 12 % · 175 op.
+   plan   a_posteriori esc5  base      +2.8 %/año · caída  -5.7 % · Sharpe 0.69 · anual/caída 0.5 · invertido 8 % · 164 op.
+   plan   a_posteriori esc5  x2_x05    +2.6 %/año · caída -10.8 % · Sharpe 0.43 · anual/caída 0.24 · invertido 8 % · 164 op.
+   plan   a_posteriori esc5  x2_x1     +3.6 %/año · caída -11.0 % · Sharpe 0.54 · anual/caída 0.33 · invertido 11 % · 164 op.
+   todas  ninguno      esc   base     +14.1 %/año · caída -34.2 % · Sharpe 0.57 · anual/caída 0.41 · invertido 60 % · 1092 op.
+   todas  ninguno      esc   x2_x05   +13.8 %/año · caída -35.4 % · Sharpe 0.58 · anual/caída 0.39 · invertido 43 % · 1047 op.
+   todas  ninguno      esc   x2_x1    +16.5 %/año · caída -37.6 % · Sharpe 0.61 · anual/caída 0.44 · invertido 61 % · 971 op.
+   todas  ninguno      esc4  base      +8.8 %/año · caída -29.1 % · Sharpe 0.44 · anual/caída 0.3 · invertido 49 % · 1004 op.
+   todas  ninguno      esc4  x2_x05   +10.6 %/año · caída -33.1 % · Sharpe 0.52 · anual/caída 0.32 · invertido 36 % · 977 op.
+   todas  ninguno      esc4  x2_x1    +12.9 %/año · caída -33.3 % · Sharpe 0.56 · anual/caída 0.39 · invertido 52 % · 923 op.
+   todas  ninguno      esc5  base      +8.0 %/año · caída -26.2 % · Sharpe 0.44 · anual/caída 0.31 · invertido 45 % · 949 op.
+   todas  ninguno      esc5  x2_x05    +8.0 %/año · caída -34.9 % · Sharpe 0.42 · anual/caída 0.23 · invertido 32 % · 922 op.
+   todas  ninguno      esc5  x2_x1     +9.6 %/año · caída -36.1 % · Sharpe 0.44 · anual/caída 0.26 · invertido 47 % · 888 op.
+   todas  neto1        esc   base      +2.7 %/año · caída -13.6 % · Sharpe 0.31 · anual/caída 0.2 · invertido 3 % · 124 op.
+   todas  neto1        esc   x2_x05    +4.1 %/año · caída -13.7 % · Sharpe 0.39 · anual/caída 0.3 · invertido 4 % · 100 op.
+   todas  neto1        esc   x2_x1     +3.8 %/año · caída -15.1 % · Sharpe 0.37 · anual/caída 0.25 · invertido 5 % · 94 op.
+   todas  neto1        esc4  base      +2.0 %/año · caída -12.6 % · Sharpe 0.26 · anual/caída 0.16 · invertido 3 % · 131 op.
+   todas  neto1        esc4  x2_x05    +2.5 %/año · caída -13.7 % · Sharpe 0.29 · anual/caída 0.18 · invertido 4 % · 109 op.
+   todas  neto1        esc4  x2_x1     +2.9 %/año · caída -15.2 % · Sharpe 0.32 · anual/caída 0.19 · invertido 4 % · 107 op.
+   todas  neto1        esc5  base      +2.4 %/año · caída -10.9 % · Sharpe 0.33 · anual/caída 0.22 · invertido 3 % · 127 op.
+   todas  neto1        esc5  x2_x05    +3.8 %/año · caída -11.1 % · Sharpe 0.44 · anual/caída 0.34 · invertido 4 % · 112 op.
+   todas  neto1        esc5  x2_x1     +3.5 %/año · caída -13.0 % · Sharpe 0.39 · anual/caída 0.27 · invertido 4 % · 110 op.
+   todas  neto05       esc   base      +2.6 %/año · caída -13.6 % · Sharpe 0.22 · anual/caída 0.19 · invertido 16 % · 313 op.
+   todas  neto05       esc   x2_x05    +8.0 %/año · caída -13.7 % · Sharpe 0.6 · anual/caída 0.59 · invertido 13 % · 260 op.
+   todas  neto05       esc   x2_x1     +6.2 %/año · caída -15.1 % · Sharpe 0.45 · anual/caída 0.41 · invertido 18 % · 254 op.
+   todas  neto05       esc4  base      +4.4 %/año · caída -12.6 % · Sharpe 0.43 · anual/caída 0.35 · invertido 16 % · 330 op.
+   todas  neto05       esc4  x2_x05    +5.9 %/año · caída -13.7 % · Sharpe 0.51 · anual/caída 0.43 · invertido 12 % · 272 op.
+   todas  neto05       esc4  x2_x1     +5.9 %/año · caída -15.2 % · Sharpe 0.47 · anual/caída 0.39 · invertido 17 % · 269 op.
+   todas  neto05       esc5  base      +5.2 %/año · caída -10.9 % · Sharpe 0.55 · anual/caída 0.48 · invertido 15 % · 328 op.
+   todas  neto05       esc5  x2_x05    +7.2 %/año · caída -11.7 % · Sharpe 0.62 · anual/caída 0.61 · invertido 13 % · 284 op.
+   todas  neto05       esc5  x2_x1     +6.4 %/año · caída -13.0 % · Sharpe 0.53 · anual/caída 0.49 · invertido 17 % · 281 op.
+   todas  neto1_dos    esc   base      +4.9 %/año · caída -15.8 % · Sharpe 0.38 · anual/caída 0.31 · invertido 13 % · 324 op.
+   todas  neto1_dos    esc   x2_x05    +8.3 %/año · caída -19.9 % · Sharpe 0.56 · anual/caída 0.42 · invertido 12 % · 280 op.
+   todas  neto1_dos    esc   x2_x1     +6.9 %/año · caída -19.9 % · Sharpe 0.46 · anual/caída 0.34 · invertido 14 % · 267 op.
+   todas  neto1_dos    esc4  base      +6.0 %/año · caída -12.9 % · Sharpe 0.53 · anual/caída 0.47 · invertido 12 % · 326 op.
+   todas  neto1_dos    esc4  x2_x05    +7.2 %/año · caída -21.4 % · Sharpe 0.48 · anual/caída 0.34 · invertido 12 % · 280 op.
+   todas  neto1_dos    esc4  x2_x1     +6.8 %/año · caída -21.4 % · Sharpe 0.44 · anual/caída 0.32 · invertido 14 % · 277 op.
+   todas  neto1_dos    esc5  base      +6.2 %/año · caída -11.9 % · Sharpe 0.62 · anual/caída 0.53 · invertido 12 % · 327 op.
+   todas  neto1_dos    esc5  x2_x05    +6.6 %/año · caída -19.6 % · Sharpe 0.5 · anual/caída 0.34 · invertido 11 % · 285 op.
+   todas  neto1_dos    esc5  x2_x1     +6.5 %/año · caída -19.6 % · Sharpe 0.46 · anual/caída 0.33 · invertido 14 % · 284 op.
+   todas  a_posteriori esc   base     +14.9 %/año · caída -30.4 % · Sharpe 0.73 · anual/caída 0.49 · invertido 24 % · 549 op.
+   todas  a_posteriori esc   x2_x05   +10.5 %/año · caída -40.0 % · Sharpe 0.48 · anual/caída 0.26 · invertido 20 % · 461 op.
+   todas  a_posteriori esc   x2_x1    +13.6 %/año · caída -40.3 % · Sharpe 0.59 · anual/caída 0.34 · invertido 24 % · 425 op.
+   todas  a_posteriori esc4  base     +11.4 %/año · caída -24.4 % · Sharpe 0.67 · anual/caída 0.47 · invertido 21 % · 572 op.
+   todas  a_posteriori esc4  x2_x05   +10.3 %/año · caída -29.1 % · Sharpe 0.54 · anual/caída 0.36 · invertido 19 % · 479 op.
+   todas  a_posteriori esc4  x2_x1    +13.8 %/año · caída -29.1 % · Sharpe 0.67 · anual/caída 0.47 · invertido 23 % · 465 op.
+   todas  a_posteriori esc5  base     +10.5 %/año · caída -22.8 % · Sharpe 0.66 · anual/caída 0.46 · invertido 19 % · 556 op.
+   todas  a_posteriori esc5  x2_x05   +10.1 %/año · caída -29.5 % · Sharpe 0.55 · anual/caída 0.34 · invertido 18 % · 488 op.
+   todas  a_posteriori esc5  x2_x1    +12.7 %/año · caída -29.5 % · Sharpe 0.65 · anual/caída 0.43 · invertido 22 % · 484 op.
+
+CONTROL DE AZAR: el filtro hacia delante frente a excluir lo mismo al azar, con la misma salida y el mismo riesgo
+   plan   neto1      esc   base    filtro  +0.8 %/año caída  -7.0 % anual/caída 0.11 | azar  +4.6 %/año (p05 +3.6, p95 +5.4) caída -12.5 % anual/caída 0.36 | p(azar ≥ filtro): anual 1.0 · anual/caída 1.0 (12 reps)
+   plan   neto1      esc5  x2_x05  filtro  +1.5 %/año caída  -5.1 % anual/caída 0.3 | azar  +1.6 %/año (p05 +0.9, p95 +2.1) caída  -8.2 % anual/caída 0.2 | p(azar ≥ filtro): anual 0.583 · anual/caída 0.0 (12 reps)
+   plan   neto05     esc   base    filtro  -0.3 %/año caída  -9.4 % anual/caída -0.03 | azar  +4.1 %/año (p05 +2.0, p95 +5.7) caída -13.5 % anual/caída 0.35 | p(azar ≥ filtro): anual 1.0 · anual/caída 1.0 (12 reps)
+   plan   neto05     esc5  x2_x05  filtro  +2.9 %/año caída  -5.1 % anual/caída 0.56 | azar  +3.1 %/año (p05 +1.6, p95 +4.2) caída  -5.5 % anual/caída 0.47 | p(azar ≥ filtro): anual 0.583 · anual/caída 0.417 (12 reps)
+   plan   neto1_dos  esc   base    filtro  +2.3 %/año caída  -9.3 % anual/caída 0.24 | azar  +3.5 %/año (p05 +1.2, p95 +5.3) caída -13.2 % anual/caída 0.26 | p(azar ≥ filtro): anual 0.833 · anual/caída 0.583 (12 reps)
+   plan   neto1_dos  esc5  x2_x05  filtro  +2.6 %/año caída  -4.1 % anual/caída 0.65 | azar  +2.3 %/año (p05 +1.1, p95 +3.6) caída  -6.0 % anual/caída 0.4 | p(azar ≥ filtro): anual 0.417 · anual/caída 0.083 (12 reps)
+   todas  neto1      esc   base    filtro  +2.7 %/año caída -13.6 % anual/caída 0.2 | azar  +8.7 %/año (p05 +7.4, p95 +10.0) caída -34.2 % anual/caída 0.26 | p(azar ≥ filtro): anual 1.0 · anual/caída 1.0 (12 reps)
+   todas  neto1      esc5  x2_x05  filtro  +3.8 %/año caída -11.1 % anual/caída 0.34 | azar  +5.4 %/año (p05 +4.2, p95 +6.1) caída -34.9 % anual/caída 0.15 | p(azar ≥ filtro): anual 1.0 · anual/caída 0.0 (12 reps)
+   todas  neto05     esc   base    filtro  +2.6 %/año caída -13.6 % anual/caída 0.19 | azar  +9.1 %/año (p05 +6.2, p95 +12.5) caída -19.1 % anual/caída 0.47 | p(azar ≥ filtro): anual 1.0 · anual/caída 1.0 (12 reps)
+   todas  neto05     esc5  x2_x05  filtro  +7.2 %/año caída -11.7 % anual/caída 0.61 | azar  +9.5 %/año (p05 +7.1, p95 +10.5) caída -10.9 % anual/caída 0.89 | p(azar ≥ filtro): anual 0.917 · anual/caída 0.917 (12 reps)
+   todas  neto1_dos  esc   base    filtro  +4.9 %/año caída -15.8 % anual/caída 0.31 | azar  +9.7 %/año (p05 +7.7, p95 +11.7) caída -19.0 % anual/caída 0.55 | p(azar ≥ filtro): anual 1.0 · anual/caída 1.0 (12 reps)
+   todas  neto1_dos  esc5  x2_x05  filtro  +6.6 %/año caída -19.6 % anual/caída 0.34 | azar  +8.1 %/año (p05 +5.7, p95 +11.5) caída -12.7 % anual/caída 0.63 | p(azar ≥ filtro): anual 0.75 · anual/caída 1.0 (12 reps)
+
+A IGUAL CAÍDA: rentabilidad anual con el riesgo escalado hasta la caída máxima del plan actual (interpolada entre riesgos ×0,5 y ×6)
+   plan: caída objetivo -17.2 %
+      ninguno|esc|base        +6.9 %/año con el riesgo ×1.0   [×0.5: +3.5 % / -8.9 % · ×1.0: +6.9 % / -17.2 % · ×1.5: +9.8 % / -24.5 % · ×2.0: +11.7 % / -28.5 % · ×3.0: +13.3 % / -32.5 % · ×4.0: +13.6 % / -33.9 % · ×6.0: +13.8 % / -35.2 %]
+      neto1|esc|base          +1.9 %/año con el riesgo ×2.8   [×0.5: +0.4 % / -3.6 % · ×1.0: +0.8 % / -7.0 % · ×1.5: +1.1 % / -10.4 % · ×2.0: +1.5 % / -13.7 % · ×3.0: +1.9 % / -18.1 % · ×4.0: +2.3 % / -18.7 % · ×6.0: +2.7 % / -18.4 %]
+      ninguno|esc5|base       +8.6 %/año con el riesgo ×2.25   [×0.5: +2.0 % / -4.0 % · ×1.0: +4.0 % / -8.0 % · ×1.5: +5.9 % / -11.8 % · ×2.0: +7.8 % / -15.6 % · ×3.0: +11.0 % / -22.1 % · ×4.0: +13.7 % / -24.7 % · ×6.0: +16.9 % / -27.5 %]
+      ninguno|esc|x2_x05      +8.6 %/año con el riesgo ×1.33   [×0.5: +3.6 % / -7.7 % · ×1.0: +6.9 % / -14.5 % · ×1.5: +9.5 % / -18.6 % · ×2.0: +11.7 % / -21.7 % · ×3.0: +13.9 % / -27.3 % · ×4.0: +14.8 % / -30.1 % · ×6.0: +15.0 % / -32.5 %]
+      ninguno|esc5|x2_x05     +7.3 %/año con el riesgo ×2.16   [×0.5: +1.7 % / -4.2 % · ×1.0: +3.3 % / -8.2 % · ×1.5: +4.9 % / -12.2 % · ×2.0: +6.8 % / -16.1 % · ×3.0: +9.7 % / -22.7 % · ×4.0: +11.6 % / -24.6 % · ×6.0: +14.4 % / -26.5 %]
+      neto1|esc5|base         +1.9 %/año con el riesgo ×4.51   [×0.5: +0.2 % / -2.1 % · ×1.0: +0.5 % / -4.1 % · ×1.5: +0.7 % / -6.1 % · ×2.0: +0.9 % / -8.1 % · ×3.0: +1.3 % / -12.0 % · ×4.0: +1.7 % / -15.8 % · ×6.0: +2.3 % / -21.4 %]
+      neto1|esc|x2_x05        +3.1 %/año con el riesgo ×5.6   [×0.5: +1.3 % / -3.9 % · ×1.0: +2.5 % / -7.7 % · ×1.5: +3.4 % / -10.6 % · ×2.0: +3.9 % / -11.6 % · ×3.0: +4.0 % / -13.3 % · ×4.0: +3.6 % / -15.3 % · ×6.0: +3.0 % / -17.7 %]
+      neto1|esc5|x2_x05      fuera del rango de riesgos probado   [×0.5: +0.8 % / -2.6 % · ×1.0: +1.5 % / -5.1 % · ×1.5: +2.3 % / -7.6 % · ×2.0: +3.0 % / -10.0 % · ×3.0: +4.0 % / -13.9 % · ×4.0: +4.0 % / -15.1 % · ×6.0: +3.8 % / -17.0 %]
+   todas: caída objetivo -34.2 %
+      ninguno|esc|base       +14.1 %/año con el riesgo ×1.0   [×0.5: +9.8 % / -21.1 % · ×1.0: +14.1 % / -34.2 % · ×1.5: +18.2 % / -35.3 % · ×2.0: +19.2 % / -39.0 % · ×3.0: +15.6 % / -45.5 % · ×4.0: +20.2 % / -49.7 % · ×6.0: +20.8 % / -50.3 %]
+      neto1|esc|base         fuera del rango de riesgos probado   [×0.5: +1.9 % / -9.6 % · ×1.0: +2.7 % / -13.6 % · ×1.5: +3.5 % / -15.2 % · ×2.0: +3.7 % / -14.8 % · ×3.0: +5.4 % / -14.0 % · ×4.0: +5.2 % / -14.4 % · ×6.0: +5.4 % / -13.5 %]
+      ninguno|esc5|base       +9.2 %/año con el riesgo ×1.45   [×0.5: +5.8 % / -13.5 % · ×1.0: +8.0 % / -26.2 % · ×1.5: +9.3 % / -35.1 % · ×2.0: +12.5 % / -36.0 % · ×3.0: +17.1 % / -36.2 % · ×4.0: +23.3 % / -39.6 % · ×6.0: +23.2 % / -43.7 %]
+      ninguno|esc|x2_x05     +12.7 %/año con el riesgo ×0.82   [×0.5: +10.7 % / -32.1 % · ×1.0: +13.8 % / -35.4 % · ×1.5: +13.6 % / -42.7 % · ×2.0: +14.6 % / -48.1 % · ×3.0: +15.2 % / -50.4 % · ×4.0: +16.0 % / -50.3 % · ×6.0: +16.9 % / -50.2 %]
+      ninguno|esc5|x2_x05     +7.9 %/año con el riesgo ×0.97   [×0.5: +7.3 % / -23.1 % · ×1.0: +8.0 % / -34.9 % · ×1.5: +10.0 % / -39.2 % · ×2.0: +12.6 % / -37.8 % · ×3.0: +13.8 % / -39.4 % · ×4.0: +14.0 % / -44.4 % · ×6.0: +18.4 % / -44.4 %]
+      neto1|esc5|base        fuera del rango de riesgos probado   [×0.5: +1.2 % / -5.5 % · ×1.0: +2.4 % / -10.9 % · ×1.5: +2.8 % / -13.8 % · ×2.0: +3.6 % / -16.7 % · ×3.0: +4.2 % / -17.9 % · ×4.0: +5.2 % / -17.1 % · ×6.0: +5.9 % / -15.6 %]
+      neto1|esc|x2_x05       fuera del rango de riesgos probado   [×0.5: +3.3 % / -8.8 % · ×1.0: +4.1 % / -13.7 % · ×1.5: +5.8 % / -12.2 % · ×2.0: +6.2 % / -15.1 % · ×3.0: +5.9 % / -14.3 % · ×4.0: +6.2 % / -14.4 % · ×6.0: +5.9 % / -13.8 %]
+      neto1|esc5|x2_x05      fuera del rango de riesgos probado   [×0.5: +2.7 % / -6.2 % · ×1.0: +3.8 % / -11.1 % · ×1.5: +4.7 % / -14.3 % · ×2.0: +5.2 % / -16.6 % · ×3.0: +6.2 % / -14.5 % · ×4.0: +6.1 % / -17.3 % · ×6.0: +5.5 % / -16.3 %]
