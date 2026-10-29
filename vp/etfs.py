@@ -25,6 +25,7 @@ BASE_RULE = 'imp_bajo200'
 BASE_EXIT = 'esc'
 RISK_EXITS = ('esc', 'op4b', 'h20')                # salidas con las que se prueba a dar más riesgo a los ETF
 RISK_MULT = (1, 2, 3, 5)                           # veces el riesgo del 1 % por operación
+CODE_TXT = {0: 'sale por el stop inicial', 1: 'aseguró +4 % y salió en ese nivel', 2: 'aseguró +10 % y salió persiguiendo', 3: 'cierre por tiempo (60 sesiones) sin asegurar'}
 DESC = {'TQQQ': 'Nasdaq-100 ×3', 'SQQQ': 'Nasdaq-100 ×3 inverso', 'SOXL': 'semiconductores ×3', 'SOXS': 'semiconductores ×3 inverso'}
 
 
@@ -68,6 +69,24 @@ def hold(Wd, j: int, years_d: np.ndarray, d0: int) -> Dict:
     return cartera.metrics(seg / seg[0], years_d[d0:])
 
 
+def signal_stats(net: np.ndarray, code: np.ndarray, nb: np.ndarray, stop: np.ndarray) -> Dict:
+    """Lo que gana cada señal, en % sobre lo invertido en ella (no depende de cuánto dinero se ponga): media, mediana, aciertos, ganancia y pérdida medias, peor y mejor, cuánto duran, a qué distancia estaba el stop inicial
+    y cómo salen (stop inicial, primer nivel asegurado, segundo nivel o tiempo) con el resultado medio de cada tipo."""
+    ok = np.isfinite(net)
+    if not ok.any():
+        return {'n': 0}
+    x, c = net[ok].astype(np.float64), code[ok]
+    w, l = x[x > 0], x[x <= 0]
+    tipos = {}
+    for k_, tx in CODE_TXT.items():
+        m = c == k_
+        if m.any():
+            tipos[tx] = {'n': int(m.sum()), 'pct': _r(100 * m.mean(), 1), 'neto': _r(x[m].mean(), 2)}
+    return {'n': int(ok.sum()), 'neto': _r(x.mean(), 2), 'mediana': _r(np.median(x), 2), 'ganan': _r(100 * (x > 0).mean(), 1), 'gan_media': _r(w.mean(), 2) if len(w) else None,
+            'perd_media': _r(l.mean(), 2) if len(l) else None, 'mejor': _r(x.max(), 1), 'peor': _r(x.min(), 1), 'sesiones': _r(float(nb[ok].mean()), 1), 'stop_pct': _r(float(stop[ok].mean()), 1),
+            'por_1000': _r(10 * x.mean(), 0), 'por_tipo': tipos}
+
+
 def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]] = None, workers: int = 1, reps: int = 200, verbose: bool = False, k: int = ml.K, etfs=ETFS, seed: int = 3) -> Dict:
     t0 = time.time()
     D, Wd, dropped = build_world(bars, join, workers, k, verbose)
@@ -95,6 +114,25 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
             yrs = D.year[ix]
             out['rows'][rn]['por_etf'][s] = {'n': int(len(ix)), 'neto': _r(float(nets.mean()), 2) if len(ix) else None, 'ganan': _r(float((nets > 0).mean() * 100), 1) if len(ix) else None,
                                               'por_año': {int(y): int((yrs == y).sum()) for y in np.unique(yrs)}}
+    # 1b. lo que gana cada señal con la escalera, sin tener en cuenta cuánto se invierte
+    net_e, code_e, nb_e = Wd.net_rows[BASE_EXIT], Wd.code_rows[BASE_EXIT], Wd.bars_rows[BASE_EXIT]
+    stop_e = 2.5 * Wd.atrp.astype(np.float64)
+    out['senales'] = {}
+    lista = []
+    for rn, r in rules.items():
+        m = Wd.rule_mask(r['regla'])
+        d_ = {'acciones': signal_stats(net_e[m & ~is_etf], code_e[m & ~is_etf], nb_e[m & ~is_etf], stop_e[m & ~is_etf]), 'etfs': signal_stats(net_e[m & is_etf], code_e[m & is_etf], nb_e[m & is_etf], stop_e[m & is_etf])}
+        for s_, j in ids.items():
+            mm = m & (D.sym == j)
+            d_[s_] = signal_stats(net_e[mm], code_e[mm], nb_e[mm], stop_e[mm])
+            yrs = D.year[mm & np.isfinite(net_e)]
+            nn = net_e[mm & np.isfinite(net_e)]
+            d_[s_]['por_año'] = {int(y): {'n': int((yrs == y).sum()), 'neto': _r(float(nn[yrs == y].mean()), 2)} for y in np.unique(yrs)}
+            for row in np.flatnonzero(mm & np.isfinite(net_e)):
+                lista.append((s_, r['corta'], dates[int(D.dcode[row])], _r(float(stop_e[row]), 1), _r(float(net_e[row]), 2), CODE_TXT.get(int(code_e[row]), '?'), int(nb_e[row])))
+        out['senales'][rn] = d_
+    lista.sort(key=lambda t: (t[0], t[1], t[2]))
+    out['_lista'] = lista
     # 2. el menú de salidas con la regla base, solo ETF
     m0 = Wd.rule_mask(rules[BASE_RULE]['regla'])
     for e in cartera.MN:
@@ -154,7 +192,23 @@ def report(ev: Dict) -> str:
     L = [f"REGLA DE IMPULSO EN ETF APALANCADOS · {', '.join(f'{s} ({DESC[s]})' for s in m['etfs'])} · más {m['acciones']} acciones del universo · {m['from']} → {m['to']} · coste {search.COST} % · miembros {m['miembros']}",
          f"Mismo mundo que la cartera simulada: los percentiles de impulso y volatilidad del día se calculan con todo el universo, ETF incluidos. Entradas = las tres de la web; salida base = la escalera; "
          f"disciplina del plan de hoy (5 huecos, correlación < 0,6, 1 % de riesgo). El orden de entrada es por volatilidad, así que, al ser los más volátiles, los ETF pasan por delante de las acciones cuando coinciden. Datos de los ETF desde: " + ' · '.join(f'{s} {d}' for s, d in m['desde_dato'].items()), '']
-    L.append('SEÑALES Y RESULTADO POR OPERACIÓN CON LA ESCALERA (neto tras costes; exceso = frente a la media del universo ese día con la misma salida; t con errores agrupados)')
+    L.append('LO QUE GANA CADA SEÑAL CON LA ESCALERA, EN % SOBRE LO INVERTIDO EN ELLA (no depende de cuánto dinero se ponga; la entrada es la apertura siguiente a la señal y el stop inicial está a 2,5 ATR)')
+    for rn, d_ in ev['senales'].items():
+        L.append(f"  {ev['rows'][rn]['etiqueta']}")
+        for nm in ['acciones', 'etfs'] + list(m['etfs']):
+            x = d_[nm]
+            if not x.get('n'):
+                L.append(f"     {nm:9s} sin señales")
+                continue
+            L.append(f"     {nm:9s} n {x['n']:5,d} · media {x['neto']:+.2f} % · mediana {x['mediana']:+.2f} % · aciertos {x['ganan']} % · gana {_f(x['gan_media'], '+.2f')} % de media / pierde {_f(x['perd_media'], '+.2f')} % · mejor {x['mejor']:+.0f} % / peor {x['peor']:+.0f} % · "
+                     f"duran {x['sesiones']} sesiones · stop a {x['stop_pct']} % · por cada 1.000 invertidos en la señal: {x['por_1000']:+,.0f}")
+            L.append('               ' + ' | '.join(f"{tx}: {v['pct']} % de las veces, {v['neto']:+.2f} % de media" for tx, v in x['por_tipo'].items()))
+    L += ['', 'SEÑALES DEL TQQQ Y SOXL POR AÑO (regla base: operaciones y resultado medio)']
+    for s_ in ('TQQQ', 'SOXL'):
+        x = ev['senales'][BASE_RULE].get(s_, {})
+        if x.get('por_año'):
+            L.append(f"   {s_}: " + ' · '.join(f"{y}: {v['n']} ({v['neto']:+.1f} %)" for y, v in x['por_año'].items()))
+    L += ['', 'SEÑALES Y RESULTADO POR OPERACIÓN CON LA ESCALERA (neto tras costes; exceso = frente a la media del universo ese día con la misma salida; t con errores agrupados)']
     for rn, r in ev['rows'].items():
         for nm, tx in (('etfs', 'solo ETF'), ('acciones', 'acciones')):
             s = r[nm]
@@ -213,6 +267,11 @@ def run(symbols_: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional
             print(f'  no se pudo leer la tabla de miembros del S&P 500 ({type(exc).__name__}: {exc}): se usan los miembros actuales', flush=True)
     ev = analyze(bars, join=join, workers=workers, reps=reps, verbose=True)
     os.makedirs(out_dir, exist_ok=True)
+    lista = ev.pop('_lista', [])
+    with open(os.path.join(out_dir, 'etfs_senales.csv'), 'w', encoding='utf-8') as fh:
+        fh.write('etf,regla,fecha_senal,distancia_stop_pct,resultado_pct,salida,sesiones\n')
+        for row in lista:
+            fh.write(','.join(str(x) for x in row) + '\n')
     json.dump(ev, open(os.path.join(out_dir, 'etfs.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     txt = report(ev)
     open(os.path.join(out_dir, 'etfs_report.txt'), 'w', encoding='utf-8').write(txt)

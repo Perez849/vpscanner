@@ -1428,10 +1428,17 @@ def test_etfs():
     assert set(res) == {'acciones', 'acciones+etf', 'solo_etf', 'cada_etf'} and set(res['cada_etf']) == set(E.ETFS)
     assert res['acciones+etf']['todas']['operaciones'] >= max(res['acciones']['todas']['operaciones'], res['solo_etf']['todas']['operaciones']) - 3
     assert set(ev['salidas']) == set(cartera.MN) and 'desde_2017' in ev['comprar_y_mantener'] and set(E.ETFS) <= set(ev['comprar_y_mantener']['desde_2020'])
+    sg = ev['senales'][E.BASE_RULE]
+    assert set(sg) == {'acciones', 'etfs'} | set(E.ETFS) and sum(sg[s_]['n'] for s_ in E.ETFS) == sg['etfs']['n']
+    for k_ in ('etfs', 'acciones'):
+        x = sg[k_]
+        if x['n']:
+            assert abs(sum(v['pct'] for v in x['por_tipo'].values()) - 100) < 0.5 and abs(x['por_1000'] - 10 * x['neto']) <= 1
+    assert len(ev['_lista']) == sum(len(sg[s_]) and sg[s_]['n'] for s_ in E.ETFS) + sum(ev['senales'][rn][s_]['n'] for rn in ev['senales'] if rn != E.BASE_RULE for s_ in E.ETFS)
     mr = ev['mas_riesgo_desde_2020']
     assert set(mr) == set(E.RISK_EXITS) and mr['esc'][1]['solo_etf']['tamaño_medio'] is None or mr['esc'][5]['solo_etf']['tamaño_medio'] >= mr['esc'][1]['solo_etf']['tamaño_medio']
     txt = E.report(ev)
-    assert 'MÁS RIESGO EN LOS ETF' in txt and 'SEÑALES Y RESULTADO POR OPERACIÓN' in txt and 'COMPRAR Y MANTENER' in txt and 'CARTERA SIMULADA' in txt and 'MENÚ DE SALIDAS' in txt
+    assert 'LO QUE GANA CADA SEÑAL' in txt and 'MÁS RIESGO EN LOS ETF' in txt and 'SEÑALES Y RESULTADO POR OPERACIÓN' in txt and 'COMPRAR Y MANTENER' in txt and 'CARTERA SIMULADA' in txt and 'MENÚ DE SALIDAS' in txt
     print(f"ok · etfs: señales por ETF coherentes, carteras acciones / acciones+ETF / solo ETF y menú de salidas ({res['solo_etf']['todas']['operaciones']} operaciones solo ETF)")
 
 
