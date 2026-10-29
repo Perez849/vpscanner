@@ -283,6 +283,16 @@ def plan_abiertas(tr: Dict) -> List[str]:
     return sorted({o['sym'] for o in tr.get('plan_ops', []) if o['res'] in ('open', 'pendiente')})
 
 
+def last_close(bars: Dict[str, Dict[str, np.ndarray]]) -> str:
+    """Fecha del último cierre disponible (la del cribado de hoy)."""
+    return str(np.datetime64(int(max(((np.asarray(b['t'])[-1] + 5 * 3600) // 86400) for b in bars.values() if len(b['t']))), 'D'))
+
+
+def before(hist: List[Dict], asof: str) -> List[Dict]:
+    """El registro anterior al día que se criba: si el cribador se repite en el mismo día (o Yahoo aún no tiene la sesión nueva), la entrada de ese día se recalcula y no cuenta como anterior."""
+    return [h for h in hist if h.get('date', '') < asof]
+
+
 def replan_history(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], max_pos: int = MAX_POS, keep_until: Optional[str] = None) -> List[Dict]:
     """Vuelve a calcular el plan de cada día del registro con la regla de la cartera (huecos, abiertas, correlación), en orden y solo con lo que se sabía ese día (las candidatas guardadas con su
     fiabilidad y volatilidad, las barras hasta esa fecha). Sirve para pasar un registro hecho con el plan sin estado al plan con estado; con el mismo código es idempotente. Los días hasta
@@ -321,10 +331,12 @@ def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[
         prev = json.load(open(hpath, encoding='utf-8'))
     except (OSError, ValueError):
         prev = []
+    asof = last_close(bars)
+    prev = before(prev, asof)                                                  # lo de hoy se recalcula entero: el plan de hoy no puede «ver» su propia entrada de una pasada anterior
     if replan and prev:
         prev = replan_history(prev, bars, keep_until=replan_keep)
-        json.dump(prev, open(hpath, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
         print(f'  registro replanificado con la cartera de {MAX_POS} huecos: ' + ' · '.join(f"{h['date']}: abiertas {h.get('plan_abiertas')} → entra {h['plan_hoy']}" for h in prev), flush=True)
+    json.dump(prev, open(hpath, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     abiertas = plan_abiertas(track(prev, bars)) if prev else []
     ev = screen(bars, workers=workers, verbose=True, abiertas=tuple(abiertas))
     json.dump(ev, open(os.path.join(out_dir, 'impulso.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))

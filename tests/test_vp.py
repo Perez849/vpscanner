@@ -1045,7 +1045,10 @@ def test_screen():
     assert pl['nuevas'] == ['S0', 'S4', 'S5'] and pl['huecos'] == 3 and pl['abiertas'] == ['S9', 'S2'], pl              # S2 ya abierta, S3 correlacionada con S9, S1 con S0
     pl = screen.daily_plan(picks, ('A', 'B', 'C', 'D', 'E'), C, syms)
     assert pl['nuevas'] == [] and pl['huecos'] == 0 and pl['riesgo_total_pct'] == 5.0, pl
-    ev5 = screen.screen({s_: {a: v[:1401] for a, v in b.items()} for s_, b in bars.items()}, k=40, rules=rules, model=False, abiertas=('S0', 'S1', 'S2', 'S3', 'S4'))
+    cut5 = {s_: {a: v[:1401] for a, v in b.items()} for s_, b in bars.items()}
+    asof = screen.last_close(cut5)
+    assert asof == str(np.datetime64(int((bars['S0']['t'][1400] + 5 * 3600) // 86400), 'D')) and screen.before([{'date': asof}, {'date': '2000-01-01'}], asof) == [{'date': '2000-01-01'}]   # la pasada de hoy no cuenta como anterior
+    ev5 = screen.screen(cut5, k=40, rules=rules, model=False, abiertas=('S0', 'S1', 'S2', 'S3', 'S4'))
     assert ev5['plan_hoy']['nuevas'] == [] and ev5['plan_hoy']['abiertas'] == ['S0', 'S1', 'S2', 'S3', 'S4'] and set(ev5['plan_hoy']['grupos_abiertas']) == {'S0', 'S1', 'S2', 'S3', 'S4'}
     assert total >= 3 and last_ev, total                                       # el control no es vacío: hubo acciones que cumplían alguna regla
     import tempfile
