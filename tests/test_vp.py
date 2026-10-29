@@ -1167,6 +1167,12 @@ def test_cartera():
     assert 0 < c['exposicion_media'] <= 100 and c['tamaño_medio'] <= 20 + 1e-6 and c['caida_max'] <= 0 and len(b['curva']) > 10 and all(len(x) == 5 for x in b['curva']) and set(b['variantes']) >= {'riesgo_2', 'max_3', 'sin_volatilidad'}
     assert b['variantes']['riesgo_2']['tamaño_medio'] > c['tamaño_medio'] and b['por_año'] and all('todas' in r and 'plan' in r for r in b['por_año']) and 'anual' in b['lineas']['mercado'] and b['azar_orden']['anual']['n'] == 8
     assert ev['meta']['fiab']['orden'].startswith('volatilidad') and ev['meta']['ventana_desde'] == ev['meta']['from'] and 'desde_inicio' not in b
+    es, co = b['estructuras'], b['costes']                                    # estructuras de cartera fijadas de antemano y sensibilidad al coste
+    assert {'p5', 'p10', 'p20_sc', 'todas', 'todas_r05', 'p5_r2'} <= set(es) and abs(es['p5']['anual'] - c['anual']) < 1e-9 and abs(es['todas']['anual'] - td['anual']) < 1e-9, (es['p5'], c)
+    assert es['todas']['operaciones'] >= es['p20_sc']['operaciones'] >= es['p5']['operaciones'] and es['todas_r05']['caida_max'] > es['todas']['caida_max'] and es['p5_r2']['tamaño_medio'] > es['p5']['tamaño_medio']
+    cs = [v['anual'] for v in co['todas'].values()]
+    assert list(co['todas']) == ['0.15', '0.30', '0.65', '1.15'] and all(a > b_ for a, b_ in zip(cs, cs[1:])) and abs(co['p5']['0.15']['anual'] - c['anual']) < 1e-9, co['todas']
+    assert 'ESTRUCTURAS DE CARTERA' in cartera.report(ev) and 'SENSIBILIDAD AL COSTE' in cartera.report(ev)
     assert set(ev['menu']['T']) == {'h10', 'esc'} and 'azar_universo' in ev['menu']['T']['esc'] and 'todas' in ev['menu']['T']['esc'] and ev['meta']['menu']['esc'].startswith('tu escalera')
     txt = cartera.report(ev)
     assert 'CASO BASE' in txt and 'MENÚ DE SALIDAS' in txt and 'azar del universo' in txt and 'todas las señales' in txt

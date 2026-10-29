@@ -144,11 +144,12 @@ class World:
 
 
 def simulate(Wd: World, mask: np.ndarray, exit_name: str, order: str = 'vol', rng: Optional[np.random.Generator] = None, risk: float = RISK_PCT, max_pos: int = MAX_POS,
-             corr_min: float = CORR_MIN, schedule: Optional[np.ndarray] = None, d0: Optional[int] = None, d1: Optional[int] = None) -> Dict:
+             corr_min: float = CORR_MIN, schedule: Optional[np.ndarray] = None, d0: Optional[int] = None, d1: Optional[int] = None, extra_cost: float = 0.0) -> Dict:
     """Un recorrido de la cartera. `mask`: filas candidatas (regla y volatilidad). `order`: 'fiab' = por fiabilidad fuera de muestra descendente (como el plan de hoy; donde no hay modelo, por
     volatilidad), 'vol' = por volatilidad del día descendente (y luego impulso), 'azar' = al azar.
     `schedule`: entradas máximas por día (para que la cartera al azar entre los mismos días y el mismo número de veces que la de la regla). Entrada en la apertura siguiente al día de la señal,
-    tamaño = riesgo / distancia al stop (acotado al 20 % de la cuenta y al efectivo disponible), valoración diaria a cierre, cierre con el resultado real de la salida."""
+    tamaño = riesgo / distancia al stop (acotado al 20 % de la cuenta y al efectivo disponible), valoración diaria a cierre, cierre con el resultado real de la salida. `extra_cost`: puntos
+    porcentuales de coste de ida y vuelta que se restan a cada operación además del 0,15 % ya descontado (sensibilidad a comisiones y deslizamiento)."""
     D = Wd.D
     nd = Wd.nd
     d0 = 0 if d0 is None else d0
@@ -200,7 +201,7 @@ def simulate(Wd: World, mask: np.ndarray, exit_name: str, order: str = 'vol', rn
             j = int(D.sym[r])
             if j in open_:
                 continue
-            net = float(net_rows[r])
+            net = float(net_rows[r]) - extra_cost
             if not np.isfinite(net):
                 continue
             b = int(D.bar[r])
@@ -209,7 +210,7 @@ def simulate(Wd: World, mask: np.ndarray, exit_name: str, order: str = 'vol', rn
             if b + nb >= len(bd) or bd[b + nb] < 0 or b + 1 >= len(Wd.W[D.syms[j]]['o']):
                 continue
             xd = int(bd[b + nb])
-            if any(Wd.corr(d, j, k) >= corr_min for k in open_):
+            if corr_min <= 1.0 and any(Wd.corr(d, j, k) >= corr_min for k in open_):                  # con corr_min > 1 no hay filtro (ni se calculan correlaciones)
                 continue
             stop_pct = SIZE_STOP_ATR * float(Wd.atrp[r])
             if not stop_pct > 0:
@@ -378,6 +379,25 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
                                    ('sin_grupos', {'corr_min': 2.0})):
                         s2 = simulate(Wd, kw.pop('mask', mask), e, 'fiab', rng, d0=d0, **kw)
                         out['base']['variantes'][nm] = metrics(s2['eq'], yrs, s2['trades'], s2['expo'])
+                    # ¿está mal elegido el universo de 5? Estructuras de cartera fijadas de antemano (huecos, filtro de correlación, riesgo por operación) sobre la misma entrada, salida y orden por fiabilidad
+                    big = 10 ** 6
+                    ESTR = (('p5', 'plan de 5 (el de Hoy)', {}), ('p5_sc', '5 huecos, sin filtro de correlación', {'corr_min': 2.0}), ('p10', '10 huecos, con filtro', {'max_pos': 10}), ('p10_sc', '10 huecos, sin filtro', {'max_pos': 10, 'corr_min': 2.0}),
+                            ('p20', '20 huecos, con filtro', {'max_pos': 20}), ('p20_sc', '20 huecos, sin filtro', {'max_pos': 20, 'corr_min': 2.0}), ('p40_sc', '40 huecos, sin filtro', {'max_pos': 40, 'corr_min': 2.0}),
+                            ('todas_cf', 'todas las señales, solo con filtro de correlación', {'max_pos': big}), ('todas', 'todas las señales (sin límite ni filtro)', {'max_pos': big, 'corr_min': 2.0}),
+                            ('todas_r07', 'todas las señales con riesgo 0,7 % por operación', {'max_pos': big, 'corr_min': 2.0, 'risk': 0.7}), ('todas_r05', 'todas las señales con riesgo 0,5 % por operación', {'max_pos': big, 'corr_min': 2.0, 'risk': 0.5}),
+                            ('p5_r2', 'plan de 5 con riesgo 2 %', {'risk': 2.0}), ('p5_r3', 'plan de 5 con riesgo 3 %', {'risk': 3.0}), ('p10_sc_r15', '10 huecos sin filtro, riesgo 1,5 %', {'max_pos': 10, 'corr_min': 2.0, 'risk': 1.5}))
+                    est = {}
+                    for nm, txt, kw in ESTR:
+                        s3 = simulate(Wd, mask, e, 'fiab', rng, d0=d0, **kw)
+                        est[nm] = {'txt': txt, **metrics(s3['eq'], yrs, s3['trades'], s3['expo'])}
+                    out['base']['estructuras'] = est
+                    cost = {}
+                    for nm, kw in (('p5', {}), ('p20_sc', {'max_pos': 20, 'corr_min': 2.0}), ('todas', {'max_pos': big, 'corr_min': 2.0})):       # comisiones y deslizamiento: sensibilidad al coste de ida y vuelta
+                        cost[nm] = {}
+                        for ex in (0.0, 0.15, 0.5, 1.0):
+                            s4 = simulate(Wd, mask, e, 'fiab', rng, d0=d0, extra_cost=ex, **kw)
+                            cost[nm][f'{COST + ex:.2f}'] = metrics(s4['eq'], yrs, s4['trades'], s4['expo'])
+                    out['base']['costes'] = cost
                     if d0 > 0:                                                  # toda la historia, sin modelo (orden por volatilidad): contexto
                         full = {nm: simulate(Wd, mask, e, 'vol', rng, **kw) for nm, kw in (('plan_vol', {}), ('todas', {'max_pos': 10 ** 6, 'corr_min': 2.0}))}
                         yf = years_d[full['plan_vol']['d0']:full['plan_vol']['dend'] + 1]
@@ -408,6 +428,15 @@ def report(ev: Dict) -> str:
               f"   mercado a partes iguales: {mk['anual']:+.1f} %/año, caída {mk['caida_max']:+.1f} %",
               '   por año: ' + ' '.join(f"{str(r['año'])[2:]}:{r['plan']:+.1f}/{r['todas']:+.1f}/{r['mercado']:+.1f}/{r['azar_mediana']:+.1f}" for r in b['por_año']) + '  (plan/todas/mercado/azar)',
               '   variantes del plan: ' + ' · '.join(f"{k}: {v['anual']:+.1f} %/año, caída {v['caida_max']:+.1f} %, {v['operaciones']} ops" for k, v in b['variantes'].items())]
+        if b.get('estructuras'):
+            L += ['', 'ESTRUCTURAS DE CARTERA (misma entrada, salida y orden por fiabilidad; fijadas de antemano; ¿está mal elegido el universo de 5?)']
+            L.append('   estructura'.ljust(56) + 'al año'.rjust(8) + 'caída'.rjust(8) + 'Sharpe'.rjust(8) + 'a/c'.rjust(6) + 'inv.'.rjust(6) + 'ops'.rjust(6) + 'ops/año'.rjust(8) + 'tam.'.rjust(6))
+            for k_, v in b['estructuras'].items():
+                L.append(('   ' + v['txt']).ljust(56) + f"{v['anual']:+8.1f}{v['caida_max']:+8.1f}{v['sharpe']:8.2f}{(v['mar'] or 0):6.2f}{v['exposicion_media']:6.0f}{v['operaciones']:6d}{v['por_año_ops']:8.0f}{v['tamaño_medio']:6.1f}")
+        if b.get('costes'):
+            L += ['', 'SENSIBILIDAD AL COSTE DE IDA Y VUELTA (comisiones y deslizamiento; el caso base descuenta 0,15 %): rentabilidad anual / caída máxima']
+            for k_, cc in b['costes'].items():
+                L.append(f'   {k_:8s} ' + ' · '.join(f"coste {c_} %: {v['anual']:+.1f} % / {v['caida_max']:+.0f} %" for c_, v in cc.items()))
         if b.get('desde_inicio'):
             di = b['desde_inicio']
             L.append(f"   desde {di['desde']} (sin modelo, orden por volatilidad): plan {di['plan_vol']['anual']:+.1f} %/año (caída {di['plan_vol']['caida_max']:+.1f} %) · todas {di['todas']['anual']:+.1f} % (caída {di['todas']['caida_max']:+.1f} %) · mercado {di['mercado']['anual']:+.1f} % (caída {di['mercado']['caida_max']:+.1f} %)")
