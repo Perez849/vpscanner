@@ -1031,8 +1031,22 @@ def test_screen():
             assert abs(p['close'] - c) < 1e-3 and abs(p['atr'] - a) < 1e-3 * c and abs(pl['stop'] - (c - 2.5 * a)) < 2e-3 * c and abs(pl['asegura4'] - c * 1.04) < 1e-3 * c and abs(pl['asegura10'] - c * 1.10) < 1e-3 * c, (p, c, a)
             assert abs(pl['tam1'] * abs(pl['stop_pct']) / 100 - 1.0) < 0.02 and abs(pl['rr4'] * abs(pl['stop_pct']) - 4) < 0.05 and pl['tam1_s6'] > 0, pl
             assert 0 <= p['mom121'] <= 1 and 0 <= p['vol'] <= 1 and set(p['nuevas']) <= set(p['reglas']) and p['bajistas'] >= 0 and p['grupo'] is not None and p['fiab'] is None
-        assert set(ev['plan_hoy']['posiciones']) <= {p['sym'] for p in ev['picks']} and len(ev['plan_hoy']['posiciones']) <= screen.MAX_POS
+        assert set(ev['plan_hoy']['posiciones']) <= {p['sym'] for p in ev['picks']} and len(ev['plan_hoy']['posiciones']) <= screen.MAX_POS and ev['plan_hoy']['nuevas'] == ev['plan_hoy']['posiciones'] and ev['plan_hoy']['huecos'] == screen.MAX_POS
         last_ev = ev if ev['picks'] else last_ev
+    # el plan con estado: las abiertas ocupan hueco, no se repiten y nada correlacionado con ellas entra; con los huecos llenos no entra nada
+    picks = [{'sym': f'S{j}', 'fiab': 90.0 - j, 'vol': 0.9} for j in range(8)] + [{'sym': 'S8', 'fiab': 99.0, 'vol': 0.2}]
+    syms = [p['sym'] for p in picks] + ['S9']
+    C = np.eye(len(syms))
+    C[0, 1] = C[1, 0] = 0.8                                                      # S1 correlacionado con S0; S3 correlacionado con la abierta S9
+    C[3, 9] = C[9, 3] = 0.7
+    pl = screen.daily_plan(picks, (), C, syms)
+    assert pl['nuevas'] == ['S0', 'S2', 'S3', 'S4', 'S5'] and pl['huecos'] == 5 and pl['abiertas'] == [], pl         # S1 fuera por correlación con S0, S8 por volatilidad baja
+    pl = screen.daily_plan(picks, ('S9', 'S2'), C, syms)
+    assert pl['nuevas'] == ['S0', 'S4', 'S5'] and pl['huecos'] == 3 and pl['abiertas'] == ['S9', 'S2'], pl              # S2 ya abierta, S3 correlacionada con S9, S1 con S0
+    pl = screen.daily_plan(picks, ('A', 'B', 'C', 'D', 'E'), C, syms)
+    assert pl['nuevas'] == [] and pl['huecos'] == 0 and pl['riesgo_total_pct'] == 5.0, pl
+    ev5 = screen.screen({s_: {a: v[:1401] for a, v in b.items()} for s_, b in bars.items()}, k=40, rules=rules, model=False, abiertas=('S0', 'S1', 'S2', 'S3', 'S4'))
+    assert ev5['plan_hoy']['nuevas'] == [] and ev5['plan_hoy']['abiertas'] == ['S0', 'S1', 'S2', 'S3', 'S4'] and set(ev5['plan_hoy']['grupos_abiertas']) == {'S0', 'S1', 'S2', 'S3', 'S4'}
     assert total >= 3 and last_ev, total                                       # el control no es vacío: hubo acciones que cumplían alguna regla
     import tempfile
     path = os.path.join(tempfile.mkdtemp(), 'h.json')
@@ -1083,7 +1097,26 @@ def test_track_and_clusters():
     s0 = ops[(days(500), 'S0')]                                               # la señal repetida con S0 abierta se anota en su operación y no cuenta como operación nueva
     assert s0['repite'] == [days(505)] and s0['plan_dias'] == [days(505)] and 'repite' not in ops[(days(505), 'S2')] and 'plan_dias' not in ops[(days(500), 'S1')], (s0, ops[(days(505), 'S2')])
     T = tr['todas']
-    assert T['n'] == 6 and T['cerradas'] + T['abiertas'] == 5 and tr['plan_hoy']['n'] == 2 and tr['por_regla']['C1']['n'] == 1 and tr['vol_alta']['n'] == 1, T
+    assert T['n'] == 6 and T['cerradas'] + T['abiertas'] == 5 and tr['por_regla']['C1']['n'] == 1 and tr['vol_alta']['n'] == 1, T
+    # la cartera del plan: solo las entradas del plan (S0 el día 500 y S6 el día 600; la repetición de S0 el 505 no abre otra), con su stop en vigor
+    po = {(o['fecha'], o['sym']): o for o in tr['plan_ops']}
+    assert set(po) == {(days(500), 'S0'), (days(600), 'S6')} and tr['plan_hoy']['n'] == 2 and all(o['plan_hoy'] for o in po.values()), set(po)
+    for o in tr['operaciones'] + tr['plan_ops']:
+        if o['res'] == 'open':
+            assert o['stop_actual'] is not None and o['stop_actual'] >= o['stop'] - 0.01 and (o['level'] == 0 or o['stop_actual'] >= o['entrada'] * 1.04 - 0.01), o
+        else:
+            assert o.get('stop_actual') is None
+    assert screen.plan_abiertas(tr) == sorted(o['sym'] for o in tr['plan_ops'] if o['res'] == 'open')
+    # replanificar el registro con la regla de la cartera: el día 505 S0 sigue abierta (ocupa hueco y no se repite) y S2 entra; nada se inventa fuera de las candidatas guardadas
+    h2 = [dict(h, picks={s_: {'fiab': 60.0, 'vol': 0.9, 'reglas': ['C6']} for s_ in set().union(*[set(v) for v in h['reglas'].values()])}) for h in hist]
+    rp = screen.replan_history(h2, bars, max_pos=2)
+    assert rp[0]['plan_hoy'] == ['S0', 'S1'] and rp[0]['plan_abiertas'] == [] and [h['date'] for h in rp] == [h['date'] for h in hist], rp[0]
+    trp = screen.track(rp, bars)
+    for h in rp[1:]:                                                          # cada día: las abiertas son exactamente las entradas del plan anteriores que seguían abiertas ese día, y solo se rellenan los huecos libres
+        want = {o['sym'] for o in trp['plan_ops'] if o['fecha'] < h['date'] and (o['res'] in ('open', 'pendiente') or (o.get('salida') or '') > h['date'])}
+        assert set(h['plan_abiertas']) == want and not (set(h['plan_hoy']) & want) and len(h['plan_hoy']) <= 2 - len(want), (h['date'], h['plan_hoy'], h['plan_abiertas'], want)
+    assert rp[1]['plan_hoy'] == ['S2'] and 'S0' in rp[1]['plan_abiertas'], rp[1]                                      # S0 sigue abierta el 505: ocupa hueco y no se repite; S2 entra
+    assert screen.replan_history(rp, bars, max_pos=2) == rp                                                          # idempotente
     print(f"ok · seguimiento hacia delante: {T['cerradas']} cerradas y {T['abiertas']} abiertas, idéntico a la escalera de la web; señales repetidas anotadas en la operación abierta; grupos de correlación correctos")
 
 
@@ -1117,17 +1150,29 @@ def test_cartera():
     sm = cartera._summary(np.array([1.0, 2.0, 3.0, 4.0]), 3.5)
     assert sm['p'] == 0.25 and sm['mediana'] == 2.5, sm
     rules = ({'nombre': 'T', 'etiqueta': 'ha caído 5 sesiones', 'regla': ['cae5'], 'sentido': 'largo', 'salida': 'h10'},)
-    kw = dict(workers=1, k=40, reps=8, rules=rules, menu=('h10', 'esc'), base_rule='T', base_exit='h10')
+    kw = dict(workers=1, k=40, reps=8, rules=rules, menu=('h10', 'esc'), base_rule='T', base_exit='h10', model=False)
     ev = cartera.analyze({f'S{j}': _walk_ar(1500, 3000 + j, 0.25) for j in range(40)}, **kw)
     b, row = ev['base'], ev['menu']['T']['h10']
-    c, au = b['cartera'], b['azar_universo']
+    c, au, td = b['lineas']['plan'], b['azar_universo'], b['lineas']['todas']
     assert row['operacion']['exceso'] > 0.5 and row['operacion']['t'] > 4 and row['operacion']['sesiones'] == 10, row['operacion']
     assert c['operaciones'] > 60 and c['anual'] > au['anual']['p95'] and au['anual']['p'] <= 0.125 and c['ganan'] > 50, (c, au)
-    assert 0 < c['exposicion_media'] <= 100 and c['tamaño_medio'] <= 20 + 1e-6 and c['caida_max'] <= 0 and len(b['curva']) > 10 and all(len(x) == 4 for x in b['curva']) and set(b['variantes']) >= {'riesgo_2', 'max_3', 'sin_volatilidad'}
-    assert b['variantes']['riesgo_2']['tamaño_medio'] > c['tamaño_medio'] and b['por_año'] and 'anual' in b['mercado'] and b['azar_orden']['anual']['n'] == 8
-    assert set(ev['menu']['T']) == {'h10', 'esc'} and 'azar_universo' in ev['menu']['T']['esc'] and ev['meta']['menu']['esc'].startswith('tu escalera')
+    assert td['operaciones'] > c['operaciones'] and td['exposicion_media'] > c['exposicion_media'] and td['anual'] > au['anual']['p95'], (td, c)   # todas las señales: más operaciones, más invertido
+    assert 0 < c['exposicion_media'] <= 100 and c['tamaño_medio'] <= 20 + 1e-6 and c['caida_max'] <= 0 and len(b['curva']) > 10 and all(len(x) == 5 for x in b['curva']) and set(b['variantes']) >= {'riesgo_2', 'max_3', 'sin_volatilidad'}
+    assert b['variantes']['riesgo_2']['tamaño_medio'] > c['tamaño_medio'] and b['por_año'] and all('todas' in r and 'plan' in r for r in b['por_año']) and 'anual' in b['lineas']['mercado'] and b['azar_orden']['anual']['n'] == 8
+    assert ev['meta']['fiab']['orden'].startswith('volatilidad') and ev['meta']['ventana_desde'] == ev['meta']['from'] and 'desde_inicio' not in b
+    assert set(ev['menu']['T']) == {'h10', 'esc'} and 'azar_universo' in ev['menu']['T']['esc'] and 'todas' in ev['menu']['T']['esc'] and ev['meta']['menu']['esc'].startswith('tu escalera')
     txt = cartera.report(ev)
-    assert 'CASO BASE' in txt and 'MENÚ DE SALIDAS' in txt and 'azar del universo' in txt
+    assert 'CASO BASE' in txt and 'MENÚ DE SALIDAS' in txt and 'azar del universo' in txt and 'todas las señales' in txt
+    try:
+        import sklearn                                                       # noqa: F401
+        has_sk = True
+    except ImportError:
+        has_sk = False
+    if has_sk:                                                               # con modelo: el orden del plan es la fiabilidad fuera de muestra y la ventana empieza donde hay modelo
+        evf = cartera.analyze({f'S{j}': _walk_ar(1500, 3000 + j, 0.25) for j in range(40)}, **dict(kw, model=True, test_years=[2020, 2021], reps=4))
+        bf = evf['base']
+        assert evf['meta']['fiab']['orden'].startswith('fiabilidad') and evf['meta']['ventana_desde'].startswith('2020') and bf['desde'].startswith('2020') and 'desde_inicio' in bf, evf['meta']['fiab']
+        assert bf['lineas']['plan']['operaciones'] > 20 and bf['desde_inicio']['plan_vol']['operaciones'] > bf['lineas']['plan']['operaciones'] and 'plan_vol' in bf['lineas'], bf['lineas']
     # mecánica de un recorrido: la cuenta nunca se apalanca y la curva es positiva
 
     ev0 = cartera.analyze({f'S{j}': _walk_ar(1500, 3100 + j, 0.0) for j in range(40)}, **dict(kw, reps=4))
@@ -1144,7 +1189,7 @@ def test_web_impulso_constants():
     rules = json.loads(re.search(r'const RULES = (\{.*?\});\n', html).group(1))
     assert cond == search.DESC and exits == search.EXIT_TXT and rules == search.LABELS, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT), set(rules) ^ set(search.LABELS))
     for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "'impulso-seguimiento': 'imptrack'", "['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1', 'Asegurar +10 %', 'Plan de hoy',
-                   'La cartera simulada', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)', 'ownTxt(p.sym)', 'r.plan_dias'):
+                   'Solo las 5 del plan, todas las señales, o mantener el universo', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)', 'la cartera de ${m.max_pos || 5} huecos', 'La cartera del plan', 'T.plan_ops', 'plan.huecos'):
         assert needle in html, needle
     assert 'C1 · C2 · C3 · C6 · C7</b>' not in html                        # los códigos no se enseñan como nombre
     for f in ('impulso.json', 'impulso_track.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json', 'fiab.json', 'cartera.json', 'plan_study.json'):

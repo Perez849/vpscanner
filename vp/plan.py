@@ -263,6 +263,7 @@ def outcome_ladder(F: Dict[str, np.ndarray], i: int, d: int, stop: float, levels
     res = 'open' if k >= n - 1 and e + maxb > n else ('target' if level else 'timeout')
     out = _finish(F, d, e, k, entry, stop, lk_px[0], entry, res, float(c[k]), k - e + 1, level >= 1)
     out['locked'], out['level'] = level >= 1, level
+    out['stop_now'] = r(st)                                                  # el stop que rige en la sesión siguiente (fijado con los cierres hasta hoy)
     return out
 
 

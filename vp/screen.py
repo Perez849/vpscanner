@@ -42,17 +42,33 @@ def _flags(D: ml.Data, rules) -> Dict[str, np.ndarray]:
     return out
 
 
+def corr_matrix(bars: Dict[str, Dict[str, np.ndarray]], syms: List[str], win: int = CORR_WIN, upto: Optional[int] = None) -> np.ndarray:
+    """Correlación de los rendimientos diarios de las últimas `win` sesiones entre `syms` (NaN donde falta historia). Con `upto` (día en días desde 1970) solo se usan barras hasta ese día."""
+    R = []
+    for s in syms:
+        b = bars.get(s)
+        c = np.asarray(b['c'], dtype=float) if b is not None else np.zeros(0)
+        if upto is not None and b is not None:
+            days = ((np.asarray(b['t']) + 5 * 3600) // 86400).astype(np.int64)
+            c = c[days <= upto]
+        c = c[-(win + 1):]
+        r = np.diff(np.log(c)) if len(c) > 1 else np.zeros(0)
+        R.append(r if len(r) == win else np.full(win, np.nan))
+    R = np.array(R) if R else np.zeros((0, win))
+    C = np.full((len(syms), len(syms)), np.nan)
+    ok = np.isfinite(R).all(axis=1) if len(R) else np.zeros(0, bool)
+    if ok.sum() >= 2:
+        idx = np.flatnonzero(ok)
+        C[np.ix_(idx, idx)] = np.corrcoef(R[ok])
+    return C
+
+
 def clusters(bars: Dict[str, Dict[str, np.ndarray]], syms: List[str], win: int = CORR_WIN, thr: float = CORR_MIN) -> Dict[str, int]:
     """Grupos de valores correlacionados (unión de pares con correlación de rendimientos diarios ≥ thr en las últimas `win` sesiones)."""
     if not syms:
         return {}
-    R = []
-    for s in syms:
-        c = np.asarray(bars[s]['c'], dtype=float)[-(win + 1):]
-        r = np.diff(np.log(c))
-        R.append(r if len(r) == win else np.full(win, np.nan))
-    R = np.array(R)
-    ok = np.isfinite(R).all(axis=1)
+    C = corr_matrix(bars, syms, win)
+    ok = np.isfinite(np.diagonal(C))
     parent = list(range(len(syms)))
 
     def find(i):
@@ -61,12 +77,11 @@ def clusters(bars: Dict[str, Dict[str, np.ndarray]], syms: List[str], win: int =
             i = parent[i]
         return i
     if ok.sum() >= 2:
-        C = np.corrcoef(R[ok])
         idx = np.flatnonzero(ok)
-        for a in range(len(idx)):
-            for b in range(a + 1, len(idx)):
-                if C[a, b] >= thr:
-                    ra, rb = find(idx[a]), find(idx[b])
+        for a in idx:
+            for b in idx:
+                if b > a and C[a, b] >= thr:
+                    ra, rb = find(a), find(b)
                     if ra != rb:
                         parent[rb] = ra
     roots = {}
@@ -78,8 +93,9 @@ def clusters(bars: Dict[str, Dict[str, np.ndarray]], syms: List[str], win: int =
     return out
 
 
-def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int = 1, rules=search.ENTRADAS, verbose: bool = False, model: bool = True) -> Dict:
-    """Acciones que cumplen cada regla en el último cierre, con su plan, su fiabilidad y su grupo. `bars`: barras diarias por valor (≥ 400 barras)."""
+def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int = 1, rules=search.ENTRADAS, verbose: bool = False, model: bool = True, abiertas: Tuple[str, ...] = ()) -> Dict:
+    """Acciones que cumplen cada regla en el último cierre, con su plan, su fiabilidad y su grupo. `bars`: barras diarias por valor (≥ 400 barras). `abiertas`: valores que la cartera del
+    plan tiene abiertos (del seguimiento): ocupan hueco y ningún valor correlacionado con ellos entra."""
     t0 = time.time()
     D, Pn, _ = search.build(bars, workers, k, verbose, search.MIN_DAY, search.MIN_COMBO, None, search.COST, library=False, keep_last=True)
     flags = _flags(D, rules)
@@ -123,31 +139,44 @@ def screen(bars: Dict[str, Dict[str, np.ndarray]], k: int = ml.K, workers: int =
                       'plan': {'stop': round(close - STOP_ATR * atr, 4), 'stop_pct': round(-risk, 2), 'stop6': round(close * (1 - STOP_PCT / 100), 4), 'asegura4': round(close * 1.04, 4), 'asegura10': round(close * 1.10, 4),
                                'asegura6': round(close * 1.06, 4), 'persigue': round(P.TRAIL2_ATR * atr, 4), 'tam1': round(RISK_PCT * 100.0 / risk, 1), 'tam1_s6': round(RISK_PCT * 100.0 / STOP_PCT, 1),
                                'rr4': round(4.0 / risk, 2), 'rr10': round(10.0 / risk, 2)}})
-    grp = clusters(bars, [p['sym'] for p in picks])
+    abiertas = tuple(a for a in abiertas if a in bars)
+    syms_all = [p['sym'] for p in picks] + [a for a in abiertas if a not in {p['sym'] for p in picks}]
+    grp = clusters(bars, syms_all)
     for p in picks:
         p['grupo'] = grp.get(p['sym'])
     picks.sort(key=lambda p: (-(p['fiab'] if p['fiab'] is not None else -1), -len(p['reglas']), -p['mom121'], p['sym']))
     bre = float(D.breadth_d[last])
-    plan_hoy = daily_plan(picks)
+    plan_hoy = daily_plan(picks, abiertas, corr_matrix(bars, syms_all) if syms_all else None, syms_all)
+    plan_hoy['grupos_abiertas'] = {a: grp.get(a) for a in abiertas}
     return {'meta': {'asof': str(D.date[last]), 'generated': int(time.time()), 'valores': len(D.syms), 'k': k, 'en_universo': int(today.sum()), 'sobre_200': round(bre * 100, 1), 'coste': ml.COST,
                      'escalera': [list(x) for x in P.LADDER], 'stop_atr': STOP_ATR, 'stop_pct': STOP_PCT, 'riesgo_pct': RISK_PCT, 'max_pos': MAX_POS, 'corr_min': CORR_MIN, 'fiab': fiab_meta,
                      'reglas': [{'nombre': r['nombre'], 'etiqueta': r.get('etiqueta', r['nombre']), 'corta': r.get('corta', r['nombre']), 'regla': r['regla'], 'sentido': r['sentido'], 'salida': r['salida'], 'texto': search._rule(r['regla'], r['sentido'])} for r in rules], 'segundos': round(time.time() - t0)},
             'resumen': {r['nombre']: {'hoy': len(hit_today[r['nombre']]), 'nuevas': len(hit_today[r['nombre']] - hit_before[r['nombre']])} for r in rules}, 'picks': picks, 'plan_hoy': plan_hoy}
 
 
-def daily_plan(picks: List[Dict], max_pos: int = MAX_POS) -> Dict:
-    """Disciplina: como mucho `max_pos` posiciones, una por grupo de correlación, las de mayor fiabilidad, solo volatilidad alta (donde se midió la ventaja), riesgo del 1 % cada una."""
-    chosen, used = [], set()
+def daily_plan(picks: List[Dict], abiertas: Tuple[str, ...] = (), corr: Optional[np.ndarray] = None, syms: Optional[List[str]] = None, max_pos: int = MAX_POS, corr_min: float = CORR_MIN) -> Dict:
+    """La cartera del plan, con estado: `abiertas` son las posiciones que el plan ya tiene (del seguimiento) y ocupan hueco; solo se rellenan los huecos libres (`max_pos` − abiertas) con las
+    acciones de mayor fiabilidad del día que tengan volatilidad alta, no estén ya abiertas y no tengan correlación ≥ `corr_min` (rendimientos a 60 sesiones; `corr` sobre `syms`) con ninguna
+    abierta ni con ninguna elegida antes. Con los huecos llenos no entra nada hasta que cierre alguna. Es exactamente la cartera que simula vp/cartera.py."""
+    abiertas = [a for a in abiertas]
+    pos = {s_: j for j, s_ in enumerate(syms or [])}
+    huecos = max(0, max_pos - len(abiertas))
+
+    def correlado(a: str, bs: List[str]) -> bool:
+        if corr is None or a not in pos:
+            return False
+        return any(b in pos and np.isfinite(corr[pos[a], pos[b]]) and corr[pos[a], pos[b]] >= corr_min for b in bs if b != a)
+    nuevas: List[str] = []
     for p in picks:
-        if p.get('vol') is not None and p['vol'] < 0.6:
-            continue
-        if p.get('grupo') in used:
-            continue
-        chosen.append(p['sym'])
-        used.add(p.get('grupo'))
-        if len(chosen) >= max_pos:
+        if len(nuevas) >= huecos:
             break
-    return {'posiciones': chosen, 'riesgo_total_pct': round(RISK_PCT * len(chosen), 1), 'criterio': f'máximo {max_pos} posiciones, una por grupo de valores correlacionados, por orden de fiabilidad, solo volatilidad alta, {RISK_PCT:g} % de riesgo cada una'}
+        if p['sym'] in abiertas or p['sym'] in nuevas or (p.get('vol') is not None and p['vol'] < 0.6):
+            continue
+        if correlado(p['sym'], abiertas + nuevas):
+            continue
+        nuevas.append(p['sym'])
+    return {'posiciones': nuevas, 'nuevas': nuevas, 'abiertas': abiertas, 'huecos': huecos, 'max_pos': max_pos, 'riesgo_total_pct': round(RISK_PCT * (len(abiertas) + len(nuevas)), 1),
+            'criterio': f'cartera de {max_pos} posiciones: las abiertas ocupan hueco y solo se rellenan los huecos libres, por orden de fiabilidad, solo volatilidad alta, sin valores ya abiertos ni correlacionados (≥ {corr_min:g}) con ellos, {RISK_PCT:g} % de riesgo cada una'}
 
 
 def update_history(path: str, ev: Dict) -> List[Dict]:
@@ -156,9 +185,10 @@ def update_history(path: str, ev: Dict) -> List[Dict]:
         hist = json.load(open(path, encoding='utf-8'))
     except (OSError, ValueError):
         hist = []
+    pl = ev.get('plan_hoy', {})
     today = {'date': ev['meta']['asof'], 'reglas': {r['nombre']: sorted(p['sym'] for p in ev['picks'] if r['nombre'] in p['reglas']) for r in ev['meta']['reglas']},
              'picks': {p['sym']: {'close': p['close'], 'atr': p['atr'], 'vol': p['vol'], 'fiab': p['fiab'], 'grupo': p['grupo'], 'reglas': p['reglas']} for p in ev['picks']},
-             'plan_hoy': ev.get('plan_hoy', {}).get('posiciones', [])}
+             'plan_hoy': pl.get('nuevas', pl.get('posiciones', [])), 'plan_abiertas': pl.get('abiertas', [])}
     hist = [h for h in hist if h.get('date') != today['date']] + [today]
     hist.sort(key=lambda h: h['date'])
     return hist[-HIST_MAX:]
@@ -167,50 +197,70 @@ def update_history(path: str, ev: Dict) -> List[Dict]:
 def track(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], cost: float = ml.COST) -> Dict:
     """Seguimiento hacia delante: cada acción que salió en el cribador se simula con la escalera (entrada en la apertura siguiente, stop 2,5 ATR del día de la señal) con los precios reales
     posteriores. Una operación por valor y día de señal; si el valor ya tenía una operación abierta no se abre otra (como haría un operador): esa señal repetida se anota en la operación
-    abierta (`repite`: fechas en que volvió a salir; `plan_dias`: las que además estaban en el plan de hoy), para que el plan y el seguimiento cuadren."""
+    abierta (`repite`: fechas en que volvió a salir; `plan_dias`: las que además estaban en el plan de hoy). Aparte, `plan_ops` es la CARTERA DEL PLAN: solo las entradas que el plan de hoy
+    mandó comprar cada día (`plan_hoy` del registro), simuladas igual; es el track record de la cartera de 5 huecos."""
     rows = []
     open_until: Dict[str, int] = {}
     last_row: Dict[str, Dict] = {}
+    Fs: Dict[str, Dict[str, np.ndarray]] = {}
+
+    def sim(h: Dict, s: str, plan: bool) -> Optional[Dict]:
+        b = bars.get(s)
+        if b is None:
+            return None
+        days = ((np.asarray(b['t']) + 5 * 3600) // 86400).astype(np.int64)
+        w = np.flatnonzero(days == np.datetime64(h['date'], 'D').astype('datetime64[D]').astype(np.int64))
+        if not len(w):
+            return None
+        i = int(w[0])
+        if s not in Fs:
+            Fs[s] = ta.prepare(b)
+        F = Fs[s]
+        a = float(F['atr'][i])
+        if not np.isfinite(a) or a <= 0:
+            return None
+        pk = (h.get('picks') or {}).get(s, {})
+        base = {'fecha': h['date'], 'sym': s, 'reglas': pk.get('reglas') or [r_ for r_, v in h['reglas'].items() if s in v], 'fiab': pk.get('fiab'), 'vol': pk.get('vol'), 'plan_hoy': plan or s in h.get('plan_hoy', [])}
+        if i + 1 >= len(F['c']):
+            return {**base, 'res': 'pendiente', 'i': i, 'xi': None}
+        entry = float(F['o'][i + 1])
+        stop = float(F['c'][i]) - STOP_ATR * a
+        o = P.outcome_ladder(F, i, 1, stop)
+        cur = float(F['c'][-1])
+        r = {**base, 'entrada': round(entry, 4), 'stop': round(stop, 4), 'res': o['res'], 'bars': o.get('bars'), 'ret': o.get('ret'), 'net': o.get('net'), 'level': o.get('level', 0), 'xp': o.get('xp'),
+             'ahora': round((cur / entry - 1) * 100, 2) if o['res'] == 'open' else None, 'salida': str(np.datetime64(int(days[o['xi']]), 'D')) if o.get('xi') is not None and o['res'] != 'open' else None,
+             'stop_actual': o.get('stop_now') if o['res'] == 'open' else None, 'i': i, 'xi': o.get('xi') if o['res'] != 'open' else None}
+        return r
+    # la cartera del plan: una operación por entrada del plan, una abierta por valor como mucho
+    plan_ops: List[Dict] = []
+    plan_until: Dict[str, int] = {}
     for h in hist:
-        day = np.datetime64(h['date'], 'D').astype('datetime64[D]').astype(np.int64)
+        for s in h.get('plan_hoy', []):
+            r = sim(h, s, True)
+            if r is None or r['res'] == 'na':
+                continue
+            if s in plan_until and r['i'] <= plan_until[s]:
+                continue
+            plan_ops.append({k_: v for k_, v in r.items() if k_ not in ('i', 'xi')})
+            plan_until[s] = r['xi'] if r.get('xi') is not None else 10 ** 9
+    for h in hist:
         syms = sorted(set().union(*[set(v) for v in h.get('reglas', {}).values()]))
         for s in syms:
-            b = bars.get(s)
-            if b is None:
+            r = sim(h, s, False)
+            if r is None:
                 continue
-            days = ((np.asarray(b['t']) + 5 * 3600) // 86400).astype(np.int64)
-            w = np.flatnonzero(days == day)
-            if not len(w):
-                continue
-            i = int(w[0])
-            if s in open_until and i <= open_until[s]:
+            if s in open_until and r['i'] <= open_until[s]:
                 rw = last_row.get(s)
                 if rw is not None:
                     rw.setdefault('repite', []).append(h['date'])
                     if s in h.get('plan_hoy', []):
                         rw.setdefault('plan_dias', []).append(h['date'])
                 continue
-            F = ta.prepare(b)
-            a = float(F['atr'][i])
-            if not np.isfinite(a) or a <= 0:
-                continue
-            pk = (h.get('picks') or {}).get(s, {})
-            if i + 1 >= len(F['c']):
-                rows.append({'fecha': h['date'], 'sym': s, 'reglas': pk.get('reglas') or [r for r, v in h['reglas'].items() if s in v], 'fiab': pk.get('fiab'), 'vol': pk.get('vol'), 'plan_hoy': s in h.get('plan_hoy', []), 'res': 'pendiente'})
-                continue
-            entry = float(F['o'][i + 1])
-            stop = float(F['c'][i]) - STOP_ATR * a
-            o = P.outcome_ladder(F, i, 1, stop)
-            cur = float(F['c'][-1])
-            r = {'fecha': h['date'], 'sym': s, 'reglas': pk.get('reglas') or [r_ for r_, v in h['reglas'].items() if s in v], 'fiab': pk.get('fiab'), 'vol': pk.get('vol'), 'plan_hoy': s in h.get('plan_hoy', []),
-                 'entrada': round(entry, 4), 'stop': round(stop, 4), 'res': o['res'], 'bars': o.get('bars'), 'ret': o.get('ret'), 'net': o.get('net'), 'level': o.get('level', 0), 'xp': o.get('xp'),
-                 'ahora': round((cur / entry - 1) * 100, 2) if o['res'] == 'open' else None, 'salida': str(np.datetime64(int(days[o['xi']]), 'D')) if o.get('xi') is not None and o['res'] != 'open' else None}
-            if o['res'] == 'na':
-                r['res'] = 'na'
+            i, xi = r.pop('i'), r.pop('xi')
             rows.append(r)
             last_row[s] = r
-            if o['res'] != 'na':                                              # una operación que no llegó a abrirse (la apertura ya estaba más allá del stop) no bloquea futuras señales del valor
-                open_until[s] = int(o['xi']) if o.get('xi') is not None and o['res'] != 'open' else len(F['c']) + 10 ** 6
+            if r['res'] != 'na' and r['res'] != 'pendiente':                  # una operación que no llegó a abrirse (la apertura ya estaba más allá del stop) no bloquea futuras señales del valor
+                open_until[s] = int(xi) if xi is not None else 10 ** 9
 
     def tally(rs: List[Dict]) -> Dict:
         cl = [x for x in rs if x['res'] in ('target', 'stop', 'timeout') and x.get('net') is not None]
@@ -224,19 +274,57 @@ def track(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], cost: float 
                 'asegurado_abiertas': sum(1 for x in op if x.get('level', 0) >= 1)}
     rules = sorted({r_ for x in rows for r_ in (x.get('reglas') or [])})
     return {'generated': int(time.time()), 'desde': hist[0]['date'] if hist else None, 'hasta': hist[-1]['date'] if hist else None, 'dias': len(hist), 'todas': tally(rows),
-            'plan_hoy': tally([x for x in rows if x.get('plan_hoy')]), 'vol_alta': tally([x for x in rows if (x.get('vol') or 0) >= 0.6]),
-            'por_regla': {r_: tally([x for x in rows if r_ in (x.get('reglas') or [])]) for r_ in rules}, 'operaciones': rows}
+            'plan_hoy': tally(plan_ops), 'vol_alta': tally([x for x in rows if (x.get('vol') or 0) >= 0.6]),
+            'por_regla': {r_: tally([x for x in rows if r_ in (x.get('reglas') or [])]) for r_ in rules}, 'operaciones': rows, 'plan_ops': plan_ops, 'max_pos': MAX_POS}
 
 
-def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2) -> Dict:
+def plan_abiertas(tr: Dict) -> List[str]:
+    """Valores que la cartera del plan tiene abiertos o pendientes de entrar (del seguimiento): ocupan hueco en el plan de hoy."""
+    return sorted({o['sym'] for o in tr.get('plan_ops', []) if o['res'] in ('open', 'pendiente')})
+
+
+def replan_history(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], max_pos: int = MAX_POS) -> List[Dict]:
+    """Vuelve a calcular el plan de cada día del registro con la regla de la cartera (huecos, abiertas, correlación), en orden y solo con lo que se sabía ese día (las candidatas guardadas con su
+    fiabilidad y volatilidad, las barras hasta esa fecha). Sirve para pasar un registro hecho con el plan sin estado al plan con estado; con el mismo código es idempotente."""
+    out: List[Dict] = []
+    for h in hist:
+        prev = out + []
+        tr = track(prev, {s_: b for s_, b in bars.items()}) if prev else {'plan_ops': []}
+        day = int(np.datetime64(h['date'], 'D').astype('datetime64[D]').astype(np.int64))
+        # «abiertas» ese día: entradas del plan cuyo valor seguía abierto al cierre de ese día (la salida, si la hay, es posterior)
+        ab = []
+        for o in tr.get('plan_ops', []):
+            if o['res'] == 'pendiente' or (o['res'] == 'open') or (o.get('salida') and o['salida'] > h['date']):
+                ab.append(o['sym'])
+        ab = sorted(set(ab))
+        picks = [{'sym': s_, **v} for s_, v in (h.get('picks') or {}).items()]
+        picks.sort(key=lambda p: (-(p['fiab'] if p.get('fiab') is not None else -1), p['sym']))
+        syms_all = [p['sym'] for p in picks] + [a for a in ab if a not in {p['sym'] for p in picks}]
+        corr = corr_matrix(bars, syms_all, upto=day) if syms_all else None
+        pl = daily_plan(picks, tuple(ab), corr, syms_all, max_pos)
+        out.append({**h, 'plan_hoy': pl['nuevas'], 'plan_abiertas': pl['abiertas']})
+    return out
+
+
+def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[str] = None, workers: int = 2, replan: bool = False) -> Dict:
     from . import data
     bars, failed = data.fetch_many(symbols, rng=rng, workers=4, cache_dir=cache_dir, max_age_h=12, verbose=True)
     if len(bars) < 0.9 * len(symbols):
         raise SystemExit(f'solo {len(bars)} de {len(symbols)} valores descargados (Yahoo limita las peticiones): se detiene')
-    ev = screen(bars, workers=workers, verbose=True)
     os.makedirs(out_dir, exist_ok=True)
+    hpath = os.path.join(out_dir, 'impulso_hist.json')
+    try:
+        prev = json.load(open(hpath, encoding='utf-8'))
+    except (OSError, ValueError):
+        prev = []
+    if replan and prev:
+        prev = replan_history(prev, bars)
+        json.dump(prev, open(hpath, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+        print(f'  registro replanificado con la cartera de {MAX_POS} huecos: ' + ' · '.join(f"{h['date']}: abiertas {h.get('plan_abiertas')} → entra {h['plan_hoy']}" for h in prev), flush=True)
+    abiertas = plan_abiertas(track(prev, bars)) if prev else []
+    ev = screen(bars, workers=workers, verbose=True, abiertas=tuple(abiertas))
     json.dump(ev, open(os.path.join(out_dir, 'impulso.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    hist = update_history(os.path.join(out_dir, 'impulso_hist.json'), ev)
+    hist = update_history(hpath, ev)
     json.dump(hist, open(os.path.join(out_dir, 'impulso_hist.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     tr = track(hist, bars)
     json.dump(tr, open(os.path.join(out_dir, 'impulso_track.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
@@ -247,6 +335,6 @@ def run(symbols: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional[
         print(f"  {r['etiqueta']} ({r['nombre']}: {r['texto']} · {r['salida']}): {s['hoy']} hoy ({s['nuevas']} nuevas)", flush=True)
     for p in ev['picks'][:20]:
         print(f"    {p['sym']:6s} {p['close']:9.2f}  fiab {p['fiab'] if p['fiab'] is not None else '  -'}  vol {p['vol'] * 100:3.0f}  impulso {p['mom121'] * 100:3.0f}  vs 200 {p['dist200']:+6.1f} %  grupo {p['grupo']}  stop {p['plan']['stop_pct']:+.1f} %  {','.join(p['reglas'])}", flush=True)
-    print(f"  plan de hoy: {ev['plan_hoy']['posiciones']} · seguimiento: {tr['todas']}", flush=True)
+    print(f"  plan de hoy: abiertas {ev['plan_hoy']['abiertas']} · huecos {ev['plan_hoy']['huecos']} · entran {ev['plan_hoy']['nuevas']} · cartera del plan: {tr['plan_hoy']} · todas las señales: {tr['todas']}", flush=True)
     sys.stdout.flush()
     return ev

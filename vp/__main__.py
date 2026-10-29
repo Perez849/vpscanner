@@ -21,6 +21,7 @@ def main() -> None:
     ap.add_argument('--ks', default='', help='study: tamaños del universo móvil por dinero negociado, separados por comas (por defecto 50,300; smallmid 100,500; mixed todos)')
     ap.add_argument('--members', default='asof', choices=['asof', 'today'], help='search: asof = cada valor del S&P 500 solo desde su fecha de incorporación · today = miembros actuales en todo el periodo (sesgo de supervivencia)')
     ap.add_argument('--confirm', action='store_true', help='search: evalúa las reglas candidatas fijadas de antemano en el universo elegido (--universe) en lugar de buscar')
+    ap.add_argument('--replan', action='store_true', help='screen: antes de cribar, vuelve a calcular el plan de cada día del registro con la regla de la cartera (huecos, abiertas, correlación)')
     ap.add_argument('--cost', type=float, default=-1.0, help='study: coste de ida y vuelta en % (por defecto 0,15; smallmid 0,30)')
     a = ap.parse_args()
     syms = [s.strip().upper() for s in a.symbols.replace(',', ' ').split() if s.strip()]
@@ -46,7 +47,7 @@ def main() -> None:
         uni = syms or universe.study_universe()
         if a.max:
             uni = uni[:a.max]
-        screen.run(uni, a.out, cache_dir=a.cache, workers=a.workers or max(1, (os.cpu_count() or 2) - 0))
+        screen.run(uni, a.out, cache_dir=a.cache, workers=a.workers or max(1, (os.cpu_count() or 2) - 0), replan=a.replan)
     elif a.cmd == 'search' and a.confirm:
         uni = syms or universe.universe_by_name(a.universe)
         if a.max:
