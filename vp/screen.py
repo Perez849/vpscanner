@@ -166,9 +166,11 @@ def update_history(path: str, ev: Dict) -> List[Dict]:
 
 def track(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], cost: float = ml.COST) -> Dict:
     """Seguimiento hacia delante: cada acción que salió en el cribador se simula con la escalera (entrada en la apertura siguiente, stop 2,5 ATR del día de la señal) con los precios reales
-    posteriores. Una operación por valor y día de señal; si el valor ya tenía una operación abierta no se abre otra (como haría un operador)."""
+    posteriores. Una operación por valor y día de señal; si el valor ya tenía una operación abierta no se abre otra (como haría un operador): esa señal repetida se anota en la operación
+    abierta (`repite`: fechas en que volvió a salir; `plan_dias`: las que además estaban en el plan de hoy), para que el plan y el seguimiento cuadren."""
     rows = []
     open_until: Dict[str, int] = {}
+    last_row: Dict[str, Dict] = {}
     for h in hist:
         day = np.datetime64(h['date'], 'D').astype('datetime64[D]').astype(np.int64)
         syms = sorted(set().union(*[set(v) for v in h.get('reglas', {}).values()]))
@@ -182,6 +184,11 @@ def track(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], cost: float 
                 continue
             i = int(w[0])
             if s in open_until and i <= open_until[s]:
+                rw = last_row.get(s)
+                if rw is not None:
+                    rw.setdefault('repite', []).append(h['date'])
+                    if s in h.get('plan_hoy', []):
+                        rw.setdefault('plan_dias', []).append(h['date'])
                 continue
             F = ta.prepare(b)
             a = float(F['atr'][i])
@@ -201,7 +208,9 @@ def track(hist: List[Dict], bars: Dict[str, Dict[str, np.ndarray]], cost: float 
             if o['res'] == 'na':
                 r['res'] = 'na'
             rows.append(r)
-            open_until[s] = int(o['xi']) if o.get('xi') is not None and o['res'] != 'open' else len(F['c']) + 10 ** 6
+            last_row[s] = r
+            if o['res'] != 'na':                                              # una operación que no llegó a abrirse (la apertura ya estaba más allá del stop) no bloquea futuras señales del valor
+                open_until[s] = int(o['xi']) if o.get('xi') is not None and o['res'] != 'open' else len(F['c']) + 10 ** 6
 
     def tally(rs: List[Dict]) -> Dict:
         cl = [x for x in rs if x['res'] in ('target', 'stop', 'timeout') and x.get('net') is not None]
