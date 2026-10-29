@@ -20,7 +20,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-from . import cartera, search
+from . import cartera, ml, search
 
 TOP_N = 300                    # las más negociadas de cada día (dinero medio de 60 sesiones, con datos hasta ese día)
 PRICE_MIN = 5.0
@@ -331,7 +331,7 @@ DESC.update({
 })
 
 
-def rule_returns(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]], dates: np.ndarray, workers: int = 1, k: int = 40, verbose: bool = False) -> Dict[str, np.ndarray]:
+def rule_returns(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]], dates: np.ndarray, workers: int = 1, k: int = ml.K, verbose: bool = False) -> Dict[str, np.ndarray]:
     """Rendimientos diarios y exposición, alineados con `dates`, de la regla de rebote y sus variantes con el simulador de la cartera simulada (orden por volatilidad). Todas las señales = sin límite de posiciones."""
     D, _, _ = search.build(bars, workers, k, verbose, search.MIN_DAY, search.MIN_COMBO, join, search.COST, library=False)
     jobs = [(s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}) for s, b in bars.items() if s in D.syms]
@@ -373,7 +373,7 @@ def voltarget(ret: np.ndarray, target: float = 0.15, win: int = 20, cap: float =
 
 
 # ── conjunto ──────────────────────────────────────────────────────────────
-def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]] = None, workers: int = 1, with_rule: bool = True, verbose: bool = False, k: int = 40) -> Dict:
+def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]] = None, workers: int = 1, with_rule: bool = True, verbose: bool = False, k: int = ml.K) -> Dict:
     t0 = time.time()
     P = Panel(bars, join)
     if verbose:
