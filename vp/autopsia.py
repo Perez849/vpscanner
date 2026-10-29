@@ -244,11 +244,57 @@ def autopsy(T) -> Dict:
     out['por_resultados_est'] = grp('ses_event', [0, 5, 20, 40, 55, 70, 10 ** 6], ['0-4', '5-19', '20-39', '40-54', '55-69', '70 o más'])
     out['por_volatilidad'] = grp('atrp', [0, 4, 5, 6, 8, 100], ['< 4 %', '4-5 %', '5-6 %', '6-8 %', '> 8 %'])
     pl = T['prev_loss'].to_numpy()
+    se = T['ses_event'].to_numpy()
+    nxt = np.where(np.isfinite(se), 63.0 - (se % 63.0), np.nan)                 # sesiones estimadas hasta los próximos resultados (si vuelven cada 63)
+    out['por_resultados_proximos'] = grp_arr(v_=nxt, edges=[0, 7, 14, 26, 46, 64], labels=['1-6', '7-13', '14-25', '26-45', '46-63'], net=net, loss=loss, blk=blk)
+    est = np.isfinite(nxt) & (nxt <= 13)
+    evx = T['post_ev_during'].to_numpy() > 0
+    out['proxy_resultados'] = {'con_proxy': {'n': int(est.sum()), 'con_resultados_en_la_operacion': _r(100 * evx[est].mean(), 1), 'pierden': _r(100 * loss[est].mean(), 1), 'neto_medio': _r(net[est].mean(), 2)},
+                               'sin_proxy': {'n': int((~est & np.isfinite(nxt)).sum()), 'con_resultados_en_la_operacion': _r(100 * evx[~est & np.isfinite(nxt)].mean(), 1), 'pierden': _r(100 * loss[~est & np.isfinite(nxt)].mean(), 1),
+                                             'neto_medio': _r(net[~est & np.isfinite(nxt)].mean(), 2)}}
+    out['regimen_por_año'] = regimen_por_año(T)
     out['tras_perdedora_del_valor'] = [{'grupo': t_, 'n': int(m.sum()), 'pierden': _r(100 * loss[m].mean(), 1), 'neto_medio': _r(net[m].mean(), 2)} for t_, m in
                                        (('la anterior ganó', pl == 0), ('la anterior perdió', pl == 1), ('sin anterior cerrada', ~np.isfinite(pl))) if m.sum() >= 30]
     ev = T['post_ev_during'].to_numpy() > 0
     out['con_resultados_en_la_operacion'] = [{'grupo': t_, 'n': int(m.sum()), 'pierden': _r(100 * loss[m].mean(), 1), 'neto_medio': _r(net[m].mean(), 2), 'perd_media': _r(net[m & loss].mean())} for t_, m in
                                              (('sin día de resultados entre entrada y salida', ~ev), ('con día de resultados entre entrada y salida', ev)) if m.sum() >= 30]
+    return out
+
+
+def grp_arr(v_: np.ndarray, edges, labels, net, loss, blk) -> List[Dict]:
+    rows = []
+    for lab, (lo, hi) in zip(labels, zip(edges[:-1], edges[1:])):
+        m = np.isfinite(v_) & (v_ >= lo) & (v_ < hi)
+        if m.sum() >= 30:
+            mm, tt = t_mean(net[m], blk[m])
+            rows.append({'grupo': lab, 'n': int(m.sum()), 'pierden': _r(100 * loss[m].mean(), 1), 'neto_medio': _r(mm, 2), 't': _r(tt, 1), 'perd_media': _r(net[m & loss].mean())})
+    return rows
+
+
+REGIMENES = (('amplitud_30', 'amplitud del mercado < 30 %', lambda T: T['breadth'].to_numpy() < 30), ('amplitud_45', 'amplitud del mercado < 45 %', lambda T: T['breadth'].to_numpy() < 45),
+             ('mercado_m5', 'mercado a 20 sesiones < −5 %', lambda T: T['mkt_r20'].to_numpy() < -5), ('señales_16', '16 o más señales el mismo día', lambda T: T['nsig'].to_numpy() >= 16),
+             ('pánico', 'cualquiera de las tres anteriores (amplitud < 30 %, mercado < −5 %, 16+ señales)', lambda T: (T['breadth'].to_numpy() < 30) | (T['mkt_r20'].to_numpy() < -5) | (T['nsig'].to_numpy() >= 16)))
+
+
+def regimen_por_año(T) -> List[Dict]:
+    """El régimen de «pánico» año a año: cuántas operaciones, cuántos episodios distintos (rachas de días separadas por más de 10 sesiones) y cómo les fue; un patrón que vive de uno o dos episodios no es un patrón."""
+    net = T['net'].to_numpy()
+    loss = T['loss'].to_numpy().astype(bool)
+    year = T['year'].to_numpy()
+    dc = T['dcode'].to_numpy()
+    out = []
+    for key, txt, f in REGIMENES:
+        m = f(T)
+        days = np.unique(dc[m])
+        epis = int(1 + (np.diff(days) > 10).sum()) if len(days) else 0
+        rows = []
+        for y in sorted(np.unique(year)):
+            a = m & (year == y)
+            b_ = ~m & (year == y)
+            rows.append({'año': int(y), 'n': int(a.sum()), 'pierden': _r(100 * loss[a].mean(), 1) if a.sum() >= 15 else None, 'neto': _r(net[a].mean(), 2) if a.sum() >= 15 else None,
+                         'n_resto': int(b_.sum()), 'pierden_resto': _r(100 * loss[b_].mean(), 1) if b_.sum() >= 15 else None, 'neto_resto': _r(net[b_].mean(), 2) if b_.sum() >= 15 else None})
+        out.append({'regimen': key, 'txt': txt, 'n': int(m.sum()), 'episodios': epis, 'dias': int(len(days)), 'pierden': _r(100 * loss[m].mean(), 1), 'neto': _r(net[m].mean(), 2),
+                    'pierden_resto': _r(100 * loss[~m].mean(), 1), 'neto_resto': _r(net[~m].mean(), 2), 'por_año': rows})
     return out
 
 
@@ -537,6 +583,33 @@ def portfolio(D, Wd, T, excl_greedy: np.ndarray, excl_tree: np.ndarray, test_yea
                                           'p': _r(float(np.mean([a['anual'] >= obs for a in an])), 3), 'n': reps},
                                 'caida_max': {'mediana': _r(np.median([a['caida_max'] for a in an]), 2)}}
     out['carteras'] = sims
+    # (a) stops iniciales más anchos con la escalera: mismo tamaño de posición (el de 2,5 ATR) y mismo riesgo (posición más pequeña cuanto más ancho el stop)
+    ancho = {}
+    for nm, kw in cases:
+        ancho[nm] = {}
+        for ex_, atr_ in (('esc', 2.5), ('esc3', 3.0), ('esc4', 4.0), ('esc5', 5.0)):
+            s5 = cartera.simulate(Wd, mask, ex_, 'vol', rng, d0=d0, **kw)
+            ancho[nm][ex_] = {'mismo_tamaño': cartera.metrics(s5['eq'], yrs, s5['trades'], s5['expo'])}
+            if atr_ != 2.5:
+                s6 = cartera.simulate(Wd, mask, ex_, 'vol', rng, d0=d0, risk=cartera.RISK_PCT * 2.5 / atr_, **kw)
+                ancho[nm][ex_]['mismo_riesgo'] = cartera.metrics(s6['eq'], yrs, s6['trades'], s6['expo'])
+    out['stops_anchos'] = ancho
+    # (b) régimen de pánico: operar solo en él (o fuera de él), en la ventana de prueba; mirado DESPUÉS de ver la tabla, así que no es evidencia, solo cuánto cuenta en una cuenta
+    bre = D.breadth_d[D.dcode] * 100.0
+    mkt = D.mkt_r20_d[D.dcode] * 100.0
+    cond = search.conditions(D)
+    rm = np.ones(len(D.sym), bool)
+    for k_ in RULE:
+        rm &= cond[k_]
+    nsig_row = np.bincount(D.dcode[rm], minlength=D.nd)[D.dcode]
+    panico = (bre < 30) | (mkt < -5) | (nsig_row >= 16)
+    reg = {}
+    for nm, kw in cases:
+        reg[nm] = {}
+        for key, rmask in (('solo_panico', panico), ('sin_panico', ~panico)):
+            s7 = cartera.simulate(Wd, mask & rmask, EXIT, 'vol', rng, d0=d0, **kw)
+            reg[nm][key] = cartera.metrics(s7['eq'], yrs, s7['trades'], s7['expo'])
+    out['regimen'] = reg
     return out
 
 
@@ -583,6 +656,11 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
 
 
 # ── informe ───────────────────────────────────────────────────────────────
+def _f(x, fmt: str = '') -> str:
+    """Formatea un número que puede faltar (sin datos suficientes)."""
+    return 'n/d' if x is None else format(x, fmt)
+
+
 def report(ev: Dict) -> str:
     m, a = ev['meta'], ev['autopsia']
     L = [f"AUTOPSIA DE LAS PERDEDORAS · regla {' + '.join(m['regla'])} · salida: escalera · {m['universe']} acciones · {m['from']} → {m['to']} · coste {m['coste']} %",
@@ -601,6 +679,7 @@ def report(ev: Dict) -> str:
     for key, tit in (('por_año', 'POR AÑO'), ('por_mes', 'POR MES DEL AÑO'), ('por_dia_semana', 'POR DÍA DE LA SEMANA DE LA SEÑAL'), ('por_amplitud', 'POR AMPLITUD DEL MERCADO (% de acciones sobre su media de 200)'),
                      ('por_mercado_20', 'POR RENDIMIENTO DEL MERCADO A 20 SESIONES'), ('por_señales_del_dia', 'POR NÚMERO DE SEÑALES DE LA REGLA ESE DÍA'), ('por_hueco_entrada', 'POR HUECO DE LA APERTURA DE ENTRADA'),
                      ('por_resultados_est', 'POR SESIONES DESDE EL ÚLTIMO DÍA TIPO «RESULTADOS» (los resultados vuelven cada ~63)'), ('por_volatilidad', 'POR VOLATILIDAD (ATR/precio)'),
+                     ('por_resultados_proximos', 'POR SESIONES ESTIMADAS HASTA LOS PRÓXIMOS RESULTADOS (si vuelven cada 63; la operación dura unas 13)'),
                      ('tras_perdedora_del_valor', 'SEGÚN CÓMO TERMINÓ LA OPERACIÓN ANTERIOR DEL MISMO VALOR'), ('con_resultados_en_la_operacion', 'SEGÚN HAYA UN DÍA TIPO «RESULTADOS» DURANTE LA OPERACIÓN (se sabe después)')):
         rows = a.get(key) or []
         if not rows:
@@ -609,6 +688,14 @@ def report(ev: Dict) -> str:
         for r in rows:
             L.append(f"   {r['grupo']:44s} n {r['n']:6,d} · pierden {r['pierden']:5.1f} % · neto medio {r['neto_medio']:+.2f} %" + (f" · t {r['t']:+.1f}" if r.get('t') is not None else ''))
         L.append('')
+    px = a['proxy_resultados']
+    L += [f"ESTIMACIÓN DE RESULTADOS: con resultados previstos en las próximas 13 sesiones n {px['con_proxy']['n']:,} · de ellas, tuvieron un día de resultados durante la operación el {_f(px['con_proxy']['con_resultados_en_la_operacion'])} % · pierden {_f(px['con_proxy']['pierden'])} % · neto {_f(px['con_proxy']['neto_medio'], '+.2f')} %"
+          f" | sin previsión n {px['sin_proxy']['n']:,} · tuvieron resultados el {_f(px['sin_proxy']['con_resultados_en_la_operacion'])} % · pierden {_f(px['sin_proxy']['pierden'])} % · neto {_f(px['sin_proxy']['neto_medio'], '+.2f')} %", '']
+    L.append('RÉGIMEN DE PÁNICO POR AÑO (¿cuántos episodios hay detrás? mirado después de ver la tabla: es descripción, no evidencia)')
+    for g in a['regimen_por_año']:
+        L.append(f"   {g['txt']}: n {g['n']:,} en {g['dias']} días y {g['episodios']} episodios · pierden {_f(g['pierden'])} % · neto {_f(g['neto'], '+.2f')} % | resto: pierden {_f(g['pierden_resto'])} % · neto {_f(g['neto_resto'], '+.2f')} %")
+        L.append('      ' + ' · '.join(f"{r['año']}: n {r['n']}" + (f" {r['pierden']:.0f} % / {r['neto']:+.1f} %" if r['neto'] is not None else '') + (f" (resto {r['neto_resto']:+.1f} %)" if r['neto_resto'] is not None else '') for r in g['por_año']))
+    L.append('')
     u = ev['univariado']
     L.append(f"VARIABLES DE ENTRADA QUE MÁS SEPARAN GANADORAS DE PERDEDORAS (AUC de «pierde»: 0,5 = nada; desarrollo = años < {u['split']}, prueba = el resto; misma dirección = el signo se mantiene)")
     for r in u['ranking'][:14]:
@@ -657,6 +744,17 @@ def report(ev: Dict) -> str:
             if 'azar' in d_:
                 z = d_['azar']['anual']
                 L.append(f"   {nm:6s} {'excluyendo lo mismo al azar':24s} {z['mediana']:+6.1f} %/año (p05 {z['p05']:+.1f}, p95 {z['p95']:+.1f}) · p(azar ≥ filtros) = {z['p']}")
+    if ev.get('cartera', {}).get('stops_anchos'):
+        L += ['', 'STOPS INICIALES MÁS ANCHOS EN LA CARTERA (escalera; mismo tamaño de posición = el de 2,5 ATR; mismo riesgo = posición más pequeña cuanto más ancho el stop)']
+        for nm, d_ in ev['cartera']['stops_anchos'].items():
+            for ex_, v in d_.items():
+                x = v['mismo_tamaño']
+                L.append(f"   {nm:6s} {ex_:5s} mismo tamaño: {x['anual']:+6.1f} %/año · caída {x['caida_max']:+5.1f} % · Sharpe {x['sharpe']} · ganan {x['ganan']} % · neto/op {x['neto_medio']:+.2f} %" + (f" | mismo riesgo: {v['mismo_riesgo']['anual']:+6.1f} %/año · caída {v['mismo_riesgo']['caida_max']:+5.1f} % · Sharpe {v['mismo_riesgo']['sharpe']}" if 'mismo_riesgo' in v else ''))
+    if ev.get('cartera', {}).get('regimen'):
+        L += ['', 'RÉGIMEN DE PÁNICO EN LA CARTERA (operar solo cuando amplitud < 30 %, mercado < −5 % o 16+ señales, o solo fuera de ello; ventana de prueba; mirado después de ver la tabla)']
+        for nm, d_ in ev['cartera']['regimen'].items():
+            for k_, v in d_.items():
+                L.append(f"   {nm:6s} {k_:11s} {v['anual']:+6.1f} %/año · caída {v['caida_max']:+5.1f} % · {v['operaciones']} operaciones · ganan {v['ganan']} % · invertido {v['exposicion_media']:.0f} % · por año: " + ' '.join(f"{str(a_)[2:]}:{r_:+.0f}" for a_, r_ in v['por_año'].items()))
     return '\n'.join(L)
 
 

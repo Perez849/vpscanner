@@ -41,6 +41,9 @@ MARGIN = 62                # las últimas 62 sesiones no abren operaciones: así
 # Salidas del menú: todas con stop inicial a 2,5 ATR salvo que se diga. La primera es la del operador; el resto, variantes razonables fijadas aquí, antes de mirar el resultado.
 MENU = (
     {'name': 'esc', 'txt': 'tu escalera: stop 2,5 ATR · al cerrar a +4 % el stop sube a +4 % y se queda · al cerrar a +10 % sube a +10 % y persigue a 2 ATR', 'stop_atr': 2.5, 'ladder': ((4.0, None), (10.0, 2.0)), 'maxb': 60},
+    {'name': 'esc3', 'txt': 'escalera con stop inicial más ancho: 3 ATR', 'stop_atr': 3.0, 'ladder': ((4.0, None), (10.0, 2.0)), 'maxb': 60},
+    {'name': 'esc4', 'txt': 'escalera con stop inicial más ancho: 4 ATR', 'stop_atr': 4.0, 'ladder': ((4.0, None), (10.0, 2.0)), 'maxb': 60},
+    {'name': 'esc5', 'txt': 'escalera con stop inicial más ancho: 5 ATR', 'stop_atr': 5.0, 'ladder': ((4.0, None), (10.0, 2.0)), 'maxb': 60},
     {'name': 'colchon', 'txt': 'escalera con colchón: al cerrar a +6 % asegura +4 %; al cerrar a +12 % asegura +10 % y persigue a 2 ATR', 'stop_atr': 2.5, 'ladder': ((6.0, 4.0, None), (12.0, 10.0, 2.0)), 'maxb': 60},
     {'name': 'corre', 'txt': 'escalera que deja correr más: +4 % plano · +10 % plano · al cerrar a +20 % persigue a 2 ATR', 'stop_atr': 2.5, 'ladder': ((4.0, None), (10.0, None), (20.0, 2.0)), 'maxb': 60},
     {'name': 'ancha', 'txt': 'escalera con persecución ancha: +4 % plano · al cerrar a +10 % persigue a 3 ATR', 'stop_atr': 2.5, 'ladder': ((4.0, None), (10.0, 3.0)), 'maxb': 60},
