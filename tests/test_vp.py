@@ -1193,6 +1193,81 @@ def test_cartera():
     print(f"ok · cartera simulada: con reversión plantada {c['anual']:+.1f} %/año frente a {au['anual']['mediana']:+.1f} % del azar (p {au['anual']['p']}); en paseos aleatorios nada; contabilidad correcta")
 
 
+def test_autopsia():
+    """La autopsia de las perdedoras: el camino de la operación coincide con el simulador, los filtros hacia delante encuentran un patrón plantado fuera de muestra y no «encuentran» nada en ruido puro,
+    el control de azar es honesto, y el recorrido completo funciona con datos sintéticos."""
+    import pandas as pd
+    from vp import autopsia as A
+    # 1. camino: el simulador con extras da lo mismo y sus excursiones son coherentes
+    b = walk(900, seed=71, sig=0.02)
+    F = ta.prepare(b)
+    n1, c1, nb1 = search.sim_all(F['o'], F['h'], F['l'], F['c'], F['atr'], 1, 2.5, None, None, 60, ladder=search.LADDER, with_bars=True)
+    n2, c2, nb2, ex = search.sim_all(F['o'], F['h'], F['l'], F['c'], F['atr'], 1, 2.5, None, None, 60, ladder=search.LADDER, extras=True)
+    ok = np.isfinite(n1)
+    assert np.allclose(n1[ok], n2[ok]) and (c1 == c2).all() and (nb1 == nb2).all() and (ex['mfe_h'][ok] >= ex['mfe_c'][ok] - 1e-9).all() and (ex['mae'][ok] <= 1e-9).all()
+    st = ok & (c1 == 0)
+    assert st.sum() > 20 and np.nanmean(ex['mae'][st]) < -3 and set(np.unique(ex['gapx'][ok])) <= {0.0, 1.0}, (st.sum(), np.nanmean(ex['mae'][st]))
+    # 2. auc y t con errores agrupados
+    rng = np.random.default_rng(1)
+    y = (rng.random(4000) < 0.3).astype(np.int8)
+    assert abs(A.auc(rng.normal(size=4000), y) - 0.5) < 0.04 and A.auc(y + rng.normal(0, 0.5, 4000), y) > 0.85 and A.auc(-(y + rng.normal(0, 0.5, 4000)), y) < 0.15
+    blk = np.arange(4000) // 10
+    net = rng.normal(1.0, 5.0, 4000)
+    excl = rng.random(4000) < 0.2
+    d0_, t0_ = A.t_diff(net, excl, blk)
+    assert abs(t0_) < 4, t0_                                                                  # sin efecto, t pequeño
+    net2 = net - 4.0 * excl                                                                  # los excluidos rinden 4 puntos menos: la diferencia es +4 y t grande
+    d1_, t1_ = A.t_diff(net2, excl, blk)
+    assert 3.2 < d1_ < 4.8 and t1_ > 8, (d1_, t1_)
+
+    def synth(effect: float, seed: int, n: int = 12000):
+        r = np.random.default_rng(seed)
+        years = r.integers(2017, 2027, n)
+        x = r.normal(size=(n, 3))
+        loss_p = 0.28 + effect * (x[:, 0] > 1.0)                                          # el patrón: la variable 0 muy alta → pierde mucho más
+        lose = r.random(n) < loss_p
+        netv = np.where(lose, -r.gamma(4, 2.5, n), r.gamma(3, 2.0, n))
+        day = (years - 2017) * 252 + r.integers(0, 252, n)
+        T = pd.DataFrame({'year': years, 'date': [str(np.datetime64('2017-01-02') + np.timedelta64(int(d) * 7 // 5, 'D')) for d in day], 'dcode': day, 'net': netv, 'loss': (netv <= 0).astype(np.int8)})
+        for j, f in enumerate(A.FEATS):
+            T[f] = r.normal(size=n) if j >= 3 else np.nan
+        T['r1'], T['r5'], T['r10'] = x[:, 0], x[:, 1], x[:, 2]
+        return T
+    old_feats = A.FEATS
+    A.FEATS = ['r1', 'r5', 'r10'] + [f for f in old_feats[3:6]]                           # pocas variables: la prueba es el mecanismo
+    try:
+        Tp = synth(0.45, 7)
+        for f in A.FEATS[3:]:
+            Tp[f] = np.random.default_rng(3).normal(size=len(Tp))
+        fo = A.filters_oos(Tp, [2020, 2021, 2022, 2023, 2024, 2025], reps=80, seed=2)
+        sm = fo['resumen']
+        assert sm and sm['neto_quedan'] > sm['neto_todas'] + 0.4 and sm['p_azar'] <= 0.05 and sm['perdedoras_evitadas_pct'] > 15 and sm['t'] > 3, sm
+        assert any('rendimiento de la sesión' in x['txt'] for p_ in fo['por_año'] for x in p_['filtros']), fo['por_año'][:2]
+        Tn = synth(0.0, 8)
+        for f in A.FEATS[3:]:
+            Tn[f] = np.random.default_rng(4).normal(size=len(Tn))
+        fn = A.filters_oos(Tn, [2020, 2021, 2022, 2023, 2024, 2025], reps=80, seed=2)
+        sn = fn['resumen']
+        assert sn is None or (sn['p_azar'] > 0.02 and sn['neto_quedan'] - sn['neto_todas'] < 0.5), sn                  # en ruido, el filtro elegido no mejora fuera de muestra
+        dv = A.dev_filters(Tp, 2023)
+        assert dv['top'] and dv['top'][0]['se_mantiene'] and 'rendimiento de la sesión' in dv['top'][0]['txt'], dv['top'][:2]
+        un = A.univariate(Tp, 2023)
+        assert un['ranking'][0]['var'] == 'r1' and un['ranking'][0]['misma_direccion'] and un['ranking'][0]['auc_dev'] > 0.55, un['ranking'][:2]
+        tr = A.tree_oos(Tp, 2023, [2020, 2021, 2022, 2023, 2024, 2025])
+        assert tr['hacia_delante']['neto_quedan'] > tr['hacia_delante']['neto_todas'] and 'r1' in tr['reglas'], tr.get('hacia_delante')
+    finally:
+        A.FEATS = old_feats
+    # 3. recorrido completo con datos sintéticos (reversión plantada: la regla «cae a 5 sesiones» tiene pérdidas y ganancias)
+    bars = {f'S{j}': _walk_ar(1500, 5000 + j, 0.25) for j in range(40)}
+    ev = A.analyze(bars, workers=1, k=40, rule=('cae5',), reps=40, port=True)
+    a = ev['autopsia']
+    assert a['n'] > 2000 and a['perdidas'] > 200 and a['por_tipo'] and a['stop_inicial']['n'] > 20 and len(a['por_año']) >= 4 and ev['univariado']['ranking'] and ev['salidas']['variantes'][0]['dif_con_escalera'] == 0.0, a['n']
+    assert ev['cartera']['carteras']['plan']['sin_filtro']['operaciones'] > 50 and 'todas' in ev['cartera']['carteras']
+    txt = A.report(ev)
+    assert 'CÓMO PIERDEN' in txt and 'FILTROS ELEGIDOS HACIA DELANTE' in txt and 'VARIANTES DE SALIDA' in txt
+    print(f"ok · autopsia: camino coherente con el simulador, patrón plantado hallado y confirmado fuera de muestra (neto {sm['neto_todas']:+.2f} → {sm['neto_quedan']:+.2f}), nada en ruido, recorrido completo ({a['n']} operaciones)")
+
+
 def test_web_impulso_constants():
     """La web copia las condiciones y las salidas de la regla de impulso: tienen que ser exactamente las de vp/search.py, y las dos partes (figuras / impulso) tienen sus propias rutas y pestañas."""
     import re
@@ -1211,7 +1286,7 @@ def test_web_impulso_constants():
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_impulso_constants]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_autopsia, test_web_impulso_constants]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»

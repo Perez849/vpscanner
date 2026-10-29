@@ -90,20 +90,23 @@ def _levels(lvls) -> List[Tuple[float, float, Optional[float]]]:
 
 
 def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.ndarray, d: int, stop_atr: Optional[float] = None, lock_pct: Optional[float] = None, trail: Optional[float] = None,
-            maxb: int = 60, cost: float = COST, stop_pct: Optional[float] = None, ladder=None, with_bars: bool = False):
+            maxb: int = 60, cost: float = COST, stop_pct: Optional[float] = None, ladder=None, with_bars: bool = False, extras: bool = False):
     """Resultado neto (%) y código de salida de entrar en la apertura siguiente a CADA barra. Stop inicial a `stop_atr` ATR (o a `stop_pct` % del precio). Con `lock_pct`: al cerrar a ese %
     a favor el stop sube a ese nivel y persigue al mejor cierre a `trail` ATR; sin lock, persigue desde el principio (y sin `trail`, el stop inicial se queda fijo hasta el cierre por tiempo).
     Con `ladder` (la escalera del operador): cada nivel es (%, ATR a los que persigue desde él o None = stop plano), o (disparo %, nivel %, ATR) cuando el nivel que se asegura es
     distinto del cierre que lo dispara; con ((4, None), (10, 2)) el stop sube a +4 % y se queda, y al cerrar a +10 % sube a +10 % y persigue a 2 ATR. El stop gana si se toca el mismo día;
     un hueco más allá sale a la apertura. Es la misma regla que plan.outcome_lock / plan.outcome_ladder, vectorizada por entradas.
     Código: 0 = saltó el stop inicial, 1 = aseguró el primer nivel, 2 = aseguró el segundo, 3 = cierre por tiempo sin asegurar. NaN / -1 donde la operación no ha terminado o no hay ATR.
-    Con `with_bars` devuelve además las sesiones que duró cada operación (0 donde no terminó)."""
+    Con `with_bars` devuelve además las sesiones que duró cada operación (0 donde no terminó). Con `extras` (implica `with_bars`) devuelve además un diccionario con el camino de cada operación:
+    `mfe_c` mejor cierre y `mfe_h` máximo intradía (% sobre la entrada hasta la salida, incluida la sesión de salida), `mae` mínimo intradía (%), `gapx` (1 si salió por un hueco de apertura más allá del stop)."""
     n = len(c)
     m = n - 1
     net = np.full(n, np.nan)
     code = np.full(n, -1, dtype=np.int8)
     nb = np.zeros(n, dtype=np.int16)
     if m < maxb + 2:
+        if extras:
+            return net, code, nb, {k_: np.full(n, np.nan) for k_ in ('mfe_c', 'mfe_h', 'mae', 'gapx')}
         return (net, code, nb) if with_bars else (net, code)
     entry, a = o[1:], atr[:m]
     done = ~(np.isfinite(a) & np.isfinite(entry) & (a > 0))
@@ -115,6 +118,7 @@ def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.
     best = entry.copy()
     xp = np.full(m, np.nan)
     xb = np.zeros(m, np.int16)
+    hi, lo, gx = entry.copy(), entry.copy(), np.zeros(m)
     idx = np.arange(m)
     for k in range(maxb):
         j = idx + 1 + k
@@ -128,6 +132,10 @@ def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.
         else:
             hit, gap = hj >= st, oj >= st
         sold = live & hit
+        if extras:
+            hi = np.where(live, np.maximum(hi, hj), hi)
+            lo = np.where(live, np.minimum(lo, lj), lo)
+            gx = np.where(sold & gap, 1.0, gx)
         xp[sold] = np.where(gap, oj, st)[sold]
         xb[sold] = k + 1
         done |= sold
@@ -156,6 +164,14 @@ def sim_all(o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray, atr: np.
     cd = np.where(level >= 1, level, np.where(tm, 3, 0)).astype(np.int8)
     code[:m] = np.where(fin, cd, -1)
     nb[:m] = np.where(fin, xb, 0)
+    if extras:
+        ext = {k_: np.full(n, np.nan) for k_ in ('mfe_c', 'mfe_h', 'mae', 'gapx')}
+        sg_ = d if d > 0 else -1                                              # las excursiones se miden a favor (+) y en contra (−) de la posición
+        for k_, arr_ in (('mfe_c', best), ('mfe_h', hi if d > 0 else lo)):
+            ext[k_][:m] = np.where(fin, (arr_ / entry - 1.0) * 100.0 * sg_, np.nan)
+        ext['mae'][:m] = np.where(fin, ((lo if d > 0 else hi) / entry - 1.0) * 100.0 * sg_, np.nan)
+        ext['gapx'][:m] = np.where(fin, gx, np.nan)
+        return net, code, nb, ext
     return (net, code, nb) if with_bars else (net, code)
 
 
