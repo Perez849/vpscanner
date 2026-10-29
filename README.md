@@ -348,9 +348,45 @@ Lectura:
 
 1. **La regla aporta algo real**: el plan de 5 gana a las carteras al azar del universo con las mismas fechas (+6,2 % frente a +1,5 % al año, p 0,05) y con menos caída.
 2. **La fiabilidad no aporta nada al elegir**: las mismas 5 en orden al azar dan +6,1 % (p 0,45) y en orden de volatilidad +6,9 %. El modelo sirve para ordenar la tabla, no mejora la cartera. Es lo mismo que decía la sección 8 (el modelo apenas supera al control de volatilidad), ahora en una cuenta.
-3. **Comprar todas las señales rinde más que elegir 5** (+14,8 % frente a +6,2 % al año; caída −35 % frente a −17 %; por unidad de caída 0,43 frente a 0,35). Lo que cuesta es el **límite de 5 huecos**: la ventaja de la regla viene en rachas (rebotes tras caídas del mercado, cuando muchas acciones cumplen la regla a la vez) y con 5 huecos se dejan fuera justo las señales de los mejores días. Sin límite la cuenta está invertida al 60 % de media (frente al 35 %) y rinde más que el mercado a partes iguales con la mitad de caída.
+3. **Comprar todas las señales rinde más que elegir 5** (+14,8 % frente a +6,2 % al año; caída −35 % frente a −17 %; por unidad de caída 0,43 frente a 0,35). **Pero no es porque las 5 estén mal elegidas**: ver el apartado siguiente. Lo que cambia entre las dos carteras es el **filtro de correlación** (no comprar dos acciones con correlación ≥ 0,6) y, con él, cuánta cuenta se invierte (60 % frente a 35 %); el número de huecos casi no importa.
 4. **Para vivir de esto no da** con riesgo del 1 % por operación: +6 % al año con un −13 % en 2022. Con 2 % sube a +10 % y la caída a −29 %: la relación no cambia.
 5. **Las otras dos entradas**: con la escalera, «2+ bajistas» da +5,0 %/año (p 0,1) y «RSI(2) ≤ 10» +8,2 % (p < 0,05) en plan de 5; comprando todas sus señales, +16,1 % y +20,9 %.
+
+#### ¿Está mal elegido el universo de 5? Estructuras de cartera a igual riesgo (29-oct-2026)
+
+La objeción: si tras 50–100 operaciones solo se gana un 6 % y las comisiones se lo comen, mientras que comprar todas las señales rinde mucho más, las 5 deben de estar mal elegidas. Se comprobó con una rejilla de estructuras **fijada de antemano** (huecos, filtro de correlación, riesgo por operación), misma entrada, salida y orden por fiabilidad, mirando Sharpe y rentabilidad por unidad de caída y no solo rentabilidad:
+
+| estructura | al año | caída máxima | Sharpe | anual / caída | invertido | operaciones (al año) |
+|---|---|---|---|---|---|---|
+| **plan de 5 con filtro (el de Hoy)** | +6,2 % | −17,4 % | 0,59 | 0,35 | 35 % | 491 (73) |
+| 5 huecos, sin filtro de correlación | +6,2 % | −18,6 % | 0,52 | 0,33 | 36 % | 556 (82) |
+| 10 huecos, con filtro | +6,2 % | −18,0 % | 0,43 | 0,34 | 46 % | 662 (98) |
+| 20 huecos, con filtro | +6,7 % | −18,7 % | 0,46 | 0,36 | 47 % | 692 (102) |
+| todas las señales, solo con filtro | +6,7 % | −18,7 % | 0,46 | 0,36 | 47 % | 692 (102) |
+| 10 huecos, sin filtro | +9,3 % | −29,1 % | 0,47 | 0,32 | 56 % | 875 (129) |
+| 20 huecos, sin filtro | +14,5 % | −34,8 % | 0,61 | 0,42 | 60 % | 1.051 (155) |
+| **todas las señales (sin límite ni filtro)** | **+14,8 %** | **−34,8 %** | 0,62 | 0,43 | 60 % | 1.061 (157) |
+| todas las señales con riesgo 0,7 % | +12,7 % | −27,7 % | 0,63 | 0,46 | 49 % | 1.183 (175) |
+| todas las señales con riesgo 0,5 % | +9,6 % | −21,1 % | 0,59 | 0,45 | 39 % | 1.240 (183) |
+| plan de 5 con riesgo 2 % | +10,2 % | −28,5 % | 0,52 | 0,36 | 60 % | 491 (73) |
+| plan de 5 con riesgo 3 % | +12,4 % | −29,4 % | 0,53 | 0,42 | 66 % | 491 (73) |
+
+Lo que dice:
+
+1. **El número de huecos casi no importa; el filtro de correlación sí.** Con 20 o 40 huecos y filtro la cartera sigue dando +6,7 %; quitando el filtro pasa a +14,5 %. Las señales de la regla vienen en grupos de acciones muy correlacionadas (semiconductores, IA); el filtro compra una por grupo y deja fuera el resto. Sin filtro se compra el grupo entero: más cuenta invertida (60 %), más rentabilidad y **el doble de caída** (−35 %). Es la misma apuesta con más peso, no mejores valores.
+2. **A igual caída la diferencia es pequeña.** Plan de 5 con riesgo 3 %: +12,4 % con −29 %. Todas las señales con riesgo 0,7 %: +12,7 % con −28 %. Con una caída de −21 % (todas con riesgo 0,5 %: +9,6 %) el plan de 5 daría unos +7,5 %. La rentabilidad por unidad de caída pasa de 0,36–0,42 (plan) a 0,45 (todas): **una mejora de un 20–30 % a igual caída (el plan de 5 daría +6,2 %; todas las señales con riesgo 0,7 %, escalada a la misma caída, +8,0 %), no «mucho mejor»**, y sacada de la mejor de 14 estructuras, así que parte de ella es azar de elegir.
+3. **El riesgo por operación manda más que la estructura.** El plan de 5 va de +3 % (riesgo 0,5 %) a +12 % (riesgo 3 %) y su caída de −9 % a −29 %. Con ninguna estructura se gana al mercado a partes iguales (+12,5 %, caída −39 %) sin caídas de −28 a −35 %.
+4. **Las comisiones sí importan, sobre todo sin filtro** (sensibilidad: coste de ida y vuelta de cada operación; el caso base descuenta 0,15 %):
+
+| cartera | 0,15 % | 0,30 % | 0,65 % | 1,15 % |
+|---|---|---|---|---|
+| plan de 5 (73 operaciones al año) | +6,2 % | +5,1 % | +2,5 % | −1,1 % |
+| 20 huecos sin filtro (155 al año) | +14,5 % | +12,3 % | +6,8 % | +0,2 % |
+| todas las señales (157 al año) | +14,8 % | +12,7 % | +7,2 % | +0,5 % |
+
+Cada 0,15 puntos más de coste restan ≈ 1 punto al año del plan de 5 y ≈ 2 puntos a las carteras sin filtro; con costes de ida y vuelta de 1,1 % o más ninguna gana nada. Con comisión casi nula y deslizamiento de 0,1–0,3 % en acciones líquidas la ventaja sobrevive, pero con el spread de acciones menos líquidas o con stops que se ejecutan con huecos no hay margen de sobra.
+
+**Veredicto**: las 5 no están «mal cogidas»; el orden dentro de la regla no aporta nada (+6,1 % al azar, p 0,45), y lo que separa las carteras es cuánta cuenta se invierte y si se permite comprar el mismo grupo varias veces. Si se quiere más rendimiento, la palanca es el riesgo por operación y el filtro de correlación, y viene con una caída de −28 a −35 %. **El plan de hoy no se ha cambiado**: es la cartera conservadora (5 huecos, un valor por grupo, riesgo del 1 %).
 
 #### Menú de salidas sobre la entrada «bajo 200» (volatilidad alta; ventana con modelo 2020–2026; ordenado por lo que da el plan de 5)
 

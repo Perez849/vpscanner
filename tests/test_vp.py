@@ -1202,7 +1202,7 @@ def test_web_impulso_constants():
     rules = json.loads(re.search(r'const RULES = (\{.*?\});\n', html).group(1))
     assert cond == search.DESC and exits == search.EXIT_TXT and rules == search.LABELS, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT), set(rules) ^ set(search.LABELS))
     for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "'impulso-seguimiento': 'imptrack'", "['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1', 'Asegurar +10 %', 'Plan de hoy',
-                   'Solo las 5 del plan, todas las señales, o mantener el universo', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)', 'la cartera de ${m.max_pos || 5} huecos', 'La cartera del plan', 'T.plan_ops', 'plan.huecos'):
+                   'Solo las 5 del plan, todas las señales, o mantener el universo', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)', 'la cartera de ${m.max_pos || 5} huecos', 'La cartera del plan', 'T.plan_ops', 'plan.huecos', '¿Está mal elegido el universo de 5?', 'estructurasPanel()'):
         assert needle in html, needle
     assert 'C1 · C2 · C3 · C6 · C7</b>' not in html                        # los códigos no se enseñan como nombre
     for f in ('impulso.json', 'impulso_track.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json', 'fiab.json', 'cartera.json', 'plan_study.json'):
