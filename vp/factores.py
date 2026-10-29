@@ -5,7 +5,7 @@ carteras diarias con los precios reales: la decisión se toma al cierre, se ejec
 fijados de antemano (no se ajusta ninguno) y todas se comparan con mantener el universo líquido a partes iguales.
 
 Qué se mide de cada una: rentabilidad anual, caída máxima, Sharpe, beta y alfa frente al universo a partes iguales (con la t del alfa por bloques de 10 sesiones), correlación con la regla de
-rebote, y qué ocurre al mezclarlas con el mismo riesgo. Es DESCRIPTIVO: son unas 14 carteras miradas a la vez, así que una t de alfa por debajo de ~2,9 no distingue entre mérito y suerte
+rebote, y qué ocurre al mezclarlas con el mismo riesgo. Es DESCRIPTIVO: son unas 30 carteras miradas a la vez, así que una t de alfa por debajo de ~3,1 no distingue entre mérito y suerte
 de elegir la mejor de varias.
 
   python -m vp factores [--out data]"""
@@ -31,7 +31,11 @@ BLOCK = 10                     # sesiones por bloque para la t del alfa
 START = '2020-01-02'           # ventana común con la regla de rebote (el primer año con fiabilidad fuera de muestra)
 LEV_COST = 0.04                # coste anual del dinero prestado al apalancar (sobre la parte prestada)
 DD_TARGET = 0.25               # caída máxima a la que se compara la rentabilidad de todo (con apalancamiento o a medio gas)
-FAMILY_T = 2.9                 # t mínima del alfa para que una de ~14 carteras destaque con p < 0,05 en el conjunto
+FAMILY_T = 3.1                 # t mínima del alfa para que una de ~30 carteras destaque con p < 0,05 en el conjunto (Bonferroni)
+ASSETS = ('SPY', 'QQQ', 'TLT', 'GLD', 'BTC-USD', 'ETH-USD', 'TQQQ', 'UPRO', 'SOXL')
+ASSET_COST = {'BTC-USD': 0.15 / 100.0, 'ETH-USD': 0.15 / 100.0}     # por lado; el resto de activos, COST_SIDE
+TREND_LEN = 200                # media de la tendencia (sesiones)
+TREND_SIGNAL = {'TQQQ': 'QQQ', 'UPRO': 'SPY'}      # el ETF apalancado se compra cuando su subyacente supera su media
 
 DESC = {
     'mercado': 'universo líquido a partes iguales, reequilibrado cada mes (la referencia)',
@@ -314,6 +318,64 @@ def blend(rets: Dict[str, np.ndarray], names: List[str]) -> np.ndarray:
     return sum(w[i] * rets[k] for i, k in enumerate(live)) if live else np.zeros(len(next(iter(rets.values()))))
 
 
+# ── tendencia en activos de alta rentabilidad ──────────────────────────────
+class AssetPanel:
+    """Los activos (ETF, cripto, ETF apalancados) alineados con el calendario de la bolsa de acciones: lo que el motor de carteras necesita (aperturas y cierres)."""
+
+    def __init__(self, P: Panel, bars: Dict[str, Dict[str, np.ndarray]]):
+        self.syms = sorted(bars)
+        self.days, self.date, self.nd, self.ns, self.year = P.days, P.date, P.nd, len(self.syms), P.year
+        self.O, self.C = np.full((self.nd, self.ns), np.nan), np.full((self.nd, self.ns), np.nan)
+        for j, s_ in enumerate(self.syms):
+            t = np.asarray(bars[s_]['t']) // 86400
+            di = np.searchsorted(self.days, t)
+            ok = (di < self.nd) & (self.days[np.minimum(di, self.nd - 1)] == t)
+            self.O[di[ok], j] = np.asarray(bars[s_]['o'])[ok]
+            self.C[di[ok], j] = np.asarray(bars[s_]['c'])[ok]
+
+
+def trend_weights(A: AssetPanel, j: int, sig: Optional[int] = None, length: int = TREND_LEN) -> Tuple[np.ndarray, np.ndarray]:
+    """Todo en el activo `j` mientras el cierre de `sig` (por defecto el mismo activo) esté por encima de su media de `length` sesiones; la orden se da al cierre y se ejecuta en la apertura siguiente."""
+    import pandas as pd
+    c = pd.Series(A.C[:, j if sig is None else sig]).ffill()
+    ma = c.rolling(length, min_periods=int(0.8 * length)).mean()
+    on = (c > ma).to_numpy() & ma.notna().to_numpy()
+    tgt = np.zeros((A.nd, A.ns))
+    trade = np.zeros((A.nd, A.ns), bool)
+    prev = False
+    for d in range(A.nd):
+        if bool(on[d]) != prev and np.isfinite(A.O[min(d + 1, A.nd - 1), j]):
+            trade[d, j] = True
+            tgt[d, j] = 1.0 if on[d] else 0.0
+            prev = bool(on[d])
+    return tgt, trade
+
+
+def asset_sleeves(P: Panel, bars: Dict[str, Dict[str, np.ndarray]]) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+    """Comprar y mantener cada activo (bh_) y comprarlo solo con tendencia alcista (tend_), y una cartera de tendencias a igual riesgo con los activos sin apalancar."""
+    A = AssetPanel(P, bars)
+    idx = {s_: j for j, s_ in enumerate(A.syms)}
+    rets: Dict[str, np.ndarray] = {}
+    expos: Dict[str, np.ndarray] = {}
+    for s_, j in idx.items():
+        cost = ASSET_COST.get(s_, COST_SIDE)
+        first = int(np.flatnonzero(np.isfinite(A.O[:, j]) & np.isfinite(A.C[:, j]))[0]) if np.isfinite(A.C[:, j]).any() else A.nd
+        tg, tr = np.zeros((A.nd, A.ns)), np.zeros((A.nd, A.ns), bool)
+        if first < A.nd - 1:
+            tg[first, j], tr[first, j] = 1.0, True
+        r = run_weights(A, tg, tr, cost)
+        rets['bh_' + s_], expos['bh_' + s_] = r['ret'], r['expo']
+        sig = idx.get(TREND_SIGNAL.get(s_, ''), None)
+        tg, tr = trend_weights(A, j, sig)
+        r = run_weights(A, tg, tr, cost)
+        rets['tend_' + s_], expos['tend_' + s_] = r['ret'], r['expo']
+    base = [k_ for k_ in ('SPY', 'QQQ', 'TLT', 'GLD', 'BTC-USD', 'ETH-USD') if 'tend_' + k_ in rets]
+    if len(base) >= 3:
+        rets['tend_cartera'] = blend(rets, ['tend_' + k_ for k_ in base])
+        expos['tend_cartera'] = np.mean([expos['tend_' + k_] for k_ in base], axis=0)
+    return rets, expos
+
+
 # ── la regla de rebote como cartera diaria ────────────────────────────────
 RULE_SLEEVES = (('regla_todas', 'imp_bajo200', 'esc', True), ('regla_plan', 'imp_bajo200', 'esc', False), ('regla_bajistas', 'imp_bajistas', 'esc', True), ('regla_rsi2', 'imp_rsi2', 'esc', True),
                 ('regla_run5', 'imp_bajo200', 'run5', True))
@@ -325,6 +387,9 @@ DESC.update({
     'regla_run5': 'la regla base con la salida «run5» (la que más da por operación del menú; elegida mirando el menú de 13 salidas); todas las señales',
     'relleno_regla_todas': 'regla de rebote, todas las señales, con la caja no invertida puesta en el universo a partes iguales',
     'relleno_regla_plan': 'plan de 5 huecos, con la caja no invertida puesta en el universo a partes iguales',
+    'bh_': 'comprar y mantener el activo (SPY, QQQ: índices; TLT: bonos largos; GLD: oro; BTC-USD y ETH-USD: cripto; TQQQ, UPRO, SOXL: ETF apalancados ×3)',
+    'tend_': 'solo con tendencia: el activo mientras su cierre supere su media de 200 sesiones (TQQQ con la media de QQQ y UPRO con la de SPY), si no, en caja',
+    'tend_cartera': 'cartera de tendencias a igual riesgo: SPY, QQQ, TLT, GLD, BTC-USD y ETH-USD (cada uno con su propia tendencia)',
     'vt_regla_todas': 'regla de rebote (todas las señales) con control de volatilidad: apalancamiento = 15 % / volatilidad de las últimas 20 sesiones, entre 0 y 1,5',
     'vt_mercado': 'universo a partes iguales con el mismo control de volatilidad',
     'vt_relleno_regla_todas': 'regla de rebote con la caja en el universo y el mismo control de volatilidad',
@@ -373,7 +438,8 @@ def voltarget(ret: np.ndarray, target: float = 0.15, win: int = 20, cap: float =
 
 
 # ── conjunto ──────────────────────────────────────────────────────────────
-def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]] = None, workers: int = 1, with_rule: bool = True, verbose: bool = False, k: int = ml.K) -> Dict:
+def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]] = None, workers: int = 1, with_rule: bool = True, verbose: bool = False, k: int = ml.K,
+            assets: Optional[Dict[str, Dict[str, np.ndarray]]] = None) -> Dict:
     t0 = time.time()
     P = Panel(bars, join)
     if verbose:
@@ -386,6 +452,12 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
             print(f'  {nm:12s} {time.time() - t0:.0f}s', flush=True)
     rets = {nm: r['ret'] for nm, r in runs.items()}
     expos = {nm: r['expo'] for nm, r in runs.items()}
+    asset_names: List[str] = []
+    if assets:
+        ar, ae = asset_sleeves(P, assets)
+        for nm in ar:
+            rets[nm], expos[nm] = ar[nm], ae[nm]
+            asset_names.append(nm)
     rule_names: List[str] = []
     if with_rule:
         rr = rule_returns(bars, join, P.date, workers, k, verbose)
@@ -404,7 +476,7 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
     yr, rm = P.year[sl], P.mret[sl]
     out: Dict = {'meta': {'generated': int(time.time()), 'universe': P.ns, 'from': str(P.date[0]), 'to': str(P.date[-1]), 'operables_por_dia': int(P.elig.sum(1).mean()), 'coste_lado': COST_SIDE * 100,
                           'top': TOP_N, 'n_xs': N_XS, 'huecos': SLOTS, 'ventana': START, 'miembros': 'en la fecha' if join else 'actuales', 'lev_coste': LEV_COST, 'caida_objetivo': DD_TARGET * 100},
-           'desc': {k_: v for k_, v in DESC.items() if k_ in rets}, 'carteras': {}, 'neutrales': {}}
+           'desc': {k_: v for k_, v in DESC.items() if k_ in rets or k_ in ('bh_', 'tend_') and asset_names}, 'carteras': {}, 'neutrales': {}}
     for nm in rets:
         r = rets[nm][sl]
         row = {'ventana': stats(r, yr, expos[nm][sl] if nm in expos else None), **alpha_beta(r, rm), 'a_25': at_drawdown(r)}
@@ -415,7 +487,7 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
                 row['desde_inicio'] = {**stats(rets[nm][f0:], P.year[f0:], expos[nm][f0:]), 'desde': str(P.date[f0])}
         out['carteras'][nm] = row
         b = row['beta']
-        if b is not None and nm != 'mercado' and not nm.startswith(('vt_', 'relleno_')) and abs(b) > 0.02:
+        if b is not None and nm != 'mercado' and not nm.startswith(('vt_', 'relleno_', 'bh_')) and abs(b) > 0.02:
             neu = r - b * rm                                                                 # alfa puro: la cartera menos su beta en el universo (sin coste de la cobertura)
             out['neutrales'][nm] = {'ventana': stats(neu, yr), **{k_: v for k_, v in alpha_beta(neu, rm).items() if k_ in ('alfa', 't_alfa')}, 'a_25': at_drawdown(neu), 'beta': b}
     if with_rule:
@@ -427,6 +499,11 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
         for nm in names + rule_names[1:] + ['mercado']:
             b2 = blend(rl, ['regla_todas', nm])
             mixes[f'regla_todas+{nm}'] = {'ventana': stats(b2, yr), **alpha_beta(b2, rm), 'a_25': at_drawdown(b2)}
+        if 'tend_cartera' in rets:
+            rl['tend_cartera'] = rets['tend_cartera'][sl]
+            out['correlacion_regla']['tend_cartera'] = _r(float(np.corrcoef(rl['tend_cartera'], rl['regla_todas'])[0, 1]), 2)
+            b3 = blend(rl, ['regla_todas', 'tend_cartera'])
+            mixes['regla_todas+tend_cartera'] = {'ventana': stats(b3, yr), **alpha_beta(b3, rm), 'a_25': at_drawdown(b3)}
         pos_ = [nm for nm in names if (out['carteras'][nm].get('t_alfa') or 0) > 0 and (out['carteras'][nm]['alfa'] or 0) > 0]
         for label, members in (('todas_las_familias', ['regla_todas'] + names), ('reglas_juntas', rule_names), ('regla+positivas', ['regla_todas'] + pos_)):
             b = blend(rl, members)
@@ -442,7 +519,7 @@ def report(ev: Dict) -> str:
     L = [f"OTRAS FAMILIAS DE ESTRATEGIAS · {m['universe']} acciones · {m['operables_por_dia']} operables por día (las más negociadas) · {m['from']} → {m['to']} · coste {2 * m['coste_lado']:.2f} % ida y vuelta · "
          f"miembros {m['miembros']}", f"Ventana común con la regla de rebote: desde {m['ventana']}. Decisión al cierre, ejecución en la apertura siguiente, sin apalancamiento, caja sin interés. Beta, alfa y exceso se miden contra el universo a partes iguales SIN costes.",
          f"«a {m['caida_objetivo']:.0f} %»: rentabilidad anual al escalar la cartera hasta una caída máxima de {m['caida_objetivo']:.0f} % (por encima de 1× se paga {100 * m['lev_coste']:.0f} % anual por lo prestado). "
-         f"Con ~14 carteras miradas a la vez, una t de alfa por debajo de {FAMILY_T} no distingue mérito de suerte de elegir la mejor.", '']
+         f"Con ~30 carteras miradas a la vez, una t de alfa por debajo de {FAMILY_T} no distingue mérito de suerte de elegir la mejor.", '']
     L.append('CARTERAS (ventana común) · beta y alfa frente al universo a partes iguales')
     L.append(f"   {'cartera':22s} {'%/año':>7s} {'caída':>7s} {'Sharpe':>6s} {'a/c':>5s} {'inv.':>5s} {'beta':>5s} {'alfa':>6s} {'t alfa':>7s} {'exceso':>7s} {'t exc.':>6s} {'rot.':>6s} {'a 25 %':>14s}")
     for nm, r in ev['carteras'].items():
@@ -494,7 +571,13 @@ def run(symbols_: List[str], out_dir: str, rng: str = '10y', cache_dir: Optional
             join = universe.sp500_join_dates()
         except Exception as exc:
             print(f'  no se pudo leer la tabla de miembros del S&P 500 ({type(exc).__name__}: {exc}): se usan los miembros actuales', flush=True)
-    ev = analyze(bars, join=join, workers=workers, verbose=True)
+    assets = None
+    try:
+        assets, _ = data.fetch_many(list(ASSETS), rng=rng, workers=4, cache_dir=cache_dir, max_age_h=24 * 3, verbose=True)
+        print(f'  activos descargados: {sorted(assets)}', flush=True)
+    except Exception as exc:
+        print(f'  no se pudieron descargar los activos ({type(exc).__name__}: {exc}): se omite la tendencia en activos', flush=True)
+    ev = analyze(bars, join=join, workers=workers, verbose=True, assets=assets or None)
     os.makedirs(out_dir, exist_ok=True)
     json.dump(ev, open(os.path.join(out_dir, 'factores.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     txt = report(ev)

@@ -1381,10 +1381,31 @@ def test_factores():
     assert abs(float((eq / np.maximum.accumulate(eq) - 1).min())) > 0
     zero = F.at_drawdown(np.zeros(500), 0.25)
     assert zero['anual'] is None or zero['anual'] <= 0.0                                        # apalancar una cartera parada solo cuesta el dinero prestado
+    # 5b. tendencia en activos: comprar y mantener rinde lo de la apertura siguiente al último cierre; sin media no hay posición; en una caída larga la tendencia pierde menos que mantener
+    Pa = F.Panel(universe(20, 1800, 7))
+    n_ = 1800
+    rr = np.random.default_rng(5)
+    r_ = rr.normal(0, 0.01, n_)
+    r_[:600] += 0.002
+    r_[600:900] -= 0.004
+    c_ = 100 * np.exp(np.cumsum(r_))
+    o_ = np.concatenate([[100.0], c_[:-1]])
+    crash = {'t': 1400000000 + 86400 * np.arange(n_), 'o': o_, 'h': np.maximum(o_, c_) * 1.001, 'l': np.minimum(o_, c_) * 0.999, 'c': c_, 'v': np.ones(n_)}
+    ab = {s_: walk(1800, seed=900 + i, mu=0.0004, sig=0.012, t0=1400000000) for i, s_ in enumerate(('SPY', 'QQQ', 'TLT', 'GLD'))}
+    ab['BTC-USD'] = crash
+    ar, ae = F.asset_sleeves(Pa, ab)
+    assert {'bh_SPY', 'tend_SPY', 'tend_BTC-USD', 'tend_cartera'} <= set(ar)
+    assert abs(np.prod(1 + ar['bh_SPY']) / (ab['SPY']['c'][-1] / ab['SPY']['o'][1]) - 1) < 0.002
+    assert ae['tend_SPY'][:150].max() == 0.0 and all(ae[k_].max() <= 1.0 + 1e-9 for k_ in ae)
+    yr_ = Pa.year
+    dd_bh, dd_tr = F.stats(ar['bh_BTC-USD'], yr_)['caida_max'], F.stats(ar['tend_BTC-USD'], yr_)['caida_max']
+    assert dd_tr > dd_bh + 20, (dd_bh, dd_tr)
     # 6. recorrido completo con la regla de rebote (datos sintéticos con reversión)
     bars = {f'S{j}': _walk_ar(1500, 5000 + j, 0.25) for j in range(40)}
-    ev = F.analyze(bars, join=None, workers=1, with_rule=True, k=40)
-    assert set(ev['carteras']) >= set(F.DESC) | {'regla_todas', 'regla_plan'} and 'mezclas' in ev and 'todas_las_familias' in ev['mezclas'] and ev['correlacion_regla']
+    assets = {s_: walk(1500, seed=950 + i, mu=0.0003, sig=0.012, t0=1500000000) for i, s_ in enumerate(('SPY', 'QQQ', 'TLT', 'GLD'))}
+    ev = F.analyze(bars, join=None, workers=1, with_rule=True, k=40, assets=assets)
+    assert set(ev['carteras']) >= (set(F.DESC) - {'bh_', 'tend_'}) | {'regla_todas', 'regla_plan', 'bh_SPY', 'tend_SPY'} and 'mezclas' in ev and 'todas_las_familias' in ev['mezclas'] and ev['correlacion_regla']
+    assert 'regla_todas+tend_cartera' in ev['mezclas']
     txt = F.report(ev)
     assert 'CARTERAS (ventana común)' in txt and 'MEZCLAS A IGUAL RIESGO' in txt and 'CORRELACIÓN DIARIA CON LA REGLA' in txt
     print(f"ok · factores: contabilidad exacta, sin apalancamiento, sin mirar al futuro, momento plantado t {pl['t_alfa']:+.1f} y nada en paseos aleatorios, {len(ev['carteras'])} carteras y {len(ev['mezclas'])} mezclas")
