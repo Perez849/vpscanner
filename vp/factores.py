@@ -315,9 +315,24 @@ def blend(rets: Dict[str, np.ndarray], names: List[str]) -> np.ndarray:
 
 
 # ── la regla de rebote como cartera diaria ────────────────────────────────
+RULE_SLEEVES = (('regla_todas', 'imp_bajo200', 'esc', True), ('regla_plan', 'imp_bajo200', 'esc', False), ('regla_bajistas', 'imp_bajistas', 'esc', True), ('regla_rsi2', 'imp_rsi2', 'esc', True),
+                ('regla_run5', 'imp_bajo200', 'run5', True))
+DESC.update({
+    'regla_todas': 'regla de rebote (impulso alto y bajo su media de 200) con la escalera, todas las señales',
+    'regla_plan': 'la misma regla con el plan de 5 huecos (orden por volatilidad)',
+    'regla_bajistas': 'variante de entrada: impulso alto y 2 o más señales bajistas; escalera, todas las señales',
+    'regla_rsi2': 'variante de entrada: impulso alto y RSI(2) ≤ 10; escalera, todas las señales',
+    'regla_run5': 'la regla base con la salida «run5» (la que más da por operación del menú; elegida mirando el menú de 13 salidas); todas las señales',
+    'relleno_regla_todas': 'regla de rebote, todas las señales, con la caja no invertida puesta en el universo a partes iguales',
+    'relleno_regla_plan': 'plan de 5 huecos, con la caja no invertida puesta en el universo a partes iguales',
+    'vt_regla_todas': 'regla de rebote (todas las señales) con control de volatilidad: apalancamiento = 15 % / volatilidad de las últimas 20 sesiones, entre 0 y 1,5',
+    'vt_mercado': 'universo a partes iguales con el mismo control de volatilidad',
+    'vt_relleno_regla_todas': 'regla de rebote con la caja en el universo y el mismo control de volatilidad',
+})
+
+
 def rule_returns(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str]], dates: np.ndarray, workers: int = 1, k: int = 40, verbose: bool = False) -> Dict[str, np.ndarray]:
-    """Rendimientos diarios, alineados con `dates`, de la regla de rebote con la escalera: todas las señales y el plan de 5 (orden por volatilidad, el mismo simulador de la cartera simulada)."""
-    from .autopsia import RULE
+    """Rendimientos diarios y exposición, alineados con `dates`, de la regla de rebote y sus variantes con el simulador de la cartera simulada (orden por volatilidad). Todas las señales = sin límite de posiciones."""
     D, _, _ = search.build(bars, workers, k, verbose, search.MIN_DAY, search.MIN_COMBO, join, search.COST, library=False)
     jobs = [(s, {a: b[a] for a in ('t', 'o', 'h', 'l', 'c', 'v')}) for s, b in bars.items() if s in D.syms]
     W: Dict[str, Dict] = {}
@@ -330,23 +345,31 @@ def rule_returns(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str
             s, w = cartera._sym_work(jb)
             W[s] = w
     Wd = cartera.World(D, W)
-    mask = Wd.rule_mask(list(RULE[:2]))
+    masks = {r['nombre']: Wd.rule_mask(r['regla']) for r in search.ENTRADAS}
     ds = np.array([str(x) for x in D.date])
     d0 = int(np.searchsorted(ds, START))
     rng = np.random.default_rng(0)
     out = {}
-    for nm, kw in (('regla_todas', {'max_pos': 10 ** 6, 'corr_min': 2.0}), ('regla_plan', {})):
-        s = cartera.simulate(Wd, mask, 'esc', 'vol', rng, d0=d0, **kw)
+    for nm, rule, ex_, todas in RULE_SLEEVES:
+        s = cartera.simulate(Wd, masks[rule], ex_, 'vol', rng, d0=d0, **({'max_pos': 10 ** 6, 'corr_min': 2.0} if todas else {}))
         eq = s['eq']
         r = np.concatenate([[0.0], eq[1:] / eq[:-1] - 1.0])
-        series = np.full(len(dates), np.nan)
-        pos = np.searchsorted(dates, ds[s['d0']:s['dend'] + 1])
-        okp = (pos < len(dates)) & (dates[np.minimum(pos, len(dates) - 1)] == ds[s['d0']:s['dend'] + 1])
-        series[pos[okp]] = r[okp]
-        out[nm] = series
-        out[nm + '_expo'] = np.full(len(dates), np.nan)
+        sub = ds[s['d0']:s['dend'] + 1]
+        pos = np.searchsorted(dates, sub)
+        okp = (pos < len(dates)) & (dates[np.minimum(pos, len(dates) - 1)] == sub)
+        out[nm] = np.zeros(len(dates))
+        out[nm][pos[okp]] = r[okp]
+        out[nm + '_expo'] = np.zeros(len(dates))
         out[nm + '_expo'][pos[okp]] = s['expo'][okp]
     return out
+
+
+def voltarget(ret: np.ndarray, target: float = 0.15, win: int = 20, cap: float = 1.5) -> np.ndarray:
+    """Control de volatilidad: cada día el factor es `target` dividido por la volatilidad anualizada de las `win` sesiones anteriores (sin mirar el día), entre 0 y `cap`; por encima de 1 se paga el dinero prestado."""
+    import pandas as pd
+    sd = pd.Series(ret).rolling(win, min_periods=win).std().shift(1).to_numpy() * np.sqrt(252)
+    lev = np.where(np.isfinite(sd) & (sd > 0), np.minimum(cap, target / np.maximum(sd, 1e-9)), 1.0)
+    return lev * ret - np.maximum(lev - 1.0, 0.0) * LEV_COST / 252.0
 
 
 # ── conjunto ──────────────────────────────────────────────────────────────
@@ -363,42 +386,49 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
             print(f'  {nm:12s} {time.time() - t0:.0f}s', flush=True)
     rets = {nm: r['ret'] for nm, r in runs.items()}
     expos = {nm: r['expo'] for nm, r in runs.items()}
+    rule_names: List[str] = []
     if with_rule:
         rr = rule_returns(bars, join, P.date, workers, k, verbose)
-        for nm in ('regla_todas', 'regla_plan'):
-            rets[nm], expos[nm] = np.nan_to_num(rr[nm]), np.nan_to_num(rr[nm + '_expo'])
+        for nm, *_ in RULE_SLEEVES:
+            rets[nm], expos[nm] = rr[nm], rr[nm + '_expo']
+            rule_names.append(nm)
+        for base in ('regla_todas', 'regla_plan'):
+            prev = np.concatenate([[0.0], expos[base][:-1]])
+            rets['relleno_' + base] = rets[base] + (1.0 - prev) * rets['mercado']
+        rets['vt_regla_todas'] = voltarget(rets['regla_todas'])
+        rets['vt_mercado'] = voltarget(rets['mercado'])
+        rets['vt_relleno_regla_todas'] = voltarget(rets['relleno_regla_todas'])
     first = {nm: int(np.flatnonzero(np.abs(runs[nm]['expo']) > 0)[0]) if (np.abs(runs[nm]['expo']) > 0).any() else P.nd for nm in runs}
     d_start = int(np.searchsorted(P.date, START))
-    wins = {'desde_2020': slice(d_start, P.nd)}
-    mkt_full = runs['mercado']['ret']
+    sl = slice(d_start, P.nd)
+    yr, rm = P.year[sl], P.mret[sl]
     out: Dict = {'meta': {'generated': int(time.time()), 'universe': P.ns, 'from': str(P.date[0]), 'to': str(P.date[-1]), 'operables_por_dia': int(P.elig.sum(1).mean()), 'coste_lado': COST_SIDE * 100,
                           'top': TOP_N, 'n_xs': N_XS, 'huecos': SLOTS, 'ventana': START, 'miembros': 'en la fecha' if join else 'actuales', 'lev_coste': LEV_COST, 'caida_objetivo': DD_TARGET * 100},
-           'desc': DESC, 'carteras': {}}
-    sl = wins['desde_2020']
-    yr = P.year[sl]
-    rm = P.mret[sl]
-    for nm in list(strat) + (['regla_todas', 'regla_plan'] if with_rule else []):
+           'desc': {k_: v for k_, v in DESC.items() if k_ in rets}, 'carteras': {}, 'neutrales': {}}
+    for nm in rets:
         r = rets[nm][sl]
-        row = {'ventana': stats(r, yr, expos[nm][sl]), **alpha_beta(r, rm), 'a_25': at_drawdown(r)}
-        if nm in strat:
+        row = {'ventana': stats(r, yr, expos[nm][sl] if nm in expos else None), **alpha_beta(r, rm), 'a_25': at_drawdown(r)}
+        if nm in runs:
             row['rotacion_anual'] = _r(float(runs[nm]['turn'][sl].sum()) / (len(r) / 252.0) * 100, 0)
             f0 = first[nm]
             if f0 < d_start:
                 row['desde_inicio'] = {**stats(rets[nm][f0:], P.year[f0:], expos[nm][f0:]), 'desde': str(P.date[f0])}
         out['carteras'][nm] = row
+        b = row['beta']
+        if b is not None and nm != 'mercado' and not nm.startswith(('vt_', 'relleno_')) and abs(b) > 0.02:
+            neu = r - b * rm                                                                 # alfa puro: la cartera menos su beta en el universo (sin coste de la cobertura)
+            out['neutrales'][nm] = {'ventana': stats(neu, yr), **{k_: v for k_, v in alpha_beta(neu, rm).items() if k_ in ('alfa', 't_alfa')}, 'a_25': at_drawdown(neu), 'beta': b}
     if with_rule:
         names = [n for n in strat if n != 'mercado']
-        rl = {nm: rets[nm][sl] for nm in names + ['regla_todas', 'regla_plan', 'mercado']}
+        rl = {nm: rets[nm][sl] for nm in names + rule_names + ['mercado']}
         with np.errstate(invalid='ignore', divide='ignore'):
-            out['correlacion_regla'] = {nm: _r(float(np.corrcoef(rl[nm], rl['regla_todas'])[0, 1]), 2) for nm in names + ['mercado']}
+            out['correlacion_regla'] = {nm: _r(float(np.corrcoef(rl[nm], rl['regla_todas'])[0, 1]), 2) for nm in names + rule_names[1:] + ['mercado']}
         mixes = {}
-        for nm in names:
+        for nm in names + rule_names[1:] + ['mercado']:
             b2 = blend(rl, ['regla_todas', nm])
             mixes[f'regla_todas+{nm}'] = {'ventana': stats(b2, yr), **alpha_beta(b2, rm), 'a_25': at_drawdown(b2)}
-        for label, members in (('todas_las_familias', ['regla_todas'] + names), ('regla+positivas', None)):
-            if members is None:
-                pos_ = [nm for nm in names if out['carteras'][nm].get('t_alfa') is not None and out['carteras'][nm]['t_alfa'] > 0 and (out['carteras'][nm]['alfa'] or 0) > 0]
-                members = ['regla_todas'] + pos_
+        pos_ = [nm for nm in names if (out['carteras'][nm].get('t_alfa') or 0) > 0 and (out['carteras'][nm]['alfa'] or 0) > 0]
+        for label, members in (('todas_las_familias', ['regla_todas'] + names), ('reglas_juntas', rule_names), ('regla+positivas', ['regla_todas'] + pos_)):
             b = blend(rl, members)
             mixes[label] = {'miembros': members, 'ventana': stats(b, yr), **alpha_beta(b, rm), 'a_25': at_drawdown(b)}
         out['mezclas'] = mixes
@@ -414,21 +444,21 @@ def report(ev: Dict) -> str:
          f"«a {m['caida_objetivo']:.0f} %»: rentabilidad anual al escalar la cartera hasta una caída máxima de {m['caida_objetivo']:.0f} % (por encima de 1× se paga {100 * m['lev_coste']:.0f} % anual por lo prestado). "
          f"Con ~14 carteras miradas a la vez, una t de alfa por debajo de {FAMILY_T} no distingue mérito de suerte de elegir la mejor.", '']
     L.append('CARTERAS (ventana común) · beta y alfa frente al universo a partes iguales')
-    L.append(f"   {'cartera':14s} {'%/año':>7s} {'caída':>7s} {'Sharpe':>6s} {'a/c':>5s} {'inv.':>5s} {'beta':>5s} {'alfa':>6s} {'t alfa':>7s} {'exceso':>7s} {'t exc.':>6s} {'rot.':>6s} {'a 25 %':>14s}")
+    L.append(f"   {'cartera':22s} {'%/año':>7s} {'caída':>7s} {'Sharpe':>6s} {'a/c':>5s} {'inv.':>5s} {'beta':>5s} {'alfa':>6s} {'t alfa':>7s} {'exceso':>7s} {'t exc.':>6s} {'rot.':>6s} {'a 25 %':>14s}")
     for nm, r in ev['carteras'].items():
         v = r['ventana']
         a25 = r['a_25']
         a25s = f"{a25['anual']:+.1f} ×{a25['L']}" if a25['anual'] is not None else 'n/d'
-        L.append(f"   {nm:14s} {v['anual']:+7.1f} {v['caida_max']:+7.1f} {v['sharpe']:6.2f} {_f(v['mar'], '5.2f')} {_f(v.get('exposicion_media'), '5.0f')} {_f(r['beta'], '5.2f')} {_f(r['alfa'], '+6.1f')} {_f(r['t_alfa'], '+7.2f')} "
+        L.append(f"   {nm:22s} {v['anual']:+7.1f} {v['caida_max']:+7.1f} {v['sharpe']:6.2f} {_f(v['mar'], '5.2f')} {_f(v.get('exposicion_media'), '5.0f')} {_f(r['beta'], '5.2f')} {_f(r['alfa'], '+6.1f')} {_f(r['t_alfa'], '+7.2f')} "
                  f"{_f(r['exceso'], '+7.1f')} {_f(r['t_exceso'], '+6.2f')} {_f(r.get('rotacion_anual'), '6.0f')} {a25s:>14s}" + (' ◄' if (r['t_alfa'] or 0) >= FAMILY_T else ''))
     L += ['', 'AÑO A AÑO (ventana común, %)']
     for nm, r in ev['carteras'].items():
-        L.append(f"   {nm:14s} " + ' '.join(f"{str(a)[2:]}:{x:+.0f}" for a, x in r['ventana']['por_año'].items()))
+        L.append(f"   {nm:22s} " + ' '.join(f"{str(a)[2:]}:{x:+.0f}" for a, x in r['ventana']['por_año'].items()))
     L += ['', 'DESDE EL PRINCIPIO DE SUS DATOS (antes de 2020; la regla de rebote no existe antes de 2020)']
     for nm, r in ev['carteras'].items():
         d = r.get('desde_inicio')
         if d:
-            L.append(f"   {nm:14s} desde {d['desde']}: {d['anual']:+.1f} %/año · caída {d['caida_max']:+.1f} % · Sharpe {d['sharpe']}")
+            L.append(f"   {nm:22s} desde {d['desde']}: {d['anual']:+.1f} %/año · caída {d['caida_max']:+.1f} % · Sharpe {d['sharpe']}")
     if ev.get('correlacion_regla'):
         L += ['', 'CORRELACIÓN DIARIA CON LA REGLA DE REBOTE (todas las señales)', '   ' + ' · '.join(f"{k} {_f(v, '+.2f')}" for k, v in ev['correlacion_regla'].items())]
         L += ['', 'MEZCLAS A IGUAL RIESGO (cada una pesa lo inverso de su volatilidad; los pesos suman 1; ventana común)']
@@ -438,7 +468,14 @@ def report(ev: Dict) -> str:
             v = r['ventana']
             L.append(f"   {nm:36s} {v['anual']:+6.1f} %/año · caída {v['caida_max']:+6.1f} % · Sharpe {v['sharpe']} · a/c {_f(v['mar'], '.2f')} · beta {_f(r['beta'], '.2f')} · a 25 %: {_f(r['a_25']['anual'], '+.1f')}"
                      + (f" · {', '.join(r['miembros'])}" if r.get('miembros') else ''))
-    L += ['', 'QUÉ ES CADA CARTERA'] + [f"   {k:14s} {v}" for k, v in ev['desc'].items()]
+    if ev.get('neutrales'):
+        L += ['', f"ALFA PURO: cada cartera menos su beta por el universo a partes iguales (la cobertura se supone gratis), escalada hasta una caída de {m['caida_objetivo']:.0f} % con el dinero prestado a {100 * m['lev_coste']:.0f} % anual"]
+        L.append(f"   {'cartera':22s} {'beta':>5s} {'alfa':>6s} {'t alfa':>7s} {'Sharpe':>6s} {'caída':>7s} {'a 25 %':>14s}")
+        for nm, r in ev['neutrales'].items():
+            a25 = r['a_25']
+            a25s = f"{a25['anual']:+.1f} ×{a25['L']}" if a25['anual'] is not None else 'n/d'
+            L.append(f"   {nm:22s} {_f(r['beta'], '5.2f')} {_f(r['alfa'], '+6.1f')} {_f(r['t_alfa'], '+7.2f')} {r['ventana']['sharpe']:6.2f} {r['ventana']['caida_max']:+7.1f} {a25s:>14s}")
+    L += ['', 'QUÉ ES CADA CARTERA'] + [f"   {k:22s} {v}" for k, v in ev['desc'].items()]
     return '\n'.join(L)
 
 
