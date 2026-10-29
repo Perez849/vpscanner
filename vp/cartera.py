@@ -252,8 +252,9 @@ def metrics(eq: np.ndarray, years: np.ndarray, trades: Optional[List] = None, ex
            'mar': round(float(cagr / -dd.min()), 2) if dd.min() < 0 else None}
     if trades is not None:
         nets = np.array([t[3] for t in trades]) if trades else np.zeros(0)
+        w_, l_ = nets[nets > 0], nets[nets <= 0]
         out.update({'operaciones': len(trades), 'por_año_ops': round(len(trades) / yrs, 1) if yrs > 0 else None, 'ganan': round(float((nets > 0).mean() * 100), 1) if len(nets) else None,
-                    'neto_medio': round(float(nets.mean()), 3) if len(nets) else None, 'sesiones_media': round(float(np.mean([t[5] for t in trades])), 1) if trades else None,
+                    'neto_medio': round(float(nets.mean()), 3) if len(nets) else None, 'gan_media': round(float(w_.mean()), 2) if len(w_) else None, 'perd_media': round(float(l_.mean()), 2) if len(l_) else None, 'sesiones_media': round(float(np.mean([t[5] for t in trades])), 1) if trades else None,
                     'exposicion_media': round(float(np.mean(expo) * 100), 1) if expo is not None and len(expo) else None,
                     'tamaño_medio': round(float(np.mean([t[4] for t in trades]) * 100), 1) if trades else None})
     return out
@@ -296,6 +297,31 @@ def op_stats(Wd: World, mask: np.ndarray, exit_name: str) -> Dict:
             'gan_media': round(float(wins.mean()), 2) if len(wins) else None, 'perd_media': round(float(loss.mean()), 2) if len(loss) else None,
             'factor': round(float(wins.sum() / max(-loss.sum(), 1e-9)), 2) if len(loss) else None, 'sesiones': round(float(bars.mean()), 1),
             'neto_por_sesion': round(float(nets.mean() / max(bars.mean(), 1.0)), 4)}
+
+
+RANGOS = (('top1', 'la mejor de cada día', lambda r: r == 0), ('top2_3', 'la 2.ª y la 3.ª', lambda r: (r >= 1) & (r <= 2)), ('top4_5', 'la 4.ª y la 5.ª', lambda r: (r >= 3) & (r <= 4)),
+          ('resto', 'de la 6.ª en adelante', lambda r: r >= 5), ('todas', 'todas las señales del día', lambda r: r >= 0))
+
+
+def rank_stats(Wd: World, mask: np.ndarray, exit_name: str) -> Dict:
+    """¿Gana más la operación de mayor fiabilidad de cada día? Por puesto en el ranking de fiabilidad del día (solo filas de la regla con modelo fuera de muestra), la estadística por operación
+    de op_stats (neto, exceso sobre el azar del día, % que gana, ganancia y pérdida medias), sin límites de cartera: mide si ELEGIR la mejor aporta algo, aparte de cuánto se invierta."""
+    D = Wd.D
+    ok = mask & np.isfinite(Wd.pred) & np.isfinite(Wd.net_rows[exit_name])
+    ix = np.flatnonzero(ok)
+    if len(ix) < 100:
+        return {}
+    o = np.lexsort((-Wd.pred[ix], D.dcode[ix]))
+    ix = ix[o]
+    d = D.dcode[ix]
+    first = np.r_[0, np.flatnonzero(np.diff(d)) + 1]
+    rank = np.arange(len(ix)) - np.repeat(first, np.diff(np.r_[first, len(ix)]))
+    out = {}
+    for k, txt, f in RANGOS:
+        m = np.zeros(len(D.sym), bool)
+        m[ix[f(rank)]] = True
+        out[k] = {'txt': txt, **op_stats(Wd, m, exit_name)}
+    return out
 
 
 def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = ml.K, reps: int = REPS, verbose: bool = False, join: Optional[Dict[str, str]] = None, rules=search.ENTRADAS,
@@ -385,12 +411,16 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
                             ('p20', '20 huecos, con filtro', {'max_pos': 20}), ('p20_sc', '20 huecos, sin filtro', {'max_pos': 20, 'corr_min': 2.0}), ('p40_sc', '40 huecos, sin filtro', {'max_pos': 40, 'corr_min': 2.0}),
                             ('todas_cf', 'todas las señales, solo con filtro de correlación', {'max_pos': big}), ('todas', 'todas las señales (sin límite ni filtro)', {'max_pos': big, 'corr_min': 2.0}),
                             ('todas_r07', 'todas las señales con riesgo 0,7 % por operación', {'max_pos': big, 'corr_min': 2.0, 'risk': 0.7}), ('todas_r05', 'todas las señales con riesgo 0,5 % por operación', {'max_pos': big, 'corr_min': 2.0, 'risk': 0.5}),
-                            ('p5_r2', 'plan de 5 con riesgo 2 %', {'risk': 2.0}), ('p5_r3', 'plan de 5 con riesgo 3 %', {'risk': 3.0}), ('p10_sc_r15', '10 huecos sin filtro, riesgo 1,5 %', {'max_pos': 10, 'corr_min': 2.0, 'risk': 1.5}))
+                            ('p5_r2', 'plan de 5 con riesgo 2 %', {'risk': 2.0}), ('p5_r3', 'plan de 5 con riesgo 3 %', {'risk': 3.0}), ('p10_sc_r15', '10 huecos sin filtro, riesgo 1,5 %', {'max_pos': 10, 'corr_min': 2.0, 'risk': 1.5}),
+                            ('p1', 'solo 1 hueco: una posición a la vez, la de mayor fiabilidad', {'max_pos': 1}), ('p1_r5', 'solo 1 hueco con riesgo 5 % (posición hasta el 20 % de la cuenta)', {'max_pos': 1, 'risk': 5.0}),
+                            ('p1_dia', 'la mejor de cada día (1 entrada diaria, sin límite de huecos), con filtro', {'max_pos': big, 'schedule': np.ones(Wd.nd, np.int32)}),
+                            ('p1_dia_sc', 'la mejor de cada día (1 entrada diaria, sin límite de huecos), sin filtro', {'max_pos': big, 'corr_min': 2.0, 'schedule': np.ones(Wd.nd, np.int32)}))
                     est = {}
                     for nm, txt, kw in ESTR:
                         s3 = simulate(Wd, mask, e, 'fiab', rng, d0=d0, **kw)
                         est[nm] = {'txt': txt, **metrics(s3['eq'], yrs, s3['trades'], s3['expo'])}
                     out['base']['estructuras'] = est
+                    out['base']['por_rango'] = rank_stats(Wd, mask, e)
                     cost = {}
                     for nm, kw in (('p5', {}), ('p20_sc', {'max_pos': 20, 'corr_min': 2.0}), ('todas', {'max_pos': big, 'corr_min': 2.0})):       # comisiones y deslizamiento: sensibilidad al coste de ida y vuelta
                         cost[nm] = {}
@@ -430,9 +460,16 @@ def report(ev: Dict) -> str:
               '   variantes del plan: ' + ' · '.join(f"{k}: {v['anual']:+.1f} %/año, caída {v['caida_max']:+.1f} %, {v['operaciones']} ops" for k, v in b['variantes'].items())]
         if b.get('estructuras'):
             L += ['', 'ESTRUCTURAS DE CARTERA (misma entrada, salida y orden por fiabilidad; fijadas de antemano; ¿está mal elegido el universo de 5?)']
-            L.append('   estructura'.ljust(56) + 'al año'.rjust(8) + 'caída'.rjust(8) + 'Sharpe'.rjust(8) + 'a/c'.rjust(6) + 'inv.'.rjust(6) + 'ops'.rjust(6) + 'ops/año'.rjust(8) + 'tam.'.rjust(6))
+            L.append('   estructura'.ljust(70) + 'al año'.rjust(8) + 'caída'.rjust(8) + 'Sharpe'.rjust(8) + 'a/c'.rjust(6) + 'inv.'.rjust(6) + 'ops'.rjust(6) + 'ops/año'.rjust(8) + 'tam.'.rjust(6) + 'ganan'.rjust(7) + 'neto/op'.rjust(9) + 'gana/pierde'.rjust(15))
             for k_, v in b['estructuras'].items():
-                L.append(('   ' + v['txt']).ljust(56) + f"{v['anual']:+8.1f}{v['caida_max']:+8.1f}{v['sharpe']:8.2f}{(v['mar'] or 0):6.2f}{v['exposicion_media']:6.0f}{v['operaciones']:6d}{v['por_año_ops']:8.0f}{v['tamaño_medio']:6.1f}")
+                L.append(('   ' + v['txt']).ljust(70) + f"{v['anual']:+8.1f}{v['caida_max']:+8.1f}{v['sharpe']:8.2f}{(v['mar'] or 0):6.2f}{v['exposicion_media']:6.0f}{v['operaciones']:6d}{v['por_año_ops']:8.0f}{v['tamaño_medio']:6.1f}"
+                         + (f"{v['ganan']:7.1f}{v['neto_medio']:+9.2f}" + f"  {v['gan_media']:+.1f}/{v['perd_media']:+.1f}".rjust(15) if v.get('ganan') is not None and v.get('gan_media') is not None and v.get('perd_media') is not None else ''))
+        if b.get('por_rango'):
+            L += ['', '¿GANA MÁS LA OPERACIÓN DE MAYOR FIABILIDAD DE CADA DÍA? (por operación, sin límites de cartera; filas de la regla con volatilidad alta y modelo fuera de muestra)']
+            L.append('   puesto en el ranking del día'.ljust(34) + 'n'.rjust(7) + 'neto'.rjust(8) + 'azar día'.rjust(10) + 'exceso'.rjust(8) + 't'.rjust(6) + 'ganan'.rjust(7) + 'gana/pierde'.rjust(15))
+            for k_, v in b['por_rango'].items():
+                if v.get('n', 0) >= 30 and 'exceso' in v:
+                    L.append(('   ' + v['txt']).ljust(34) + f"{v['n']:7d}{v['neto']:+7.2f}%{v['azar_dia']:+9.2f}%{v['exceso']:+7.2f}%{v['t']:+6.1f}{v['ganan']:6.0f}%" + f"  {v['gan_media']:+.1f}/{v['perd_media']:+.1f}".rjust(15))
         if b.get('costes'):
             L += ['', 'SENSIBILIDAD AL COSTE DE IDA Y VUELTA (comisiones y deslizamiento; el caso base descuenta 0,15 %): rentabilidad anual / caída máxima']
             for k_, cc in b['costes'].items():

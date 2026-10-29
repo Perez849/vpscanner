@@ -1173,6 +1173,8 @@ def test_cartera():
     cs = [v['anual'] for v in co['todas'].values()]
     assert list(co['todas']) == ['0.15', '0.30', '0.65', '1.15'] and all(a > b_ for a, b_ in zip(cs, cs[1:])) and abs(co['p5']['0.15']['anual'] - c['anual']) < 1e-9, co['todas']
     assert 'ESTRUCTURAS DE CARTERA' in cartera.report(ev) and 'SENSIBILIDAD AL COSTE' in cartera.report(ev)
+    assert {'p1', 'p1_r5', 'p1_dia', 'p1_dia_sc'} <= set(es) and es['p1']['operaciones'] < es['p5']['operaciones'] and es['p1_dia_sc']['operaciones'] <= es['todas']['operaciones'] and c['gan_media'] > 0 > c['perd_media'], es['p1']
+    assert b['por_rango'] == {} or {'top1', 'resto', 'todas'} <= set(b['por_rango'])
     assert set(ev['menu']['T']) == {'h10', 'esc'} and 'azar_universo' in ev['menu']['T']['esc'] and 'todas' in ev['menu']['T']['esc'] and ev['meta']['menu']['esc'].startswith('tu escalera')
     txt = cartera.report(ev)
     assert 'CASO BASE' in txt and 'MENÚ DE SALIDAS' in txt and 'azar del universo' in txt and 'todas las señales' in txt
@@ -1186,6 +1188,8 @@ def test_cartera():
         bf = evf['base']
         assert evf['meta']['fiab']['orden'].startswith('fiabilidad') and evf['meta']['ventana_desde'].startswith('2020') and bf['desde'].startswith('2020') and 'desde_inicio' in bf, evf['meta']['fiab']
         assert bf['lineas']['plan']['operaciones'] > 20 and bf['desde_inicio']['plan_vol']['operaciones'] > bf['lineas']['plan']['operaciones'] and 'plan_vol' in bf['lineas'], bf['lineas']
+        pr_ = bf['por_rango']
+        assert {'top1', 'top2_3', 'top4_5', 'resto', 'todas'} <= set(pr_) and pr_['todas']['n'] >= pr_['top1']['n'] > 20 and pr_['todas']['n'] >= pr_['top1']['n'] + pr_['top2_3']['n'], pr_
     # mecánica de un recorrido: la cuenta nunca se apalanca y la curva es positiva
 
     ev0 = cartera.analyze({f'S{j}': _walk_ar(1500, 3100 + j, 0.0) for j in range(40)}, **dict(kw, reps=4))
