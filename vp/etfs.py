@@ -23,6 +23,8 @@ ETFS = ('TQQQ', 'SQQQ', 'SOXL', 'SOXS')
 START = '2020-01-02'
 BASE_RULE = 'imp_bajo200'
 BASE_EXIT = 'esc'
+RISK_EXITS = ('esc', 'op4b', 'h20')                # salidas con las que se prueba a dar más riesgo a los ETF
+RISK_MULT = (1, 2, 3, 5)                           # veces el riesgo del 1 % por operación
 DESC = {'TQQQ': 'Nasdaq-100 ×3', 'SQQQ': 'Nasdaq-100 ×3 inverso', 'SOXL': 'semiconductores ×3', 'SOXS': 'semiconductores ×3 inverso'}
 
 
@@ -121,6 +123,18 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
             cm = [cartera.metrics(c['eq'], years_d[c['d0']:c['dend'] + 1]) for c in ctrl]
             out['azar'][w_] = {'anual': cartera._summary([x['anual'] for x in cm], todas['anual']), 'caida_max': cartera._summary([x['caida_max'] for x in cm], todas['caida_max']),
                                'operaciones_media': _r(float(np.mean([len(c['trades']) for c in ctrl])), 1)}
+        # más riesgo en los ETF: el 1 % por operación con un stop de ~10 % da posiciones pequeñas y pocas señales, así que apenas pesan en la cuenta
+        mas: Dict = {}
+        for e in RISK_EXITS:
+            mas[e] = {}
+            for kx in RISK_MULT:
+                rr = np.where(is_etf, float(kx), 1.0)
+                res_ = {}
+                for nm, mk_ in (('solo_etf', m0 & is_etf), ('acciones+etf', m0)):
+                    sm = cartera.simulate(Wd, mk_, e, 'vol', rng, d0=d0, max_pos=10 ** 6, corr_min=2.0, risk_rows=rr)
+                    res_[nm] = cartera.metrics(sm['eq'], years_d[sm['d0']:sm['dend'] + 1], sm['trades'], sm['expo'])
+                mas[e][kx] = res_
+        out['mas_riesgo_' + w_] = mas
         # el menú de salidas, solo ETF (todas las señales)
         out['salidas_cartera_' + w_] = {e: {k_: v for k_, v in line(Wd, m0 & is_etf, e, years_d, d0, rng, True).items() if k_ != '_entries'} for e in cartera.MN}
     if verbose:
@@ -164,6 +178,15 @@ def report(ev: Dict) -> str:
             z = ev['azar'][w_]
             L.append(f"  Control: entrar al azar en los mismos ETF con el mismo calendario: {z['anual']['mediana']:+.1f} %/año (p05 {z['anual']['p05']:+.1f}, p95 {z['anual']['p95']:+.1f}), caída mediana {z['caida_max']['mediana']:+.1f} % · "
                      f"p(azar ≥ regla) = {z['anual']['p']} ({z['anual']['n']} repeticiones)")
+    for w_ in ev['cartera']:
+        mas = ev.get('mas_riesgo_' + w_)
+        if not mas:
+            continue
+        L += ['', f"MÁS RIESGO EN LOS ETF · {w_} · regla base, todas las señales; los ETF arriesgan ×k el 1 % por operación (tope del 20 % de la cuenta por posición) y las acciones siguen en el 1 %"]
+        for e, d_ in mas.items():
+            for kx, x in d_.items():
+                a, b = x['solo_etf'], x['acciones+etf']
+                L.append(f"   {e:5s} ×{kx}  solo ETF {a['anual']:+6.1f} %/año caída {a['caida_max']:+6.1f} % Sharpe {a['sharpe']:5.2f} invertido {_f(a.get('exposicion_media'), '3.0f')} %  |  acciones+ETF {b['anual']:+6.1f} %/año caída {b['caida_max']:+6.1f} % Sharpe {b['sharpe']:5.2f} invertido {_f(b.get('exposicion_media'), '3.0f')} %")
     L += ['', 'MENÚ DE SALIDAS CON LA REGLA BASE, SOLO ETF (todas las señales; ventana desde 2020)']
     L.append(f"   {'salida':9s} {'n':>5s} {'neto':>7s} {'exceso':>7s} {'t':>5s} {'ganan':>6s} | {'%/año':>7s} {'caída':>7s} {'ops':>4s}   acciones: neto exceso t")
     sal = ev.get('salidas_cartera_desde_2020', {})

@@ -1428,8 +1428,10 @@ def test_etfs():
     assert set(res) == {'acciones', 'acciones+etf', 'solo_etf', 'cada_etf'} and set(res['cada_etf']) == set(E.ETFS)
     assert res['acciones+etf']['todas']['operaciones'] >= max(res['acciones']['todas']['operaciones'], res['solo_etf']['todas']['operaciones']) - 3
     assert set(ev['salidas']) == set(cartera.MN) and 'desde_2017' in ev['comprar_y_mantener'] and set(E.ETFS) <= set(ev['comprar_y_mantener']['desde_2020'])
+    mr = ev['mas_riesgo_desde_2020']
+    assert set(mr) == set(E.RISK_EXITS) and mr['esc'][1]['solo_etf']['tamaño_medio'] is None or mr['esc'][5]['solo_etf']['tamaño_medio'] >= mr['esc'][1]['solo_etf']['tamaño_medio']
     txt = E.report(ev)
-    assert 'SEÑALES Y RESULTADO POR OPERACIÓN' in txt and 'COMPRAR Y MANTENER' in txt and 'CARTERA SIMULADA' in txt and 'MENÚ DE SALIDAS' in txt
+    assert 'MÁS RIESGO EN LOS ETF' in txt and 'SEÑALES Y RESULTADO POR OPERACIÓN' in txt and 'COMPRAR Y MANTENER' in txt and 'CARTERA SIMULADA' in txt and 'MENÚ DE SALIDAS' in txt
     print(f"ok · etfs: señales por ETF coherentes, carteras acciones / acciones+ETF / solo ETF y menú de salidas ({res['solo_etf']['todas']['operaciones']} operaciones solo ETF)")
 
 
