@@ -376,6 +376,46 @@ def asset_sleeves(P: Panel, bars: Dict[str, Dict[str, np.ndarray]]) -> Tuple[Dic
     return rets, expos
 
 
+TREND_CORE = ('SPY', 'QQQ', 'TLT', 'GLD', 'BTC-USD', 'ETH-USD')
+PERIODOS = {'2017-2019': ('2017-01-01', '2019-12-31'), '2020-2022': ('2020-01-01', '2022-12-31'), '2023-2026': ('2023-01-01', '2026-12-31'), '2020-2026': ('2020-01-01', '2026-12-31')}
+
+
+def asset_variants(P: Panel, bars: Dict[str, Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
+    """Robustez de la cartera de tendencias: otras medias (100, 150, 250 sesiones), sin cripto y solo con cripto. Mismas reglas, a igual riesgo, sin ajustar nada."""
+    A = AssetPanel(P, bars)
+    idx = {s_: j for j, s_ in enumerate(A.syms)}
+    cache: Dict[Tuple[str, int], np.ndarray] = {}
+
+    def one(sym: str, length: int) -> np.ndarray:
+        if (sym, length) not in cache:
+            tg, tr = trend_weights(A, idx[sym], None, length)
+            cache[(sym, length)] = run_weights(A, tg, tr, ASSET_COST.get(sym, COST_SIDE))['ret']
+        return cache[(sym, length)]
+    out: Dict[str, np.ndarray] = {}
+    have = [k_ for k_ in TREND_CORE if k_ in idx]
+    for length in (100, 150, 250):
+        out[f'tend_cartera_ma{length}'] = blend({k_: one(k_, length) for k_ in have}, have)
+    nocry = [k_ for k_ in have if k_ not in ('BTC-USD', 'ETH-USD')]
+    cry = [k_ for k_ in have if k_ in ('BTC-USD', 'ETH-USD')]
+    if len(nocry) >= 2:
+        out['tend_cartera_sin_cripto'] = blend({k_: one(k_, TREND_LEN) for k_ in nocry}, nocry)
+    if cry:
+        out['tend_cripto'] = blend({k_: one(k_, TREND_LEN) for k_ in cry}, cry)
+    return out
+
+
+def periods(ret: np.ndarray, P: Panel) -> Dict[str, Dict]:
+    """Rentabilidad anual, caída y Sharpe de una cartera en cada subperiodo (la cuenta empieza en 1 al inicio de cada uno)."""
+    out = {}
+    for nm, (a, b) in PERIODOS.items():
+        ix = np.flatnonzero((P.date >= a) & (P.date <= b))
+        if len(ix) < 150 or not (np.abs(ret[ix]) > 0).any():
+            continue
+        m = stats(ret[ix], P.year[ix])
+        out[nm] = {'anual': m['anual'], 'caida_max': m['caida_max'], 'sharpe': m['sharpe']}
+    return out
+
+
 # ── la regla de rebote como cartera diaria ────────────────────────────────
 RULE_SLEEVES = (('regla_todas', 'imp_bajo200', 'esc', True), ('regla_plan', 'imp_bajo200', 'esc', False), ('regla_bajistas', 'imp_bajistas', 'esc', True), ('regla_rsi2', 'imp_rsi2', 'esc', True),
                 ('regla_run5', 'imp_bajo200', 'run5', True))
@@ -470,7 +510,8 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
         rets['vt_regla_todas'] = voltarget(rets['regla_todas'])
         rets['vt_mercado'] = voltarget(rets['mercado'])
         rets['vt_relleno_regla_todas'] = voltarget(rets['relleno_regla_todas'])
-    first = {nm: int(np.flatnonzero(np.abs(runs[nm]['expo']) > 0)[0]) if (np.abs(runs[nm]['expo']) > 0).any() else P.nd for nm in runs}
+    variants = asset_variants(P, assets) if assets else {}
+    first = {nm: int(np.flatnonzero(np.abs(expos[nm]) > 0)[0]) if (np.abs(expos[nm]) > 0).any() else P.nd for nm in expos}
     d_start = int(np.searchsorted(P.date, START))
     sl = slice(d_start, P.nd)
     yr, rm = P.year[sl], P.mret[sl]
@@ -482,14 +523,20 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], join: Optional[Dict[str, str
         row = {'ventana': stats(r, yr, expos[nm][sl] if nm in expos else None), **alpha_beta(r, rm), 'a_25': at_drawdown(r)}
         if nm in runs:
             row['rotacion_anual'] = _r(float(runs[nm]['turn'][sl].sum()) / (len(r) / 252.0) * 100, 0)
+        if nm in first and first[nm] < d_start:
             f0 = first[nm]
-            if f0 < d_start:
-                row['desde_inicio'] = {**stats(rets[nm][f0:], P.year[f0:], expos[nm][f0:]), 'desde': str(P.date[f0])}
+            row['desde_inicio'] = {**stats(rets[nm][f0:], P.year[f0:], expos[nm][f0:]), 'desde': str(P.date[f0])}
         out['carteras'][nm] = row
         b = row['beta']
         if b is not None and nm != 'mercado' and not nm.startswith(('vt_', 'relleno_', 'bh_')) and abs(b) > 0.02:
             neu = r - b * rm                                                                 # alfa puro: la cartera menos su beta en el universo (sin coste de la cobertura)
             out['neutrales'][nm] = {'ventana': stats(neu, yr), **{k_: v for k_, v in alpha_beta(neu, rm).items() if k_ in ('alfa', 't_alfa')}, 'a_25': at_drawdown(neu), 'beta': b}
+    if variants:
+        keyrows = ['mercado', 'bh_SPY', 'bh_QQQ', 'tend_QQQ', 'tend_cartera', 'bh_BTC-USD', 'tend_BTC-USD', 'tend_TQQQ']
+        series = {nm: rets[nm] for nm in keyrows if nm in rets}
+        series.update(variants)
+        out['robustez_tendencia'] = {'variantes': {nm: {'ventana': stats(v[sl], yr), **{k_: x for k_, x in alpha_beta(v[sl], rm).items() if k_ in ('beta', 'alfa', 't_alfa')}, 'a_25': at_drawdown(v[sl])} for nm, v in variants.items()},
+                                     'periodos': {nm: periods(v, P) for nm, v in series.items()}}
     if with_rule:
         names = [n for n in strat if n != 'mercado']
         rl = {nm: rets[nm][sl] for nm in names + rule_names + ['mercado']}
@@ -545,6 +592,18 @@ def report(ev: Dict) -> str:
             v = r['ventana']
             L.append(f"   {nm:36s} {v['anual']:+6.1f} %/año · caída {v['caida_max']:+6.1f} % · Sharpe {v['sharpe']} · a/c {_f(v['mar'], '.2f')} · beta {_f(r['beta'], '.2f')} · a 25 %: {_f(r['a_25']['anual'], '+.1f')}"
                      + (f" · {', '.join(r['miembros'])}" if r.get('miembros') else ''))
+    rb = ev.get('robustez_tendencia')
+    if rb:
+        L += ['', 'ROBUSTEZ DE LA TENDENCIA (cartera de tendencias a igual riesgo con otras medias, sin cripto y solo cripto; ventana común)']
+        L.append(f"   {'variante':26s} {'%/año':>7s} {'caída':>7s} {'Sharpe':>6s} {'beta':>5s} {'alfa':>6s} {'t alfa':>7s} {'a 25 %':>14s}")
+        for nm, r in rb['variantes'].items():
+            v, a25 = r['ventana'], r['a_25']
+            a25s = f"{a25['anual']:+.1f} ×{a25['L']}" if a25['anual'] is not None else 'n/d'
+            L.append(f"   {nm:26s} {v['anual']:+7.1f} {v['caida_max']:+7.1f} {v['sharpe']:6.2f} {_f(r['beta'], '5.2f')} {_f(r['alfa'], '+6.1f')} {_f(r['t_alfa'], '+7.2f')} {a25s:>14s}")
+        L += ['', 'POR SUBPERIODOS (%/año · caída · Sharpe; la cuenta empieza en 1 al inicio de cada subperiodo)']
+        L.append(f"   {'cartera':26s} " + ' '.join(f"{p_:>28s}" for p_ in PERIODOS))
+        for nm, d_ in rb['periodos'].items():
+            L.append(f"   {nm:26s} " + ' '.join((f"{d_[p_]['anual']:+7.1f} {d_[p_]['caida_max']:+7.1f} {d_[p_]['sharpe']:6.2f}   " if p_ in d_ else f"{'n/d':>28s}") for p_ in PERIODOS))
     if ev.get('neutrales'):
         L += ['', f"ALFA PURO: cada cartera menos su beta por el universo a partes iguales (la cobertura se supone gratis), escalada hasta una caída de {m['caida_objetivo']:.0f} % con el dinero prestado a {100 * m['lev_coste']:.0f} % anual"]
         L.append(f"   {'cartera':22s} {'beta':>5s} {'alfa':>6s} {'t alfa':>7s} {'Sharpe':>6s} {'caída':>7s} {'a 25 %':>14s}")

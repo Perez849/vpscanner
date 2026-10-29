@@ -1406,6 +1406,8 @@ def test_factores():
     ev = F.analyze(bars, join=None, workers=1, with_rule=True, k=40, assets=assets)
     assert set(ev['carteras']) >= (set(F.DESC) - {'bh_', 'tend_'}) | {'regla_todas', 'regla_plan', 'bh_SPY', 'tend_SPY'} and 'mezclas' in ev and 'todas_las_familias' in ev['mezclas'] and ev['correlacion_regla']
     assert 'regla_todas+tend_cartera' in ev['mezclas']
+    rb = ev['robustez_tendencia']
+    assert {'tend_cartera_ma100', 'tend_cartera_ma150', 'tend_cartera_ma250', 'tend_cartera_sin_cripto'} <= set(rb['variantes']) and '2020-2026' in rb['periodos']['tend_cartera'] and 'tend_cartera_ma100' in rb['periodos']
     txt = F.report(ev)
     assert 'CARTERAS (ventana común)' in txt and 'MEZCLAS A IGUAL RIESGO' in txt and 'CORRELACIÓN DIARIA CON LA REGLA' in txt
     print(f"ok · factores: contabilidad exacta, sin apalancamiento, sin mirar al futuro, momento plantado t {pl['t_alfa']:+.1f} y nada en paseos aleatorios, {len(ev['carteras'])} carteras y {len(ev['mezclas'])} mezclas")
