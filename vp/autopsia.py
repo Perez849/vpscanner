@@ -196,6 +196,14 @@ def _r(x, d=2):
 
 
 # ── 1. autopsia ───────────────────────────────────────────────────────────
+DIMS = (('por_amplitud', 'breadth', [-1, 30, 45, 60, 75, 101], ['< 30 %', '30-45 %', '45-60 %', '60-75 %', '> 75 %'], 'amplitud del mercado'),
+        ('por_señales_del_dia', 'nsig', [0, 2, 4, 8, 16, 10 ** 6], ['1', '2-3', '4-7', '8-15', '16 o más'], 'señales de la regla ese día'),
+        ('por_mercado_20', 'mkt_r20', [-100, -5, -2, 0, 2, 5, 100], ['< −5 %', '−5 a −2 %', '−2 a 0 %', '0 a 2 %', '2 a 5 %', '> 5 %'], 'mercado a 20 sesiones'),
+        ('por_hueco_entrada', 'entry_gap', [-100, -3, -1, 0, 1, 3, 100], ['< −3 %', '−3 a −1 %', '−1 a 0 %', '0 a 1 %', '1 a 3 %', '> 3 %'], 'hueco de la apertura de entrada'),
+        ('por_resultados_est', 'ses_event', [0, 5, 20, 40, 55, 70, 10 ** 6], ['0-4', '5-19', '20-39', '40-54', '55-69', '70 o más'], 'sesiones desde el último día tipo resultados'),
+        ('por_volatilidad', 'atrp', [0, 4, 5, 6, 8, 100], ['< 4 %', '4-5 %', '5-6 %', '6-8 %', '> 8 %'], 'volatilidad'))
+
+
 def autopsy(T) -> Dict:
     net = T['net'].to_numpy()
     loss = T['loss'].to_numpy().astype(bool)
@@ -237,12 +245,8 @@ def autopsy(T) -> Dict:
     dow = pd.to_datetime(T['date']).dt.dayofweek.to_numpy()
     T2['dow'] = dow
     out['por_dia_semana'] = [{'grupo': ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'][int(d_)], 'n': int(len(g)), 'pierden': _r(100 * g['loss'].mean(), 1), 'neto_medio': _r(g['net'].mean(), 2)} for d_, g in T2.groupby('dow')]
-    out['por_amplitud'] = grp('breadth', [-1, 30, 45, 60, 75, 101], ['< 30 %', '30-45 %', '45-60 %', '60-75 %', '> 75 %'])
-    out['por_señales_del_dia'] = grp('nsig', [0, 2, 4, 8, 16, 10 ** 6], ['1', '2-3', '4-7', '8-15', '16 o más'])
-    out['por_mercado_20'] = grp('mkt_r20', [-100, -5, -2, 0, 2, 5, 100], ['< −5 %', '−5 a −2 %', '−2 a 0 %', '0 a 2 %', '2 a 5 %', '> 5 %'])
-    out['por_hueco_entrada'] = grp('entry_gap', [-100, -3, -1, 0, 1, 3, 100], ['< −3 %', '−3 a −1 %', '−1 a 0 %', '0 a 1 %', '1 a 3 %', '> 3 %'])
-    out['por_resultados_est'] = grp('ses_event', [0, 5, 20, 40, 55, 70, 10 ** 6], ['0-4', '5-19', '20-39', '40-54', '55-69', '70 o más'])
-    out['por_volatilidad'] = grp('atrp', [0, 4, 5, 6, 8, 100], ['< 4 %', '4-5 %', '5-6 %', '6-8 %', '> 8 %'])
+    for key, col, edges, labels, _ in DIMS:
+        out[key] = grp(col, edges, labels)
     pl = T['prev_loss'].to_numpy()
     se = T['ses_event'].to_numpy()
     nxt = np.where(np.isfinite(se), 63.0 - (se % 63.0), np.nan)                 # sesiones estimadas hasta los próximos resultados (si vuelven cada 63)
@@ -378,14 +382,37 @@ def greedy_filters(T, train: np.ndarray, depth: int = 3) -> List[Tuple[str, str,
     return chosen
 
 
+def _resumen_oos(T, excl: np.ndarray, years: List[int], reps: int = 300, seed: int = 5) -> Optional[Dict]:
+    """Efecto de una exclusión (`excl`) sobre las filas de `years`: neto de las que quedan, perdedoras evitadas y ganadoras perdidas, t agrupada y la comparación con excluir al azar el mismo número de filas cada año."""
+    net = T['net'].to_numpy()
+    loss = T['loss'].to_numpy().astype(bool)
+    year = T['year'].to_numpy()
+    blk = (T['dcode'].to_numpy() // BLOCK).astype(np.int64)
+    ev = np.isin(year, years)
+    if ev.sum() < 300 or not (excl & ev).any():
+        return None
+    d, t = t_diff(net[ev], excl[ev], blk[ev])
+    rng = np.random.default_rng(seed)
+    obs = net[ev & ~excl].mean()
+    sims = np.zeros(reps)
+    idxs = [(np.flatnonzero(year == Y), int((excl & (year == Y)).sum())) for Y in years]
+    for r_ in range(reps):
+        exr = np.zeros(len(T), bool)
+        for ii, k_ in idxs:
+            exr[rng.choice(ii, k_, replace=False)] = True
+        sims[r_] = net[ev & ~exr].mean()
+    return {'n': int(ev.sum()), 'excluidas': int((excl & ev).sum()), 'pct_excluidas': _r(100 * (excl & ev).sum() / ev.sum(), 1), 'neto_todas': _r(net[ev].mean(), 3), 'neto_quedan': _r(obs, 3), 'neto_excluidas': _r(net[excl & ev].mean(), 3),
+            'ganan_todas': _r(100 * (~loss[ev]).mean(), 1), 'ganan_quedan': _r(100 * (~loss[ev & ~excl]).mean(), 1), 'perdedoras_evitadas_pct': _r(100 * (excl & loss).sum() / loss[ev].sum(), 1),
+            'ganadoras_perdidas_pct': _r(100 * (excl & ~loss).sum() / (~loss[ev]).sum(), 1), 'perd_media_quedan': _r(net[ev & ~excl & loss].mean(), 2), 'diferencia': _r(d, 3), 't': _r(t, 2),
+            'azar_neto_quedan_mediana': _r(np.median(sims), 3), 'azar_p95': _r(np.quantile(sims, 0.95), 3), 'p_azar': _r(float((sims >= obs).mean()), 3), 'reps': reps}
+
+
 def filters_oos(T, test_years: List[int], reps: int = 300, seed: int = 5, depth: int = 3) -> Dict:
     """Selección hacia delante: cada año de prueba se eligen los filtros con las filas anteriores (menos PURGE_DAYS) y se aplican a ese año. Se compara con excluir el mismo número de filas al azar."""
     import pandas as pd
     net = T['net'].to_numpy()
-    loss = T['loss'].to_numpy().astype(bool)
     year = T['year'].to_numpy()
     dates = pd.to_datetime(T['date']).to_numpy()
-    blk = (T['dcode'].to_numpy() // BLOCK).astype(np.int64)
     excl = np.zeros(len(T), bool)
     per_year = []
     for Y in test_years:
@@ -402,26 +429,10 @@ def filters_oos(T, test_years: List[int], reps: int = 300, seed: int = 5, depth:
         excl |= ex
         per_year.append({'año': int(Y), 'n': int(te.sum()), 'excluidas': int(ex.sum()), 'neto_todas': _r(net[te].mean()), 'neto_quedan': _r(net[te & ~ex].mean()) if (te & ~ex).any() else None,
                          'neto_excluidas': _r(net[ex].mean()) if ex.any() else None, 'filtros': [{'txt': _ftxt(f, s_, c_), 't_train': _r(t_, 1), 'n_train': int(n_)} for f, s_, c_, t_, n_ in ch]})
-    ev = np.isin(year, [p['año'] for p in per_year])
     out: Dict = {'por_año': per_year}
-    if ev.sum() < 300 or not excl.any():
-        out['resumen'] = None
-        return out
-    d, t = t_diff(net[ev], excl[ev], blk[ev])
-    rng = np.random.default_rng(seed)
-    obs = net[ev & ~excl].mean()
-    sims = np.zeros(reps)
-    idxs = [(np.flatnonzero(year == Y), int((excl & (year == Y)).sum())) for Y in [p['año'] for p in per_year]]
-    for r_ in range(reps):
-        exr = np.zeros(len(T), bool)
-        for ii, k_ in idxs:
-            exr[rng.choice(ii, k_, replace=False)] = True
-        sims[r_] = net[ev & ~exr].mean()
-    out['resumen'] = {'n': int(ev.sum()), 'excluidas': int(excl.sum()), 'pct_excluidas': _r(100 * excl.sum() / ev.sum(), 1), 'neto_todas': _r(net[ev].mean(), 3), 'neto_quedan': _r(obs, 3), 'neto_excluidas': _r(net[excl].mean(), 3),
-                      'ganan_todas': _r(100 * (~loss[ev]).mean(), 1), 'ganan_quedan': _r(100 * (~loss[ev & ~excl]).mean(), 1), 'perdedoras_evitadas_pct': _r(100 * (excl & loss).sum() / loss[ev].sum(), 1),
-                      'ganadoras_perdidas_pct': _r(100 * (excl & ~loss).sum() / (~loss[ev]).sum(), 1), 'perd_media_quedan': _r(net[ev & ~excl & loss].mean(), 2), 'diferencia': _r(d, 3), 't': _r(t, 2),
-                      'azar_neto_quedan_mediana': _r(np.median(sims), 3), 'azar_p95': _r(np.quantile(sims, 0.95), 3), 'p_azar': _r(float((sims >= obs).mean()), 3), 'reps': reps}
-    out['excl'] = excl
+    out['resumen'] = _resumen_oos(T, excl, [p['año'] for p in per_year], reps, seed)
+    if out['resumen']:
+        out['excl'] = excl
     return out
 
 
@@ -476,6 +487,95 @@ def tree_oos(T, split: int, test_years: List[int], depth: int = 3, min_leaf: int
                                 'neto_excluidas': _r(net[excl].mean(), 3), 'perdedoras_evitadas_pct': _r(100 * (excl & loss).sum() / loss[ev].sum(), 1), 'ganadoras_perdidas_pct': _r(100 * (excl & ~loss).sum() / (~loss[ev]).sum(), 1),
                                 'diferencia': _r(d, 3), 't': _r(t, 2)}
     out['excl'] = excl
+    return out
+
+
+MIN_BUCKET = 100               # operaciones mínimas de un tipo de condición en el entrenamiento para poder excluirlo
+CUBOS = {                      # variantes fijadas de antemano: (neto medio máximo del tipo de condición en el entrenamiento, en cuántas variables debe caer la fila, texto)
+    'neto1': (1.0, 1, 'se excluye todo tipo de condición con neto medio < +1,0 % en el entrenamiento'),
+    'neto05': (0.5, 1, 'igual, con el umbral en +0,5 %'),
+    'neto1_dos': (1.0, 2, 'igual que la primera, pero la operación debe caer en DOS tipos malos a la vez')}
+
+
+def cubo_ids(T) -> Dict[str, Tuple[np.ndarray, List[str]]]:
+    """Cada variable de las tablas de la autopsia (más el mes y el día de la semana) troceada en tipos de condición: por fila, el número del tramo (−1 si falta el dato)."""
+    import pandas as pd
+    out = {}
+    for _, col, edges, labels, txt in DIMS:
+        v = T[col].to_numpy().astype(np.float64)
+        ids = np.full(len(T), -1, np.int8)
+        for j, (lo, hi) in enumerate(zip(edges[:-1], edges[1:])):
+            ids[np.isfinite(v) & (v >= lo) & (v < hi)] = j
+        out[txt] = (ids, labels)
+    d = pd.to_datetime(T['date'])
+    out['mes del año'] = ((d.dt.month.to_numpy() - 1).astype(np.int8), [str(m_) for m_ in range(1, 13)])
+    out['día de la semana'] = (np.clip(d.dt.dayofweek.to_numpy(), 0, 4).astype(np.int8), ['lun', 'mar', 'mié', 'jue', 'vie'])
+    return out
+
+
+def malos_cubos(T, ids: Dict[str, Tuple[np.ndarray, List[str]]], train: np.ndarray, thr: float) -> List[Tuple[str, int, int, float]]:
+    """Tipos de condición con al menos MIN_BUCKET operaciones en `train` y neto medio por debajo de `thr`: (variable, tramo, n, neto medio)."""
+    net = T['net'].to_numpy()
+    out = []
+    for dim, (b_, labels) in ids.items():
+        for j in range(len(labels)):
+            m = train & (b_ == j)
+            n = int(m.sum())
+            if n >= MIN_BUCKET and net[m].mean() < thr:
+                out.append((dim, j, n, float(net[m].mean())))
+    return out
+
+
+def excl_cubos(ids: Dict[str, Tuple[np.ndarray, List[str]]], bad: List[Tuple[str, int, int, float]], need: int) -> np.ndarray:
+    """Filas que caen en al menos `need` de los tipos de condición malos (cada variable cuenta una vez como mucho)."""
+    hits = np.zeros(len(next(iter(ids.values()))[0]), np.int8)
+    for dim, j, _, _ in bad:
+        hits += (ids[dim][0] == j)
+    return hits >= need
+
+
+def cubos_oos(T, test_years: List[int], reps: int = 300, seed: int = 5) -> Dict:
+    """Excluir los tipos de condición que rinden poco, elegidos hacia delante: cada año de prueba se miran las filas anteriores (menos PURGE_DAYS), se trocean las variables de las tablas de la autopsia
+    (amplitud, señales del día, mercado, hueco, resultados, volatilidad, mes y día de la semana) y se excluyen las filas que caen en un tramo con neto medio por debajo del umbral. Se compara con excluir al azar
+    el mismo número de filas. «a_posteriori» elige los tramos con TODOS los años y se aplica a los mismos años: es el techo optimista de la idea, no una cifra utilizable."""
+    import pandas as pd
+    ids = cubo_ids(T)
+    net = T['net'].to_numpy()
+    year = T['year'].to_numpy()
+    dates = pd.to_datetime(T['date']).to_numpy()
+    txt = lambda bad: [f'{d_}: {ids[d_][1][j]}' for d_, j, _, _ in bad]
+
+    def fila(Y: int, ex: np.ndarray, bad) -> Dict:
+        te = year == Y
+        return {'año': int(Y), 'n': int(te.sum()), 'excluidas': int(ex.sum()), 'neto_todas': _r(net[te].mean()), 'neto_quedan': _r(net[te & ~ex].mean()) if (te & ~ex).any() else None,
+                'neto_excluidas': _r(net[ex].mean()) if ex.any() else None, 'cubos': txt(bad)}
+    out: Dict = {}
+    excls: Dict[str, np.ndarray] = {}
+    years: List[int] = []
+    for nm, (thr, need, tx) in CUBOS.items():
+        excl = np.zeros(len(T), bool)
+        per_year = []
+        for Y in test_years:
+            cut = np.datetime64(f'{Y}-01-01') - np.timedelta64(PURGE_DAYS, 'D')
+            train = dates < cut
+            te = year == Y
+            if train.sum() < 1500 or te.sum() < 100:
+                continue
+            bad = malos_cubos(T, ids, train, thr)
+            ex = excl_cubos(ids, bad, need) & te
+            excl |= ex
+            per_year.append(fila(Y, ex, bad))
+        years = [p['año'] for p in per_year] or years
+        out[nm] = {'txt': tx, 'por_año': per_year, 'resumen': _resumen_oos(T, excl, [p['año'] for p in per_year], reps, seed)}
+        excls[nm] = excl
+    if years:
+        bad = malos_cubos(T, ids, np.ones(len(T), bool), 1.0)
+        ex_all = excl_cubos(ids, bad, 1)
+        excl = ex_all & np.isin(year, years)
+        out['a_posteriori'] = {'txt': 'techo optimista: tipos malos elegidos con TODOS los años y aplicados a los mismos años (mirando el resultado)', 'por_año': [fila(Y, excl & (year == Y), bad) for Y in years],
+                               'resumen': _resumen_oos(T, excl, years, reps, seed)}
+        excls['a_posteriori'] = excl
+    out['excl'] = excls
     return out
 
 
@@ -535,11 +635,11 @@ def symbols(T, split: int) -> Dict:
             'valores_con_historial': int(len(g)), 'corr_tasa_dev_test': _r(corr, 2) if corr is not None else None, 'valores_comparables': int(len(j))}
 
 
-def portfolio(D, Wd, T, excl_greedy: np.ndarray, excl_tree: np.ndarray, test_years: List[int], reps: int = 20, seed: int = 9) -> Dict:
-    """Los filtros hacia delante aplicados a la cartera simulada (plan de 5 y todas las señales), solo en los años de prueba, frente a la cartera sin filtrar y a filtros al azar con el mismo número de filas.
-    Orden de entrada: por volatilidad (el modelo de fiabilidad no entra aquí, para que sea comparable año a año)."""
-    big = 10 ** 6
-    rng = np.random.default_rng(seed)
+PESOS = (('base', 'riesgo 1 % siempre', 1.0, 1.0), ('x2_x1', 'pánico ×2, resto ×1', 2.0, 1.0), ('x2_x05', 'pánico ×2, resto ×0,5', 2.0, 0.5), ('x3_x05', 'pánico ×3, resto ×0,5', 3.0, 0.5), ('x1_x05', 'pánico ×1, resto ×0,5', 1.0, 0.5))
+
+
+def _port_setup(D, Wd, T, test_years: List[int]):
+    """Filas de la regla en el simulador, año de cada día, primer día de prueba y fila del panel de cada operación de la tabla."""
     mask = Wd.rule_mask(list(RULE[:2]))
     years_d = np.zeros(Wd.nd, int)
     years_d[D.dcode] = D.year
@@ -549,11 +649,36 @@ def portfolio(D, Wd, T, excl_greedy: np.ndarray, excl_tree: np.ndarray, test_yea
         rowid[(int(s_), int(b_))] = r_
     symidx = {s_: j for j, s_ in enumerate(D.syms)}
     prow = np.array([rowid[(symidx[s_], int(b_))] for s_, b_ in zip(T['sym'], T['bar'])])
+    return mask, years_d, d0, prow
 
+
+def _keep_fn(D, prow: np.ndarray):
     def keep(excl: np.ndarray) -> np.ndarray:
         k = np.ones(len(D.sym), bool)
         k[prow[excl]] = False
         return k
+    return keep
+
+
+def _panico(D) -> np.ndarray:
+    """Filas en régimen de pánico: amplitud del mercado < 30 %, mercado a 20 sesiones < −5 % o 16+ señales de la regla ese día (definido mirando la tabla)."""
+    bre = D.breadth_d[D.dcode] * 100.0
+    mkt = D.mkt_r20_d[D.dcode] * 100.0
+    cond = search.conditions(D)
+    rm = np.ones(len(D.sym), bool)
+    for k_ in RULE:
+        rm &= cond[k_]
+    nsig_row = np.bincount(D.dcode[rm], minlength=D.nd)[D.dcode]
+    return (bre < 30) | (mkt < -5) | (nsig_row >= 16)
+
+
+def portfolio(D, Wd, T, excl_greedy: np.ndarray, excl_tree: np.ndarray, test_years: List[int], reps: int = 20, seed: int = 9) -> Dict:
+    """Los filtros hacia delante aplicados a la cartera simulada (plan de 5 y todas las señales), solo en los años de prueba, frente a la cartera sin filtrar y a filtros al azar con el mismo número de filas.
+    Orden de entrada: por volatilidad (el modelo de fiabilidad no entra aquí, para que sea comparable año a año)."""
+    big = 10 ** 6
+    rng = np.random.default_rng(seed)
+    mask, years_d, d0, prow = _port_setup(D, Wd, T, test_years)
+    keep = _keep_fn(D, prow)
     out: Dict = {'desde': str(D.date[int(np.flatnonzero(D.dcode == d0)[0])]) if (D.dcode == d0).any() else None}
     cases = (('plan', {}), ('todas', {'max_pos': big, 'corr_min': 2.0}))
     sims = {}
@@ -595,14 +720,7 @@ def portfolio(D, Wd, T, excl_greedy: np.ndarray, excl_tree: np.ndarray, test_yea
                 ancho[nm][ex_]['mismo_riesgo'] = cartera.metrics(s6['eq'], yrs, s6['trades'], s6['expo'])
     out['stops_anchos'] = ancho
     # (b) régimen de pánico: operar solo en él (o fuera de él), en la ventana de prueba; mirado DESPUÉS de ver la tabla, así que no es evidencia, solo cuánto cuenta en una cuenta
-    bre = D.breadth_d[D.dcode] * 100.0
-    mkt = D.mkt_r20_d[D.dcode] * 100.0
-    cond = search.conditions(D)
-    rm = np.ones(len(D.sym), bool)
-    for k_ in RULE:
-        rm &= cond[k_]
-    nsig_row = np.bincount(D.dcode[rm], minlength=D.nd)[D.dcode]
-    panico = (bre < 30) | (mkt < -5) | (nsig_row >= 16)
+    panico = _panico(D)
     reg = {}
     for nm, kw in cases:
         reg[nm] = {}
@@ -612,14 +730,75 @@ def portfolio(D, Wd, T, excl_greedy: np.ndarray, excl_tree: np.ndarray, test_yea
     out['regimen'] = reg
     # (c) arriesgar según el régimen: más en pánico, menos en días normales (pesos fijados antes de simular; mismo plan de 5 y todas las señales; el régimen se definió mirando la tabla)
     sizing = {}
-    pesos = (('base', 'riesgo 1 % siempre', 1.0, 1.0), ('x2_x1', 'pánico ×2, resto ×1', 2.0, 1.0), ('x2_x05', 'pánico ×2, resto ×0,5', 2.0, 0.5), ('x3_x05', 'pánico ×3, resto ×0,5', 3.0, 0.5), ('x1_x05', 'pánico ×1, resto ×0,5', 1.0, 0.5))
     for nm, kw in cases:
         sizing[nm] = {}
-        for key, txt, a_, b_ in pesos:
+        for key, txt, a_, b_ in PESOS:
             rr = np.where(panico, a_, b_)
             s8 = cartera.simulate(Wd, mask, EXIT, 'vol', rng, d0=d0, risk_rows=rr, **kw)
             sizing[nm][key] = {'txt': txt, **cartera.metrics(s8['eq'], yrs, s8['trades'], s8['expo'])}
     out['sizing'] = sizing
+    return out
+
+
+SALIDAS_C = (('esc', 2.5), ('esc4', 4.0), ('esc5', 5.0))          # escalera con el stop inicial de 2,5 / 4 / 5 ATR, siempre con el mismo riesgo real (posición más pequeña cuanto más ancho el stop)
+TAMAÑOS_C = ('base', 'x2_x05', 'x2_x1')
+CONTROL_C = (('esc', 'base'), ('esc5', 'x2_x05'))                  # combinaciones en las que se compara el filtro con excluir lo mismo al azar
+IGUAL_C = (('ninguno', 'esc', 'base'), ('neto1', 'esc', 'base'), ('ninguno', 'esc5', 'base'), ('ninguno', 'esc', 'x2_x05'), ('ninguno', 'esc5', 'x2_x05'), ('neto1', 'esc5', 'base'), ('neto1', 'esc', 'x2_x05'), ('neto1', 'esc5', 'x2_x05'))
+MULT_C = (0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0)
+
+
+def combinaciones(D, Wd, T, excls: Dict[str, np.ndarray], test_years: List[int], reps: int = 12, seed: int = 11) -> Dict:
+    """Filtro de tipos de condición × salida (stop inicial) × riesgo por régimen en la cartera simulada (plan de 5 y todas las señales; orden por volatilidad; ventana de prueba). Para los filtros hacia delante,
+    el control de excluir al azar el mismo número de filas por año con la misma salida y el mismo riesgo; y, para las combinaciones de IGUAL_C, la rentabilidad anual con el riesgo escalado hasta tener la
+    misma caída máxima que el plan actual (escalera con el 1 % de riesgo siempre y sin filtro)."""
+    big = 10 ** 6
+    rng = np.random.default_rng(seed)
+    mask, years_d, d0, prow = _port_setup(D, Wd, T, test_years)
+    keep = _keep_fn(D, prow)
+    panico = _panico(D)
+    peso = {k: (a_, b_) for k, _, a_, b_ in PESOS}
+    atr = dict(SALIDAS_C)
+    year_t = T['year'].to_numpy()
+    forward = [k for k in excls if k != 'a_posteriori']
+    kps = {'ninguno': np.ones(len(D.sym), bool), **{k: keep(v) for k, v in excls.items()}}
+    yr_rows = {Y: np.flatnonzero(year_t == Y) for Y in test_years}
+
+    def sim(kw: Dict, kp: np.ndarray, ek: str, sk: str, mult: float = 1.0) -> Dict:
+        a_, b_ = peso[sk]
+        s = cartera.simulate(Wd, mask & kp, ek, 'vol', rng, d0=d0, risk=cartera.RISK_PCT * 2.5 / atr[ek] * mult, risk_rows=np.where(panico, a_, b_), **kw)
+        return cartera.metrics(s['eq'], years_d[s['d0']:s['dend'] + 1], s['trades'], s['expo'])
+
+    def azar(fk: str) -> np.ndarray:
+        exr = np.zeros(len(T), bool)
+        for Y, ii in yr_rows.items():
+            k_ = int((excls[fk] & (year_t == Y)).sum())
+            if k_ and len(ii) > k_:
+                exr[rng.choice(ii, k_, replace=False)] = True
+        return keep(exr)
+    out: Dict = {'rejilla': {}, 'azar': {}, 'igual_caida': {}}
+    for nm, kw in (('plan', {}), ('todas', {'max_pos': big, 'corr_min': 2.0})):
+        g = out['rejilla'][nm] = {}
+        for fk, kp in kps.items():
+            g[fk] = {ek: {sk: sim(kw, kp, ek, sk) for sk in TAMAÑOS_C} for ek, _ in SALIDAS_C}
+        out['azar'][nm] = {}
+        for fk in forward:
+            out['azar'][nm][fk] = {}
+            for ek, sk in CONTROL_C:
+                ms = [sim(kw, azar(fk), ek, sk) for _ in range(reps)]
+                obs = g[fk][ek][sk]
+                an, mar = np.array([m['anual'] for m in ms]), np.array([m['mar'] or 0.0 for m in ms])
+                out['azar'][nm][fk][f'{ek}|{sk}'] = {'anual': {'mediana': _r(np.median(an)), 'p05': _r(np.quantile(an, 0.05)), 'p95': _r(np.quantile(an, 0.95)), 'p': _r(float((an >= obs['anual']).mean()), 3)},
+                                                    'caida_max_mediana': _r(np.median([m['caida_max'] for m in ms])), 'mar_mediana': _r(np.median(mar)), 'p_mar': _r(float((mar >= (obs['mar'] or 0.0)).mean()), 3), 'n': reps}
+        target = -g['ninguno']['esc']['base']['caida_max']
+        ig = out['igual_caida'][nm] = {'caida_objetivo': _r(-target, 1)}
+        for fk, ek, sk in IGUAL_C:
+            if fk not in kps:
+                continue
+            pts = [(mu, -m['caida_max'], m['anual']) for mu in MULT_C for m in [sim(kw, kps[fk], ek, sk, mu)]]
+            mu_, dd_, an_ = (np.array(c) for c in zip(*sorted(pts, key=lambda p_: p_[1])))
+            ok = bool(dd_[0] <= target <= dd_[-1])
+            ig[f'{fk}|{ek}|{sk}'] = {'anual': _r(float(np.interp(target, dd_, an_))) if ok else None, 'multiplicador': _r(float(np.interp(target, dd_, mu_)), 2) if ok else None,
+                                     'puntos': [{'riesgo_x': _r(mu, 2), 'caida': _r(-dd, 1), 'anual': _r(an)} for mu, dd, an in pts]}
     return out
 
 
@@ -654,6 +833,8 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
     to = tree_oos(T, split, test_years)
     out['filtros_hacia_delante'] = {k_: v for k_, v in fo.items() if k_ != 'excl'}
     out['arbol'] = {k_: v for k_, v in to.items() if k_ != 'excl'}
+    cu = cubos_oos(T, test_years, reps, seed)
+    out['cubos'] = {k_: v for k_, v in cu.items() if k_ != 'excl'}
     out['salidas'] = exit_variants(T, split)
     out['valores'] = symbols(T, split)
     if verbose:
@@ -661,6 +842,8 @@ def analyze(bars: Dict[str, Dict[str, np.ndarray]], workers: int = 1, k: int = m
     if port and 'excl' in fo and 'excl' in to:
         Wd = cartera.World(D, W)
         out['cartera'] = portfolio(D, Wd, T, fo['excl'], to['excl'], test_years, reps=20)
+        if cu['excl']:
+            out['cartera']['combinaciones'] = combinaciones(D, Wd, T, cu['excl'], test_years)
     out['_tabla_filas'] = int(len(T))
     return out
 
@@ -734,6 +917,23 @@ def report(ev: Dict) -> str:
         s_ = t_['hacia_delante']
         L.append(f"   Hacia delante (se excluyen las hojas que en el entrenamiento rendían menos de la mitad de la media): {s_['excluidas']:,} de {s_['n']:,} excluidas ({s_['pct_excluidas']} %) · neto {s_['neto_todas']:+.3f} % → {s_['neto_quedan']:+.3f} % (excluidas {s_['neto_excluidas']:+.3f} %) · evita el {s_['perdedoras_evitadas_pct']} % de perdedoras y pierde el {s_['ganadoras_perdidas_pct']} % de ganadoras · t {s_['t']}")
     L.append('')
+    cb = ev.get('cubos') or {}
+    if cb:
+        L.append(f"TIPOS DE CONDICIÓN CON POCO NETO, EXCLUIDOS HACIA DELANTE (cada año con lo anterior menos {m['purga_dias']} días; tramos de amplitud, señales del día, mercado, hueco, resultados, volatilidad, mes y día de la semana con ≥ {MIN_BUCKET} operaciones)")
+        for nm, v in cb.items():
+            L.append(f"  [{nm}] {v['txt']}")
+            prev = None
+            for r in v['por_año']:
+                lst = ' · '.join(r['cubos']) or 'ningún tipo'
+                L.append(f"   {r['año']}: {r['excluidas']} de {r['n']} excluidas · neto todas {r['neto_todas']:+.2f} % · quedan {_f(r['neto_quedan'], '+.2f')} % · excluidas {_f(r['neto_excluidas'], '+.2f')} % · " + ('los mismos tipos' if lst == prev else lst))
+                prev = lst
+            s_ = v.get('resumen')
+            if s_:
+                L += [f"   CONJUNTO FUERA DE MUESTRA: {s_['n']:,} operaciones, {s_['excluidas']:,} excluidas ({s_['pct_excluidas']} %) · neto todas {s_['neto_todas']:+.3f} % → quedan {s_['neto_quedan']:+.3f} % (excluidas {s_['neto_excluidas']:+.3f} %) · ganan {s_['ganan_todas']} % → {s_['ganan_quedan']} %",
+                      f"   evita el {s_['perdedoras_evitadas_pct']} % de las perdedoras y pierde el {s_['ganadoras_perdidas_pct']} % de las ganadoras · diferencia {s_['diferencia']:+.3f} % (t {s_['t']}) · excluir lo mismo al azar deja {s_['azar_neto_quedan_mediana']:+.3f} % (p95 {s_['azar_p95']:+.3f} %): p = {s_['p_azar']}"]
+            else:
+                L.append('   sin operaciones excluidas o sin datos suficientes')
+        L.append('')
     sa = ev['salidas']
     L.append('VARIANTES DE SALIDA (mismas filas; fijadas de antemano; diferencia con la escalera por operación)')
     for r in sa['variantes']:
@@ -770,6 +970,28 @@ def report(ev: Dict) -> str:
         for nm, d_ in ev['cartera']['regimen'].items():
             for k_, v in d_.items():
                 L.append(f"   {nm:6s} {k_:11s} {v['anual']:+6.1f} %/año · caída {v['caida_max']:+5.1f} % · {v['operaciones']} operaciones · ganan {v['ganan']} % · invertido {v['exposicion_media']:.0f} % · por año: " + ' '.join(f"{str(a_)[2:]}:{r_:+.0f}" for a_, r_ in v['por_año'].items()))
+    cb2 = ev.get('cartera', {}).get('combinaciones')
+    if cb2:
+        lin = lambda v: f"{v['anual']:+6.1f} %/año · caída {v['caida_max']:+5.1f} % · Sharpe {v['sharpe']} · anual/caída {v['mar']} · invertido {v['exposicion_media']:.0f} % · {v['operaciones']} op."
+        L += ['', 'COMBINAR FILTRO DE CONDICIONES × SALIDA × RIESGO POR RÉGIMEN EN LA CARTERA (ventana de prueba; orden por volatilidad; esc = stop 2,5 ATR, esc4 = 4 ATR, esc5 = 5 ATR, siempre con el mismo riesgo real; x2_x05 = pánico ×2 y resto ×0,5; x2_x1 = pánico ×2 y resto ×1)']
+        for nm, g in cb2['rejilla'].items():
+            for fk, d_ in g.items():
+                for ek, e_ in d_.items():
+                    for sk, v in e_.items():
+                        L.append(f"   {nm:6s} {fk:12s} {ek:5s} {sk:7s} {lin(v)}")
+        L += ['', 'CONTROL DE AZAR: el filtro hacia delante frente a excluir lo mismo al azar, con la misma salida y el mismo riesgo']
+        for nm, d_ in cb2['azar'].items():
+            for fk, e_ in d_.items():
+                for key, z in e_.items():
+                    ek, sk = key.split('|')
+                    o = cb2['rejilla'][nm][fk][ek][sk]
+                    L.append(f"   {nm:6s} {fk:10s} {ek:5s} {sk:7s} filtro {o['anual']:+5.1f} %/año caída {o['caida_max']:+5.1f} % anual/caída {o['mar']} | azar {z['anual']['mediana']:+5.1f} %/año (p05 {z['anual']['p05']:+.1f}, p95 {z['anual']['p95']:+.1f}) caída {z['caida_max_mediana']:+5.1f} % anual/caída {z['mar_mediana']} | p(azar ≥ filtro): anual {z['anual']['p']} · anual/caída {z['p_mar']} ({z['n']} reps)")
+        L += ['', 'A IGUAL CAÍDA: rentabilidad anual con el riesgo escalado hasta la caída máxima del plan actual (interpolada entre riesgos ×0,5 y ×6)']
+        for nm, d_ in cb2['igual_caida'].items():
+            L.append(f"   {nm}: caída objetivo {d_['caida_objetivo']:+.1f} %")
+            for key, v in d_.items():
+                if key != 'caida_objetivo':
+                    L.append(f"      {key:22s} " + (f"{v['anual']:+5.1f} %/año con el riesgo ×{v['multiplicador']}" if v['anual'] is not None else 'fuera del rango de riesgos probado') + '   [' + ' · '.join(f"×{x['riesgo_x']}: {x['anual']:+.1f} % / {x['caida']:+.1f} %" for x in v['puntos']) + ']')
     return '\n'.join(L)
 
 

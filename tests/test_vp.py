@@ -1257,6 +1257,27 @@ def test_autopsia():
         assert tr['hacia_delante']['neto_quedan'] > tr['hacia_delante']['neto_todas'] and 'r1' in tr['reglas'], tr.get('hacia_delante')
     finally:
         A.FEATS = old_feats
+    # 2b. tipos de condición con poco neto: un tramo malo plantado se excluye hacia delante y mejora fuera de muestra; en ruido no hay mejora
+    def synth_c(effect: float, seed: int, n: int = 14000):
+        r = np.random.default_rng(seed)
+        years = r.integers(2017, 2027, n)
+        day = (years - 2017) * 252 + r.integers(0, 252, n)
+        T = pd.DataFrame({'year': years, 'date': [str(np.datetime64('2017-01-02') + np.timedelta64(int(d) * 7 // 5, 'D')) for d in day], 'dcode': day})
+        T['breadth'], T['nsig'], T['mkt_r20'] = r.uniform(0, 100, n), r.integers(1, 20, n).astype(float), r.normal(0, 4, n)
+        T['entry_gap'], T['ses_event'], T['atrp'] = r.normal(0, 2, n), r.integers(0, 90, n).astype(float), r.uniform(2, 9, n)
+        T['net'] = r.normal(2.0, 6.0, n) - effect * ((T['breadth'] >= 45) & (T['breadth'] < 60))
+        T['loss'] = (T['net'] <= 0).astype(np.int8)
+        return T
+    cp = A.cubos_oos(synth_c(5.0, 21), [2020, 2021, 2022, 2023, 2024, 2025], reps=60, seed=2)
+    assert set(cp) == {'neto1', 'neto05', 'neto1_dos', 'a_posteriori', 'excl'} and cp['neto1']['resumen'], list(cp)
+    r1 = cp['neto1']['resumen']
+    assert r1['neto_quedan'] > r1['neto_todas'] + 0.3 and r1['p_azar'] <= 0.05 and any('amplitud del mercado: 45-60 %' in c for p_ in cp['neto1']['por_año'] for c in p_['cubos']), r1
+    assert cp['excl']['neto1'].sum() > 500 and cp['excl']['a_posteriori'].sum() >= cp['excl']['neto1_dos'].sum() - 1
+    cn = A.cubos_oos(synth_c(0.0, 22), [2020, 2021, 2022, 2023, 2024, 2025], reps=60, seed=2)
+    rn = cn['neto1']['resumen']
+    assert rn is None or (rn['neto_quedan'] - rn['neto_todas'] < 0.5 and rn['p_azar'] > 0.02), rn          # en ruido, excluir tipos «malos» no mejora fuera de muestra
+    ids_ = A.cubo_ids(synth_c(0.0, 23, 3000))
+    assert ids_['amplitud del mercado'][0].min() >= 0 and ids_['mes del año'][0].max() <= 11 and ids_['día de la semana'][0].max() <= 4
     # 3. recorrido completo con datos sintéticos (reversión plantada: la regla «cae a 5 sesiones» tiene pérdidas y ganancias)
     bars = {f'S{j}': _walk_ar(1500, 5000 + j, 0.25) for j in range(40)}
     ev = A.analyze(bars, workers=1, k=40, rule=('cae5',), reps=40, port=True)
@@ -1266,8 +1287,17 @@ def test_autopsia():
     sz = ev['cartera']['sizing']['plan']                                                  # arriesgar según el régimen: pesos 1 en todas partes dan lo mismo que la base; el doble en todas partes sube el tamaño
     assert abs(sz['base']['anual'] - ev['cartera']['carteras']['plan']['sin_filtro']['anual']) < 1e-9 and sz['x2_x1']['tamaño_medio'] >= sz['base']['tamaño_medio'] and sz['x1_x05']['tamaño_medio'] <= sz['base']['tamaño_medio'], sz
     assert set(ev['cartera']['stops_anchos']['plan']) == {'esc', 'esc3', 'esc4', 'esc5'} and 'mismo_riesgo' in ev['cartera']['stops_anchos']['plan']['esc4']
+    assert set(ev['cubos']) == {'neto1', 'neto05', 'neto1_dos', 'a_posteriori'}
+    cm = ev['cartera'].get('combinaciones')
+    if cm:                                                                                      # filtro «ninguno», escalera actual y riesgo 1 % = la cartera sin filtrar de siempre
+        for nm in ('plan', 'todas'):
+            assert abs(cm['rejilla'][nm]['ninguno']['esc']['base']['anual'] - ev['cartera']['carteras'][nm]['sin_filtro']['anual']) < 1e-9
+            assert set(cm['rejilla'][nm]['ninguno']) == {'esc', 'esc4', 'esc5'} and set(cm['rejilla'][nm]['ninguno']['esc5']) == {'base', 'x2_x05', 'x2_x1'}
+            ig = cm['igual_caida'][nm]['ninguno|esc|base']                                      # a la caída del propio plan actual, la rentabilidad es la del plan actual
+            assert ig['anual'] is None or abs(ig['anual'] - ev['cartera']['carteras'][nm]['sin_filtro']['anual']) < 0.5 and abs(ig['multiplicador'] - 1.0) < 0.05, ig
     txt = A.report(ev)
-    assert 'CÓMO PIERDEN' in txt and 'FILTROS ELEGIDOS HACIA DELANTE' in txt and 'VARIANTES DE SALIDA' in txt
+    assert 'CÓMO PIERDEN' in txt and 'FILTROS ELEGIDOS HACIA DELANTE' in txt and 'VARIANTES DE SALIDA' in txt and 'TIPOS DE CONDICIÓN CON POCO NETO' in txt
+    assert not cm or ('COMBINAR FILTRO DE CONDICIONES' in txt and 'A IGUAL CAÍDA' in txt)
     print(f"ok · autopsia: camino coherente con el simulador, patrón plantado hallado y confirmado fuera de muestra (neto {sm['neto_todas']:+.2f} → {sm['neto_quedan']:+.2f}), nada en ruido, recorrido completo ({a['n']} operaciones)")
 
 
