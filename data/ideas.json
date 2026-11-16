@@ -36,6 +36,15 @@
     "efecto": "Movimientos de empresa, sin un hecho nuevo que cambie el cuadro. Esta semana quedan los resultados de las cadenas de consumo, las actas de la Fed y las ventas minoristas.",
     "tono": "neutro"
    }
+  ],
+  "hoy": {
+   "accion": "vigilar",
+   "texto": "Nada que comprar todavía. La idea del control aéreo espera a que alguien en el Congreso se comprometa con los fondos; si pasa, se entra al cierre de ese día."
+  },
+  "cambios": [
+   "La petición de 50.000 millones ya está presentada, pero ningún responsable del Congreso se ha comprometido a tramitarla: el disparador no ha saltado.",
+   "El sindicato de técnicos discute la causa del apagón (dos equipos actualizados ese día, no su antigüedad). Si se confirma, la idea se rompe.",
+   "L3Harris cae un 3 % antes de la apertura; el resto de valores de la idea, casi sin moverse."
   ]
  },
  "ideas": [
@@ -155,7 +164,9 @@
      "t": "CNBC (preapertura)",
      "u": "https://www.cnbc.com/2026/11/16/stocks-moving-the-most-today-live-updates.html"
     }
-   ]
+   ],
+   "caduca": "2026-12-11",
+   "en_contra": "El dinero puede no llegar nunca: es una petición a un Congreso que cambia de manos en enero, y los demócratas ya responden que hay 11.000 millones aprobados sin gastar. Si la investigación concluye que el apagón fue un error de un contratista al cambiar unas líneas, y no cosa de equipos viejos, la urgencia desaparece. Y aunque el dinero llegue, el reparto es desfavorable: la empresa que más cobraría (Peraton) no cotiza, y para RTX, e incluso para Leidos, estos contratos son una parte pequeña de sus ingresos. Lumen sube y baja por su deuda, no por la FAA."
   }
  ],
  "descartes": [
