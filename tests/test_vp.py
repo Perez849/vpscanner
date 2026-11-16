@@ -1196,7 +1196,7 @@ def test_cartera():
 def test_web_ideas():
     """La web tiene dos partes: ideas por coyuntura (principal y vista por defecto) y figuras y velas (secundaria). La regla de impulso ya no está en la web."""
     html = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'index.html'), encoding='utf-8').read()
-    for needle in ("await go(h || 'ideas', null, true)", "(VIEWS[w] || 'ideas')", "['ideas', 'Hoy'], ['train', 'Entrenamiento']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']",
+    for needle in ("await go(h || 'ideas', null, true)", "(VIEWS[w] || 'ideas')", "['ideas', 'Hoy'], ['arch', 'Hemeroteca'], ['train', 'Entrenamiento']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']",
                    'function renderIdeas()', 'function renderTrain()', "'ideas.json'", "'ideas_track.json'", "'ideas_playbook.json'", "'plan_study.json'"):
         assert needle in html, needle
     for gone in ('renderImp', 'impulso.json', 'Regla de impulso'):
@@ -1204,10 +1204,12 @@ def test_web_ideas():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
     D = json.load(open(os.path.join(root, 'ideas.json'), encoding='utf-8'))
     for i in D['ideas']:                                                     # cada idea lleva todo lo que la ficha enseña
-        for k in ('id', 'fecha', 'estado', 'titulo', 'hecho', 'cadena', 'valores', 'en_precio', 'disparador', 'invalidacion', 'horizonte', 'ref'):
+        for k in ('id', 'fecha', 'estado', 'tipo', 'titulo', 'hecho', 'cadena', 'valores', 'en_precio', 'disparador', 'invalidacion', 'en_contra', 'horizonte', 'ref'):
             assert i.get(k), (i.get('id'), k)
         assert i['estado'] in ('vigilancia', 'abierta', 'cerrada') and (i['estado'] == 'vigilancia') == (not i.get('entrada')), i['id']
         assert all(v['sym'] in i['ref'] for v in i['valores']) and 'SPY' in i['ref'], i['id']
+        assert i['estado'] != 'vigilancia' or i.get('caduca'), i['id']          # toda idea en vigilancia lleva fecha de caducidad
+    assert D['sesion'].get('titular') and D['sesion'].get('hoy', {}).get('accion') in ('nada', 'vigilar', 'comprar', 'vender') and D['sesion']['hoy'].get('texto') and isinstance(D['sesion'].get('cambios'), list)
     P = json.load(open(os.path.join(root, 'ideas_playbook.json'), encoding='utf-8'))
     assert P['lecciones'] and P['estudios'] and all(l['veredicto'] in ('dar', 'esperar', 'no') for l in P['lecciones'])
     print('ok · web: ideas por coyuntura como parte principal, chartismo como secundaria; fichas de ideas y lecciones completas')
@@ -1243,8 +1245,27 @@ def test_ideas_casos():
     print('ok · ideas: registro de casos propios (dadas y descartadas) con su resultado a 5, 20 y 60 sesiones')
 
 
+def test_ideas_archivo():
+    """Hemeroteca y caducidad: cada edición se guarda una vez por lectura (reescribir no duplica), el índice va de la más reciente a la más antigua, y una idea en vigilancia con la fecha pasada se señala."""
+    import tempfile
+    from vp import ideas
+    D = {'sesion': {'cuando': '2026-11-16T13:22:05Z', 'tipo': 'preapertura', 'titular': 'Uno *dos*', 'hoy': {'accion': 'nada', 'texto': 'Nada'}}, 'ideas': [{'id': 'a', 'estado': 'vigilancia', 'caduca': '2026-11-20'}, {'id': 'b', 'estado': 'cerrada'}]}
+    with tempfile.TemporaryDirectory() as tmp:
+        assert ideas.archivar(D, {'ideas': {}}, tmp) == '2026-11-16-1322'
+        ideas.archivar(D, {'ideas': {}}, tmp)
+        D2 = {**D, 'sesion': {**D['sesion'], 'cuando': '2026-11-16T20:10:00Z'}}
+        ideas.archivar(D2, {'ideas': {}}, tmp)
+        idx = json.load(open(os.path.join(tmp, 'ediciones', 'index.json'), encoding='utf-8'))
+        assert [x['id'] for x in idx] == ['2026-11-16-2010', '2026-11-16-1322'] and idx[1]['titular'] == 'Uno dos' and idx[1]['vivas'] == 1, idx
+        assert json.load(open(os.path.join(tmp, 'ediciones', '2026-11-16-1322.json'), encoding='utf-8'))['ideas']['sesion']['tipo'] == 'preapertura'
+    assert ideas.caducadas(D, '2026-11-20') == [] and ideas.caducadas(D, '2026-11-21') == ['a']
+    r = ideas.score({'id': 'x', 'fecha': '2026-01-05', 'valores': [{'sym': 'AAA'}], 'ref': {'AAA': 100.0, 'SPY': 400.0}, 'entrada': None}, {'AAA': {'2026-01-02': 100.0, '2026-01-05': 110.0, '2026-01-06': 121.0}, 'SPY': {'2026-01-06': 408.0}})
+    assert r['por_valor']['AAA']['serie'] == [100.0, 110.0, 121.0] and r['por_valor']['AAA']['i0'] == 1, r
+    print('ok · ideas: hemeroteca de ediciones, caducidad de las ideas en vigilancia y serie de precios de cada valor')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_ideas, test_ideas_score, test_ideas_casos]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_ideas, test_ideas_score, test_ideas_casos, test_ideas_archivo]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»

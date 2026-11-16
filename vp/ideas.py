@@ -41,6 +41,9 @@ def on_or_before(cl: Dict[str, float], day: Optional[str]) -> Optional[tuple]:
     return (ks[-1], cl[ks[-1]]) if ks else None
 
 
+SERIE = 60
+
+
 def symbols(idea: Dict) -> List[str]:
     return [v['sym'] if isinstance(v, dict) else v for v in idea.get('valores', [])]
 
@@ -57,6 +60,10 @@ def score(idea: Dict, cl: Dict[str, Dict[str, float]]) -> Dict:
         b = on_or_before(c, sal)
         if p0 and b:
             por[s] = {'ref': round(p0, 2), 'ahora': round(b[1], 2), 'pct': round(100 * (b[1] / p0 - 1), 2)}
+            ks = [k for k in sorted(c) if k <= b[0]][-SERIE:]                 # los últimos cierres, para el gráfico de la ficha; i0 = primer cierre desde el día del hecho
+            desde = ent or idea.get('fecha') or ''
+            por[s]['serie'] = [round(c[k], 2) for k in ks]
+            por[s]['i0'] = next((i for i, k in enumerate(ks) if k >= desde), len(ks) - 1)
             hasta = b[0]
     vals = [por[s]['pct'] for s in symbols(idea) if s in por]
     return {'estado': idea.get('estado'), 'desde': ent or idea.get('fecha'), 'hasta': hasta, 'por_valor': {s: v for s, v in por.items() if s != 'SPY'},
@@ -124,6 +131,35 @@ def registro(D: Dict, prev: Dict, B: Dict[str, Dict[str, tuple]]) -> Dict:
     return {'casos': lst, 'resumen': {'dadas': res(True), 'descartadas': res(False)}}
 
 
+def edicion_id(cuando: str) -> str:
+    """'2026-11-16T13:22:05Z' → '2026-11-16-1322' (hora UTC de la lectura)."""
+    return cuando[:10] + '-' + cuando[11:13] + cuando[14:16]
+
+
+def archivar(D: Dict, track: Dict, out: str) -> Optional[str]:
+    """Hemeroteca: guarda la edición completa (ideas y marcador) en data/ediciones/<id>.json y la apunta en el índice. Una edición ya guardada se reescribe (misma lectura corregida), no se duplica."""
+    cuando = (D.get('sesion') or {}).get('cuando')
+    if not cuando:
+        return None
+    eid = edicion_id(cuando)
+    d = os.path.join(out, 'ediciones')
+    os.makedirs(d, exist_ok=True)
+    json.dump({'ideas': D, 'track': track}, open(os.path.join(d, eid + '.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    pi = os.path.join(d, 'index.json')
+    idx = json.load(open(pi, encoding='utf-8')) if os.path.exists(pi) else []
+    ses = D['sesion']
+    fila = {'id': eid, 'cuando': cuando, 'tipo': ses.get('tipo'), 'titular': (ses.get('titular') or '').replace('*', ''), 'hoy': (ses.get('hoy') or {}).get('texto'), 'accion': (ses.get('hoy') or {}).get('accion'),
+            'vivas': sum(i.get('estado') != 'cerrada' for i in D.get('ideas', []))}
+    idx = sorted([x for x in idx if x['id'] != eid] + [fila], key=lambda x: x['id'], reverse=True)
+    json.dump(idx, open(pi, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    return eid
+
+
+def caducadas(D: Dict, hoy: str) -> List[str]:
+    """Ideas en vigilancia cuya fecha de caducidad ya ha pasado: hay que cerrarlas como «no saltó»."""
+    return [i['id'] for i in D.get('ideas', []) if i.get('estado') == 'vigilancia' and i.get('caduca') and i['caduca'] < hoy]
+
+
 def main(out: str = 'data') -> None:
     ideas = json.load(open(f'{out}/ideas.json', encoding='utf-8'))['ideas']
     syms = sorted({s for i in ideas for s in symbols(i)} | {'SPY'})
@@ -137,6 +173,10 @@ def main(out: str = 'data') -> None:
     reg = registro(D, prev, {x: bars(x) for x in need})
     reg['generado'] = int(time.time())
     json.dump(reg, open(pc, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    eid = archivar(D, track, out)
+    print(f'hemeroteca: edición {eid} guardada')
+    for cid in caducadas(D, datetime.now(timezone.utc).strftime('%Y-%m-%d')):
+        print(f'¡CADUCADA! {cid}: su disparador no ha saltado a tiempo; ciérrala con motivo «no saltó»')
     print(f"casos propios: {len(reg['casos'])} apuntados · con resultado a 20 sesiones: {reg['resumen']['dadas']['n']} dadas, {reg['resumen']['descartadas']['n']} descartadas")
     for i in ideas:
         r = track['ideas'][i['id']]
