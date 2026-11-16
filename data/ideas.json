@@ -1,21 +1,21 @@
 {
- "actualizado": "2026-11-16T10:15:13Z",
+ "actualizado": "2026-11-16T13:15:06Z",
  "sesion": {
-  "cuando": "2026-11-16T10:15:13Z",
-  "tipo": "manual",
+  "cuando": "2026-11-16T13:15:06Z",
+  "tipo": "preapertura",
   "titular": "Un país entero en tierra. *Alguien cobra el arreglo.*",
-  "pulso": "Lo nuevo de este fin de semana no está aún en ningún precio: el viernes, con Wall Street ya cerrado, un fallo de equipos de los años ochenta dejó en tierra todos los vuelos de Estados Unidos durante más de cuatro horas. Hoy el Gobierno pide al Congreso 50.000 millones para rehacer el control aéreo. Ahí está la idea del día. De fondo, el bono a 10 años por encima del 5 % y una subida de tipos casi segura el 9 de diciembre.",
+  "pulso": "A una hora de la apertura, la idea del control aéreo sigue esperando su disparador: el Gobierno ha pedido los 50.000 millones, pero nadie en el Congreso se ha comprometido todavía a tramitarlos. El mercado solo ha castigado a L3Harris, un 3 % abajo antes de abrir. De fondo, los futuros caen un 0,6 % con Nvidia otra vez a la baja y el bono a 10 años en el 5,15 %.",
   "hechos": [
    {
     "titulo": "Apagón del control aéreo de EE. UU.",
-    "detalle": "El viernes 13, de 15:54 a 20:15 (hora de Nueva York), la FAA paró todas las salidas por un fallo de comunicaciones en 17 de sus 22 centros de ruta. Es la segunda parada nacional desde el 11-S; unos 12.000 vuelos no se completaron.",
-    "efecto": "Ocurrió tras el cierre: hoy es la primera sesión que lo cotiza. El secretario de Transporte pide hoy 50.000 millones de emergencia, frente a los 30.000 que pedía el jueves.",
+    "detalle": "El viernes 13, de 15:54 a 20:15 (hora de Nueva York), la FAA paró todas las salidas por un fallo de comunicaciones en 17 de sus 22 centros de ruta. El secretario de Transporte ha pedido al Congreso 50.000 millones de emergencia, frente a los 30.000 que pedía el jueves.",
+    "efecto": "Hoy es la primera sesión que lo cotiza. Todavía no hay respuesta de ningún responsable del Congreso: la idea sigue en vigilancia.",
     "tono": "oportunidad"
    },
    {
     "titulo": "L3Harris, señalada",
-    "detalle": "El Gobierno investiga si un equipo de L3Harris, dueña de la red actual, provocó el fallo al cambiar líneas. Cayó un 4 % fuera de hora el viernes.",
-    "efecto": "La red nueva la preparan AT&T, Verizon y Lumen; los radares, RTX e Indra. Lo que pierda la que falla lo ganan quienes la sustituyen.",
+    "detalle": "El Gobierno investiga si un equipo de L3Harris, dueña de la red actual, provocó el fallo al cambiar líneas. El sindicato de técnicos lo atribuye a dos equipos actualizados ese mismo día, no a su antigüedad. La acción cae un 3 % antes de la apertura.",
+    "efecto": "Si se confirma que fue un error puntual y no un problema de equipos viejos, la urgencia política baja. Es justo lo que rompería la idea.",
     "tono": "riesgo"
    },
    {
@@ -31,9 +31,9 @@
     "tono": "neutro"
    },
    {
-    "titulo": "Esta semana",
-    "detalle": "Resultados de Home Depot y de varias cadenas de consumo, actas de la Fed y ventas minoristas de octubre.",
-    "efecto": "Primera lectura de cómo aguanta el consumidor con la gasolina cara y los tipos subiendo. Todavía no hay hecho, solo fechas.",
+    "titulo": "Antes de la apertura",
+    "detalle": "Los futuros del S&P 500 ceden un 0,6 %. Nvidia cae otro 3,5 % a un día de sus resultados; Take-Two sube un 3 % antes del lanzamiento de su videojuego estrella y Aramark pierde un 5 % tras sus cuentas.",
+    "efecto": "Movimientos de empresa, sin un hecho nuevo que cambie el cuadro. Esta semana quedan los resultados de las cadenas de consumo, las actas de la Fed y las ventas minoristas.",
     "tono": "neutro"
    }
   ]
@@ -116,6 +116,10 @@
     {
      "fecha": "2026-11-16",
      "texto": "Primera lectura, antes de la apertura de Wall Street. Pendiente de que se presente hoy la petición de fondos y de la reacción del Congreso."
+    },
+    {
+     "fecha": "2026-11-16",
+     "texto": "Preapertura. La petición de 50.000 millones está hecha, pero no he encontrado ningún compromiso del Congreso: el disparador no ha saltado. El sindicato de técnicos discute la versión del Gobierno y habla de dos equipos actualizados ese día; si la investigación le da la razón, se cumple la condición que rompe la idea. Antes de abrir: L3Harris −3 %, RTX +0,5 %, Indra +0,2 %, Lumen sin cambios."
     }
    ],
    "fuentes": [
@@ -142,6 +146,14 @@
     {
      "t": "FedScoop",
      "u": "https://fedscoop.com/faa-air-traffic-control-radar-modernization-partner-contract/"
+    },
+    {
+     "t": "Common Dreams",
+     "u": "https://www.commondreams.org/news/duffy-ground-stop-explanation"
+    },
+    {
+     "t": "CNBC (preapertura)",
+     "u": "https://www.cnbc.com/2026/11/16/stocks-moving-the-most-today-live-updates.html"
     }
    ]
   }
@@ -174,6 +186,10 @@
   {
    "cuando": "2026-11-16T10:15:13Z",
    "resumen": "Se retiran las dos ideas iniciales (Irán y Nvidia): eran los ejemplos del usuario, no temas de hoy. Barrido nuevo: una idea en vigilancia (apagón del control aéreo) y tres descartes."
+  },
+  {
+   "cuando": "2026-11-16T13:15:06Z",
+   "resumen": "Preapertura. La idea del control aéreo sigue en vigilancia: petición presentada, sin compromiso del Congreso; el sindicato discute la causa. Sin ideas nuevas."
   }
  ]
 }
