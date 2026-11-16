@@ -1,16 +1,18 @@
-# VP Scanner · laboratorio de chartismo y reglas
+# VP Scanner · ideas por coyuntura y laboratorio de chartismo
 
-El laboratorio tiene **dos partes separadas**, cada una con su sección en la web, sus datos y **sus propias estadísticas** (no se mezclan):
+La web tiene **dos partes**:
 
-| | **Parte 1 · Figuras, velas y rupturas** | **Parte 2 · Regla de impulso con caída** |
+| | **Ideas por coyuntura** (principal) | **Figuras, velas y rupturas** (secundaria) |
 |---|---|---|
-| Qué es | Detecta **110 patrones chartistas**, los **dibuja** con su plan (entrada, stop inicial, escalera +4 % → +10 %) y **mide si funcionan** | Una **regla sin figuras ni velas**: comprar acciones de impulso alto a 12 meses que han caído, con la escalera del operador, un modelo de fiabilidad, disciplina de cartera y track record hacia delante |
-| Web | «Figuras y velas»: Radar · Gráfico · Evidencia · Guía | «Regla de impulso»: Hoy (cribador y plan de hoy) · Seguimiento (track record) · Evidencia · Guía |
-| Veredicto | Ningún patrón bate a entrar al azar con el mismo riesgo | Candidata con una ventaja **pequeña** que se repite en acciones distintas |
-| Estadísticas | `data/evidence*.json`, `plan_report`, `ml_report`, `context_report` | `data/search*.json`, `search_confirm*.json`, `fiab.json`, `cartera.json`, `impulso.json`, `impulso_track.json` |
-| Comandos | `lab`, `study`, `plan`, `ml`, `context` | `search`, `search --confirm`, `fiab`, `screen` |
+| Qué es | Un analista que dos veces al día (9:00 y 14:00, hora española) lee lo que pasa en el mundo y razona quién gana y quién pierde: hecho → cadena lógica → valores → qué está ya en el precio → disparador → qué la rompe | Detecta **110 patrones chartistas**, los **dibuja** con su plan y **mide si funcionan** |
+| Web | «Ideas»: Hoy (ideas vivas, hechos en el radar, descartes y marcador) · Entrenamiento (lecciones y ensayos) | «Figuras y velas»: Radar · Gráfico · Evidencia · Guía |
+| Cómo se valida | Cada tipo de idea se ha simulado sobre hechos pasados (`python -m vp.ideas_train`) y cada idea dada queda registrada y se compara con el SPY (`python -m vp.ideas`) | Estudio de evidencia: ningún patrón bate a entrar al azar con el mismo riesgo |
+| Datos | `data/ideas.json`, `ideas_track.json`, `ideas_playbook.json` | `data/evidence*.json`, `plan_report`, `ml_report`, `context_report` |
+| Protocolo | [`IDEAS.md`](IDEAS.md) | secciones siguientes |
 
-> No es una recomendación de inversión. Dibujar bien una figura no demuestra que funcione, y una ventaja estadística pequeña no es una promesa de ganar: las dos partes dicen, con sus cifras, qué ha aportado de verdad cada cosa.
+> No es una recomendación de inversión. Las ideas son razonamientos públicos con su registro; un promedio histórico no garantiza el caso siguiente.
+
+La **regla de impulso con caída** (antigua parte 2) se ha retirado de la web y ya no se criba a diario: en su registro hacia delante ganaba el 60 % de las veces pero con +4,5 % de ganancia media frente a −13,3 % de pérdida media. Su código y sus estudios (`vp/search.py`, `screen.py`, `fiab.py`, `cartera.py` y `data/search*`, `fiab*`, `cartera*`, `impulso*`) siguen en el repositorio como archivo, y su documentación está más abajo.
 
 ---
 
@@ -189,7 +191,7 @@ En la **Guía** y en el panel de cada gráfico se dibuja la **trayectoria media*
 
 ---
 
-## PARTE 2 · Regla de impulso con caída (sin figuras ni velas)
+## ARCHIVO · Regla de impulso con caída (retirada de la web)
 
 Estadísticas **separadas** de las de la parte 1. Resumen: probando miles de reglas con selección hacia delante y control del procedimiento, y confirmando cinco candidatas fijadas de antemano en acciones distintas (S&P 400 y 600), la idea que se repite es **comprar acciones de impulso alto a 12 meses que han caído** (por debajo de su media de 200 sesiones, con RSI(2) ≤ 10 o con 2 o más señales bajistas a la vez), en largo y con las salidas del operador. Exceso estimado de **+0,3 a +0,5 % por operación** sobre el azar tras descontar el sesgo de supervivencia, **concentrado en el 40 % más volátil** (en las acciones tranquilas la ventaja es cero o negativa). Encima de la regla van **la escalera del operador** (+4 % plano → +10 % persiguiendo), la **búsqueda por fiabilidad**, un **modelo de fiabilidad** calibrado y validado hacia delante, la **disciplina del plan de hoy**, el **seguimiento con precios reales** y la **cartera simulada** (lo que da esa disciplina en una cuenta durante toda la historia, frente a carteras al azar y al mercado) con un **menú de salidas** sobre la misma entrada. En la web: «Regla de impulso» → Hoy · Seguimiento · Evidencia · Guía.
 

@@ -1,0 +1,48 @@
+{
+ "generado": 1794822303,
+ "ideas": {
+  "2026-11-16-iran-aerolineas": {
+   "estado": "vigilancia",
+   "desde": "2026-11-16",
+   "hasta": "2026-11-13",
+   "por_valor": {
+    "UAL": {
+     "ref": 109.31,
+     "ahora": 109.31,
+     "pct": -0.0
+    },
+    "ALK": {
+     "ref": 38.48,
+     "ahora": 38.48,
+     "pct": -0.0
+    },
+    "DAL": {
+     "ref": 86.25,
+     "ahora": 86.25,
+     "pct": 0.0
+    },
+    "RCL": {
+     "ref": 323.27,
+     "ahora": 323.27,
+     "pct": -0.0
+    }
+   },
+   "media": 0.0,
+   "spy": -0.0
+  },
+  "2026-11-16-nvda-sin-huang": {
+   "estado": "vigilancia",
+   "desde": "2026-11-16",
+   "hasta": "2026-11-13",
+   "por_valor": {
+    "NVDA": {
+     "ref": 162.85,
+     "ahora": 162.85,
+     "pct": 0.0
+    }
+   },
+   "media": 0.0,
+   "spy": -0.0
+  }
+ }
+}

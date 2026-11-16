@@ -1,30 +1,227 @@
 {
-  "ideas": [
+ "actualizado": "2026-11-16T09:44:13Z",
+ "sesion": {
+  "cuando": "2026-11-16T09:44:13Z",
+  "tipo": "manual",
+  "pulso": "Dos historias mandan hoy. El petróleo ha perdido un 15 % en tres semanas porque el mercado descuenta un acuerdo con Irán que todavía no existe. Y Nvidia se ha dejado un 25 % en un mes tras la salida de Jensen Huang, con resultados esta misma semana. En las dos hay una idea, y en las dos falta el hecho que la dispara: de momento, vigilancia.",
+  "hechos": [
+   {
+    "titulo": "Irán: ni guerra ni paz",
+    "detalle": "Teherán dice esperar la respuesta de Washington a su plan; Ormuz sigue cerrado y el bloqueo naval de EE. UU., en pie. No hay conversaciones confirmadas.",
+    "efecto": "El Brent (~93 $) aún lleva prima de guerra. Un acuerdo firmado la quita de golpe; una ruptura lo devuelve por encima de 105 $.",
+    "tono": "oportunidad"
+   },
+   {
+    "titulo": "El petróleo ya ha caído un 15 % en un mes",
+    "detalle": "Solo por expectativas de acuerdo y por señales de exceso de oferta (JPMorgan calcula 1,4 millones de barriles diarios de más en octubre).",
+    "efecto": "Las aerolíneas ya han recogido parte (+5 % a +10 % en el mes). El entrenamiento dice que perseguir una bajada del crudo al día siguiente no da nada.",
+    "tono": "neutro"
+   },
+   {
+    "titulo": "Nvidia sin Jensen Huang",
+    "detalle": "Según la prensa, dimitió el 12 de noviembre tras la investigación del consejo por su relación con una presunta espía china. La directora financiera asume de forma interina. NVDA: −25 % en un mes.",
+    "efecto": "El riesgo que importa no es quién manda, sino si la investigación acaba en restricciones de exportación o en clientes que diversifican compras.",
+    "tono": "riesgo"
+   },
+   {
+    "titulo": "Resultados de Nvidia esta semana",
+    "detalle": "La prensa los sitúa el 17 de noviembre, con una comparecencia a puerta cerrada en el Congreso al día siguiente.",
+    "efecto": "Es la primera prueba de si el negocio sigue intacto. Hasta entonces, comprar es una moneda al aire.",
+    "tono": "neutro"
+   },
+   {
+    "titulo": "La Reserva Federal vuelve a hablar de subir tipos",
+    "detalle": "Las expectativas han pasado de recortes a posibles subidas en diciembre; el bono largo ha caído un 3 % en la semana y el Nasdaq-100 está un 10 % por debajo de su máximo.",
+    "efecto": "Viento en contra para lo más caro del mercado. No hay pánico general (el S&P 500 está a un 3 % de máximos), así que tampoco hay idea de «comprar el miedo».",
+    "tono": "riesgo"
+   }
+  ]
+ },
+ "ideas": [
+  {
+   "id": "2026-11-16-iran-aerolineas",
+   "fecha": "2026-11-16",
+   "estado": "vigilancia",
+   "conviccion": 4,
+   "tipo": "estructural",
+   "titulo": "Acuerdo con Irán → aerolíneas y cruceros",
+   "resumen": "Si se firma la paz y se reabre Ormuz, el petróleo pierde la prima de guerra de forma duradera, y quien más gasta en combustible es quien más gana. Pero la idea es el acuerdo firmado, no los titulares de «progresos».",
+   "hecho": "La guerra con Irán sigue sin acuerdo: Teherán espera respuesta a su plan de siete puntos, el estrecho de Ormuz continúa cerrado y el bloqueo naval estadounidense sigue activo. Aun así, el Brent ha caído de más de 110 $ a unos 93 $ en tres semanas solo por la expectativa.",
+   "cadena": [
+    "Se anuncia un alto el fuego confirmado por las dos partes y la reapertura del estrecho.",
+    "El petróleo pierde la prima de guerra que todavía lleva: y vuelve hacia los niveles de antes de la guerra.",
+    "El combustible es el mayor coste variable de una aerolínea y uno de los grandes de un crucero: cada dólar menos va directo al margen.",
+    "No es un susto de un día sino un cambio que dura trimestres: los analistas suben previsiones de beneficio durante semanas, y eso es lo que sigue empujando el precio después del primer salto.",
+    "Las más castigadas y más sensibles al combustible (United, Alaska) son las que más recorrido tienen."
+   ],
+   "valores": [
     {
-      "id": "2026-11-16-iran-aerolineas",
-      "fecha": "2026-11-16",
-      "estado": "vigilancia",
-      "hecho": "Guerra de Irán sin acuerdo todavía («ni guerra ni paz»); el Brent ha caído de más de 110 a ~93 $ en tres semanas solo por la expectativa de acuerdo.",
-      "logica": "El combustible es el mayor coste variable de una aerolínea. Si se confirma el acuerdo y se reabre Ormuz, el petróleo pierde la prima de guerra que aún lleva y las aerolíneas y cruceros lo recogen en márgenes; las más castigadas (UAL, ALK) tienen más recorrido.",
-      "valores": ["UAL", "ALK", "DAL", "RCL"],
-      "disparador": "Anuncio confirmado de alto el fuego o reapertura del estrecho (no un titular de «progresos»). Entrar ese día o en la apertura siguiente.",
-      "invalidacion": "Ruptura de las conversaciones o nuevo ataque que devuelva el Brent por encima de 105 $.",
-      "horizonte": "1 a 3 meses desde el disparador",
-      "ref": {"UAL": 109.31, "ALK": 38.48, "DAL": 86.25, "RCL": 323.27, "SPY": 754.37},
-      "entrada": null
+     "sym": "UAL",
+     "nombre": "United Airlines",
+     "papel": "la principal",
+     "por_que": "A un 20 % de su máximo anual y con mucho largo radio: la más sensible al queroseno entre las grandes."
     },
     {
-      "id": "2026-11-16-nvda-sin-huang",
-      "fecha": "2026-11-16",
-      "estado": "vigilancia",
-      "hecho": "Jensen Huang dimite (12-nov) tras la investigación del consejo; NVDA −25 % en un mes y −32 % desde máximos. AMD y Broadcom subieron ~18 % en la semana y el viernes ya devolvieron parte (AMD −8,8 %).",
-      "logica": "El efecto obvio (comprar a la competencia) ya está en el precio y se está deshaciendo. Lo que no está resuelto es si el negocio de Nvidia cambia: los pedidos y los chips no dependen de quién sea el consejero delegado este trimestre; el riesgo real es regulatorio (vínculo con China). Los resultados de esta semana son la primera prueba.",
-      "valores": ["NVDA"],
-      "disparador": "Resultados de esta semana: guía mantenida o al alza Y sin restricciones nuevas de exportación ni salidas de clientes. Entrar tras los resultados, no antes.",
-      "invalidacion": "Recorte de guía, sanción o restricción de exportación derivada de la investigación, o que un cliente grande anuncie que desvía pedidos.",
-      "horizonte": "3 a 6 meses desde el disparador",
-      "ref": {"NVDA": 162.85, "SPY": 754.37},
-      "entrada": null
+     "sym": "ALK",
+     "nombre": "Alaska Air",
+     "papel": "la más castigada",
+     "por_que": "A un 36 % de su máximo. Más riesgo y más recorrido."
+    },
+    {
+     "sym": "DAL",
+     "nombre": "Delta",
+     "papel": "la tranquila",
+     "por_que": "La de mejor balance; sube menos pero aguanta mejor si la idea falla."
+    },
+    {
+     "sym": "RCL",
+     "nombre": "Royal Caribbean",
+     "papel": "segundo efecto",
+     "por_que": "Combustible más barato y consumidor con más dinero libre al bajar la gasolina."
     }
-  ]
+   ],
+   "en_precio": "En parte. Las aerolíneas llevan entre +5 % y +10 % en el último mes acompañando la caída del crudo, pero siguen lejos de máximos. Lo que no está en el precio es la certeza: hoy el mercado paga una probabilidad, no un acuerdo.",
+   "disparador": "Anuncio confirmado de alto el fuego o de reapertura de Ormuz por las dos partes. Se entra ese mismo día o en la apertura siguiente, aunque ya hayan subido: en un cambio duradero, lo que queda por delante es más que el primer salto.",
+   "invalidacion": "Ruptura de las conversaciones, nuevo ataque o el Brent de vuelta por encima de 105 $. Si ya se está dentro: que el acuerdo se rompa.",
+   "no_hacer": "Comprar aerolíneas hoy solo porque el petróleo ha bajado. En 99 días con el crudo cayendo un 4 % o más, quien compró aerolíneas a la mañana siguiente no ganó nada de más (+0,1 % en 5 sesiones, −0,2 % en 20).",
+   "horizonte": "De 1 a 3 meses desde el disparador. Sin tope de ganancia.",
+   "precedentes": [
+    {
+     "caso": "Vacuna de Pfizer, 9-nov-2020",
+     "que_paso": "aerolíneas y cruceros subieron un 23 % ese día y, comprando al día siguiente, otro 20 % más que el S&P 500 en 20 sesiones."
+    },
+    {
+     "caso": "Invasión de Ucrania, 24-feb-2022",
+     "que_paso": "los beneficiarios del cambio duradero (fertilizantes, energía) ganaron +25 % sobre el índice en las 20 sesiones posteriores."
+    },
+    {
+     "caso": "Caídas del petróleo de un día (99 casos)",
+     "que_paso": "sin un hecho duradero detrás, las aerolíneas no ganaron nada después del primer día."
+    }
+   ],
+   "ref": {
+    "UAL": 109.31,
+    "ALK": 38.48,
+    "DAL": 86.25,
+    "RCL": 323.27,
+    "SPY": 754.37
+   },
+   "entrada": null,
+   "notas": [
+    {
+     "fecha": "2026-11-16",
+     "texto": "Primera lectura. Sin acuerdo; el Brent cae otro 3 % hoy hasta ~93 $. Se mantiene en vigilancia."
+    }
+   ],
+   "fuentes": [
+    {
+     "t": "CBS News",
+     "u": "https://www.cbsnews.com/live-updates/iran-war-us-trump-talks-strait-of-hormuz/"
+    },
+    {
+     "t": "Al Jazeera",
+     "u": "https://www.aljazeera.com/news/2026/11/12/no-war-no-peace-can-iran-break-the-deadlock-with-the-us"
+    },
+    {
+     "t": "Trading Economics",
+     "u": "https://tradingeconomics.com/commodity/brent-crude-oil/news/600174"
+    }
+   ]
+  },
+  {
+   "id": "2026-11-16-nvda-sin-huang",
+   "fecha": "2026-11-16",
+   "estado": "vigilancia",
+   "conviccion": 2,
+   "tipo": "caido",
+   "titulo": "Nvidia sin Huang → Nvidia, pero después de la prueba",
+   "resumen": "La jugada evidente (comprar a AMD y Broadcom) ya está hecha y deshaciéndose. Lo que queda por resolver es si a Nvidia le cambia el negocio o solo el consejero delegado. Eso se ve en los resultados de esta semana, no antes.",
+   "hecho": "Jensen Huang dimitió el 12 de noviembre, según la prensa, tras la investigación del consejo por su relación con una presunta agente china. Nvidia ha caído un 25 % en un mes y está un 32 % por debajo de su máximo. AMD y Broadcom subieron un 18 % en la semana y el viernes devolvieron parte (AMD −8,8 %).",
+   "cadena": [
+    "El mercado vende Nvidia por miedo y compra a sus rivales por lógica inmediata.",
+    "Pero los pedidos de este trimestre y del siguiente están firmados: los chips no dependen de quién dirija la empresa.",
+    "El riesgo real es otro: que la investigación derive en restricciones de exportación, o que los grandes clientes repartan compras por prudencia.",
+    "Los resultados y la guía de esta semana son la primera prueba pública de cuál de las dos cosas pasa.",
+    "Si la guía se mantiene y no aparecen restricciones, el 25 % de caída es un descuento sobre un negocio intacto; si no, la caída estaba justificada."
+   ],
+   "valores": [
+    {
+     "sym": "NVDA",
+     "nombre": "Nvidia",
+     "papel": "la idea",
+     "por_que": "A un 32 % de su máximo por un problema de persona, no (de momento) de negocio."
+    }
+   ],
+   "en_precio": "El miedo sí: −25 % en un mes. La subida de las rivales también, y ya se está deshaciendo. Lo que no está en el precio es la respuesta a si los clientes se van.",
+   "disparador": "Tras los resultados de esta semana: guía mantenida o al alza, sin restricciones nuevas de exportación y sin que ningún gran cliente anuncie que desvía pedidos. Se entra después de conocerlos, nunca antes.",
+   "invalidacion": "Recorte de guía, sanción o restricción derivada de la investigación, o un cliente grande que anuncia que diversifica proveedores.",
+   "no_hacer": "Perseguir a AMD o Broadcom ahora. La competencia del que tropieza solo ha dado dinero entrando el primer día; una semana después se compra lo que otros ya están vendiendo. Y tampoco comprar Nvidia antes de los resultados: es una moneda al aire.",
+   "horizonte": "De 3 a 6 meses desde el disparador.",
+   "precedentes": [
+    {
+     "caso": "1.465 caídas de ≥ 10 % en un día de empresas grandes",
+     "que_paso": "de media +0,9 % sobre el índice en 20 sesiones y +3,0 % en 60, pero solo ganó el 46 %: no hay prisa."
+    },
+    {
+     "caso": "Meta, 3-feb-2022 (−26 %)",
+     "que_paso": "otro −11,7 % frente al índice en las 20 sesiones siguientes. Quien esperó a la prueba compró mucho más abajo."
+    },
+    {
+     "caso": "CrowdStrike, 19-jul-2024",
+     "que_paso": "−8,1 % en las 20 sesiones siguientes y +3,0 % a 60: el rebote llegó cuando los clientes confirmaron que se quedaban."
+    },
+    {
+     "caso": "Nvidia con DeepSeek, 27-ene-2025",
+     "que_paso": "−3,8 % en 5 sesiones, +5,0 % a 20 y −5,1 % a 60: sin prueba, fue cara o cruz."
+    }
+   ],
+   "ref": {
+    "NVDA": 162.85,
+    "SPY": 754.37
+   },
+   "entrada": null,
+   "notas": [
+    {
+     "fecha": "2026-11-16",
+     "texto": "Primera lectura. Resultados previstos para el 17 de noviembre. En vigilancia hasta entonces."
+    }
+   ],
+   "fuentes": [
+    {
+     "t": "CNBC",
+     "u": "https://www.cnbc.com/2026/11/10/nvidia-nvda-jensen-huang-affair-chinese-spy.html"
+    },
+    {
+     "t": "24/7 Wall St.",
+     "u": "https://247wallst.com/investing/2026/11/15/amd-vs-broadcom-with-nvdas-jensen-huang-gone-which-ai-stock-wins-the-most/"
+    }
+   ]
+  }
+ ],
+ "descartes": [
+  {
+   "fecha": "2026-11-16",
+   "titulo": "Comprar AMD y Broadcom por el tropiezo de Nvidia",
+   "por_que": "Subieron un 18 % en la semana de la noticia y el viernes ya cedieron (AMD −8,8 %, Broadcom −4,8 %). El movimiento lógico ocurrió el primer día.",
+   "leccion": "la competencia del que tropieza solo paga si se entra enseguida (+0,8 % en 5 sesiones); después, nada."
+  },
+  {
+   "fecha": "2026-11-16",
+   "titulo": "Comprar aerolíneas ya, porque el petróleo baja",
+   "por_que": "Sin acuerdo firmado, la bajada del crudo es una expectativa que puede darse la vuelta con un titular, y las aerolíneas ya han subido con ella.",
+   "leccion": "el beneficiario evidente de una materia prima no gana nada de más a partir del día siguiente."
+  },
+  {
+   "fecha": "2026-11-16",
+   "titulo": "Bancos, porque la Fed puede subir tipos",
+   "por_que": "Es el primer efecto, el que ve todo el mundo, y el mercado lo recoge el mismo día en que se mueve el bono.",
+   "leccion": "bono a 10 años +12 pb → bancos: +1,1 % ese día y +0,0 % en las 5 sesiones siguientes."
+  }
+ ],
+ "sesiones": [
+  {
+   "cuando": "2026-11-16T09:44:13Z",
+   "resumen": "Primera sesión. Dos ideas en vigilancia (Irán → aerolíneas; Nvidia tras resultados) y tres descartes."
+  }
+ ]
 }
