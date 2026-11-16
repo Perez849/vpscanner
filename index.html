@@ -339,7 +339,32 @@ table.x-tr tr.sig td:first-child{box-shadow:inset 4px 0 0 var(--go);padding-left
 @keyframes xinkv{0%{transform:scaleY(0)}70%,92%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
 @media (max-width:700px){.x-wire{column-count:1}.x-date span:nth-child(2){display:none}.x-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.x-stat:nth-child(2){border-right:0}.x-stat:nth-child(n+3){border-top:1px solid var(--rule2)}.x-stat:nth-child(3){padding-left:0}.x-ih{grid-template-columns:1fr}.x-num{grid-row:auto;font-size:74px}.x-idea,.x-none{box-shadow:5px 5px 0 var(--ink);margin-right:5px}.x-val{grid-template-columns:76px minmax(0,1fr)}.x-val .mv{grid-column:2;text-align:left;padding:0}.x-val .mv small{display:inline;margin-left:8px}.x-sc{grid-template-columns:minmax(0,1fr) 120px}.x-sc .spy{display:none}.x-note{grid-template-columns:1fr;gap:2px}.x-stamp{position:static;display:inline-block;margin:0 0 14px;transform:rotate(-3deg)}}
 @media (max-width:700px){.x-mast h1{flex-direction:column;gap:.2em}.x-mast h1 .logo{width:1.9em;height:1.9em}}
-@media (prefers-reduced-motion:reduce){.x-mast h1 .logo,.x-tape div,.x-h1 span,.x-h1 em,.x-flow ol::after,.x-flow li::before,.x-live i,.x-st i,.x-val .mv,.x-stamp{animation:none}.x-h1 em{background-size:100% 100%}.x-rv{transform:none;transition:none}.x-dis h4::after{transition:none}}
+.x-new{display:inline-block;font-family:var(--fm);font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:var(--hl);padding:2px 7px;margin-right:8px;vertical-align:.18em;animation:xnew 1.6s ease-in-out 3}
+@keyframes xnew{50%{background:var(--red);color:#fff}}
+.x-hoy{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border:1.5px solid var(--ink);margin-top:14px;background:var(--card)}
+.x-hoy span{display:flex;align-items:center;font-family:var(--fh);font-weight:900;font-size:clamp(20px,2.6vw,34px);letter-spacing:-.02em;padding:14px 22px;background:var(--ink);color:var(--bg);white-space:nowrap}
+.x-hoy p{margin:0;padding:14px 20px;font-size:clamp(17px,1.5vw,21px);line-height:1.4;align-self:center}
+.x-hoy.comprar span{background:var(--go)}.x-hoy.vender span{background:var(--no)}.x-hoy.vigilar span{background:var(--hl);color:var(--ink)}
+.x-warn{margin-top:14px;padding:12px 16px;border:1.5px solid var(--red);color:var(--red);font-family:var(--fm);font-size:12px;font-weight:600;letter-spacing:.03em;background:#fff5f2}
+.x-warn.arch{border-color:var(--ink);color:var(--ink);background:var(--hl)}.x-warn a{color:inherit}
+.x-camb{margin-top:26px;border:1.5px solid var(--ink);background:var(--card);padding:16px 20px 18px;box-shadow:6px 6px 0 var(--hl)}
+.x-camb h4{margin:0 0 10px;font-family:var(--fh);font-weight:900;font-size:24px;letter-spacing:-.02em}
+.x-camb ul{margin:0;padding-left:20px;display:grid;gap:7px}.x-camb li{font-size:18px;line-height:1.44}
+.x-cad{color:var(--red)}
+.x-contra{margin:0;padding:22px clamp(18px,3vw,44px) 26px;border-top:1.5px solid var(--ink);background:repeating-linear-gradient(135deg,transparent 0 9px,#1111100a 9px 10px)}
+.x-contra h4{margin:0 0 10px;font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;display:inline-block;padding:4px 9px;color:var(--ink);border:1.5px solid var(--ink);background:var(--card)}
+.x-contra p{margin:0;font-size:18px;line-height:1.48;color:#2a2925;max-width:92ch}
+.x-mini{width:104px;height:30px;display:block}
+.x-val{grid-template-columns:92px minmax(0,1fr) 104px auto}
+.x-day{font-family:var(--fh);font-weight:900;font-size:26px;letter-spacing:-.02em;margin:34px 0 0;padding-bottom:8px;border-bottom:3px solid var(--ink)}
+.x-day::first-letter{text-transform:uppercase}
+.x-ed{display:grid;grid-template-columns:96px minmax(0,1fr) auto auto;gap:20px;align-items:center;padding:16px 0;border-bottom:1px solid var(--rule2);text-decoration:none;color:inherit;transition:background .2s,padding .2s}
+.x-ed:hover{background:var(--hl);padding-inline:12px}
+.x-ed time{font-family:var(--fh);font-weight:900;font-size:30px;line-height:1;letter-spacing:-.02em}.x-ed time small{display:block;font-family:var(--fm);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-top:6px}
+.x-ed h4{font-family:var(--fh);font-weight:800;font-size:clamp(20px,2vw,26px);line-height:1.08;margin:0;letter-spacing:-.02em}.x-ed p{margin:5px 0 0;font-size:16px;font-style:italic;color:var(--sub);line-height:1.4}
+.x-acc{font-family:var(--fm);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;color:#fff;background:var(--ink);white-space:nowrap}.x-acc.comprar{background:var(--go)}.x-acc.vender{background:var(--no)}.x-acc.vigilar{background:var(--hl);color:var(--ink)}
+@media (max-width:700px){.x-hoy{grid-template-columns:1fr}.x-hoy span{padding:10px 16px}.x-val{grid-template-columns:76px minmax(0,1fr)}.x-mini{grid-column:2}.x-ed{grid-template-columns:70px minmax(0,1fr)}.x-ed .x-acc,.x-ed .x-mono{grid-column:2;justify-self:start}.x-ed time{font-size:24px}}
+@media (prefers-reduced-motion:reduce){.x-mast h1 .logo,.x-new,.x-tape div,.x-h1 span,.x-h1 em,.x-flow ol::after,.x-flow li::before,.x-live i,.x-st i,.x-val .mv,.x-stamp{animation:none}.x-h1 em{background-size:100% 100%}.x-rv{transform:none;transition:none}.x-dis h4::after{transition:none}}
 </style>
 </head>
 <body>
@@ -366,7 +391,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp
 const mon = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 const S = {
-  view: 'ideas', ideas: null, idt: null, idp: null, idc: null, idx: null, cat: null, ev: null, sym: null, D: null, sel: null, hover: null, tab: 'act', cross: null, cache: {},
+  view: 'ideas', ideas: null, idt: null, idp: null, idc: null, eds: null, live: null, arch: null, idx: null, cat: null, ev: null, sym: null, D: null, sel: null, hover: null, tab: 'act', cross: null, cache: {},
   rv: {mode: 'all', dir: 0, q: 60, all: 0, text: '', fav: 0},                                   // filtros del radar
   f: {figuras: 1, rupturas: 1, velas: 1, directrices: 0, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'a', q: 60},   // filtros del gráfico
   view_: {start: 0, ppb: 6}, hits: [], W: 0, H: 0, dpr: 1,
@@ -385,7 +410,7 @@ const distTxt = d => d == null ? '' : d < 0.1 ? 'en el disparo' : `a ${d.toFixed
 
 /* ───────────────────────── datos ───────────────────────── */
 async function J(path) {
-  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['ideas', 'ideas_track', 'ideas_playbook', 'ideas_casos', 'plan_study'].includes(k)) return VP[k] || null; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
+  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['ideas', 'ideas_track', 'ideas_playbook', 'ideas_casos', 'plan_study'].includes(k)) return VP[k] || null; if (k.startsWith('ediciones/')) return (VP.ediciones || {})[k.slice(10)] || null; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
   if (S.cache[path]) return S.cache[path];
   const r = await fetch(BASE + path + '?v=' + Math.floor(Date.now() / 3600000));
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -416,7 +441,7 @@ async function init() {
   try { S.idx = await J('index.json'); S.cat = await J('catalog.json'); } catch (e) { S.idx = null; }
   try { S.ev = await J('evidence.json'); } catch (e) { S.ev = null; }
   try { S.ps = await J('plan_study.json'); } catch (e) { S.ps = null; }
-  for (const [k, f] of [['ideas', 'ideas.json'], ['idt', 'ideas_track.json'], ['idp', 'ideas_playbook.json'], ['idc', 'ideas_casos.json']]) { try { S[k] = (await J(f)) || null; } catch (e) { S[k] = null; } }
+  for (const [k, f] of [['ideas', 'ideas.json'], ['idt', 'ideas_track.json'], ['idp', 'ideas_playbook.json'], ['idc', 'ideas_casos.json'], ['eds', 'ediciones/index.json']]) { try { S[k] = (await J(f)) || null; } catch (e) { S[k] = null; } }
   window.addEventListener('resize', () => { if (S.view === 'chart') resize(); else if (S.view === 'ev') drawStrip(); });
   window.addEventListener('keydown', onKey);
   window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (h) go(h); });                 // atrás/adelante del navegador y enlaces con #VALOR
@@ -426,19 +451,19 @@ async function init() {
   await go(h || 'ideas', null, true);
 }
 function rerender() { if (S.view === 'chart') { draw(); renderPane(); } else if (S.view === 'ev') drawStrip(); }
-const AIV = ['ideas', 'train'];
+const AIV = ['ideas', 'train', 'arch'];
 function buildNav() {
   const ai = AIV.includes(S.view);
   $('#sec').innerHTML = `<button data-s="ai" class="${ai ? 'on' : ''}">Ideas<small>por coyuntura · principal</small></button><button data-s="fig" class="lo ${ai ? '' : 'on'}">Figuras y velas<small>chartismo</small></button>`;
   $('#sec').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.s === 'ai' ? 'ideas' : 'radar'));
-  const items = ai ? [['ideas', 'Hoy'], ['train', 'Entrenamiento']] : [['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']];
+  const items = ai ? [['ideas', 'Hoy'], ['arch', 'Hemeroteca'], ['train', 'Entrenamiento']] : [['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']];
   $('#nav').innerHTML = items.map(([k, t]) => `<button data-v="${k}" class="${S.view === k ? 'on' : ''}">${t}</button>`).join('');
   $('#nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.v === 'chart' ? (S.sym || (S.idx && S.idx.symbols[0].sym) || 'radar') : b.dataset.v));
   $('#brand').onclick = e => { e.preventDefault(); go('ideas'); };
   document.body.classList.toggle('ai', ai);
 }
-const VIEWS = {ideas: 'ideas', entrenamiento: 'train', train: 'train', radar: 'radar', evidencia: 'ev', ev: 'ev', guia: 'guide', guide: 'guide', chart: 'chart'};
-const HASH = {ev: 'evidencia', guide: 'guia', train: 'entrenamiento'};
+const VIEWS = {ideas: 'ideas', entrenamiento: 'train', train: 'train', hemeroteca: 'arch', arch: 'arch', radar: 'radar', evidencia: 'ev', ev: 'ev', guia: 'guide', guide: 'guide', chart: 'chart'};
+const HASH = {ev: 'evidencia', guide: 'guia', train: 'entrenamiento', arch: 'hemeroteca'};
 async function go(where, selId, first) {
   const w = (where || '').toLowerCase();
   const sym = S.idx && S.idx.symbols.find(s => s.sym === (where || '').toUpperCase());
@@ -448,8 +473,11 @@ async function go(where, selId, first) {
   buildNav();
   setChrome(view);
   aiStop();
+  if (view !== 'ideas' || !S.keepArch) backLive();
+  S.keepArch = 0;
   if (view === 'ideas') renderIdeas();
   else if (view === 'train') renderTrain();
+  else if (view === 'arch') renderArch();
   else if (!S.idx) $('#view').innerHTML = '<div class="empty">No hay datos de figuras todavía. Ejecuta <code>python -m vp lab</code> o lanza el flujo «Escaneo diario».</div>';
   else if (view === 'radar') renderRadar();
   else if (view === 'ev') renderEvidence();
@@ -724,28 +752,37 @@ function side() {                                                            // 
 }
 const secHead = (kick, h2, p) => `<div class="x-head x-rv"><div><div class="x-mono">${kick}</div><h2>${h2}</h2></div><p>${p}</p></div>`;
 
+const NEW = '<b class="x-new">Nuevo</b>';
+const daysTo = d => { const n = Math.ceil((new Date(d + 'T23:59:59Z') - Date.now()) / 864e5); return n < 0 ? 'vencida' : n === 0 ? 'hoy' : n === 1 ? 'queda 1 día' : `quedan ${n} días`; };
+function mini(a, i0) {                                                        // cierres recientes del valor, con la marca del día del hecho
+  const W = 104, H = 30, lo = Math.min(...a), hi = Math.max(...a), k = (hi - lo) || 1, X = i => 2 + i / (a.length - 1) * (W - 4), Y = v => 3 + (hi - v) / k * (H - 6);
+  const up = a[a.length - 1] >= a[Math.min(i0, a.length - 1)], c = up ? 'var(--go)' : 'var(--no)';
+  return `<svg class="x-mini" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cierres recientes; la raya marca el día del hecho"><line x1="${X(i0).toFixed(1)}" x2="${X(i0).toFixed(1)}" y1="1" y2="${H - 1}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 2"/><polyline points="${a.slice(0, i0 + 1).map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ')}" fill="none" stroke="var(--dim)" stroke-width="1.4" stroke-linejoin="round"/><polyline points="${a.slice(i0).map((v, i) => X(i + i0).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ')}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/><circle cx="${X(a.length - 1).toFixed(1)}" cy="${Y(a[a.length - 1]).toFixed(1)}" r="2.6" fill="${c}"/></svg>`;
+}
 function ideaCard(I, k) {
   const T = (S.idt && S.idt.ideas && S.idt.ideas[I.id]) || null, conv = Math.max(1, Math.min(5, I.conviccion || 3)), steps = I.cadena || [];
   const vals = (I.valores || []).map(v => { const t = T && T.por_valor && T.por_valor[v.sym], link = S.idx && S.idx.symbols.some(s => s.sym === v.sym);
-    return `<${link ? `a href="#${esc(v.sym)}"` : 'div'} class="x-val"><span class="tk">${esc(v.sym)}<small>${esc(v.papel || '')}</small></span><span class="why"><b>${esc(v.nombre || '')}</b>${esc(v.por_que || '')}</span><span class="mv">${t ? sgn(t.pct) : '—'}<small>${t ? 'desde ' + fx(t.ref) : ''}</small></span></${link ? 'a' : 'div'}>`; }).join('');
+    return `<${link ? `a href="#${esc(v.sym)}"` : 'div'} class="x-val"><span class="tk">${esc(v.sym)}<small>${esc(v.papel || '')}</small></span><span class="why"><b>${esc(v.nombre || '')}</b>${esc(v.por_que || '')}</span>${t && t.serie ? mini(t.serie, t.i0) : '<span></span>'}<span class="mv">${t ? sgn(t.pct) : '—'}<small>${t ? 'desde ' + fx(t.ref) : ''}</small></span></${link ? 'a' : 'div'}>`; }).join('');
   return `<article class="x-idea x-rv" id="i-${esc(I.id)}">
     <header class="x-ih"><div class="x-num" aria-hidden="true">${k + 1}</div>
       <div class="x-meta"><span class="x-st ${esc(I.estado)}"><i></i>${ST[I.estado] || esc(I.estado)}</span><span class="x-mono">dada el ${fdate(I.fecha)}${I.entrada ? ' · abierta el ' + fdate(I.entrada) : ''}${I.salida ? ' · cerrada el ' + fdate(I.salida) : ''}</span>
         <span class="x-mono x-conv" title="Cuánto encaja con lo que el entrenamiento dice que funciona">convicción <span>${[1, 2, 3, 4, 5].map(n => `<b class="${n <= conv ? 'on' : ''}"></b>`).join('')}</span></span>
-        ${I.horizonte ? `<span class="x-mono">horizonte · ${esc(I.horizonte.split('.')[0])}</span>` : ''}</div>
+        ${I.horizonte ? `<span class="x-mono">horizonte · ${esc(I.horizonte.split('.')[0])}</span>` : ''}
+        ${I.estado === 'vigilancia' && I.caduca ? `<span class="x-mono x-cad" title="Si para esa fecha no ha saltado el disparador, la idea se cierra sola como «no saltó»">caduca el ${fdate(I.caduca)} · ${daysTo(I.caduca)}</span>` : ''}${I.motivo_cierre ? `<span class="x-mono x-cad">cerrada: ${esc(I.motivo_cierre)}</span>` : ''}${I.nuevo ? NEW : ''}</div>
       <h3>${esc(I.titulo)}</h3><p class="x-lede">${esc(I.resumen || '')}</p></header>
     <div class="x-flow"><div class="x-mono"><b>La cadena lógica</b> · del hecho al valor, paso a paso</div><ol style="--n:${steps.length}">${steps.map((s, i) => `<li data-n="${i + 1}" style="--i:${i + 1}">${esc(s)}</li>`).join('')}</ol></div>
     <div class="x-body"><div>
         <div class="x-blk"><div class="x-mono">El hecho</div><p>${esc(I.hecho)}</p></div>
         ${I.precedentes && I.precedentes.length ? `<div class="x-blk"><div class="x-mono">Qué pasó otras veces</div><div class="x-prec">${I.precedentes.map(p => `<div><b>${esc(p.caso)}.</b> ${esc(p.que_paso.charAt(0).toUpperCase() + p.que_paso.slice(1))}</div>`).join('')}</div></div>` : ''}
       </div><div class="x-blk"><div class="x-mono">Los valores${T && T.media != null ? ` · la idea ${num(T.media)} · S&amp;P 500 ${num(T.spy)}` : ''}</div><div class="x-vals">${vals}</div></div></div>
+    ${I.en_contra ? `<div class="x-contra"><h4>El argumento en contra</h4><p>${esc(I.en_contra)}</p></div>` : ''}
     <div class="x-dec">
       <div class="x-cell go"><h4>Se entra si</h4><p>${esc(I.disparador)}</p></div>
       <div class="x-cell no"><h4>Se rompe si</h4><p>${esc(I.invalidacion)}</p></div>
       <div class="x-cell px"><h4>¿Ya está en el precio?</h4><p>${esc(I.en_precio || '')}</p></div>
       <div class="x-cell dont"><h4>Lo que no hay que hacer</h4><p>${esc(I.no_hacer || '')}</p></div>
     </div>
-    <footer class="x-foot">${(I.notas || []).slice().reverse().map(n => `<div class="x-note"><time>${fdate(n.fecha)}</time><span>${esc(n.texto)}</span></div>`).join('')}
+    <footer class="x-foot">${(I.notas || []).slice().reverse().map(n => `<div class="x-note"><time>${fdate(n.fecha)}${n.edicion ? ' · ' + esc(n.edicion) : ''}</time><span>${n.nuevo ? NEW : ''}${esc(n.texto)}</span></div>`).join('')}
       ${I.fuentes && I.fuentes.length ? `<div class="x-src">Fuentes: ${I.fuentes.map(f => `<a href="${esc(f.u)}" target="_blank" rel="noopener">${esc(f.t)}</a>`).join(' · ')}</div>` : ''}</footer>
   </article>`;
 }
@@ -756,8 +793,13 @@ function renderIdeas() {
   const ses = D.sesion || {}, ideas = D.ideas || [], live = ideas.filter(i => i.estado !== 'cerrada'), closed = ideas.filter(i => i.estado === 'cerrada'), facts = ses.hechos || [], disc = D.descartes || [];
   const nx = nextRun(), when = ses.cuando ? new Date(ses.cuando) : null;
   const tick = facts.map(h => `<span style="--tc:${TONE[h.tono] || TONE.neutro}">${esc(h.titulo)}</span>`).join('');
-  const sd = side();
+  const sd = side(), hoy = ses.hoy || null, camb = ses.cambios || [];
+  const ageH = when ? (Date.now() - when) / 36e5 : 0, wd = new Date().getUTCDay(), stale = !S.arch && when && ageH > (wd === 0 || wd === 6 || wd === 1 ? 80 : 30);
+  const ACC = {nada: 'Hoy · nada que hacer', vigilar: 'Hoy · solo vigilar', comprar: 'Hoy · comprar', vender: 'Hoy · vender'};
   $('#view').innerHTML = `<div class="x-wrap">${mast('edición de las ' + (when ? madrid(when, {hour: '2-digit', minute: '2-digit'}) : '—'), when)}
+  ${S.arch ? `<div class="x-warn arch">Estás leyendo una edición antigua, la del ${madrid(when, {weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'})}. <a href="#ideas" id="xback">Volver a la última</a></div>` : ''}
+  ${stale ? `<div class="x-warn">La última edición es de hace ${ageH < 48 ? Math.round(ageH) + ' horas' : Math.round(ageH / 24) + ' días'}. Es posible que alguna lectura no se haya hecho: no des por actual lo que lees aquí.</div>` : ''}
+  ${hoy ? `<div class="x-hoy ${esc(hoy.accion || 'nada')}"><span>${ACC[hoy.accion] || 'Hoy'}</span><p>${esc(hoy.texto || '')}</p></div>` : ''}
   <section class="x-hero" id="aihero" style="${sd ? '' : 'grid-template-columns:1fr'}"><div class="x-hin"><div class="x-stamp" aria-hidden="true">Última edición</div>
     <span class="x-kick">${live.length ? 'La idea del día' : 'Hoy, sin idea'}</span>
     <h1 class="x-h1">${headline(ses.titular || 'Lo que pasa en el mundo, *hilado con sentido común.*')}</h1>
@@ -769,15 +811,16 @@ function renderIdeas() {
       <div class="x-stat"><span class="x-mono">Próxima edición</span><b>${nx ? madrid(nx, {hour: '2-digit', minute: '2-digit'}) : '—'}<small id="aicount">${nx ? 'en ' + untilTxt(nx) : ''}</small></b></div>
     </div></div>${sd}</section>
 
+  ${camb.length ? `<div class="x-camb x-rv"><h4>${NEW} Qué ha cambiado desde la edición anterior</h4><ul>${camb.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div>` : ''}
   <section class="x-sec">${secHead('<b>Exclusiva</b> · Ideas vivas', 'Pocas, razonadas <em>y con la salida escrita</em>', 'Cada idea nace de un hecho, no de un gráfico. Lleva su cadena lógica, lo que el precio ya ha recogido, qué tiene que pasar para entrar y qué hecho la rompe. No hay tope de ganancia: se sale cuando cambia el hecho que la sostenía.')}
     ${live.length ? live.map(ideaCard).join('') : '<div class="x-none x-rv"><h3>Hoy no hay ninguna idea que merezca tu dinero.</h3><p>Es lo normal. El entrenamiento enseña que casi todo lo evidente ya está en el precio el mismo día. Cuando no hay nada, se dice.</p></div>'}
   </section>
 
   ${facts.length ? `<section class="x-sec">${secHead('<b>Teletipo</b> · En el radar', 'Lo que está moviendo <em>el mercado</em>', 'Hechos de las últimas sesiones. Unos alimentan las ideas de arriba; otros todavía no dan para una idea, y se dice por qué.')}
-    <div class="x-wire">${facts.map((h, i) => `<div class="x-rad" style="--tc:${TONE[h.tono] || TONE.neutro}"><div class="ix">${{riesgo: 'Riesgo', oportunidad: 'Oportunidad', neutro: 'Contexto'}[h.tono] || 'Contexto'}</div><h4>${esc(h.titulo)}</h4><p>${esc(h.detalle)}</p><div class="ef"><span class="x-mono">Qué implica</span>${esc(h.efecto)}</div></div>`).join('')}</div></section>` : ''}
+    <div class="x-wire">${facts.map((h, i) => `<div class="x-rad" style="--tc:${TONE[h.tono] || TONE.neutro}"><div class="ix">${{riesgo: 'Riesgo', oportunidad: 'Oportunidad', neutro: 'Contexto'}[h.tono] || 'Contexto'}${h.nuevo ? NEW : ''}</div><h4>${esc(h.titulo)}</h4><p>${esc(h.detalle)}</p><div class="ef"><span class="x-mono">Qué implica</span>${esc(h.efecto)}</div></div>`).join('')}</div></section>` : ''}
 
   ${disc.length ? `<section class="x-sec">${secHead('<b>Papelera</b> · Descartadas', 'Parecían buenas <em>y no te las doy</em>', 'Tan importante como dar una idea es saber cuál callarse. Cada descarte lleva la lección del entrenamiento que lo explica.')}
-    ${disc.map(d => `<div class="x-dis x-rv"><h4>${esc(d.titulo)}</h4><div><p>${esc(d.por_que)}</p>${d.leccion ? `<div class="le"><b>Lección</b>${esc(d.leccion)}</div>` : ''}</div></div>`).join('')}</section>` : ''}
+    ${disc.map(d => `<div class="x-dis x-rv"><h4>${d.nuevo ? NEW : ''}${esc(d.titulo)}</h4><div><p>${esc(d.por_que)}</p>${d.leccion ? `<div class="le"><b>Lección</b>${esc(d.leccion)}</div>` : ''}</div></div>`).join('')}</section>` : ''}
 
   <section class="x-sec">${secHead('<b>Resultados</b> · Marcador', 'Cada idea, <em>contra el S&amp;P 500</em>', 'Las ideas no se borran ni se retocan. Las abiertas cuentan desde el cierre del día en que saltó su disparador; las que siguen en vigilancia, desde el precio del día en que se dieron, solo como referencia.')}
     ${ideas.map(i => { const t = S.idt && S.idt.ideas && S.idt.ideas[i.id]; return `<div class="x-sc x-rv"><div><h4>${esc(i.titulo)}</h4><span class="x-mono">${ST[i.estado] || ''} · ${fdate(i.entrada || i.fecha)}${t && t.hasta ? ' → ' + fdate(t.hasta) : ''}</span></div><div class="v">${t && t.media != null ? sgn(t.media) : '—'}<small>la idea</small></div><div class="v spy">${t && t.spy != null ? sgn(t.spy) : '—'}<small>S&amp;P 500</small></div></div>`; }).join('')}
@@ -785,6 +828,29 @@ function renderIdeas() {
   </section>
   <p class="x-end">Esto no es una recomendación de inversión personalizada. Es un razonamiento público, con su registro, para que juzgues tú. Las noticias salen de búsquedas en prensa y pueden contener errores; los precios son de Yahoo Finance al último cierre. En <a href="#entrenamiento">Entrenamiento</a> está lo que se ha aprendido probando este tipo de ideas con hechos pasados.</p></div>`;
   aiStart(ses.pulso || '');
+  const xb = $('#xback'); if (xb) xb.onclick = e => { e.preventDefault(); go('ideas'); };
+}
+/* hemeroteca: todas las ediciones guardadas; al abrir una se enseña tal como se publicó */
+function backLive() { if (S.arch && S.live) { S.ideas = S.live.ideas; S.idt = S.live.idt; } S.arch = null; }
+async function openEd(id) {
+  let E = null; try { E = await J('ediciones/' + id + '.json'); } catch (e) { E = null; }
+  if (!E) return;
+  if (!S.arch) S.live = {ideas: S.ideas, idt: S.idt};
+  const last = S.eds && S.eds[0] && S.eds[0].id === id;
+  if (last) { backLive(); return go('ideas'); }
+  S.ideas = E.ideas; S.idt = E.track; S.arch = id; S.keepArch = 1; go('ideas');
+}
+function renderArch() {
+  const E = S.eds || [], TIPO = {manual: 'Especial', mañana: 'Mañana', manana: 'Mañana', preapertura: 'Preapertura', cierre: 'Cierre'}, ACC = {nada: 'Nada que hacer', vigilar: 'Solo vigilar', comprar: 'Comprar', vender: 'Vender'};
+  let day = '', rows = '';
+  for (const e of E) { const d = new Date(e.cuando), dk = madrid(d, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
+    if (dk !== day) { day = dk; rows += `<h3 class="x-day">${dk}</h3>`; }
+    rows += `<a class="x-ed x-rv" href="#hemeroteca" data-ed="${esc(e.id)}"><time>${madrid(d, {hour: '2-digit', minute: '2-digit'})}<small>${TIPO[e.tipo] || esc(e.tipo || '')}</small></time><div><h4>${esc(e.titular || 'Sin titular')}</h4>${e.hoy ? `<p>${esc(e.hoy)}</p>` : ''}</div><span class="x-acc ${esc(e.accion || 'nada')}">${ACC[e.accion] || '—'}</span><span class="x-mono">${e.vivas} idea${e.vivas === 1 ? '' : 's'} viva${e.vivas === 1 ? '' : 's'}</span></a>`; }
+  $('#view').innerHTML = `<div class="x-wrap">${mast('hemeroteca')}
+    <section class="x-sec" style="margin-top:28px">${secHead('<b>Archivo</b> · Hemeroteca', 'Todas las ediciones, <em>tal como se publicaron</em>', 'Cada lectura queda guardada entera el día que sale. Nada se corrige después: si una idea salió mal, aquí sigue como se dijo. Abre cualquiera para leerla.')}
+    ${rows || '<div class="x-none"><h3>Todavía no hay ediciones guardadas.</h3><p>La hemeroteca empieza a llenarse con la próxima lectura.</p></div>'}</section></div>`;
+  document.querySelectorAll('.x-ed').forEach(a => a.onclick = e => { e.preventDefault(); openEd(a.dataset.ed); });
+  aiStart('');
 }
 
 function casosSec() {                                                         // lo que el propio diario ha dicho y lo que pasó después: es con lo que aprende
