@@ -7,9 +7,10 @@ La parte principal de VP Scanner no es un cribador ni una regla de precio. Es un
 1. **Leer el estado**: `data/ideas.json` (ideas vivas, con su disparador y su invalidación) y `data/ideas_playbook.json` (lecciones del entrenamiento).
 2. **Hechos**: buscar qué ha pasado desde la última sesión (geopolítica, materias primas, bancos centrales, resultados, escándalos, regulación, catástrofes). Solo cuenta lo confirmado por más de una fuente; un rumor se apunta como rumor.
 3. **Revisar las ideas vivas**: ¿ha saltado el disparador? → `abierta`, con `entrada` = fecha de hoy. ¿Ha ocurrido la invalidación o se ha cumplido el horizonte? → `cerrada`, con `salida`. Si no, una nota de seguimiento solo cuando haya algo nuevo que decir.
-4. **Ideas nuevas**: para cada hecho, primer efecto (el obvio) y segundo efecto (el que tarda). Mirar cuánto se ha movido ya cada valor. Pasar el filtro de las lecciones (abajo). **Máximo 2 ideas nuevas por sesión; lo normal es ninguna.** No se rellena por rellenar.
-5. **Descartes**: las ideas que parecían buenas y no pasan el filtro se publican en `descartes` con la lección que las tumba. La lista se rehace en cada sesión (solo las de hoy).
-6. **Publicar**: reescribir `sesion` (pulso de 2–4 frases y 3–6 hechos), añadir una línea a `sesiones`, ejecutar `python -m vp.ideas` (precios y marcador), `python tests/test_vp.py ideas` y subir los cambios.
+4. **Barrido amplio antes de elegir**: mirar como mínimo estos frentes, no solo el titular del día: geopolítica · materias primas · tipos y bancos centrales · resultados y guías de la última semana · fusiones y compras · regulación, sentencias y política · accidentes, averías y catástrofes · salud y farmacia · tecnología · consumo. La idea tiene que salir de un hecho **de las últimas una o dos sesiones**. Un tema que ya tuvo su momento no se propone ni se lista como descarte «porque llegamos tarde»: simplemente no está. Los ejemplos que el usuario pone para explicarse (petróleo y aerolíneas, Nvidia y su competencia) son eso, ejemplos, y no temas a seguir.
+5. **Ideas nuevas**: para cada hecho, primer efecto (el obvio) y segundo efecto (el que tarda). Mirar cuánto se ha movido ya cada valor. Pasar el filtro de las lecciones (abajo). **Máximo 2 ideas nuevas por sesión; lo normal es ninguna.** No se rellena por rellenar.
+6. **Descartes**: las ideas que parecían buenas y no pasan el filtro se publican en `descartes` con la lección que las tumba. La lista se rehace en cada sesión (solo las de hoy).
+7. **Publicar**: reescribir `sesion` (pulso de 2–4 frases y 3–6 hechos), añadir una línea a `sesiones`, ejecutar `python -m vp.ideas` (precios y marcador), `python tests/test_vp.py ideas` y subir los cambios.
 
 ## El filtro: qué ideas se dan y cuáles no
 
@@ -33,7 +34,7 @@ La **convicción** (1–5) dice cuánto encaja la idea con un tipo de veredicto 
 
 Reglas del registro:
 
-- Una idea **no se borra ni se retoca** aunque salga mal: solo cambia de estado y gana notas.
+- Una idea **no se borra ni se retoca** aunque salga mal: solo cambia de estado y gana notas. (Única excepción hasta hoy: el 16-nov-2026 se retiraron a petición del usuario las dos ideas de arranque, que eran sus ejemplos y no temas del día.)
 - La invalidación es un **hecho**, no un stop de precio. No hay tope de ganancia.
 - El marcador (`data/ideas_track.json`) compara cada idea con el SPY: abierta, desde el cierre del día de entrada; en vigilancia, desde la referencia (solo orientativo).
 - No es asesoramiento personalizado: es un razonamiento público con su registro.

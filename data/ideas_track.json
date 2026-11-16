@@ -1,47 +1,33 @@
 {
- "generado": 1794822303,
+ "generado": 1794824126,
  "ideas": {
-  "2026-11-16-iran-aerolineas": {
+  "2026-11-16-apagon-faa": {
    "estado": "vigilancia",
    "desde": "2026-11-16",
    "hasta": "2026-11-13",
    "por_valor": {
-    "UAL": {
-     "ref": 109.31,
-     "ahora": 109.31,
-     "pct": -0.0
-    },
-    "ALK": {
-     "ref": 38.48,
-     "ahora": 38.48,
-     "pct": -0.0
-    },
-    "DAL": {
-     "ref": 86.25,
-     "ahora": 86.25,
+    "LUMN": {
+     "ref": 4.09,
+     "ahora": 4.09,
      "pct": 0.0
     },
-    "RCL": {
-     "ref": 323.27,
-     "ahora": 323.27,
+    "LDOS": {
+     "ref": 130.53,
+     "ahora": 130.53,
      "pct": -0.0
-    }
-   },
-   "media": 0.0,
-   "spy": -0.0
-  },
-  "2026-11-16-nvda-sin-huang": {
-   "estado": "vigilancia",
-   "desde": "2026-11-16",
-   "hasta": "2026-11-13",
-   "por_valor": {
-    "NVDA": {
-     "ref": 162.85,
-     "ahora": 162.85,
+    },
+    "IDR.MC": {
+     "ref": 58.8,
+     "ahora": 59.02,
+     "pct": 0.37
+    },
+    "RTX": {
+     "ref": 198.58,
+     "ahora": 198.58,
      "pct": 0.0
     }
    },
-   "media": 0.0,
+   "media": 0.09,
    "spy": -0.0
   }
  }
