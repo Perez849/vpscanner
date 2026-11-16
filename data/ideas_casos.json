@@ -47,6 +47,36 @@
    "e60": null
   },
   {
+   "id": "2026-11-16-comprar-aerolineas-porque-el-petroleo-baja-un-3-",
+   "fecha": "2026-11-16",
+   "titulo": "Comprar aerolíneas porque el petróleo baja un 3,5 %",
+   "tipo": "obvio",
+   "valores": [
+    "DAL",
+    "UAL",
+    "JETS"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-16-comprar-semiconductores-porque-han-caido-un-4",
+   "fecha": "2026-11-16",
+   "titulo": "Comprar semiconductores porque han caído un 4 %",
+   "tipo": "caido",
+   "valores": [
+    "SMH",
+    "NVDA",
+    "AMD"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-16-oro-plata-y-constructoras-porque-han-caido-con-l",
    "fecha": "2026-11-16",
    "titulo": "Oro, plata y constructoras, porque han caído con la subida de tipos",
@@ -57,6 +87,19 @@
     "XHB"
    ],
    "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-16-panico-chips",
+   "fecha": "2026-11-16",
+   "titulo": "Si Wall Street cierra hoy en −2 %, mañana se compra el Nasdaq",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "dada": true,
    "e5": null,
    "e20": null,
    "e60": null
@@ -74,5 +117,5 @@
    "aciertos": 0
   }
  },
- "generado": 1794852475
+ "generado": 1794859901
 }

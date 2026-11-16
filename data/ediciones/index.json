@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-16-2011",
+  "cuando": "2026-11-16T20:11:21Z",
+  "tipo": "cierre",
+  "titular": "Los chips hunden a Wall Street. Si cierra en −2 %, mañana se compra.",
+  "hoy": "Nada que comprar hoy al cierre. Mira el S&P 500 a las 22:00: si acaba en −2 % o peor, mañana a la apertura se compra Nasdaq-100 (QQQ). Si no, nada.",
+  "accion": "vigilar",
+  "vivas": 2
+ },
+ {
   "id": "2026-11-16-1315",
   "cuando": "2026-11-16T13:15:06Z",
   "tipo": "preapertura",

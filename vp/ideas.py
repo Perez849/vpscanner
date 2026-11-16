@@ -58,7 +58,7 @@ def score(idea: Dict, cl: Dict[str, Dict[str, float]]) -> Dict:
         a = on_or_before(c, ent) if ent else None
         p0 = a[1] if a else (idea.get('ref') or {}).get(s)
         b = on_or_before(c, sal)
-        if p0 and b:
+        if p0 and b and (ent or b[0] >= (idea.get('fecha') or '')):          # en vigilancia no se compara con cierres anteriores al día en que se dio la idea
             por[s] = {'ref': round(p0, 2), 'ahora': round(b[1], 2), 'pct': round(100 * (b[1] / p0 - 1), 2)}
             ks = [k for k in sorted(c) if k <= b[0]][-SERIE:]                 # los últimos cierres, para el gráfico de la ficha; i0 = primer cierre desde el día del hecho
             desde = ent or idea.get('fecha') or ''

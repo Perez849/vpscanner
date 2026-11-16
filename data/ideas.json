@@ -1,58 +1,137 @@
 {
- "actualizado": "2026-11-16T13:15:06Z",
+ "actualizado": "2026-11-16T20:11:21Z",
  "sesion": {
-  "cuando": "2026-11-16T13:15:06Z",
-  "tipo": "preapertura",
-  "titular": "Un país entero en tierra. *Alguien cobra el arreglo.*",
-  "pulso": "A una hora de la apertura, la idea del control aéreo sigue esperando su disparador: el Gobierno ha pedido los 50.000 millones, pero nadie en el Congreso se ha comprometido todavía a tramitarlos. El mercado solo ha castigado a L3Harris, un 3 % abajo antes de abrir. De fondo, los futuros caen un 0,6 % con Nvidia otra vez a la baja y el bono a 10 años en el 5,15 %.",
-  "hechos": [
-   {
-    "titulo": "Apagón del control aéreo de EE. UU.",
-    "detalle": "El viernes 13, de 15:54 a 20:15 (hora de Nueva York), la FAA paró todas las salidas por un fallo de comunicaciones en 17 de sus 22 centros de ruta. El secretario de Transporte ha pedido al Congreso 50.000 millones de emergencia, frente a los 30.000 que pedía el jueves.",
-    "efecto": "Hoy es la primera sesión que lo cotiza. Todavía no hay respuesta de ningún responsable del Congreso: la idea sigue en vigilancia.",
-    "tono": "oportunidad"
-   },
-   {
-    "titulo": "L3Harris, señalada",
-    "detalle": "El Gobierno investiga si un equipo de L3Harris, dueña de la red actual, provocó el fallo al cambiar líneas. El sindicato de técnicos lo atribuye a dos equipos actualizados ese mismo día, no a su antigüedad. La acción cae un 3 % antes de la apertura.",
-    "efecto": "Si se confirma que fue un error puntual y no un problema de equipos viejos, la urgencia política baja. Es justo lo que rompería la idea.",
-    "tono": "riesgo"
-   },
-   {
-    "titulo": "El bono a 10 años, en el 5,15 %",
-    "detalle": "El dos años subió 35 puntos básicos en una semana, el mayor salto en más de dos años. El mercado da por hecha una subida de tipos el 9 de diciembre y un gobernador de la Fed habla de medio punto.",
-    "efecto": "Oro −4,6 % y plata −5,8 % en la semana; constructoras −5 %. Aseguradoras y gestoras de nóminas, que ganan con los tipos altos, ya están en máximos.",
-    "tono": "riesgo"
-   },
-   {
-    "titulo": "Los demócratas ganan las dos cámaras",
-    "detalle": "Tomarán posesión en enero. Hospitales y aseguradoras de Medicaid subieron entre un 6 % y un 10 % tras el 3 de noviembre y llevan una semana planos.",
-    "efecto": "Cualquier ley necesita la firma de Trump: se espera bloqueo más que cambios. Importa para la idea de hoy, porque el dinero del control aéreo tendrá que pasar por ellos.",
-    "tono": "neutro"
-   },
-   {
-    "titulo": "Antes de la apertura",
-    "detalle": "Los futuros del S&P 500 ceden un 0,6 %. Nvidia cae otro 3,5 % a un día de sus resultados; Take-Two sube un 3 % antes del lanzamiento de su videojuego estrella y Aramark pierde un 5 % tras sus cuentas.",
-    "efecto": "Movimientos de empresa, sin un hecho nuevo que cambie el cuadro. Esta semana quedan los resultados de las cadenas de consumo, las actas de la Fed y las ventas minoristas.",
-    "tono": "neutro"
-   }
-  ],
+  "cuando": "2026-11-16T20:11:21Z",
+  "tipo": "cierre",
+  "titular": "Los chips hunden a Wall Street. *Si cierra en −2 %, mañana se compra.*",
   "hoy": {
    "accion": "vigilar",
-   "texto": "Nada que comprar todavía. La idea del control aéreo espera a que alguien en el Congreso se comprometa con los fondos; si pasa, se entra al cierre de ese día."
+   "texto": "Nada que comprar hoy al cierre. Mira el S&P 500 a las 22:00: si acaba en −2 % o peor, mañana a la apertura se compra Nasdaq-100 (QQQ). Si no, nada."
   },
   "cambios": [
-   "La petición de 50.000 millones ya está presentada, pero ningún responsable del Congreso se ha comprometido a tramitarla: el disparador no ha saltado.",
-   "El sindicato de técnicos discute la causa del apagón (dos equipos actualizados ese día, no su antigüedad). Si se confirma, la idea se rompe.",
-   "L3Harris cae un 3 % antes de la apertura; el resto de valores de la idea, casi sin moverse."
+   "Idea nueva, condicionada al cierre de hoy: comprar el Nasdaq-100 mañana si el S&P 500 acaba en −2 % o peor. A las 21:10 está en −1,9 %.",
+   "Hecho nuevo: EE. UU. cierra el acceso de China a chips avanzados a través de centros de datos de otros países. Los semiconductores caen un 4,4 %.",
+   "La idea del control aéreo se enfría: los demócratas llaman «rescate» a la petición y exigen cuentas antes de dar dinero. Convicción de 3 a 2.",
+   "Dos descartes nuevos: comprar chips en la caída y comprar aerolíneas por el petróleo."
+  ],
+  "pulso": "Wall Street pierde un 2 % a media hora del cierre, con los semiconductores un 4 % abajo por una norma que cierra a China el acceso a chips a través de terceros países. El miedo sube un 22 %. Si el índice acaba en −2 % o peor, el entrenamiento dice que mañana se compra el Nasdaq; si no, es solo un mal día. La idea del control aéreo, mientras, pierde fuerza en el Congreso.",
+  "hechos": [
+   {
+    "titulo": "Wall Street, cerca del −2 %",
+    "detalle": "A las 21:10: S&P 500 −1,9 %, Nasdaq-100 −2,4 %, pequeñas −1,7 %. El VIX sube un 22 %, a 23,6. Solo aguantan consumo básico y eléctricas.",
+    "efecto": "En el umbral donde el entrenamiento dice que comprar el índice a la mañana siguiente ha compensado. Se decide con el cierre.",
+    "tono": "oportunidad",
+    "nuevo": true
+   },
+   {
+    "titulo": "Norma nueva contra los chips para China",
+    "detalle": "Comercio exige licencia para enviar semiconductores avanzados a Singapur, Brasil, Indonesia, Malasia y Tailandia, y da 90 días a los centros de datos que ya dan servicio. Cierra la vía por la que empresas chinas usaban chips vetados. Nvidia −4,2 %, AMD −5,1 %, Intel −6,6 %.",
+    "efecto": "Puede ser un cambio duradero para las ventas del sector, no un susto. Nvidia presenta resultados mañana tras el cierre: ahí se sabrá cuánto pesa.",
+    "tono": "riesgo",
+    "nuevo": true
+   },
+   {
+    "titulo": "El Congreso recibe mal la petición para el control aéreo",
+    "detalle": "La principal demócrata de presupuestos de la Cámara llama «rescate» a los 50.000 millones; su partido, que tomará las dos cámaras en enero, pide cuentas del dinero ya dado. Algunos republicanos apoyan al Gobierno.",
+    "efecto": "Lo contrario del compromiso que exige la idea. La petición, además, se cruza con la ley de gasto que hay que aprobar en diciembre.",
+    "tono": "riesgo",
+    "nuevo": true
+   },
+   {
+    "titulo": "El petróleo cae otro 3,5 %",
+    "detalle": "Brent a 92,3 $ y WTI a 85,6 $. Pesa la previsión de exceso de oferta para el cuarto trimestre.",
+    "efecto": "Las aerolíneas son de lo poco que sube hoy (United +0,9 %), pero el efecto ya está en el precio el mismo día.",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "Mañana, Nvidia",
+    "detalle": "Resultados tras el cierre del martes, los primeros sin Jensen Huang y un día después de la norma de exportación.",
+    "efecto": "El dato que puede alargar la venta de hoy o cortarla. Quien compre antes asume ese riesgo.",
+    "tono": "neutro"
+   }
   ]
  },
  "ideas": [
   {
+   "id": "2026-11-16-panico-chips",
+   "fecha": "2026-11-16",
+   "estado": "vigilancia",
+   "conviccion": 2,
+   "tipo": "panico",
+   "caduca": "2026-11-17",
+   "nuevo": true,
+   "titulo": "Si Wall Street cierra hoy en −2 %, mañana se compra el Nasdaq",
+   "resumen": "Los días en que el S&P 500 pierde un 2 % o más se vende de todo sin distinguir, y comprar el índice tecnológico a la mañana siguiente ha salido bien casi tres de cada cuatro veces. Hoy el índice ronda ese umbral a media hora del cierre. Es una idea de estadística, no de tesis, y llega con los resultados de Nvidia a un día.",
+   "hecho": "A las 21:10 (hora española) el S&P 500 cae un 1,9 %, el Nasdaq-100 un 2,4 % y los semiconductores un 4,4 %. El índice del miedo (VIX) sube un 22 %, hasta 23,6. El detonante es una norma nueva del Departamento de Comercio que cierra el acceso de empresas chinas a chips avanzados a través de centros de datos en otros países, a un día de los resultados de Nvidia.",
+   "cadena": [
+    "Una norma que golpea a los chips llega en el peor momento: Nvidia presenta resultados mañana, sin su consejero delegado, y la Fed está a punto de subir tipos.",
+    "El mercado no espera a saber cuánto pesa la norma: vende semiconductores primero y el resto de la tecnología después.",
+    "Cuando la caída del índice entero llega al 2 %, entran las ventas automáticas y las de quien necesita reducir riesgo, que no miran precios.",
+    "Ese exceso es lo que se ha recuperado otras veces: no hace falta acertar con Nvidia, basta con que el índice deje de venderse a ciegas.",
+    "Por eso se compra el índice (QQQ) y no un valor: se apuesta por el rebote del conjunto, no por quién sale mejor parado de la norma."
+   ],
+   "valores": [
+    {
+     "sym": "QQQ",
+     "nombre": "Nasdaq-100 (Invesco QQQ)",
+     "papel": "el índice",
+     "por_que": "Es lo que se midió en el entrenamiento. Cae un 2,4 % hoy y está a un 12 % de su máximo del año."
+    }
+   ],
+   "en_precio": "La caída sí, por definición. Lo que no está en el precio es si mañana sigue: los resultados de Nvidia salen tras el cierre del martes y pueden alargar la venta o cortarla.",
+   "disparador": "Que el S&P 500 cierre hoy con una caída del 2 % o mayor (se sabe a las 22:00, hora española). Si se cumple, se compra QQQ en la apertura de mañana, que es exactamente lo que se probó. Comprar hoy al cierre es adelantarse a una condición que a esta hora aún no se cumple.",
+   "invalidacion": "Que el índice cierre por encima de −2 %: entonces es un mal día normal y no hay idea. Si ya se está dentro: que Nvidia recorte previsiones por la norma y la caída pase de susto a cambio duradero para todo el sector.",
+   "en_contra": "Hoy no hay pánico ciego, hay un motivo concreto: una norma que quita ventas a los chips. Si es un cambio duradero, lo «barato» puede abaratarse más. La ventaja medida para caídas del 2 % es modesta (+5,6 % en 60 sesiones frente a +4,1 % de un tramo cualquiera) y una de cada cuatro veces salió mal. Y mañana por la noche Nvidia puede darle la vuelta a todo en cualquier sentido: quien compre a la apertura se come ese riesgo entero.",
+   "no_hacer": "Comprar semiconductores sueltos «porque han caído un 4 %». Y tampoco entrar hoy antes del cierre: con el índice en −1,9 %, la condición no está cumplida.",
+   "horizonte": "De 1 a 3 meses desde la entrada.",
+   "precedentes": [
+    {
+     "caso": "88 días con el S&P 500 entre −2 % y −3 %",
+     "que_paso": "comprando el Nasdaq-100 en la apertura siguiente: +1,9 % en 20 sesiones y +5,6 % en 60; ganó el 72 % de las veces. Un tramo cualquiera de 60 sesiones da +4,1 %."
+    },
+    {
+     "caso": "42 días con el S&P 500 en −3 % o peor",
+     "que_paso": "+7,6 % en 60 sesiones; ganó el 73 %. Cuanto mayor la caída, mayor el rebote."
+    },
+    {
+     "caso": "DeepSeek, 27-ene-2025",
+     "que_paso": "otro susto de chips con motivo concreto: Nvidia −3,8 % más en las 5 sesiones siguientes antes de recuperar. El rebote no es inmediato."
+    }
+   ],
+   "ref": {
+    "QQQ": 663.27,
+    "SPY": 740.12
+   },
+   "entrada": null,
+   "notas": [
+    {
+     "fecha": "2026-11-16",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Edición de cierre. A las 21:10 el S&P 500 está en −1,9 %: a una décima del umbral. Se decide con el cierre de las 22:00; si no llega a −2 %, la idea caduca mañana sin haberse abierto."
+    }
+   ],
+   "fuentes": [
+    {
+     "t": "Yahoo Finance (sesión en directo)",
+     "u": "https://finance.yahoo.com/markets/live/stock-market-today-monday-november-16-dow-sp-500-nasdaq-nvidia-oil-091631084.html"
+    },
+    {
+     "t": "South China Morning Post (norma de chips)",
+     "u": "https://scmp.com/tech/article/3374639/us-tightens-ai-chip-export-curbs-close-chinas-overseas-data-centre-loophole"
+    },
+    {
+     "t": "The Motley Fool (mediodía)",
+     "u": "https://www.fool.com/coverage/stock-market-today/2026/11/16/stock-market-midday-nov-16-stocks-slide-as-tech-selling-intensifies-across-the-market/"
+    }
+   ]
+  },
+  {
    "id": "2026-11-16-apagon-faa",
    "fecha": "2026-11-16",
    "estado": "vigilancia",
-   "conviccion": 3,
+   "conviccion": 2,
    "tipo": "rival",
    "titulo": "Apagón del control aéreo → quien construye la red nueva",
    "resumen": "Un fallo que deja en tierra a todo un país no se arregla con un parche: obliga a gastar, y deprisa. El dinero no irá a la empresa señalada por la avería, sino a quienes ya tienen firmados los contratos para sustituirla. La noticia llegó con la bolsa cerrada, así que el precio aún no la ha recogido.",
@@ -129,6 +208,12 @@
     {
      "fecha": "2026-11-16",
      "texto": "Preapertura. La petición de 50.000 millones está hecha, pero no he encontrado ningún compromiso del Congreso: el disparador no ha saltado. El sindicato de técnicos discute la versión del Gobierno y habla de dos equipos actualizados ese día; si la investigación le da la razón, se cumple la condición que rompe la idea. Antes de abrir: L3Harris −3 %, RTX +0,5 %, Indra +0,2 %, Lumen sin cambios."
+    },
+    {
+     "fecha": "2026-11-16",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "El disparador no ha saltado y el día ha ido en contra: la principal demócrata de la comisión de presupuestos de la Cámara ha llamado «rescate» a la petición, y su partido exige cuentas del dinero ya aprobado antes de dar más. Solo algunos republicanos la apoyan. Bajo la convicción de 3 a 2. En una sesión de −1,9 % para el S&P 500: Lumen −3,5 %, RTX −2,1 %, Indra −1,9 %, Leidos −0,7 %; L3Harris −4,4 %."
     }
    ],
    "fuentes": [
@@ -163,6 +248,10 @@
     {
      "t": "CNBC (preapertura)",
      "u": "https://www.cnbc.com/2026/11/16/stocks-moving-the-most-today-live-updates.html"
+    },
+    {
+     "t": "CNN (reacción del Congreso)",
+     "u": "https://www.cnn.com/2026/11/15/politics/congress-additional-funding-request-faa-duffy"
     }
    ],
    "caduca": "2026-12-11",
@@ -172,39 +261,29 @@
  "descartes": [
   {
    "fecha": "2026-11-16",
-   "titulo": "Oro, plata y constructoras, porque han caído con la subida de tipos",
-   "por_que": "Es el primer efecto del bono al 5 %, y ocurrió en la misma semana en que se movió. Sin un hecho nuevo, comprar la caída es adivinar el suelo.",
-   "leccion": "el beneficiario o la víctima evidente de los tipos se mueve el mismo día; después no queda nada que se distinga del azar (oro −2 % → mineras: −0,2 % en las 5 sesiones siguientes).",
+   "titulo": "Comprar semiconductores porque han caído un 4 %",
+   "por_que": "La caída tiene un motivo concreto que puede durar (una norma que les quita ventas) y mañana presenta Nvidia. Es comprar al caído sin la prueba.",
+   "leccion": "al gigante que se hunde se le espera hasta que haya una prueba de negocio: 21 caídas famosas, −6,7 % en las 20 sesiones siguientes.",
+   "tipo": "caido",
    "valores": [
-    "GDX",
-    "SLV",
-    "XHB"
+    "SMH",
+    "NVDA",
+    "AMD"
    ],
-   "tipo": "obvio"
+   "nuevo": true
   },
   {
    "fecha": "2026-11-16",
-   "titulo": "Aseguradoras y gestoras de nóminas, que ganan con los tipos altos",
-   "por_que": "La lógica es buena (invierten el dinero de sus clientes a un tipo cada vez mayor) y es un segundo efecto, pero ADP, Chubb y Progressive ya están en máximos históricos. Vuelve a mirarse si la Fed sube el 9 de diciembre y anuncia más.",
-   "leccion": "una idea necesita que quede algo por recoger en el precio.",
-   "valores": [
-    "ADP",
-    "CB",
-    "PGR"
-   ],
-   "tipo": "segundo"
-  },
-  {
-   "fecha": "2026-11-16",
-   "titulo": "Aerolíneas, por el susto del apagón",
-   "por_que": "Cancelaron el 20 % de los vuelos del sábado, pero es un coste de un fin de semana y ni siquiera han caído lo bastante como para hablar de castigo excesivo.",
-   "leccion": "los sustos de un día se devuelven: 18 casos, −4,7 % en 20 sesiones para quien compró al día siguiente.",
+   "titulo": "Comprar aerolíneas porque el petróleo baja un 3,5 %",
+   "por_que": "Es el beneficiario evidente y ya sube hoy mismo. Sin un hecho duradero detrás (no hay acuerdo ni cambio en la guerra), mañana no queda nada que recoger.",
+   "leccion": "petróleo −4 % → aerolíneas: +0,8 % el mismo día y después nada que se distinga del azar.",
+   "tipo": "obvio",
    "valores": [
     "DAL",
     "UAL",
-    "AAL"
+    "JETS"
    ],
-   "tipo": "susto"
+   "nuevo": true
   }
  ],
  "sesiones": [
@@ -219,6 +298,10 @@
   {
    "cuando": "2026-11-16T13:15:06Z",
    "resumen": "Preapertura. La idea del control aéreo sigue en vigilancia: petición presentada, sin compromiso del Congreso; el sindicato discute la causa. Sin ideas nuevas."
+  },
+  {
+   "cuando": "2026-11-16T20:11:21Z",
+   "resumen": "Cierre. Idea nueva condicionada al cierre (pánico: Nasdaq si el S&P 500 acaba en −2 %). La del control aéreo sigue en vigilancia con menos convicción. Dos descartes nuevos."
   }
  ]
 }
