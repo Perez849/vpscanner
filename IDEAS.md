@@ -1,6 +1,6 @@
 # Ideas por coyuntura · protocolo del analista
 
-La parte principal de VP Scanner no es un cribador ni una regla de precio. Es un analista que, dos veces al día (9:00 y 14:00, hora española, de lunes a viernes), lee lo que ha pasado en el mundo y razona **quién gana y quién pierde** con ello. Lo publica en la pestaña **Ideas** de la web.
+La parte principal de **The Many Saints of Wall St** no es un cribador ni una regla de precio. Es un analista que, tres veces al día (9:00, 14:00 y 21:30, hora española, de lunes a viernes), lee lo que ha pasado en el mundo y razona **quién gana y quién pierde** con ello. Lo publica en la pestaña **Ideas** de la web.
 
 ## Qué hace cada sesión
 
@@ -11,6 +11,25 @@ La parte principal de VP Scanner no es un cribador ni una regla de precio. Es un
 5. **Ideas nuevas**: para cada hecho, primer efecto (el obvio) y segundo efecto (el que tarda). Mirar cuánto se ha movido ya cada valor. Pasar el filtro de las lecciones (abajo). **Máximo 2 ideas nuevas por sesión; lo normal es ninguna.** No se rellena por rellenar.
 6. **Descartes**: las ideas que parecían buenas y no pasan el filtro se publican en `descartes` con la lección que las tumba. La lista se rehace en cada sesión (solo las de hoy).
 7. **Publicar**: reescribir `sesion` (`titular`: una frase corta de periódico sobre lo más importante del día, con la parte clave entre asteriscos; pulso de 2–4 frases y 3–6 hechos), añadir una línea a `sesiones`, ejecutar `python -m vp.ideas` (precios y marcador), `python tests/test_vp.py ideas` y subir los cambios.
+
+## Las tres ediciones
+
+| Edición | Para qué sirve |
+|---|---|
+| **9:00** | Qué ha pasado desde el cierre de ayer (Asia, apertura europea, noticias de la noche). |
+| **14:00** | Preapertura de Wall Street: resultados y datos publicados antes de abrir. |
+| **21:30** | Media hora antes del cierre: qué ha pasado **durante la sesión** y qué habría que comprar al cierre para adelantarse a la apertura de mañana. Es la edición en la que una idea puede pasar a «abierta» con entrada al cierre de hoy. |
+
+## Cómo aprende
+
+1. **Cada idea lleva su `tipo`** (`estructural`, `susto`, `obvio`, `panico`, `rival`, `caido`, `segundo`, `contagio`), y **cada descarte lleva también `tipo` y `valores`** (los tickers que se habrían comprado). Sin eso no se puede medir si descartar fue acertado.
+2. `python -m vp.ideas` apunta cada idea dada y cada descarte en `data/ideas_casos.json` y, cuando pasan 5, 20 y 60 sesiones, mide lo que hicieron sus valores frente al SPY, igual que el entrenamiento (compra en la apertura siguiente). Los casos no se borran nunca.
+3. **Cada lunes, en la edición de las 9:00**, se lee el resumen de `ideas_casos.json`. Si un tipo de idea que se viene dando no funciona, o uno que se viene descartando acaba subiendo, se reescribe la lección correspondiente en `data/ideas_playbook.json` (veredicto, texto y cifra) y se dice en la nota de la sesión.
+4. **La primera edición de cada mes** se vuelve a ejecutar `python -m vp.ideas_train`, que incorpora las sesiones nuevas del mercado a los ensayos, y se añaden a `CASES` (en `vp/ideas_train.py`) los hechos con nombre propio del mes que hayan sido importantes, con su fecha, sus valores y su tipo. Después se revisan las lecciones con las cifras nuevas.
+
+## Quién hace la lectura
+
+Las lecturas las hace el modelo de IA que esté sirviendo la conversación en ese momento. Este protocolo está escrito para que cualquier modelo capaz lo siga igual: mismos pasos, mismo filtro, misma ficha. Si la lectura no puede hacerse con el rigor que pide (sin acceso a noticias o a precios, o sin poder contrastar los hechos), **no se inventa nada**: se deja la edición anterior y se añade una línea a `sesiones` diciendo que esa edición no se pudo hacer y por qué.
 
 ## El filtro: qué ideas se dan y cuáles no
 
@@ -33,11 +52,12 @@ La **convicción** (1–5) dice cuánto encaja la idea con un tipo de veredicto 
 
 ## Ficha de una idea (`data/ideas.json`)
 
-`id`, `fecha`, `estado` (`vigilancia` · `abierta` · `cerrada`), `conviccion`, `tipo`, `titulo`, `resumen`, `hecho`, `cadena` (pasos de la lógica), `valores` (`sym`, `nombre`, `papel`, `por_que`), `en_precio`, `disparador`, `invalidacion`, `no_hacer`, `horizonte`, `precedentes` (`caso`, `que_paso`), `ref` (precio de cada valor y del SPY el día que se dio), `entrada`, `salida`, `notas` (`fecha`, `texto`), `fuentes` (`t`, `u`).
+`id`, `fecha`, `estado` (`vigilancia` · `abierta` · `cerrada`), `conviccion`, `tipo` (uno de los de «Cómo aprende»), `titulo`, `resumen`, `hecho`, `cadena` (pasos de la lógica), `valores` (`sym`, `nombre`, `papel`, `por_que`), `en_precio`, `disparador`, `invalidacion`, `no_hacer`, `horizonte`, `precedentes` (`caso`, `que_paso`), `ref` (precio de cada valor y del SPY el día que se dio), `entrada`, `salida`, `notas` (`fecha`, `texto`), `fuentes` (`t`, `u`).
 
 Reglas del registro:
 
 - Una idea **no se borra ni se retoca** aunque salga mal: solo cambia de estado y gana notas. (Única excepción hasta hoy: el 16-nov-2026 se retiraron a petición del usuario las dos ideas de arranque, que eran sus ejemplos y no temas del día.)
 - La invalidación es un **hecho**, no un stop de precio. No hay tope de ganancia.
 - El marcador (`data/ideas_track.json`) compara cada idea con el SPY: abierta, desde el cierre del día de entrada; en vigilancia, desde la referencia (solo orientativo).
+- Cada descarte: `fecha`, `titulo`, `por_que`, `leccion`, `tipo` y `valores` (lista de tickers).
 - No es asesoramiento personalizado: es un razonamiento público con su registro.

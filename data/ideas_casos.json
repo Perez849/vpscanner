@@ -1,0 +1,78 @@
+{
+ "casos": [
+  {
+   "id": "2026-11-16-aerolineas-por-el-susto-del-apagon",
+   "fecha": "2026-11-16",
+   "titulo": "Aerolíneas, por el susto del apagón",
+   "tipo": "susto",
+   "valores": [
+    "DAL",
+    "UAL",
+    "AAL"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-16-apagon-faa",
+   "fecha": "2026-11-16",
+   "titulo": "Apagón del control aéreo → quien construye la red nueva",
+   "tipo": "rival",
+   "valores": [
+    "LUMN",
+    "LDOS",
+    "IDR.MC",
+    "RTX"
+   ],
+   "dada": true,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-16-aseguradoras-y-gestoras-de-nominas-que-ganan-con",
+   "fecha": "2026-11-16",
+   "titulo": "Aseguradoras y gestoras de nóminas, que ganan con los tipos altos",
+   "tipo": "segundo",
+   "valores": [
+    "ADP",
+    "CB",
+    "PGR"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-16-oro-plata-y-constructoras-porque-han-caido-con-l",
+   "fecha": "2026-11-16",
+   "titulo": "Oro, plata y constructoras, porque han caído con la subida de tipos",
+   "tipo": "obvio",
+   "valores": [
+    "GDX",
+    "SLV",
+    "XHB"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  }
+ ],
+ "resumen": {
+  "dadas": {
+   "n": 0,
+   "e20": null,
+   "aciertos": 0
+  },
+  "descartadas": {
+   "n": 0,
+   "e20": null,
+   "aciertos": 0
+  }
+ },
+ "generado": 1794837193
+}

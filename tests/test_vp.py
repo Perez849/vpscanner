@@ -1227,8 +1227,24 @@ def test_ideas_score():
     print('ok · ideas: marcador frente al SPY desde la referencia, la entrada y hasta la salida')
 
 
+def test_ideas_casos():
+    """Registro de casos propios: mide desde la apertura de la sesión siguiente, deja pendiente lo que aún no ha vencido, conserva los casos que ya no están en ideas.json y no recalcula lo ya medido."""
+    from vp import ideas
+    days = [f'2026-01-{d:02d}' for d in range(1, 29)]
+    B = {'SPY': {d: (100.0, 100.0) for d in days}, 'AAA': {d: (50.0, 50.0 + k) for k, d in enumerate(days)}, 'BBB': {d: (20.0, 20.0 - 0.1 * k) for k, d in enumerate(days)}}
+    o = ideas.outcome(['AAA'], '2026-01-01', B)
+    assert o == {'e5': 12.0, 'e20': 42.0, 'e60': None}, o                  # entra en la apertura del día 2 (50) y sale al cierre 5 y 20 sesiones después (56 y 71)
+    D = {'ideas': [{'id': 'i1', 'fecha': '2026-01-01', 'titulo': 'Idea', 'tipo': 'rival', 'valores': [{'sym': 'AAA'}]}],
+         'descartes': [{'fecha': '2026-01-01', 'titulo': 'Descarte Ñ', 'tipo': 'susto', 'valores': ['BBB']}, {'fecha': '2026-01-01', 'titulo': 'Sin valores'}]}
+    R = ideas.registro(D, {}, B)
+    assert [c['id'] for c in R['casos']] == ['2026-01-01-descarte-n', 'i1'] and R['resumen'] == {'dadas': {'n': 1, 'e20': 42.0, 'aciertos': 1}, 'descartadas': {'n': 1, 'e20': -10.5, 'aciertos': 1}}, R
+    R2 = ideas.registro({'ideas': [], 'descartes': []}, R, {'SPY': B['SPY']})   # ya no están en ideas.json ni hay precios: siguen apuntados con su resultado
+    assert len(R2['casos']) == 2 and R2['casos'][1]['e20'] == 42.0, R2
+    print('ok · ideas: registro de casos propios (dadas y descartadas) con su resultado a 5, 20 y 60 sesiones')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_ideas, test_ideas_score]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_ideas, test_ideas_score, test_ideas_casos]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»
