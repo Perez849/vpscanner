@@ -44,7 +44,7 @@
    "fecha": "2026-11-16",
    "estado": "vigilancia",
    "conviccion": 3,
-   "tipo": "estructural",
+   "tipo": "rival",
    "titulo": "Apagón del control aéreo → quien construye la red nueva",
    "resumen": "Un fallo que deja en tierra a todo un país no se arregla con un parche: obliga a gastar, y deprisa. El dinero no irá a la empresa señalada por la avería, sino a quienes ya tienen firmados los contratos para sustituirla. La noticia llegó con la bolsa cerrada, así que el precio aún no la ha recogido.",
    "hecho": "El viernes 13, tras el cierre de Wall Street, la FAA paró todos los despegues de EE. UU. durante más de cuatro horas por un fallo de comunicaciones en 17 de sus 22 centros de control de ruta. El Gobierno lo atribuye a equipos de los años ochenta e investiga a L3Harris, dueña de la red actual. El secretario de Transporte pidió el jueves 30.000 millones al Congreso y, tras el apagón, anunció que hoy pedirá 50.000.",
@@ -163,19 +163,37 @@
    "fecha": "2026-11-16",
    "titulo": "Oro, plata y constructoras, porque han caído con la subida de tipos",
    "por_que": "Es el primer efecto del bono al 5 %, y ocurrió en la misma semana en que se movió. Sin un hecho nuevo, comprar la caída es adivinar el suelo.",
-   "leccion": "el beneficiario o la víctima evidente de los tipos se mueve el mismo día; después no queda nada que se distinga del azar (oro −2 % → mineras: −0,2 % en las 5 sesiones siguientes)."
+   "leccion": "el beneficiario o la víctima evidente de los tipos se mueve el mismo día; después no queda nada que se distinga del azar (oro −2 % → mineras: −0,2 % en las 5 sesiones siguientes).",
+   "valores": [
+    "GDX",
+    "SLV",
+    "XHB"
+   ],
+   "tipo": "obvio"
   },
   {
    "fecha": "2026-11-16",
    "titulo": "Aseguradoras y gestoras de nóminas, que ganan con los tipos altos",
    "por_que": "La lógica es buena (invierten el dinero de sus clientes a un tipo cada vez mayor) y es un segundo efecto, pero ADP, Chubb y Progressive ya están en máximos históricos. Vuelve a mirarse si la Fed sube el 9 de diciembre y anuncia más.",
-   "leccion": "una idea necesita que quede algo por recoger en el precio."
+   "leccion": "una idea necesita que quede algo por recoger en el precio.",
+   "valores": [
+    "ADP",
+    "CB",
+    "PGR"
+   ],
+   "tipo": "segundo"
   },
   {
    "fecha": "2026-11-16",
    "titulo": "Aerolíneas, por el susto del apagón",
    "por_que": "Cancelaron el 20 % de los vuelos del sábado, pero es un coste de un fin de semana y ni siquiera han caído lo bastante como para hablar de castigo excesivo.",
-   "leccion": "los sustos de un día se devuelven: 18 casos, −4,7 % en 20 sesiones para quien compró al día siguiente."
+   "leccion": "los sustos de un día se devuelven: 18 casos, −4,7 % en 20 sesiones para quien compró al día siguiente.",
+   "valores": [
+    "DAL",
+    "UAL",
+    "AAL"
+   ],
+   "tipo": "susto"
   }
  ],
  "sesiones": [
