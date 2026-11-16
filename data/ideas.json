@@ -24,12 +24,6 @@
     "tono": "riesgo"
    },
    {
-    "titulo": "Publicidad en móviles: resultados muy por encima",
-    "detalle": "AppLovin presentó el 4 de noviembre ingresos un 55 % mayores y una guía por encima de lo esperado. Sube un 67 % desde entonces.",
-    "efecto": "El contagio al sector ya ocurrió: Unity +30 %, Magnite +31 %, Trade Desk +22 %.",
-    "tono": "neutro"
-   },
-   {
     "titulo": "Los demócratas ganan las dos cámaras",
     "detalle": "Tomarán posesión en enero. Hospitales y aseguradoras de Medicaid subieron entre un 6 % y un 10 % tras el 3 de noviembre y llevan una semana planos.",
     "efecto": "Cualquier ley necesita la firma de Trump: se espera bloqueo más que cambios. Importa para la idea de hoy, porque el dinero del control aéreo tendrá que pasar por ellos.",
@@ -150,12 +144,6 @@
  "descartes": [
   {
    "fecha": "2026-11-16",
-   "titulo": "Comprar las compañeras de AppLovin en publicidad móvil",
-   "por_que": "Los resultados fueron el 4 de noviembre y el sector ya ha subido con ella: Unity +30 %, Magnite +31 %, Trade Desk +22 % desde entonces.",
-   "leccion": "la buena noticia de una grande solo se aprovecha mientras las demás siguen quietas; aquí ya se han movido."
-  },
-  {
-   "fecha": "2026-11-16",
    "titulo": "Oro, plata y constructoras, porque han caído con la subida de tipos",
    "por_que": "Es el primer efecto del bono al 5 %, y ocurrió en la misma semana en que se movió. Sin un hecho nuevo, comprar la caída es adivinar el suelo.",
    "leccion": "bono a 10 años +12 pb → constructoras: −0,9 % más en las 5 sesiones siguientes; oro y mineras, nada después del primer día."
@@ -165,12 +153,6 @@
    "titulo": "Aseguradoras y gestoras de nóminas, que ganan con los tipos altos",
    "por_que": "La lógica es buena (invierten el dinero de sus clientes a un tipo cada vez mayor) y es un segundo efecto, pero ADP, Chubb y Progressive ya están en máximos históricos. Vuelve a mirarse si la Fed sube el 9 de diciembre y anuncia más.",
    "leccion": "una idea necesita que quede algo por recoger en el precio."
-  },
-  {
-   "fecha": "2026-11-16",
-   "titulo": "Hospitales y aseguradoras de Medicaid por la victoria demócrata",
-   "por_que": "Subieron entre un 6 % y un 10 % tras las elecciones y llevan una semana parados. Cualquier cambio necesita la firma de Trump, así que lo probable es bloqueo.",
-   "leccion": "un cambio de gobierno solo empuja durante semanas cuando puede cambiar leyes; aquí no puede."
   },
   {
    "fecha": "2026-11-16",
@@ -186,7 +168,7 @@
   },
   {
    "cuando": "2026-11-16T10:15:13Z",
-   "resumen": "Se retiran las dos ideas iniciales (Irán y Nvidia): eran los ejemplos del usuario, no temas de hoy. Barrido nuevo: una idea en vigilancia (apagón del control aéreo) y cinco descartes."
+   "resumen": "Se retiran las dos ideas iniciales (Irán y Nvidia): eran los ejemplos del usuario, no temas de hoy. Barrido nuevo: una idea en vigilancia (apagón del control aéreo) y tres descartes."
   }
  ]
 }
