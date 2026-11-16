@@ -164,23 +164,151 @@ table.ev tr:hover td{background:var(--ink2)}
 @media (max-width:1250px){.chartwrap{grid-template-columns:minmax(0,1fr) 340px}.rail{display:none}}
 @media (max-width:1000px){.chartwrap{grid-template-columns:minmax(0,1fr)}.side{max-height:none}#stage{height:520px}}
 @media (max-width:700px){#stage{height:430px}.asof{margin-left:0;text-align:left}.bar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.bar>*{flex:none}.warn{display:none}.meta{display:none}.price{font-size:22px}.stat{min-width:100px;padding:6px 10px}.stat b{font-size:20px}}
-/* ───────── ideas por coyuntura: la pantalla principal (oscura, viva) ───────── */
-@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}body.ai{--bg:#05060b;--card:#0d0f18;--ink:#f3f4fb;--sub:#a3a8c3;--dim:#6b7090;--rule:#1b1e2e;--rule2:#262a40;--ink2:#141726;--ink3:#0a0c14;
-  --c1:#35e0ff;--c2:#8b5cff;--c3:#ff4fd8;--c4:#3dffb0;--c5:#ffc04d;--emerald:#3dffb0;--ember:#ff6b7d;--amber:#ffc04d;color-scheme:dark;overflow-x:clip}body.ai .top{border-bottom-color:transparent;position:relative;z-index:3}body.ai .brand b{background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3));-webkit-background-clip:text;background-clip:text;color:transparent}body.ai .sec button{border-color:var(--rule2);background:transparent;color:var(--sub)}body.ai .sec button.on{background:linear-gradient(120deg,#1a2550,#3a1d6e 55%,#5a1a5c);color:#fff;border-color:#6d5cff;box-shadow:0 0 24px #6d5cff55}body.ai .nav button.on{background:#ffffff14;color:#fff;border-color:#ffffff26}.sec button.lo{font-size:12.5px;padding:6px 12px;border-width:1px;border-color:var(--rule2);opacity:.85}.sec button.lo.on{opacity:1}body.ai .ai-hero{position:relative;margin:6px -16px 0;min-height:min(78vh,720px);overflow:hidden;border-radius:26px;isolation:isolate;display:flex;align-items:flex-end;background:#05060b}body.ai .ai-hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-2}body.ai .ai-hero::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#05060b00 30%,#05060bcc 78%,#05060b 100%),linear-gradient(90deg,#05060bb0 0%,#05060b00 55%)}body.ai .ai-hero.nogl{background:radial-gradient(60% 70% at 72% 38%,#8b5cff66,transparent 60%),radial-gradient(45% 55% at 60% 55%,#35e0ff55,transparent 60%),radial-gradient(50% 50% at 82% 60%,#ff4fd855,transparent 60%),#05060b;background-size:160% 160%;animation:aidrift 14s ease-in-out infinite alternate}
-@keyframes aidrift{to{background-position:100% 60%}}body.ai .ai-in{padding:clamp(20px,4vw,54px);max-width:860px;width:100%}body.ai .ai-live{display:inline-flex;align-items:center;gap:9px;font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#dfe3ff;padding:7px 13px;border-radius:99px;background:#ffffff10;border:1px solid #ffffff24;backdrop-filter:blur(10px)}body.ai .ai-dot{width:8px;height:8px;border-radius:50%;background:var(--c4);box-shadow:0 0 0 0 #3dffb0aa;animation:aipulse 1.8s infinite}
-@keyframes aipulse{70%{box-shadow:0 0 0 12px #3dffb000}100%{box-shadow:0 0 0 0 #3dffb000}}body.ai .ai-h1{font-family:var(--f-text);font-weight:800;font-size:clamp(34px,6.4vw,78px);line-height:.98;letter-spacing:-.035em;margin:18px 0 12px;color:#fff}body.ai .ai-h1 em{font-style:normal;background:linear-gradient(90deg,var(--c1),var(--c2) 40%,var(--c3) 70%,var(--c5));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:aishift 7s linear infinite}
-@keyframes aishift{to{background-position:-200% 0}}body.ai .ai-pulse{font-size:clamp(15px,1.6vw,19px);line-height:1.55;color:#d9dcf2;max-width:66ch;min-height:4.6em}body.ai .ai-pulse .cur{display:inline-block;width:.55em;height:1.05em;background:var(--c1);vertical-align:-.15em;margin-left:2px;animation:aiblink 1s steps(2) infinite}
-@keyframes aiblink{50%{opacity:0}}body.ai .ai-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}body.ai .ai-chip{font-family:var(--f-mono);font-size:11.5px;color:#cfd3ee;padding:8px 12px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff1c;backdrop-filter:blur(8px)}body.ai .ai-chip b{color:#fff;font-weight:700}body.ai .ai-chip i{font-style:normal;color:var(--c1)}body.ai .ai-think{font-family:var(--f-mono);font-size:12px;color:var(--c1);margin-top:14px;height:1.4em;opacity:.9}body.ai .ai-sec{margin:44px 0 0;position:relative}body.ai .ai-sec>h2{font-family:var(--f-text);font-size:clamp(22px,3vw,34px);font-weight:800;letter-spacing:-.025em;margin:0 0 4px;color:#fff}body.ai .ai-sec>p.sub{color:var(--sub);font-size:14.5px;max-width:74ch;margin:0 0 20px;line-height:1.55}body.ai .ai-kick{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--c1);margin-bottom:8px;display:flex;align-items:center;gap:10px}body.ai .ai-kick::before{content:'';width:26px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--c1),var(--c3))}body.ai .rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}body.ai .rv.in{opacity:1;transform:none}
-/* tarjeta de idea */
-body.ai .idea{position:relative;border-radius:24px;padding:1.5px;margin:0 0 26px;background:conic-gradient(from var(--ang),var(--k1,#35e0ff),var(--k2,#8b5cff),var(--k3,#ff4fd8),#ffffff10 62%,var(--k1,#35e0ff));animation:aispin 9s linear infinite}
-@keyframes aispin{to{--ang:360deg}}body.ai .idea::before{content:'';position:absolute;inset:-20px -14px;border-radius:40px;z-index:-1;background:radial-gradient(50% 60% at 20% 0%,color-mix(in srgb,var(--k1,#35e0ff) 26%,transparent),transparent 70%),radial-gradient(50% 60% at 90% 100%,color-mix(in srgb,var(--k3,#ff4fd8) 20%,transparent),transparent 70%);filter:blur(26px);opacity:.75}body.ai .idea-in{border-radius:23px;background:linear-gradient(180deg,#0f1220f2,#090b13f7);padding:clamp(18px,3vw,34px);overflow:hidden;position:relative}body.ai .idea-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}body.ai .st{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:6px 11px;border-radius:99px;display:inline-flex;align-items:center;gap:7px}body.ai .st i{width:7px;height:7px;border-radius:50%;background:currentColor;animation:aiblink 1.4s ease-in-out infinite}body.ai .st.vigilancia{color:var(--c5);background:#ffc04d18;border:1px solid #ffc04d55}body.ai .st.abierta{color:var(--c4);background:#3dffb018;border:1px solid #3dffb055}body.ai .st.cerrada{color:var(--sub);background:#ffffff0c;border:1px solid #ffffff22}body.ai .st.cerrada i{animation:none}body.ai .idea-date{font-family:var(--f-mono);font-size:11px;color:var(--dim)}body.ai .conv{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.1em}body.ai .conv span{display:flex;gap:3px}body.ai .conv span b{width:16px;height:6px;border-radius:3px;background:#ffffff1a}body.ai .conv span b.on{background:linear-gradient(90deg,var(--k1,#35e0ff),var(--k3,#ff4fd8));box-shadow:0 0 10px var(--k1,#35e0ff)}body.ai .idea h3{font-family:var(--f-text);font-size:clamp(22px,3.1vw,36px);font-weight:800;letter-spacing:-.028em;line-height:1.08;margin:0 0 10px;color:#fff}body.ai .idea .lede{font-size:clamp(15px,1.5vw,17.5px);color:#d5d8ee;line-height:1.6;max-width:72ch;margin:0 0 22px}body.ai .wave{position:absolute;right:-40px;top:-10px;width:420px;height:150px;opacity:.5;pointer-events:none}body.ai .wave path{fill:none;stroke-width:1.6;stroke-linecap:round;animation:aiwave 6s ease-in-out infinite alternate}body.ai .wave path:nth-child(2){animation-duration:8s;animation-direction:alternate-reverse;opacity:.7}body.ai .wave path:nth-child(3){animation-duration:11s;opacity:.5}
-@keyframes aiwave{0%{transform:translateX(0) scaleY(1)}50%{transform:translateX(-26px) scaleY(.55)}100%{transform:translateX(-52px) scaleY(1.15)}}body.ai .ig{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:26px}
-@media (max-width:900px){body.ai .ig{grid-template-columns:1fr}body.ai .wave{display:none}}body.ai .blk{margin-bottom:20px}body.ai .blk h4{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--k1,#35e0ff);margin:0 0 8px;font-weight:700}body.ai .blk p{margin:0;font-size:14.5px;line-height:1.62;color:#ccd0e8}body.ai .chain{list-style:none;margin:0;padding:0 0 0 2px;position:relative}body.ai .chain::before{content:'';position:absolute;left:12px;top:10px;bottom:14px;width:2px;background:linear-gradient(180deg,var(--k1,#35e0ff),var(--k2,#8b5cff),var(--k3,#ff4fd8));opacity:.45;border-radius:2px}body.ai .chain::after{content:'';position:absolute;left:8.5px;top:0;width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 14px 4px var(--k1,#35e0ff);animation:aiflow 4.2s cubic-bezier(.5,0,.5,1) infinite}
-@keyframes aiflow{0%{top:4px;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:calc(100% - 20px);opacity:0}}body.ai .chain li{position:relative;padding:0 0 14px 38px;font-size:14.5px;line-height:1.55;color:#d5d8ee}body.ai .chain li::before{content:attr(data-n);position:absolute;left:0;top:-1px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:11px;font-weight:700;color:#fff;background:#12162a;border:1.5px solid var(--k2,#8b5cff)}body.ai .chain li:last-child{padding-bottom:0}body.ai .chain li:last-child::before{background:linear-gradient(135deg,var(--k1,#35e0ff),var(--k3,#ff4fd8));border-color:transparent;color:#05060b}body.ai .vals{display:grid;gap:9px}body.ai .val{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 13px;border-radius:14px;background:#ffffff08;border:1px solid #ffffff14;transition:transform .25s,border-color .25s,background .25s}body.ai .val:hover{transform:translateX(4px);border-color:var(--k1,#35e0ff);background:#ffffff0e}body.ai .val .tk{font-family:var(--f-mono);font-weight:800;font-size:15px;color:#fff;min-width:54px}body.ai .val .why{font-size:12.5px;color:var(--sub);line-height:1.45}body.ai .val .why b{color:#e6e8f8;font-weight:600;display:block;font-size:13px}body.ai .val .mv{font-family:var(--f-mono);font-size:12.5px;text-align:right;white-space:nowrap}body.ai .val .mv small{display:block;color:var(--dim);font-size:10px}body.ai .box{border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #ffffff16;background:#ffffff07}body.ai .box h4{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px;font-weight:700;display:flex;align-items:center;gap:8px}body.ai .box p{margin:0;font-size:14px;line-height:1.58;color:#d5d8ee}body.ai .box.go{border-color:#3dffb040;background:linear-gradient(120deg,#3dffb012,#3dffb004)}body.ai .box.go h4{color:var(--c4)}body.ai .box.stop{border-color:#ff6b7d40;background:linear-gradient(120deg,#ff6b7d12,#ff6b7d04)}body.ai .box.stop h4{color:var(--ember)}body.ai .box.px h4{color:var(--c5)}body.ai .box.no h4{color:var(--c3)}body.ai .box.hz h4{color:var(--c1)}body.ai .prec{display:grid;gap:8px}body.ai .prec div{font-size:13px;line-height:1.5;color:#c3c7e0;padding-left:14px;border-left:2px solid var(--k2,#8b5cff)}body.ai .prec div b{color:#fff}body.ai .notes{margin-top:6px;border-top:1px dashed #ffffff1c;padding-top:14px}body.ai .note{display:grid;grid-template-columns:92px 1fr;gap:12px;font-size:13.5px;color:#ccd0e8;line-height:1.55;margin-bottom:8px}body.ai .note time{font-family:var(--f-mono);font-size:11px;color:var(--c1);padding-top:2px}body.ai .src{font-size:11.5px;color:var(--dim);margin-top:10px}body.ai .src a{color:var(--sub);text-decoration-color:#ffffff30}
-/* hechos, descartes, lecciones */
-body.ai .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}body.ai .fact{border-radius:18px;padding:18px;background:linear-gradient(180deg,#0f1220,#0a0c15);border:1px solid #ffffff14;position:relative;overflow:hidden;transition:transform .3s,border-color .3s}body.ai .fact:hover{transform:translateY(-4px);border-color:#ffffff30}body.ai .fact::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--fc,var(--c1));box-shadow:0 0 18px var(--fc,var(--c1))}body.ai .fact h4{margin:0 0 6px;font-size:16px;color:#fff;letter-spacing:-.01em}body.ai .fact p{margin:0 0 8px;font-size:13.5px;color:#b9bdd8;line-height:1.55}body.ai .fact p.ef{color:#e3e5f6}body.ai .fact p.ef b{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--fc,var(--c1));display:block;margin-bottom:2px}body.ai .disc{display:grid;gap:10px}body.ai .dis{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:14px 16px;border-radius:16px;background:#ffffff06;border:1px solid #ffffff12}body.ai .dis .x{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#ff6b7d1c;color:var(--ember);font-weight:800}body.ai .dis h4{margin:0 0 3px;font-size:15px;color:#fff}body.ai .dis p{margin:0;font-size:13.5px;color:#b9bdd8;line-height:1.55}body.ai .dis p.le{color:var(--c5);font-size:12.5px;margin-top:5px}body.ai .less{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}body.ai .les{border-radius:20px;padding:20px;background:linear-gradient(180deg,#10132250,#0a0c1590);border:1px solid #ffffff16;position:relative}body.ai .les .vd{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding:5px 10px;border-radius:99px;display:inline-block;margin-bottom:10px}body.ai .les.dar .vd{color:#05060b;background:var(--c4)}body.ai .les.esperar .vd{color:#05060b;background:var(--c5)}body.ai .les.no .vd{color:#fff;background:#ff6b7d}body.ai .les h4{margin:0 0 8px;font-size:18px;color:#fff;letter-spacing:-.015em;line-height:1.2}body.ai .les p{margin:0 0 10px;font-size:13.8px;color:#c3c7e0;line-height:1.58}body.ai .les .fig{font-family:var(--f-mono);font-size:12px;color:#e6e8f8;padding:9px 11px;border-radius:10px;background:#ffffff0a;border:1px solid #ffffff12;line-height:1.5}body.ai table.tr{width:100%;border-collapse:collapse;font-size:13px}body.ai table.tr th{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:right;padding:8px 10px;border-bottom:1px solid #ffffff1c;font-weight:400}body.ai table.tr th:first-child,body.ai table.tr td:first-child{text-align:left}body.ai table.tr td{padding:9px 10px;border-bottom:1px solid #ffffff0d;text-align:right;font-family:var(--f-mono);font-size:12.5px;color:#d5d8ee;white-space:nowrap}body.ai table.tr td:first-child{font-family:var(--f-text);font-size:13.5px;white-space:normal;color:#eceef9;min-width:240px}body.ai table.tr td:first-child small{display:block;color:var(--dim);font-size:11.5px}body.ai table.tr tr.igrp td{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--c1);padding-top:22px;border-bottom-color:#35e0ff40}body.ai .bar2{display:inline-block;height:7px;border-radius:4px;vertical-align:middle;margin-left:6px;min-width:2px}body.ai .itw{overflow-x:auto;border-radius:18px;border:1px solid #ffffff14;background:#0b0d17;padding:6px 10px}body.ai .pos2{color:var(--c4)}body.ai .neg2{color:var(--ember)}body.ai .score{display:grid;gap:10px}body.ai .isc{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:14px 18px;border-radius:16px;background:#ffffff07;border:1px solid #ffffff14}body.ai .isc h4{margin:0;font-size:15px;color:#fff}body.ai .isc small{color:var(--dim);font-family:var(--f-mono);font-size:11px}body.ai .isc .inum{font-family:var(--f-mono);font-size:18px;font-weight:800;text-align:right}body.ai .isc .inum small{display:block;font-weight:400}body.ai .ai-foot{margin-top:40px;padding:18px 20px;border-radius:16px;border:1px solid #ffffff12;background:#ffffff05;color:var(--sub);font-size:12.5px;line-height:1.6}
-@media (max-width:700px){body.ai .ai-hero{border-radius:18px;min-height:74vh}body.ai .conv{margin-left:0;width:100%}body.ai .note{grid-template-columns:1fr;gap:2px}body.ai .isc{grid-template-columns:1fr auto}body.ai .isc .inum.spy{display:none}}
-@media (prefers-reduced-motion:reduce){body.ai .idea,body.ai .ai-h1 em,body.ai .wave path,body.ai .chain::after,body.ai .ai-dot,body.ai .st i,body.ai .ai-hero.nogl{animation:none}body.ai .rv{opacity:1;transform:none;transition:none}}
+/* ───────── ideas por coyuntura: pantalla principal (clara, editorial, con un único elemento vivo: la seda del encabezado) ───────── */
+@font-face{font-family:'Instrument Serif';src:url('assets/fonts/instrument-serif-latin-400-normal.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Instrument Serif';src:url('assets/fonts/instrument-serif-latin-400-italic.woff2') format('woff2');font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:'Geist';src:url('assets/fonts/geist-latin-wght-normal.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('assets/fonts/geist-mono-latin-wght-normal.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+/* una sola piel, clara, también con el sistema en oscuro · tinta azulada sobre papel frío · un acento (cobalto) · la seda lleva el color */
+body.ai{--bg:#f5f6f8;--card:#ffffff;--ink:#0b1120;--sub:#566077;--dim:#8f97aa;--rule:#e3e6ed;--rule2:#d0d5df;--ink2:#eceef3;--ink3:#fafbfc;
+  --ac:#2440f0;--ac2:#eef1ff;--go:#07875a;--gobg:#e9f7f1;--no:#d2334a;--nobg:#fdecef;--wa:#a86a00;--wabg:#fff5df;
+  --s1:#2447ff;--s2:#19c2e6;--s3:#ff4f96;--s4:#ffb01f;--emerald:#07875a;--ember:#d2334a;--amber:#a86a00;
+  --fd:'Instrument Serif','Iowan Old Style',Georgia,serif;--ft:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--fm:'Geist Mono','SF Mono',Menlo,Consolas,monospace;
+  color-scheme:light;font-family:var(--ft);overflow-x:clip}
+body.ai .top{border-bottom:1px solid var(--rule)}
+body.ai .brand{font-family:var(--fd);font-weight:400;font-size:30px;letter-spacing:-.01em}
+body.ai .brand b{color:var(--ac);font-weight:400;font-style:italic}
+body.ai .brand small,body.ai .asof,body.ai .nav button,body.ai .sec button small{font-family:var(--fm)}
+body.ai .sec button{font-family:var(--ft);font-weight:600;font-size:14px;border:1px solid var(--rule2);background:var(--card);color:var(--sub);border-radius:999px;padding:8px 18px}
+body.ai .sec button small{display:none}
+body.ai .sec button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+body.ai .nav button{border-radius:999px;font-size:12px}
+body.ai .nav button.on{background:var(--ac2);color:var(--ac);font-weight:600}
+.sec button.lo{font-size:12.5px;padding:6px 12px;border-width:1px;border-color:var(--rule2);opacity:.85}
+.sec button.lo.on{opacity:1}
+.x-wrap{font-family:var(--ft);color:var(--ink)}
+.x-wrap ::selection{background:var(--ac);color:#fff}
+.x-mono{font-family:var(--fm);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--sub)}
+/* encabezado vivo */
+.x-hero{position:relative;margin-top:14px;border-radius:30px;overflow:hidden;isolation:isolate;background:#f7f8fa;border:1px solid var(--rule);min-height:clamp(480px,66vh,660px);display:flex;flex-direction:column;justify-content:flex-end}
+.x-hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.x-hero.nogl{background:radial-gradient(60% 80% at 85% 20%,#19c2e655,transparent 60%),radial-gradient(50% 70% at 70% 45%,#2447ff44,transparent 62%),radial-gradient(45% 60% at 95% 60%,#ff4f9644,transparent 60%),radial-gradient(40% 50% at 60% 10%,#ffb01f44,transparent 60%),#f7f8fa}
+.x-hero.sm{min-height:clamp(340px,46vh,460px)}
+.x-hin{padding:clamp(22px,4vw,56px);padding-bottom:clamp(20px,3vw,40px);max-width:1040px}
+.x-live{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 11px;border-radius:999px;background:#ffffffcc;border:1px solid var(--rule);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.x-live i{width:8px;height:8px;border-radius:50%;background:var(--go);box-shadow:0 0 0 0 #07875a66;animation:xping 2s infinite}
+@keyframes xping{70%{box-shadow:0 0 0 10px #07875a00}100%{box-shadow:0 0 0 0 #07875a00}}
+.x-h1{font-family:var(--fd);font-weight:400;font-size:clamp(44px,8.2vw,118px);line-height:.94;letter-spacing:-.022em;margin:22px 0 20px;text-wrap:balance;color:var(--ink)}
+.x-h1 em{font-style:italic;color:var(--ac)}
+.x-h1 span{display:inline-block;animation:xrise .9s cubic-bezier(.2,.75,.2,1) both}
+@keyframes xrise{from{transform:translateY(.35em);opacity:.01}}
+.x-pulse{font-size:clamp(16px,1.55vw,20px);line-height:1.5;color:#2b3448;max-width:60ch;margin:0;min-height:4.5em}
+.x-pulse .cur{display:inline-block;width:2px;height:1.05em;background:var(--ac);vertical-align:-.16em;margin-left:3px;animation:xblink 1s steps(2) infinite}
+@keyframes xblink{50%{opacity:0}}
+.x-stats{display:flex;flex-wrap:wrap;gap:10px 34px;margin-top:26px;padding-top:18px;border-top:1px solid #0b112018}
+.x-stat{display:flex;flex-direction:column;gap:3px}
+.x-stat b{font-family:var(--fd);font-weight:400;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.x-stat b small{font-family:var(--fm);font-size:12px;color:var(--sub);margin-left:4px}
+.x-tick{border-top:1px solid var(--rule);background:#ffffffb3;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);overflow:hidden;white-space:nowrap;padding:11px 0}
+.x-tick div{display:inline-block;animation:xmarq 60s linear infinite;padding-left:24px}
+.x-tick span{font-family:var(--fm);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);margin-right:44px}
+.x-tick span::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:10px;vertical-align:1px;background:var(--tc,var(--ac))}
+@keyframes xmarq{to{transform:translateX(-50%)}}
+/* secciones */
+.x-sec{margin-top:clamp(56px,8vw,104px)}
+.x-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px 48px;align-items:end;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid var(--ink)}
+.x-head h2{font-family:var(--fd);font-weight:400;font-size:clamp(34px,4.6vw,62px);line-height:1;letter-spacing:-.018em;margin:8px 0 0;text-wrap:balance}
+.x-head h2 em{color:var(--ac)}
+.x-head p{margin:0;color:var(--sub);font-size:15.5px;line-height:1.55;max-width:58ch}
+.x-rv{transform:translateY(18px);transition:transform .8s cubic-bezier(.2,.7,.2,1)}.x-rv.in{transform:none}
+/* idea: un expediente */
+.x-idea{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:30px;box-shadow:0 1px 0 #fff inset,0 30px 60px -38px #0b112040,0 2px 6px #0b11200a;overflow:hidden;margin-bottom:28px}
+.x-idea::before{content:'';display:block;height:4px;background:linear-gradient(90deg,var(--s1),var(--s2),var(--s3),var(--s4),var(--s1));background-size:200% 100%;animation:xslide 9s linear infinite}
+@keyframes xslide{to{background-position:-200% 0}}
+.x-ih{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px clamp(18px,3vw,44px);padding:clamp(22px,3.4vw,46px) clamp(20px,3.4vw,48px) 0}
+.x-num{font-family:var(--fd);font-size:clamp(64px,9vw,132px);line-height:.8;color:transparent;-webkit-text-stroke:1.2px var(--rule2);letter-spacing:-.03em;grid-row:span 3;user-select:none}
+.x-meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.x-st{display:inline-flex;align-items:center;gap:8px;font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:6px 12px;border-radius:999px}
+.x-st i{width:7px;height:7px;border-radius:50%;background:currentColor;animation:xblink 1.6s ease-in-out infinite}
+.x-st.vigilancia{color:var(--wa);background:var(--wabg)}.x-st.abierta{color:var(--go);background:var(--gobg)}.x-st.cerrada{color:var(--sub);background:var(--ink2)}.x-st.cerrada i{animation:none}
+.x-conv{display:inline-flex;align-items:center;gap:8px}
+.x-conv span{display:inline-flex;gap:3px}.x-conv span b{width:14px;height:5px;border-radius:3px;background:var(--rule2)}.x-conv span b.on{background:var(--ink)}
+.x-idea h3{font-family:var(--fd);font-weight:400;font-size:clamp(32px,4.4vw,60px);line-height:1;letter-spacing:-.018em;margin:6px 0 0;text-wrap:balance}
+.x-lede{font-size:clamp(16px,1.5vw,19px);line-height:1.55;color:#2b3448;max-width:64ch;margin:8px 0 0}
+.x-flow{margin:clamp(26px,3.4vw,44px) 0 0;padding:26px clamp(20px,3.4vw,48px) 30px;background:var(--ink3);border-block:1px solid var(--rule);position:relative}
+.x-flow ol{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:0 22px;position:relative}
+.x-flow ol::before{content:'';position:absolute;left:0;right:0;top:13px;height:2px;background:linear-gradient(90deg,var(--s1),var(--s2),var(--s3),var(--s4));border-radius:2px;opacity:.9}
+.x-flow ol::after{content:'';position:absolute;top:8px;left:0;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--ink);box-shadow:0 0 0 5px #2440f022;animation:xrun 7s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes xrun{0%{left:0;opacity:0}6%{opacity:1}94%{opacity:1}100%{left:calc(100% - 12px);opacity:0}}
+.x-flow li{position:relative;padding-top:42px;font-size:14px;line-height:1.5;color:#2b3448}
+.x-flow li::before{content:attr(data-n);position:absolute;top:0;left:0;width:28px;height:28px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);display:grid;place-items:center;font-family:var(--fm);font-size:11px;font-weight:600;color:var(--ink);z-index:1}
+.x-flow li:last-child::before{background:var(--ink);color:#fff}
+.x-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,3.4vw,52px);padding:clamp(24px,3.4vw,44px) clamp(20px,3.4vw,48px)}
+.x-blk+.x-blk{margin-top:28px}
+.x-blk>p{margin:10px 0 0;font-size:15px;line-height:1.62;color:#2b3448}
+.x-vals{margin-top:12px;border-top:1px solid var(--ink)}
+.x-val{display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:14px;align-items:baseline;padding:15px 0;border-bottom:1px solid var(--rule);text-decoration:none;color:inherit;transition:background .2s,padding .2s}
+a.x-val:hover{background:var(--ac2);padding-inline:12px;border-radius:10px}
+.x-val .tk{font-family:var(--fm);font-weight:700;font-size:15px}
+.x-val .tk small{display:block;font-weight:400;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ac);margin-top:4px}
+.x-val .why{font-size:13.5px;line-height:1.5;color:var(--sub)}.x-val .why b{display:block;color:var(--ink);font-weight:600;font-size:14.5px;margin-bottom:2px}
+.x-val .mv{font-family:var(--fm);font-size:14px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.x-val .mv small{display:block;font-weight:400;font-size:10.5px;color:var(--dim);margin-top:3px}
+.x-prec{margin-top:12px;display:grid;gap:12px}
+.x-prec div{font-size:14px;line-height:1.55;color:var(--sub);padding-left:16px;border-left:2px solid var(--rule2)}.x-prec div b{color:var(--ink);font-weight:600}
+.x-dec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--rule)}
+.x-cell{padding:24px clamp(20px,3.4vw,48px) 26px;border-bottom:1px solid var(--rule)}
+.x-cell:nth-child(odd){border-right:1px solid var(--rule)}
+.x-cell h4{margin:0 0 8px;font-family:var(--fm);font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:9px}
+.x-cell h4::before{content:'';width:9px;height:9px;border-radius:2px;background:currentColor}
+.x-cell p{margin:0;font-size:15px;line-height:1.6;color:#2b3448}
+.x-cell.go{background:var(--gobg)}.x-cell.go h4{color:var(--go)}.x-cell.no{background:var(--nobg)}.x-cell.no h4{color:var(--no)}.x-cell.px h4{color:var(--wa)}.x-cell.dont h4{color:var(--ink)}
+.x-foot{padding:20px clamp(20px,3.4vw,48px) 26px;display:grid;gap:10px}
+.x-note{display:grid;grid-template-columns:104px minmax(0,1fr);gap:14px;font-size:14px;line-height:1.55;color:#2b3448}.x-note time{font-family:var(--fm);font-size:11.5px;color:var(--ac);padding-top:2px}
+.x-src{font-size:12px;color:var(--dim)}.x-src a{color:var(--sub);text-underline-offset:3px}
+.x-none{padding:clamp(28px,5vw,64px);border:1px dashed var(--rule2);border-radius:30px;background:var(--card)}
+.x-none h3{font-family:var(--fd);font-weight:400;font-size:clamp(30px,4vw,52px);line-height:1.02;margin:0 0 10px}.x-none p{margin:0;color:var(--sub);font-size:16px;max-width:60ch;line-height:1.55}
+/* radar, descartes, marcador */
+.x-rad{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:8px 32px;padding:24px 0;border-bottom:1px solid var(--rule);align-items:start}
+.x-rad .ix{font-family:var(--fm);font-size:12px;color:var(--dim);padding-top:9px;display:flex;align-items:center;gap:8px}.x-rad .ix::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--tc,var(--ac))}
+.x-rad h4{font-family:var(--fd);font-weight:400;font-size:clamp(24px,2.4vw,32px);line-height:1.06;margin:0 0 8px;letter-spacing:-.01em}
+.x-rad p{margin:0;font-size:15px;line-height:1.6;color:var(--sub)}
+.x-rad .ef{font-size:15px;line-height:1.6;color:var(--ink);padding-top:6px}.x-rad .ef span{display:block;margin-bottom:6px}
+.x-dis{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:8px 48px;padding:24px 0;border-bottom:1px solid var(--rule)}
+.x-dis h4{font-family:var(--fd);font-style:italic;font-weight:400;font-size:clamp(22px,2.3vw,30px);line-height:1.1;margin:0;color:var(--sub);text-decoration:line-through;text-decoration-color:var(--no);text-decoration-thickness:1.5px}
+.x-dis p{margin:0;font-size:15px;line-height:1.6;color:#2b3448}
+.x-dis .le{margin-top:10px;font-size:13.5px;color:var(--sub);padding:9px 13px;border-radius:10px;background:var(--ink2)}.x-dis .le b{font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-right:8px;font-weight:600}
+.x-sc{display:grid;grid-template-columns:minmax(0,1fr) 150px 150px;gap:18px;align-items:center;padding:22px 0;border-bottom:1px solid var(--rule)}
+.x-sc h4{font-family:var(--fd);font-weight:400;font-size:clamp(22px,2.3vw,30px);line-height:1.1;margin:0 0 6px}
+.x-sc .v{font-family:var(--fd);font-size:clamp(30px,3.4vw,46px);line-height:1;text-align:right;font-variant-numeric:tabular-nums}.x-sc .v small{display:block;font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-top:6px}
+.x-up{color:var(--go)}.x-dn{color:var(--no)}
+.x-end{margin-top:clamp(48px,7vw,88px);padding-top:22px;border-top:1px solid var(--ink);color:var(--sub);font-size:13px;line-height:1.6;max-width:92ch}.x-end a{color:var(--ink)}
+/* entrenamiento */
+.x-less{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px}
+.x-les{background:var(--card);border:1px solid var(--rule);border-radius:24px;padding:26px;display:flex;flex-direction:column;gap:12px;transition:transform .3s,box-shadow .3s}
+.x-les:hover{transform:translateY(-4px);box-shadow:0 24px 44px -30px #0b112055}
+.x-vd{align-self:flex-start;font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:6px 12px;border-radius:999px}
+.x-les.dar .x-vd{color:var(--go);background:var(--gobg)}.x-les.esperar .x-vd{color:var(--wa);background:var(--wabg)}.x-les.no .x-vd{color:var(--no);background:var(--nobg)}
+.x-les h4{font-family:var(--fd);font-weight:400;font-size:28px;line-height:1.05;margin:0;letter-spacing:-.01em}
+.x-les p{margin:0;font-size:14.5px;line-height:1.6;color:var(--sub)}
+.x-les .fig{margin-top:auto;font-family:var(--fm);font-size:12px;line-height:1.6;color:var(--ink);padding:12px 14px;border-radius:12px;background:var(--ink3);border:1px solid var(--rule)}
+.x-types{display:grid;gap:0;border-top:1px solid var(--ink)}
+.x-type{display:grid;grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,1fr));gap:18px;align-items:center;padding:18px 0;border-bottom:1px solid var(--rule)}
+.x-type h4{font-family:var(--fd);font-weight:400;font-size:24px;line-height:1.1;margin:0}.x-type h4 small{display:block;font-family:var(--fm);font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:.04em}
+.x-bar{display:flex;flex-direction:column;gap:6px;font-family:var(--fm);font-size:12.5px;font-variant-numeric:tabular-nums}
+.x-bar i{display:block;height:8px;border-radius:4px;background:var(--rule);position:relative;overflow:hidden}.x-bar i::after{content:'';position:absolute;inset:0 auto 0 50%;width:var(--w);background:var(--c);border-radius:4px;transform:translateX(var(--x))}
+.x-bar small{color:var(--dim);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+.x-tw{overflow-x:auto;background:var(--card);border:1px solid var(--rule);border-radius:24px;padding:6px 22px 14px}
+table.x-tr{width:100%;border-collapse:collapse}
+table.x-tr th{font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:500;text-align:right;padding:14px 10px 10px;border-bottom:1px solid var(--ink);white-space:nowrap}
+table.x-tr th:first-child,table.x-tr td:first-child{text-align:left;padding-left:0}
+table.x-tr td{padding:11px 10px;border-bottom:1px solid var(--rule);text-align:right;font-family:var(--fm);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink)}
+table.x-tr td:first-child{font-family:var(--ft);font-size:14px;white-space:normal;min-width:280px}table.x-tr td:first-child small{display:block;color:var(--dim);font-size:12px;margin-top:2px}
+table.x-tr td small.t{color:var(--dim);margin-left:6px}
+table.x-tr tr.grp td{font-family:var(--fd);font-size:26px;padding:34px 0 10px;border-bottom:1px solid var(--ink);color:var(--ink);white-space:normal}
+table.x-tr tr.sig td:first-child{box-shadow:inset 3px 0 0 var(--go);padding-left:12px}
+@media (max-width:900px){.x-head{grid-template-columns:1fr}.x-body{grid-template-columns:1fr}.x-flow ol{grid-template-columns:1fr;gap:18px 0}.x-flow ol::before{left:13px;right:auto;top:6px;bottom:6px;width:2px;height:auto;background:linear-gradient(180deg,var(--s1),var(--s2),var(--s3),var(--s4))}.x-flow ol::after{display:none}.x-flow li{padding:2px 0 0 44px}.x-dec{grid-template-columns:1fr}.x-cell:nth-child(odd){border-right:0}.x-rad{grid-template-columns:1fr;gap:6px}.x-rad .ix{padding-top:0}.x-dis{grid-template-columns:1fr}.x-type{grid-template-columns:1fr 1fr 1fr}.x-type h4{grid-column:1/-1}}
+@media (max-width:700px){.x-hero{border-radius:22px;min-height:560px}.x-hin{padding-top:210px}.x-hero.sm .x-hin{padding-top:150px}.x-ih{grid-template-columns:1fr}.x-num{grid-row:auto;font-size:60px}.x-idea,.x-none{border-radius:22px}.x-val{grid-template-columns:72px minmax(0,1fr)}.x-val .mv{grid-column:2;text-align:left}.x-val .mv small{display:inline;margin-left:8px}.x-sc{grid-template-columns:minmax(0,1fr) auto}.x-sc .spy{display:none}.x-note{grid-template-columns:1fr;gap:2px}}
+@media (prefers-reduced-motion:reduce){.x-h1 span,.x-tick div,.x-idea::before,.x-flow ol::after,.x-live i,.x-st i{animation:none}.x-rv{transform:none;transition:none}}
 </style>
 </head>
 <body>
@@ -521,11 +649,10 @@ function renderGuide() {
 }
 
 /* ───────────────────────── IDEAS POR COYUNTURA (pantalla principal) ───────────────────────── */
-const KCOL = [['#35e0ff', '#8b5cff', '#ff4fd8'], ['#3dffb0', '#35e0ff', '#8b5cff'], ['#ffc04d', '#ff4fd8', '#8b5cff'], ['#ff4fd8', '#ffc04d', '#3dffb0']];
 const ST = {vigilancia: 'En vigilancia', abierta: 'Abierta', cerrada: 'Cerrada'};
 const fdate = s => { const d = new Date(s); return isNaN(d) ? esc(s) : `${d.getUTCDate()} ${mon[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
 const madrid = (d, o) => new Intl.DateTimeFormat('es-ES', {timeZone: 'Europe/Madrid', ...o}).format(d);
-function nextRun() {                                                          // próximas sesiones: 9:00 y 14:00 de Madrid, de lunes a viernes
+function nextRun() {                                                          // próximas lecturas: 9:00 y 14:00 de Madrid, de lunes a viernes
   const now = new Date();
   for (let k = 0; k < 8 * 24 * 4; k++) {
     const t = new Date(Math.ceil(now / 9e5) * 9e5 + k * 9e5);
@@ -535,109 +662,122 @@ function nextRun() {                                                          //
   return null;
 }
 function untilTxt(t) { const m = Math.max(0, Math.round((t - Date.now()) / 6e4)); return m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${Math.floor(m / 1440)} d ${Math.floor(m % 1440 / 60)} h`; }
-const sgn = (x, d = 1) => x == null || !isFinite(x) ? '—' : `<span class="${x >= 0 ? 'pos2' : 'neg2'}">${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(d)} %</span>`;
+const num = (x, d = 1) => x == null || !isFinite(x) ? '—' : `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(d).replace('.', ',')} %`;
+const sgn = (x, d = 1) => x == null || !isFinite(x) ? '—' : `<span class="${x >= 0 ? 'x-up' : 'x-dn'}">${num(x, d)}</span>`;
+const TONE = {riesgo: 'var(--no)', oportunidad: 'var(--go)', neutro: 'var(--ac)'};
+/* titular: *así* marca la parte en cursiva; cada palabra entra por separado */
+function headline(t) {
+  let k = 0;
+  return esc(t).split(/(\*[^*]+\*)/).filter(Boolean).map(part => { const em = part.startsWith('*'), ws = (em ? part.slice(1, -1) : part).split(/(\s+)/);
+    const h = ws.map(w => /^\s+$/.test(w) ? ' ' : w ? `<span style="animation-delay:${(k++ * 55)}ms">${w}</span>` : '').join(''); return em ? `<em>${h}</em>` : h; }).join('');
+}
+const secHead = (kick, h2, p) => `<div class="x-head x-rv"><div><div class="x-mono">${kick}</div><h2>${h2}</h2></div><p>${p}</p></div>`;
 
 function ideaCard(I, k) {
-  const c = KCOL[k % KCOL.length], T = (S.idt && S.idt.ideas && S.idt.ideas[I.id]) || null;
-  const conv = Math.max(1, Math.min(5, I.conviccion || 3));
-  const vals = (I.valores || []).map(v => { const t = T && T.por_valor && T.por_valor[v.sym];
-    return `<a class="val" ${S.idx && S.idx.symbols.some(s => s.sym === v.sym) ? `href="#${esc(v.sym)}"` : ''} style="text-decoration:none"><span class="tk">${esc(v.sym)}</span><span class="why"><b>${esc(v.nombre || '')}${v.papel ? ' · ' + esc(v.papel) : ''}</b>${esc(v.por_que || '')}</span><span class="mv">${t ? sgn(t.pct) : '—'}<small>${t ? 'desde ' + fx(t.ref) : ''}</small></span></a>`; }).join('');
-  const wave = `<svg class="wave" viewBox="0 0 420 150" aria-hidden="true">${[0, 1, 2].map(j => `<path stroke="${c[j]}" d="M0 75 ${Array.from({length: 22}, (_, i) => `Q ${i * 22 + 11} ${75 + (i % 2 ? -1 : 1) * (18 + 9 * j) * Math.sin((i + 1) / 23 * Math.PI)} ${i * 22 + 22} 75`).join(' ')}"/>`).join('')}</svg>`;
-  return `<article class="idea rv" style="--k1:${c[0]};--k2:${c[1]};--k3:${c[2]}" id="i-${esc(I.id)}"><div class="idea-in">${wave}
-    <div class="idea-top"><span class="st ${esc(I.estado)}"><i></i>${ST[I.estado] || esc(I.estado)}</span><span class="idea-date">dada el ${fdate(I.fecha)}${I.entrada ? ' · abierta el ' + fdate(I.entrada) : ''}${I.salida ? ' · cerrada el ' + fdate(I.salida) : ''}</span>
-      <span class="conv" title="Convicción: cuánto encaja con lo que el entrenamiento dice que funciona">convicción <span>${[1, 2, 3, 4, 5].map(n => `<b class="${n <= conv ? 'on' : ''}"></b>`).join('')}</span></span></div>
-    <h3>${esc(I.titulo)}</h3><p class="lede">${esc(I.resumen || '')}</p>
-    <div class="ig"><div>
-      <div class="blk"><h4>El hecho</h4><p>${esc(I.hecho)}</p></div>
-      <div class="blk"><h4>La cadena lógica</h4><ol class="chain">${(I.cadena || []).map((s, i) => `<li data-n="${i + 1}">${esc(s)}</li>`).join('')}</ol></div>
-      ${I.precedentes && I.precedentes.length ? `<div class="blk"><h4>Qué pasó otras veces</h4><div class="prec">${I.precedentes.map(p => `<div><b>${esc(p.caso)}</b> — ${esc(p.que_paso)}</div>`).join('')}</div></div>` : ''}
-    </div><div>
-      <div class="blk"><h4>Los valores${T && T.media != null ? ` · media ${T.media >= 0 ? '+' : '−'}${Math.abs(T.media).toFixed(1)} % vs SPY ${T.spy >= 0 ? '+' : '−'}${Math.abs(T.spy).toFixed(1)} %` : ''}</h4><div class="vals">${vals}</div></div>
-      <div class="box px"><h4>¿Ya está en el precio?</h4><p>${esc(I.en_precio || '')}</p></div>
-      <div class="box go"><h4>▶ Disparador: cuándo se entra</h4><p>${esc(I.disparador)}</p></div>
-      <div class="box stop"><h4>■ Se rompe si…</h4><p>${esc(I.invalidacion)}</p></div>
-      ${I.no_hacer ? `<div class="box no"><h4>Lo que no hay que hacer</h4><p>${esc(I.no_hacer)}</p></div>` : ''}
-      <div class="box hz"><h4>Horizonte</h4><p>${esc(I.horizonte || '')}</p></div>
-    </div></div>
-    ${I.notas && I.notas.length ? `<div class="notes"><div class="blk" style="margin-bottom:8px"><h4>Seguimiento</h4></div>${I.notas.slice().reverse().map(n => `<div class="note"><time>${fdate(n.fecha)}</time><span>${esc(n.texto)}</span></div>`).join('')}</div>` : ''}
-    ${I.fuentes && I.fuentes.length ? `<div class="src">Fuentes: ${I.fuentes.map(f => `<a href="${esc(f.u)}" target="_blank" rel="noopener">${esc(f.t)}</a>`).join(' · ')}</div>` : ''}
-  </div></article>`;
+  const T = (S.idt && S.idt.ideas && S.idt.ideas[I.id]) || null, conv = Math.max(1, Math.min(5, I.conviccion || 3)), steps = I.cadena || [];
+  const vals = (I.valores || []).map(v => { const t = T && T.por_valor && T.por_valor[v.sym], link = S.idx && S.idx.symbols.some(s => s.sym === v.sym);
+    return `<${link ? `a href="#${esc(v.sym)}"` : 'div'} class="x-val"><span class="tk">${esc(v.sym)}<small>${esc(v.papel || '')}</small></span><span class="why"><b>${esc(v.nombre || '')}</b>${esc(v.por_que || '')}</span><span class="mv">${t ? sgn(t.pct) : '—'}<small>${t ? 'desde ' + fx(t.ref) : ''}</small></span></${link ? 'a' : 'div'}>`; }).join('');
+  return `<article class="x-idea x-rv" id="i-${esc(I.id)}">
+    <header class="x-ih"><div class="x-num" aria-hidden="true">${String(k + 1).padStart(2, '0')}</div>
+      <div class="x-meta"><span class="x-st ${esc(I.estado)}"><i></i>${ST[I.estado] || esc(I.estado)}</span><span class="x-mono">dada el ${fdate(I.fecha)}${I.entrada ? ' · abierta el ' + fdate(I.entrada) : ''}${I.salida ? ' · cerrada el ' + fdate(I.salida) : ''}</span>
+        <span class="x-mono x-conv" title="Cuánto encaja con lo que el entrenamiento dice que funciona">convicción <span>${[1, 2, 3, 4, 5].map(n => `<b class="${n <= conv ? 'on' : ''}"></b>`).join('')}</span></span>
+        ${I.horizonte ? `<span class="x-mono">horizonte · ${esc(I.horizonte.split('.')[0])}</span>` : ''}</div>
+      <h3>${esc(I.titulo)}</h3><p class="x-lede">${esc(I.resumen || '')}</p></header>
+    <div class="x-flow"><div class="x-mono">La cadena lógica</div><ol style="--n:${steps.length}">${steps.map((s, i) => `<li data-n="${i + 1}">${esc(s)}</li>`).join('')}</ol></div>
+    <div class="x-body"><div>
+        <div class="x-blk"><div class="x-mono">El hecho</div><p>${esc(I.hecho)}</p></div>
+        ${I.precedentes && I.precedentes.length ? `<div class="x-blk"><div class="x-mono">Qué pasó otras veces</div><div class="x-prec">${I.precedentes.map(p => `<div><b>${esc(p.caso)}.</b> ${esc(p.que_paso.charAt(0).toUpperCase() + p.que_paso.slice(1))}</div>`).join('')}</div></div>` : ''}
+      </div><div class="x-blk"><div class="x-mono">Los valores${T && T.media != null ? ` · la idea ${num(T.media)} · S&amp;P 500 ${num(T.spy)}` : ''}</div><div class="x-vals">${vals}</div></div></div>
+    <div class="x-dec">
+      <div class="x-cell go"><h4>Se entra si</h4><p>${esc(I.disparador)}</p></div>
+      <div class="x-cell no"><h4>Se rompe si</h4><p>${esc(I.invalidacion)}</p></div>
+      <div class="x-cell px"><h4>¿Ya está en el precio?</h4><p>${esc(I.en_precio || '')}</p></div>
+      <div class="x-cell dont"><h4>Lo que no hay que hacer</h4><p>${esc(I.no_hacer || '')}</p></div>
+    </div>
+    <footer class="x-foot">${(I.notas || []).slice().reverse().map(n => `<div class="x-note"><time>${fdate(n.fecha)}</time><span>${esc(n.texto)}</span></div>`).join('')}
+      ${I.fuentes && I.fuentes.length ? `<div class="x-src">Fuentes: ${I.fuentes.map(f => `<a href="${esc(f.u)}" target="_blank" rel="noopener">${esc(f.t)}</a>`).join(' · ')}</div>` : ''}</footer>
+  </article>`;
 }
 
 function renderIdeas() {
   const D = S.ideas;
-  if (!D) { $('#view').innerHTML = '<div class="empty">Todavía no hay ninguna sesión de ideas guardada (data/ideas.json).</div>'; return; }
-  const ses = D.sesion || {}, ideas = D.ideas || [], live = ideas.filter(i => i.estado !== 'cerrada'), closed = ideas.filter(i => i.estado === 'cerrada');
+  if (!D) { $('#view').innerHTML = '<div class="empty">Todavía no hay ninguna lectura guardada (data/ideas.json).</div>'; return; }
+  const ses = D.sesion || {}, ideas = D.ideas || [], live = ideas.filter(i => i.estado !== 'cerrada'), closed = ideas.filter(i => i.estado === 'cerrada'), facts = ses.hechos || [], disc = D.descartes || [];
   const nx = nextRun(), when = ses.cuando ? new Date(ses.cuando) : null;
-  const tone = {riesgo: 'var(--ember)', oportunidad: 'var(--c4)', neutro: 'var(--c1)'};
-  $('#view').innerHTML = `
-  <section class="ai-hero" id="aihero"><canvas id="aigl"></canvas><div class="ai-in">
-    <span class="ai-live"><span class="ai-dot"></span>analista en marcha · ${live.length} idea${live.length === 1 ? '' : 's'} viva${live.length === 1 ? '' : 's'}</span>
-    <h1 class="ai-h1">Lo que pasa en el mundo,<br><em>hilado con sentido común.</em></h1>
-    <div class="ai-pulse" id="aipulse" aria-label="${esc(ses.pulso || '')}"></div>
-    <div class="ai-think" id="aithink"></div>
-    <div class="ai-meta">
-      <span class="ai-chip">última lectura <b>${when ? madrid(when, {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) : '—'}</b></span>
-      <span class="ai-chip">próxima <b id="ainext">${nx ? madrid(nx, {weekday: 'short', hour: '2-digit', minute: '2-digit'}) : '—'}</b> <i id="aicount">${nx ? '· en ' + untilTxt(nx) : ''}</i></span>
-      <span class="ai-chip">dos lecturas al día · <b>9:00</b> y <b>14:00</b> (hora española)</span>
-    </div></div></section>
+  const tick = facts.map(h => `<span style="--tc:${TONE[h.tono] || TONE.neutro}">${esc(h.titulo)}</span>`).join('');
+  $('#view').innerHTML = `<div class="x-wrap">
+  <section class="x-hero" id="aihero"><canvas id="aigl"></canvas><div class="x-hin">
+    <span class="x-live"><i></i>en directo · lectura de ${when ? madrid(when, {weekday: 'long', hour: '2-digit', minute: '2-digit'}) : '—'}</span>
+    <h1 class="x-h1">${headline(ses.titular || 'Lo que pasa en el mundo, *hilado con sentido común.*')}</h1>
+    <p class="x-pulse" id="aipulse" aria-label="${esc(ses.pulso || '')}">${esc(ses.pulso || '')}</p>
+    <div class="x-stats">
+      <div class="x-stat"><span class="x-mono">ideas vivas</span><b>${live.length}</b></div>
+      <div class="x-stat"><span class="x-mono">hechos en el radar</span><b>${facts.length}</b></div>
+      <div class="x-stat"><span class="x-mono">descartadas hoy</span><b>${disc.length}</b></div>
+      <div class="x-stat"><span class="x-mono">próxima lectura</span><b>${nx ? madrid(nx, {hour: '2-digit', minute: '2-digit'}) : '—'}<small id="aicount">${nx ? 'en ' + untilTxt(nx) : ''}</small></b></div>
+    </div></div>
+    ${tick ? `<div class="x-tick" aria-hidden="true"><div>${tick}${tick}${tick}${tick}</div></div>` : ''}</section>
 
-  <section class="ai-sec" id="s-ideas"><div class="ai-kick rv">ideas vivas</div><h2 class="rv">Pocas, razonadas y con la puerta de salida escrita</h2>
-    <p class="sub rv">Cada idea nace de un hecho, no de un gráfico. Lleva su cadena lógica, lo que ya ha recogido el precio, qué tiene que pasar para entrar y qué hecho la rompe. No hay tope de ganancia: se sale cuando cambia el hecho que la sostenía.</p>
-    ${live.length ? live.map(ideaCard).join('') : '<div class="fact rv"><h4>Hoy no hay ninguna idea que merezca tu dinero</h4><p>Es lo normal. El entrenamiento enseña que casi todo lo evidente ya está en el precio el mismo día; cuando no hay nada, se dice.</p></div>'}
+  <section class="x-sec">${secHead('01 · Ideas vivas', 'Pocas, razonadas <em>y con la salida escrita</em>', 'Cada idea nace de un hecho, no de un gráfico. Lleva su cadena lógica, lo que el precio ya ha recogido, qué tiene que pasar para entrar y qué hecho la rompe. No hay tope de ganancia: se sale cuando cambia el hecho que la sostenía.')}
+    ${live.length ? live.map(ideaCard).join('') : '<div class="x-none x-rv"><h3>Hoy no hay ninguna idea que merezca tu dinero.</h3><p>Es lo normal. El entrenamiento enseña que casi todo lo evidente ya está en el precio el mismo día. Cuando no hay nada, se dice.</p></div>'}
   </section>
 
-  ${(ses.hechos || []).length ? `<section class="ai-sec"><div class="ai-kick rv">en el radar</div><h2 class="rv">Lo que está moviendo el mercado</h2><p class="sub rv">Hechos que estoy siguiendo. Algunos alimentan las ideas de arriba; otros aún no dan para una idea, y se dice por qué.</p>
-    <div class="facts">${ses.hechos.map(h => `<div class="fact rv" style="--fc:${tone[h.tono] || tone.neutro}"><h4>${esc(h.titulo)}</h4><p>${esc(h.detalle)}</p><p class="ef"><b>qué implica</b>${esc(h.efecto)}</p></div>`).join('')}</div></section>` : ''}
+  ${facts.length ? `<section class="x-sec">${secHead('02 · En el radar', 'Lo que está moviendo <em>el mercado</em>', 'Hechos de las últimas sesiones. Unos alimentan las ideas de arriba; otros todavía no dan para una idea, y se dice por qué.')}
+    ${facts.map((h, i) => `<div class="x-rad x-rv" style="--tc:${TONE[h.tono] || TONE.neutro}"><div class="ix">${String(i + 1).padStart(2, '0')}</div><div><h4>${esc(h.titulo)}</h4><p>${esc(h.detalle)}</p></div><div class="ef"><span class="x-mono">Qué implica</span>${esc(h.efecto)}</div></div>`).join('')}</section>` : ''}
 
-  ${(D.descartes || []).length ? `<section class="ai-sec"><div class="ai-kick rv">descartadas</div><h2 class="rv">Ideas que parecían buenas y no te doy</h2><p class="sub rv">Tan importante como dar una idea es saber cuál no dar. Cada descarte lleva la lección del entrenamiento que lo explica.</p>
-    <div class="disc">${D.descartes.map(d => `<div class="dis rv"><div class="x">×</div><div><h4>${esc(d.titulo)}</h4><p>${esc(d.por_que)}</p>${d.leccion ? `<p class="le">Lección: ${esc(d.leccion)}</p>` : ''}</div></div>`).join('')}</div></section>` : ''}
+  ${disc.length ? `<section class="x-sec">${secHead('03 · Descartadas', 'Parecían buenas <em>y no te las doy</em>', 'Tan importante como dar una idea es saber cuál callarse. Cada descarte lleva la lección del entrenamiento que lo explica.')}
+    ${disc.map(d => `<div class="x-dis x-rv"><h4>${esc(d.titulo)}</h4><div><p>${esc(d.por_que)}</p>${d.leccion ? `<div class="le"><b>Lección</b>${esc(d.leccion)}</div>` : ''}</div></div>`).join('')}</section>` : ''}
 
-  <section class="ai-sec" id="s-score"><div class="ai-kick rv">marcador</div><h2 class="rv">Cada idea, contra el S&amp;P 500</h2><p class="sub rv">Las ideas no se borran ni se retocan. Las abiertas cuentan desde el cierre del día en que saltó su disparador; las que siguen en vigilancia, desde el precio del día en que se dieron (solo como referencia).</p>
-    <div class="score">${ideas.map(i => { const t = S.idt && S.idt.ideas && S.idt.ideas[i.id]; return `<div class="isc rv"><div><h4>${esc(i.titulo)}</h4><small>${ST[i.estado] || ''} · ${fdate(i.entrada || i.fecha)}${t && t.hasta ? ' → ' + fdate(t.hasta) : ''}</small></div><div class="inum">${t && t.media != null ? sgn(t.media) : '—'}<small>la idea</small></div><div class="inum spy">${t && t.spy != null ? sgn(t.spy) : '—'}<small>SPY</small></div></div>`; }).join('')}</div>
-    ${closed.length ? `<p class="sub rv" style="margin-top:26px">Ideas cerradas</p>${closed.map(ideaCard).join('')}` : ''}
+  <section class="x-sec">${secHead('04 · Marcador', 'Cada idea, <em>contra el S&amp;P 500</em>', 'Las ideas no se borran ni se retocan. Las abiertas cuentan desde el cierre del día en que saltó su disparador; las que siguen en vigilancia, desde el precio del día en que se dieron, solo como referencia.')}
+    ${ideas.map(i => { const t = S.idt && S.idt.ideas && S.idt.ideas[i.id]; return `<div class="x-sc x-rv"><div><h4>${esc(i.titulo)}</h4><span class="x-mono">${ST[i.estado] || ''} · ${fdate(i.entrada || i.fecha)}${t && t.hasta ? ' → ' + fdate(t.hasta) : ''}</span></div><div class="v">${t && t.media != null ? sgn(t.media) : '—'}<small>la idea</small></div><div class="v spy">${t && t.spy != null ? sgn(t.spy) : '—'}<small>S&amp;P 500</small></div></div>`; }).join('')}
+    ${closed.length ? `<div style="margin-top:40px">${closed.map((c, k) => ideaCard(c, live.length + k)).join('')}</div>` : ''}
   </section>
-  <div class="ai-foot rv">Esto no es una recomendación de inversión personalizada: es un razonamiento público, con su registro, para que juzgues tú. Las noticias salen de búsquedas en prensa y pueden contener errores; los precios son de Yahoo Finance al último cierre. En <a href="#entrenamiento">Entrenamiento</a> está lo que he aprendido probando este tipo de ideas con hechos pasados.</div>`;
-  aiStart(ses.pulso || '', ['leyendo titulares', 'separando hechos de rumores', 'buscando el segundo efecto', 'mirando qué ha recogido ya el precio', 'revisando disparadores', 'comparando con casos pasados']);
+  <p class="x-end">Esto no es una recomendación de inversión personalizada. Es un razonamiento público, con su registro, para que juzgues tú. Las noticias salen de búsquedas en prensa y pueden contener errores; los precios son de Yahoo Finance al último cierre. En <a href="#entrenamiento">Entrenamiento</a> está lo que se ha aprendido probando este tipo de ideas con hechos pasados.</p></div>`;
+  aiStart(ses.pulso || '');
 }
 
 function renderTrain() {
   const P = S.idp;
   if (!P) { $('#view').innerHTML = '<div class="empty">Sin datos de entrenamiento (data/ideas_playbook.json).</div>'; return; }
-  const VD = {dar: 'sí la doy', esperar: 'espero a la prueba', no: 'no la doy'};
-  const mx = Math.max(...P.estudios.filter(e => e.n > 1).map(e => Math.max(Math.abs(e.d0 || 0), Math.abs(e.e20 || 0), Math.abs(e.e60 || 0))), 1);
-  const bar = v => v == null ? '' : `<span class="bar2" style="width:${Math.min(70, Math.abs(v) / mx * 70).toFixed(0)}px;background:${v >= 0 ? 'var(--c4)' : 'var(--ember)'}"></span>`;
+  const VD = {dar: 'Sí la doy', esperar: 'Depende: con condiciones', no: 'No la doy'};
+  const E = P.estudios, types = E.filter(e => e.grupo.includes('resumen por tipo')), rest = E.filter(e => !e.grupo.includes('resumen por tipo')), named = E.filter(e => e.grupo === 'Casos con nombre').length;
+  const total = rest.reduce((s, e) => s + e.n, 0), kinds = rest.filter(e => e.n > 1).length;
+  const mxT = Math.max(...types.flatMap(e => [e.d0, e.e20, e.e60].map(v => Math.abs(v || 0))), 1);
+  const bar = (v, lab) => `<div class="x-bar"><small>${lab}</small><i style="--w:${(Math.abs(v || 0) / mxT * 50).toFixed(1)}%;--x:${v >= 0 ? '0' : '-100%'};--c:${v >= 0 ? 'var(--go)' : 'var(--no)'}"></i><span>${sgn(v)}</span></div>`;
   let g = '', rows = '';
-  for (const e of P.estudios) {
-    if (e.grupo !== g) { g = e.grupo; rows += `<tr class="igrp"><td colspan="6">${esc(g)}</td></tr>`; }
-    const tt = (v, t) => v == null ? '—' : `${sgn(v, 1)}${t != null ? `<small style="color:var(--dim)"> t ${t >= 0 ? '+' : ''}${t}</small>` : ''}`;
-    rows += `<tr><td>${esc(e.nombre)}<small>${esc(e.logica || '')}${e.fecha ? ' ' + esc(e.fecha) + ' · ' + esc((e.valores || []).join(' ')) : ''}${e.nota ? ' · ' + esc(e.nota) : ''}</small></td><td>${e.n}</td><td>${sgn(e.d0, 1)}${bar(e.d0)}</td><td>${tt(e.e5, e.t5)}</td><td>${tt(e.e20, e.t20)}${bar(e.e20)}</td><td>${tt(e.e60, e.t60)}${bar(e.e60)}</td></tr>`;
+  const tt = (v, t) => v == null ? '—' : `${sgn(v)}${t != null ? `<small class="t">t ${t >= 0 ? '+' : '−'}${Math.abs(t).toFixed(1).replace('.', ',')}</small>` : ''}`;
+  for (const e of rest) {
+    if (e.grupo !== g) { g = e.grupo; rows += `<tr class="grp"><td colspan="6">${esc(g)}</td></tr>`; }
+    const sig = e.n > 1 && Math.max(Math.abs(e.t20 || 0), Math.abs(e.t60 || 0)) >= 2 && (e.e60 || 0) > 0;
+    rows += `<tr class="${sig ? 'sig' : ''}"><td>${esc(e.nombre)}<small>${esc(e.logica || '')}${e.fecha ? ' · ' + fdate(e.fecha) + ' · ' + esc((e.valores || []).join(' ')) : ''}${e.nota ? ' · ' + esc(e.nota) : ''}</small></td><td>${e.n.toLocaleString('es-ES')}</td><td>${sgn(e.d0)}</td><td>${tt(e.e5, e.t5)}</td><td>${tt(e.e20, e.t20)}</td><td>${tt(e.e60, e.t60)}</td></tr>`;
   }
-  $('#view').innerHTML = `
-  <section class="ai-hero" id="aihero" style="min-height:min(52vh,460px)"><canvas id="aigl"></canvas><div class="ai-in">
-    <span class="ai-live"><span class="ai-dot"></span>entrenamiento · ${P.estudios.reduce((s, e) => s + e.n, 0).toLocaleString('es-ES')} hechos pasados</span>
-    <h1 class="ai-h1">Qué ideas doy<br><em>y cuáles me callo.</em></h1>
-    <div class="ai-pulse" id="aipulse"></div><div class="ai-think" id="aithink"></div></div></section>
-  <section class="ai-sec"><div class="ai-kick rv">lecciones</div><h2 class="rv">Lo que enseñan los hechos pasados</h2><p class="sub rv">${esc(P.metodo)}</p>
-    <div class="less">${P.lecciones.map(l => `<div class="les ${esc(l.veredicto)} rv"><span class="vd">${VD[l.veredicto] || ''}</span><h4>${esc(l.titulo)}</h4><p>${esc(l.texto)}</p><div class="fig">${esc(l.cifra)}</div></div>`).join('')}</div></section>
-  <section class="ai-sec"><div class="ai-kick rv">los ensayos</div><h2 class="rv">Cada tipo de idea, simulado</h2><p class="sub rv">«El mismo día» es lo que se mueve el grupo el día de la noticia: eso ya no se puede comprar. Las otras columnas son lo que se gana <b>de más sobre el S&amp;P 500</b> comprando en la apertura del día siguiente y manteniendo 5, 20 o 60 sesiones. La t mide si se distingue del azar (hace falta 2 o más).</p>
-    <div class="itw rv"><table class="tr"><thead><tr><th>Idea</th><th>casos</th><th>el mismo día</th><th>5 sesiones</th><th>20 sesiones</th><th>60 sesiones</th></tr></thead><tbody>${rows}</tbody></table></div></section>
-  <div class="ai-foot rv">${esc(P.cautelas)} Generado el ${fdate(P.generado)} con <code>python -m vp.ideas_train</code>.</div>`;
-  aiStart(P.resumen || '', ['repasando hechos pasados', 'midiendo qué quedaba por ganar al día siguiente', 'descartando lo que ya estaba en el precio']);
+  $('#view').innerHTML = `<div class="x-wrap">
+  <section class="x-hero sm" id="aihero"><canvas id="aigl"></canvas><div class="x-hin">
+    <span class="x-live"><i></i>entrenamiento · actualizado el ${fdate(P.generado)}</span>
+    <h1 class="x-h1">${headline('Qué ideas doy *y cuáles me callo.*')}</h1>
+    <p class="x-pulse" id="aipulse" style="min-height:0">${esc(P.resumen || '')}</p>
+    <div class="x-stats"><div class="x-stat"><span class="x-mono">hechos pasados simulados</span><b>${total.toLocaleString('es-ES')}</b></div><div class="x-stat"><span class="x-mono">tipos de idea</span><b>${kinds}</b></div><div class="x-stat"><span class="x-mono">casos con nombre</span><b>${named}</b></div><div class="x-stat"><span class="x-mono">desde</span><b>2008</b></div></div>
+  </div></section>
+  <section class="x-sec">${secHead('01 · Lecciones', 'Lo que enseñan <em>los hechos pasados</em>', esc(P.metodo))}
+    <div class="x-less">${P.lecciones.map(l => `<div class="x-les ${esc(l.veredicto)} x-rv"><span class="x-vd">${VD[l.veredicto] || ''}</span><h4>${esc(l.titulo)}</h4><p>${esc(l.texto)}</p><div class="fig">${esc(l.cifra)}</div></div>`).join('')}</div></section>
+  ${types.length ? `<section class="x-sec">${secHead('02 · Casos con nombre', `${named} episodios, <em>cinco tipos</em>`, 'Los episodios que todo el mundo recuerda, agrupados por el tipo de hecho. Lo que hizo el grupo de valores «lógico» el mismo día y, comprando al día siguiente, lo que ganó de más sobre el S&P 500. Están elegidos y clasificados a mano, a toro pasado: sirven de orientación, no de prueba.')}
+    <div class="x-types">${types.map(e => `<div class="x-type x-rv"><h4>${esc(e.nombre.split(' (')[0])}<small>${e.n} casos · suben a 20 sesiones el ${e.hit20} %</small></h4>${bar(e.d0, 'el mismo día')}${bar(e.e20, '20 sesiones después')}${bar(e.e60, '60 sesiones después')}</div>`).join('')}</div></section>` : ''}
+  <section class="x-sec">${secHead('03 · Los ensayos', 'Cada tipo de idea, <em>simulado</em>', '«El mismo día» es lo que se mueve el grupo el día de la noticia: eso ya no se puede comprar. Las otras columnas son lo que se gana de más sobre el S&P 500 comprando en la apertura del día siguiente y manteniendo 5, 20 o 60 sesiones. La t mide si se distingue del azar: hace falta 2 o más. La marca verde señala los que lo consiguen.')}
+    <div class="x-tw x-rv"><table class="x-tr"><thead><tr><th>Idea</th><th>casos</th><th>el mismo día</th><th>5 sesiones</th><th>20 sesiones</th><th>60 sesiones</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+  <p class="x-end">${esc(P.cautelas)} Generado con <code>python -m vp.ideas_train</code>.</p></div>`;
+  aiStart('');
 }
 
-/* animación: orbe y ondas (WebGL); texto que se escribe; cuenta atrás; aparición al hacer scroll */
+/* lo vivo: la seda del encabezado (WebGL), el pulso que se escribe, la cuenta atrás y la entrada suave de cada bloque */
 const AI = {raf: 0, tm: [], gl: null};
 function aiStop() { cancelAnimationFrame(AI.raf); AI.tm.forEach(clearInterval); AI.tm = []; if (AI.io) AI.io.disconnect(); AI.gl = null; }
-function aiStart(text, thoughts) {
+function aiStart(text) {
   aiStop();
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const el = $('#aipulse'), th = $('#aithink');
-  if (el) { if (reduce) el.textContent = text; else { let i = 0; el.innerHTML = '<span></span><span class="cur"></span>'; const sp = el.firstChild; const id = setInterval(() => { i = Math.min(text.length, i + 2); sp.textContent = text.slice(0, i); if (i >= text.length) clearInterval(id); }, 16); AI.tm.push(id); } }
-  if (th && !reduce) { let k = 0; const f = () => { th.textContent = '› ' + thoughts[k++ % thoughts.length] + '…'; }; f(); AI.tm.push(setInterval(f, 2600)); }
-  const cn = $('#aicount'); if (cn) AI.tm.push(setInterval(() => { const n = nextRun(); if (n) cn.textContent = '· en ' + untilTxt(n); }, 30000));
-  AI.io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); AI.io.unobserve(e.target); } }), {rootMargin: '0px 0px -8% 0px'});
-  document.querySelectorAll('.rv').forEach((n, i) => { n.style.transitionDelay = (i % 4) * 70 + 'ms'; AI.io.observe(n); });
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, el = $('#aipulse');
+  if (el && text && !reduce) { let i = 0; el.innerHTML = '<span></span><span class="cur"></span>'; const sp = el.firstChild; const id = setInterval(() => { i = Math.min(text.length, i + 3); sp.textContent = text.slice(0, i); if (i >= text.length) { clearInterval(id); setTimeout(() => { const c = el.querySelector('.cur'); if (c) c.remove(); }, 2400); } }, 16); AI.tm.push(id); }
+  const cn = $('#aicount'); if (cn) AI.tm.push(setInterval(() => { const n = nextRun(); if (n) cn.textContent = 'en ' + untilTxt(n); }, 30000));
+  AI.io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); AI.io.unobserve(e.target); } }), {rootMargin: '0px 0px -6% 0px'});
+  document.querySelectorAll('.x-rv').forEach(n => AI.io.observe(n));
   aiGL(reduce);
 }
 function aiGL(reduce) {
@@ -647,26 +787,26 @@ function aiGL(reduce) {
   const FS = `precision highp float;uniform vec2 r;uniform float t;uniform vec2 m;uniform float n;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float ns(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
-float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*ns(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}
-vec3 pal(float x){return .5+.5*cos(6.2831*(x+vec3(.55,.33,.02)));}
-void main(){vec2 uv=(gl_FragCoord.xy-.5*r)/r.y;float asp=r.x/r.y;
- vec2 c=vec2(n>.5?0.:asp*.24,n>.5?.2:.06)+m*.05;vec2 p=uv-c;float d=length(p),a=atan(p.y,p.x);
- float R=(n>.5?.2:.27)+.012*sin(t*1.3);
- float w=fbm(vec2(a*1.6+t*.25,d*3.-t*.4))*.5+fbm(p*3.2+vec2(t*.18,-t*.12))*.5;
- float edge=R+.085*(w-.5);float inside=smoothstep(edge+.012,edge-.05,d);
- vec3 col=vec3(.012,.014,.03);
- float sw=fbm(p*4.5+vec2(sin(t*.3),cos(t*.23))*1.4+w*1.6);
- vec3 core=mix(pal(sw*.9+t*.05),pal(a/6.2831+w*.6-t*.07),.5);
- core*=.55+1.1*smoothstep(R,0.,d*1.15);core+=vec3(1.)*pow(max(0.,1.-d/R),6.)*.35;
- col=mix(col,core,inside);
- float rim=exp(-abs(d-edge)*42.);col+=pal(a/6.2831+t*.1)*rim*.9;
- col+=pal(.62+w*.3)*.05/(d*d*7.+.07)*(1.-inside*.6);
- for(int i=0;i<6;i++){float fi=float(i);float env=exp(-pow((uv.x-c.x)/(asp*.62),2.)*2.2);
-  float y=c.y+(.05+.035*fi)*env*sin(uv.x*(3.2+fi*1.3)+t*(.9+fi*.23)+fi*1.7)*sin(t*.4+fi)*1.3+ .02*sin(uv.x*9.+t*1.7+fi);
-  float g=.0022/(abs(uv.y-y)+.0022);col+=pal(.5+fi*.11+uv.x*.12+t*.03)*g*(.2+.5*env)*(1.-inside*.85);}
- float st=step(.9975,h(floor(gl_FragCoord.xy/2.)))*(.4+.6*sin(t*2.+h(floor(gl_FragCoord.xy/2.)+3.)*40.));col+=st*.35*(1.-inside);
- col*=1.-.35*smoothstep(.4,1.3,length(uv*vec2(.7,1.)));
- col=pow(col,vec3(.9));gl_FragColor=vec4(col,1.);}`;
+float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*ns(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}
+vec3 pal(float x){x=fract(x)*4.;vec3 a=vec3(.141,.278,1.),b=vec3(.098,.761,.902),c=vec3(1.,.31,.588),d=vec3(1.,.69,.122);
+ float f=smoothstep(0.,1.,fract(x));return x<1.?mix(a,b,f):x<2.?mix(b,c,f):x<3.?mix(c,d,f):mix(d,a,f);}
+void main(){vec2 uv=gl_FragCoord.xy/r;float asp=r.x/r.y;vec2 p=vec2((uv.x-.5)*asp,uv.y-.5);
+ vec3 paper=vec3(.969,.973,.98),col=paper;
+ for(int k=0;k<3;k++){float fk=float(k);
+  float base=(n>.5?mix(.26,.36,uv.x):mix(-.34,.33,pow(uv.x,1.25)))+fk*.085-.085;
+  float w=.10*sin(p.x*1.5+t*.21+fk*1.9)+.055*sin(p.x*3.0-t*.16+fk*.7)+.07*(fbm(vec2(p.x*1.1+fk*3.,t*.06+fk))-.5);
+  float d=p.y-base-w+m.y*.015;
+  float th=(n>.5?.085:.12)+.05*sin(p.x*1.2+t*.14+fk*2.3);
+  float mask=smoothstep(th,th*.18,abs(d));
+  float fold=sin(d*44.+fbm(vec2(p.x*2.1+fk,d*3.+t*.07))*7.+p.x*3.6+m.x*.6);
+  float hue=uv.x*.5+d*1.5+t*.022+fk*.2+fbm(p*1.2+fk)*.3;
+  vec3 c=pal(hue);c=mix(c,vec3(1.),.16+.26*fold*fold*smoothstep(-1.,1.,fold));c*=.94+.06*fold;
+  col=mix(col,mix(paper,c,.5),smoothstep(th*2.6,0.,abs(d))*.16);
+  col=mix(col,c,mask*(.9-fk*.18));}
+ float fade=n>.5?smoothstep(.42,.66,uv.y):smoothstep(.10,.58,uv.x)*smoothstep(-.05,.22,uv.y);
+ col=mix(paper,col,fade);
+ col+=(h(gl_FragCoord.xy+fract(t))-.5)*.012;
+ gl_FragColor=vec4(col,1.);}`;
   const sh = (ty, src) => { const s = gl.createShader(ty); gl.shaderSource(s, src); gl.compileShader(s); return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null; };
   const vs = sh(gl.VERTEX_SHADER, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'), fs = sh(gl.FRAGMENT_SHADER, FS);
   if (!vs || !fs) { hero.classList.add('nogl'); return; }
@@ -677,12 +817,12 @@ void main(){vec2 uv=(gl_FragCoord.xy-.5*r)/r.y;float asp=r.x/r.y;
   let mx = 0, my = 0, tx = 0, ty = 0, vis = true; AI.gl = gl;
   hero.onpointermove = e => { const b = hero.getBoundingClientRect(); tx = (e.clientX - b.left) / b.width * 2 - 1; ty = -((e.clientY - b.top) / b.height * 2 - 1); };
   new IntersectionObserver(es => { vis = es[0].isIntersecting; }).observe(hero);
-  const fit = () => { const k = Math.min(1.5, devicePixelRatio || 1), w = Math.max(2, Math.round(hero.clientWidth * k)), hh = Math.max(2, Math.round(hero.clientHeight * k)); if (cv.width !== w || cv.height !== hh) { cv.width = w; cv.height = hh; gl.viewport(0, 0, w, hh); } };
+  const fit = () => { const k = Math.min(1.75, devicePixelRatio || 1), w = Math.max(2, Math.round(hero.clientWidth * k)), hh = Math.max(2, Math.round(hero.clientHeight * k)); if (cv.width !== w || cv.height !== hh) { cv.width = w; cv.height = hh; gl.viewport(0, 0, w, hh); } };
   const t0 = performance.now();
   const frame = now => {
     if (AI.gl !== gl) return;
     if (vis && !document.hidden) { fit(); mx += (tx - mx) * .04; my += (ty - my) * .04;
-      gl.uniform2f(ur, cv.width, cv.height); gl.uniform1f(ut, reduce ? 12.3 : (now - t0) / 1000 + 12.3); gl.uniform2f(um, mx, my); gl.uniform1f(un, cv.width / cv.height < .95 ? 1 : 0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+      gl.uniform2f(ur, cv.width, cv.height); gl.uniform1f(ut, reduce ? 20 : (now - t0) / 1000 + 20); gl.uniform2f(um, mx, my); gl.uniform1f(un, hero.clientWidth < 700 ? 1 : 0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
     if (!reduce) AI.raf = requestAnimationFrame(frame);
   };
   AI.raf = requestAnimationFrame(frame);

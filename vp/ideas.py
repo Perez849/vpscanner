@@ -6,14 +6,28 @@ from __future__ import annotations
 import json
 import sys
 import time
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from . import data
 
 
+def fetch(sym: str):
+    """Barras de un año. Los valores de otras bolsas llevan sufijo con punto (IDR.MC), que `data.fetch_one` convertiría en guion: esos se piden tal cual."""
+    if '.' not in sym:
+        return data.fetch_one(sym, '1y')
+    url = data.URL.format(host=data.HOSTS[0], sym=urllib.parse.quote(sym, safe='.'), span=data.span('1y'))
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': data.UA, 'Accept': 'application/json'}), timeout=25) as r:
+            return data.parse(json.loads(r.read().decode('utf-8')))
+    except (OSError, ValueError):
+        return None
+
+
 def closes(sym: str) -> Dict[str, float]:
-    b = data.fetch_one(sym, '1y')
+    b = fetch(sym)
     if b is None:
         return {}
     return {datetime.fromtimestamp(int(t), timezone.utc).strftime('%Y-%m-%d'): float(c) for t, c in zip(b['t'], b['c'])}
