@@ -1193,25 +1193,42 @@ def test_cartera():
     print(f"ok · cartera simulada: con reversión plantada {c['anual']:+.1f} %/año frente a {au['anual']['mediana']:+.1f} % del azar (p {au['anual']['p']}); en paseos aleatorios nada; contabilidad correcta")
 
 
-def test_web_impulso_constants():
-    """La web copia las condiciones y las salidas de la regla de impulso: tienen que ser exactamente las de vp/search.py, y las dos partes (figuras / impulso) tienen sus propias rutas y pestañas."""
-    import re
+def test_web_ideas():
+    """La web tiene dos partes: ideas por coyuntura (principal y vista por defecto) y figuras y velas (secundaria). La regla de impulso ya no está en la web."""
     html = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'index.html'), encoding='utf-8').read()
-    cond = json.loads(re.search(r'const COND = (\{.*?\});\n', html).group(1))
-    exits = json.loads(re.search(r'const EXITS = (\{.*?\});\n', html).group(1))
-    rules = json.loads(re.search(r'const RULES = (\{.*?\});\n', html).group(1))
-    assert cond == search.DESC and exits == search.EXIT_TXT and rules == search.LABELS, (set(cond) ^ set(search.DESC), set(exits) ^ set(search.EXIT_TXT), set(rules) ^ set(search.LABELS))
-    for needle in ("impulso: 'imp'", "'impulso-evidencia': 'impev'", "'impulso-guia': 'impguide'", "'impulso-seguimiento': 'imptrack'", "['imp', 'Hoy'], ['imptrack', 'Seguimiento'], ['impev', 'Evidencia'], ['impguide', 'Guía']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']", 'Parte 2', 'Parte 1', 'Asegurar +10 %', 'Plan de hoy',
-                   'Solo las 5 del plan, todas las señales, o mantener el universo', 'El menú de salidas', 'Con tu escalera (+4 % → +10 %)', 'ruleLabel(k)', 'ruleShort(n)', 'la cartera de ${m.max_pos || 5} huecos', 'La cartera del plan', 'T.plan_ops', 'plan.huecos', '¿Está mal elegido el universo de 5?', 'estructurasPanel()'):
+    for needle in ("await go(h || 'ideas', null, true)", "(VIEWS[w] || 'ideas')", "['ideas', 'Hoy'], ['train', 'Entrenamiento']", "['radar', 'Radar'], ['chart', 'Gráfico'], ['ev', 'Evidencia'], ['guide', 'Guía']",
+                   'function renderIdeas()', 'function renderTrain()', "'ideas.json'", "'ideas_track.json'", "'ideas_playbook.json'", "'plan_study.json'"):
         assert needle in html, needle
-    assert 'C1 · C2 · C3 · C6 · C7</b>' not in html                        # los códigos no se enseñan como nombre
-    for f in ('impulso.json', 'impulso_track.json', 'search.json', 'search_confirm.json', 'search_confirm_smallmid.json', 'fiab.json', 'cartera.json', 'plan_study.json'):
-        assert f"'{f}'" in html, f
-    print('ok · web: condiciones y salidas de la regla de impulso idénticas a las del código; dos partes con rutas y pestañas propias')
+    for gone in ('renderImp', 'impulso.json', 'Regla de impulso'):
+        assert gone not in html, gone
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
+    D = json.load(open(os.path.join(root, 'ideas.json'), encoding='utf-8'))
+    for i in D['ideas']:                                                     # cada idea lleva todo lo que la ficha enseña
+        for k in ('id', 'fecha', 'estado', 'titulo', 'hecho', 'cadena', 'valores', 'en_precio', 'disparador', 'invalidacion', 'horizonte', 'ref'):
+            assert i.get(k), (i.get('id'), k)
+        assert i['estado'] in ('vigilancia', 'abierta', 'cerrada') and (i['estado'] == 'vigilancia') == (not i.get('entrada')), i['id']
+        assert all(v['sym'] in i['ref'] for v in i['valores']) and 'SPY' in i['ref'], i['id']
+    P = json.load(open(os.path.join(root, 'ideas_playbook.json'), encoding='utf-8'))
+    assert P['lecciones'] and P['estudios'] and all(l['veredicto'] in ('dar', 'esperar', 'no') for l in P['lecciones'])
+    print('ok · web: ideas por coyuntura como parte principal, chartismo como secundaria; fichas de ideas y lecciones completas')
+
+
+def test_ideas_score():
+    """Marcador de ideas: en vigilancia cuenta desde el precio de referencia; abierta, desde el cierre del día de entrada; cerrada, hasta el de salida. La media es a partes iguales y el SPY va aparte."""
+    from vp import ideas
+    cl = {'AAA': {'2026-01-02': 100.0, '2026-01-05': 110.0, '2026-01-06': 121.0}, 'BBB': {'2026-01-02': 50.0, '2026-01-05': 50.0, '2026-01-06': 45.0}, 'SPY': {'2026-01-02': 400.0, '2026-01-05': 404.0, '2026-01-06': 408.0}}
+    base = {'id': 'x', 'fecha': '2026-01-02', 'valores': [{'sym': 'AAA'}, {'sym': 'BBB'}], 'ref': {'AAA': 100.0, 'BBB': 50.0, 'SPY': 400.0}}
+    r = ideas.score({**base, 'estado': 'vigilancia', 'entrada': None}, cl)
+    assert r['media'] == 5.5 and r['spy'] == 2.0 and r['por_valor']['AAA']['pct'] == 21.0 and 'SPY' not in r['por_valor'], r
+    r = ideas.score({**base, 'estado': 'abierta', 'entrada': '2026-01-05'}, cl)
+    assert r['media'] == 0.0 and r['spy'] == 0.99 and r['desde'] == '2026-01-05', r
+    r = ideas.score({**base, 'estado': 'cerrada', 'entrada': '2026-01-02', 'salida': '2026-01-05'}, cl)
+    assert r['media'] == 5.0 and r['spy'] == 1.0 and r['hasta'] == '2026-01-05', r
+    print('ok · ideas: marcador frente al SPY desde la referencia, la entrada y hasta la salida')
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_impulso_constants]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_ideas, test_ideas_score]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»

@@ -1,0 +1,42 @@
+name: Publicar ideas
+
+# El analista escribe las ideas en su rama de trabajo dos veces al día. Este flujo copia SOLO los tres ficheros de datos de ideas a main,
+# que es de donde se sirve la web. No hace nada mientras main no tenga ya la parte de ideas (es decir, hasta que se fusione la rama a mano una primera vez).
+on:
+  push:
+    branches: ['claude/practical-mayer-ndi8gx']
+    paths: ['data/ideas.json', 'data/ideas_track.json', 'data/ideas_playbook.json']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ideas-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Copiar los datos de ideas a main
+        run: |
+          if [ ! -f data/ideas.json ] || ! grep -q "function renderIdeas" index.html; then
+            echo "main todavía no tiene la parte de ideas: no se publica nada."; exit 0
+          fi
+          git fetch -q origin "${GITHUB_REF_NAME}"
+          git checkout FETCH_HEAD -- data/ideas.json data/ideas_track.json data/ideas_playbook.json
+          python3 -c "import json; [json.load(open('data/'+f, encoding='utf-8')) for f in ('ideas.json', 'ideas_track.json', 'ideas_playbook.json')]"
+          git config user.name  "vp-scanner-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/ideas.json data/ideas_track.json data/ideas_playbook.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "datos: ideas $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull --rebase -q origin main || true
+            git push origin HEAD:main
+          fi
