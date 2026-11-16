@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="icon" href="data:,">
-<title>VP Scanner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' aria-hidden='true'%3E%3Ccircle cx='60' cy='60' r='56.5' stroke='%23111110' stroke-width='3'/%3E%3Ccircle cx='60' cy='60' r='50.5' stroke='%23111110' stroke-width='1.6' stroke-dasharray='0.1 4.4' stroke-linecap='round'/%3E%3Cg stroke='%23111110' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M60 9.5v7M43 12.5l2.4 6.4M77 12.5l-2.4 6.4M28.5 21l4.6 5.2M91.5 21l-4.6 5.2'/%3E%3C/g%3E%3Cellipse cx='60' cy='29.5' rx='19' ry='5.6' stroke='%23111110' stroke-width='3.4'/%3E%3Cg fill='%23111110'%3E%3Cpath d='M43.5 53.5C31 54 18.5 46 19 27.5c3.5 10.5 12 16.5 25.5 17z'/%3E%3Cpath d='M76.5 53.5C89 54 101.5 46 101 27.5c-3.5 10.5-12 16.5-25.5 17z'/%3E%3Cpath d='M39.5 55.5 27 57.5c2.5 5.5 8 7.5 13.5 6z'/%3E%3Cpath d='M80.5 55.5 93 57.5c-2.5 5.5-8 7.5-13.5 6z'/%3E%3Cpath d='M40 49c12-6.5 28-6.5 40 0 1.5 9-.5 19-3 27-1 7-3.5 15-8.5 19.5-5 3.5-12 3.5-17 0C46.5 91 44 83 43 76c-2.5-8-4.500-18-3-27z'/%3E%3C/g%3E%3Cg fill='%23f4efe4'%3E%3Cpath d='M47 64.5c3.5-1.5 7-.5 8.5 2-3 1.5-6.5 1-8.5-2zM73 64.5c-3.5-1.5-7-.5-8.5 2 3 1.5 6.5 1 8.500-2z'/%3E%3Cellipse cx='55.5' cy='89.3' rx='2' ry='1.5'/%3E%3Cellipse cx='64.5' cy='89.3' rx='2' ry='1.5'/%3E%3C/g%3E%3Cpath d='M51.5 83.5c5.5-2.5 11.5-2.5 17 0' stroke='%23f4efe4' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E">
+<title>The Many Saints of Wall St</title>
 <style>
 /* Distribución: cabecera con navegación · radar en tarjetas · gráfico con carril de valores y panel · evidencia · guía */
 :root{
@@ -55,9 +55,10 @@ table.ev tr.me td{background:color-mix(in srgb, var(--violet) 9%, transparent)}
 .pos{color:var(--emerald);font-weight:700}.neg{color:var(--ember);font-weight:700}
 /* cabecera */
 .top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:4px 0 12px;border-bottom:2px solid var(--ink)}
-.brand{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.015em;text-decoration:none;line-height:1}
-.brand b{color:var(--emerald);font-weight:800;margin-left:1px}
-.brand small{display:block;font-family:var(--f-mono);font-size:10px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin-top:4px}
+.brand{font-family:var(--f-display);font-size:22px;font-weight:800;letter-spacing:-.015em;text-decoration:none;line-height:1;display:inline-flex;align-items:center;gap:10px}
+.brand .logo{width:42px;height:42px;flex:none}.brand span{display:block}
+
+.brand small{display:block;font-family:var(--f-display);font-style:italic;font-size:14px;font-weight:400;letter-spacing:0;color:var(--sub);margin-top:2px}
 .nav{display:flex;gap:4px;flex-wrap:wrap}
 .nav button{font-family:var(--f-mono);font-size:12px;padding:8px 14px;border:1px solid transparent;border-radius:8px;background:none;color:var(--sub);cursor:pointer}
 .nav button:hover{color:var(--ink)}
@@ -177,9 +178,8 @@ body.ai{--bg:#f4efe4;--card:#fbf8f1;--ink:#111110;--sub:#55524b;--dim:#8d887c;--
   color-scheme:light;font-family:var(--ft);overflow-x:clip;background-color:var(--bg);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .18 0 0 0 0 .12 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")}
 body.ai .top{border-bottom:0;padding-bottom:10px}
-body.ai .brand{font-family:var(--fh);font-weight:900;font-size:30px;letter-spacing:-.02em}
-body.ai .brand b{color:var(--ink);font-weight:900;font-style:italic}
-body.ai .brand small{display:none}
+body.ai .brand{font-family:var(--fh);font-weight:900;font-size:22px;letter-spacing:-.02em}
+body.ai .brand small{font-family:var(--fh);font-style:italic;font-weight:500;color:var(--ink)}
 body.ai .asof{font-family:var(--fm);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)}
 body.ai .sec button{font-family:var(--fm);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:0;padding:8px 14px}
 body.ai .sec button small{display:none}
@@ -201,8 +201,10 @@ body.ai .nav button.on{background:none;color:var(--ink);font-weight:700;box-shad
 @keyframes xmarq{to{transform:translateX(-50%)}}
 /* cabecera del diario */
 .x-mast{text-align:center;padding:26px 0 0;position:relative}
-.x-mast h1{font-family:var(--fh);font-weight:900;font-size:clamp(44px,9.4vw,138px);line-height:.86;letter-spacing:-.035em;margin:0;text-transform:uppercase}
-.x-mast h1 i{font-weight:500;letter-spacing:-.04em;text-transform:none}
+.x-mast h1{font-family:var(--fh);font-weight:900;font-size:clamp(34px,6.5vw,98px);line-height:.9;letter-spacing:-.035em;margin:0;display:flex;align-items:center;justify-content:center;gap:.28em;flex-wrap:wrap}
+.x-mast h1 i{font-weight:500;letter-spacing:-.03em}
+.x-mast h1 .logo{width:1.18em;height:1.18em;flex:none;animation:xseal .9s cubic-bezier(.2,1.4,.4,1) .2s both}
+@keyframes xseal{from{transform:rotate(-24deg) scale(2.4);opacity:0}}
 .x-date{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding:8px 0;border-top:4px double var(--ink);border-bottom:1.5px solid var(--ink);font-family:var(--fm);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
 .x-date b{color:var(--red)}
 .x-live{display:inline-flex;align-items:center;gap:8px}
@@ -336,13 +338,14 @@ table.x-tr tr.sig td:first-child{box-shadow:inset 4px 0 0 var(--go);padding-left
 @media (max-width:900px){.x-hero{grid-template-columns:1fr}.x-hin{border-right:0;padding-right:0}.x-side{border-top:1.5px solid var(--ink);min-height:340px}.x-sh,.x-sf{padding-left:0}.x-head{grid-template-columns:1fr}.x-body{grid-template-columns:1fr}.x-flow ol{grid-template-columns:1fr;gap:16px 0}.x-flow ol::before,.x-flow ol::after{left:15px;right:auto;top:6px;bottom:6px;width:2px;height:auto}.x-flow ol::after{transform-origin:50% 0;animation-name:xinkv}.x-flow li{padding:4px 0 0 48px}.x-dec{grid-template-columns:1fr}.x-cell:nth-child(odd){border-right:0}.x-dis{grid-template-columns:1fr}.x-type{grid-template-columns:1fr 1fr 1fr}.x-type h4{grid-column:1/-1}}
 @keyframes xinkv{0%{transform:scaleY(0)}70%,92%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
 @media (max-width:700px){.x-wire{column-count:1}.x-date span:nth-child(2){display:none}.x-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.x-stat:nth-child(2){border-right:0}.x-stat:nth-child(n+3){border-top:1px solid var(--rule2)}.x-stat:nth-child(3){padding-left:0}.x-ih{grid-template-columns:1fr}.x-num{grid-row:auto;font-size:74px}.x-idea,.x-none{box-shadow:5px 5px 0 var(--ink);margin-right:5px}.x-val{grid-template-columns:76px minmax(0,1fr)}.x-val .mv{grid-column:2;text-align:left;padding:0}.x-val .mv small{display:inline;margin-left:8px}.x-sc{grid-template-columns:minmax(0,1fr) 120px}.x-sc .spy{display:none}.x-note{grid-template-columns:1fr;gap:2px}.x-stamp{position:static;display:inline-block;margin:0 0 14px;transform:rotate(-3deg)}}
-@media (prefers-reduced-motion:reduce){.x-tape div,.x-h1 span,.x-h1 em,.x-flow ol::after,.x-flow li::before,.x-live i,.x-st i,.x-val .mv,.x-stamp{animation:none}.x-h1 em{background-size:100% 100%}.x-rv{transform:none;transition:none}.x-dis h4::after{transition:none}}
+@media (max-width:700px){.x-mast h1{flex-direction:column;gap:.2em}.x-mast h1 .logo{width:1.9em;height:1.9em}}
+@media (prefers-reduced-motion:reduce){.x-mast h1 .logo,.x-tape div,.x-h1 span,.x-h1 em,.x-flow ol::after,.x-flow li::before,.x-live i,.x-st i,.x-val .mv,.x-stamp{animation:none}.x-h1 em{background-size:100% 100%}.x-rv{transform:none;transition:none}.x-dis h4::after{transition:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="#ideas" id="brand">VP<b>Scanner</b><small>ideas por coyuntura · chartismo</small></a>
+    <a class="brand" href="#ideas" id="brand"><svg class="logo" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle cx="60" cy="60" r="56.5" stroke="currentColor" stroke-width="3"/><circle cx="60" cy="60" r="50.5" stroke="currentColor" stroke-width="1.6" stroke-dasharray="0.1 4.4" stroke-linecap="round"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M60 9.5v7M43 12.5l2.4 6.4M77 12.5l-2.4 6.4M28.5 21l4.6 5.2M91.5 21l-4.6 5.2"/></g><ellipse cx="60" cy="29.5" rx="19" ry="5.6" stroke="currentColor" stroke-width="3.4"/><g fill="currentColor"><path d="M43.5 53.5C31 54 18.5 46 19 27.5c3.5 10.5 12 16.5 25.5 17z"/><path d="M76.5 53.5C89 54 101.5 46 101 27.5c-3.5 10.5-12 16.5-25.5 17z"/><path d="M39.5 55.5 27 57.5c2.5 5.5 8 7.5 13.5 6z"/><path d="M80.5 55.5 93 57.5c-2.5 5.5-8 7.5-13.5 6z"/><path d="M40 49c12-6.5 28-6.5 40 0 1.5 9-.5 19-3 27-1 7-3.5 15-8.5 19.5-5 3.5-12 3.5-17 0C46.5 91 44 83 43 76c-2.5-8-4.500-18-3-27z"/></g><g fill="var(--bg)"><path d="M47 64.5c3.5-1.5 7-.5 8.5 2-3 1.5-6.5 1-8.5-2zM73 64.5c-3.5-1.5-7-.5-8.5 2 3 1.5 6.5 1 8.500-2z"/><ellipse cx="55.5" cy="89.3" rx="2" ry="1.5"/><ellipse cx="64.5" cy="89.3" rx="2" ry="1.5"/></g><path d="M51.5 83.5c5.5-2.5 11.5-2.5 17 0" stroke="var(--bg)" stroke-width="1.7" stroke-linecap="round"/></svg><span>Many Saints<small>of Wall St</small></span></a>
     <nav class="sec" id="sec"></nav>
     <nav class="nav" id="nav"></nav>
     <div class="asof" id="asof"></div>
@@ -363,7 +366,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp
 const mon = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 const S = {
-  view: 'ideas', ideas: null, idt: null, idp: null, idx: null, cat: null, ev: null, sym: null, D: null, sel: null, hover: null, tab: 'act', cross: null, cache: {},
+  view: 'ideas', ideas: null, idt: null, idp: null, idc: null, idx: null, cat: null, ev: null, sym: null, D: null, sel: null, hover: null, tab: 'act', cross: null, cache: {},
   rv: {mode: 'all', dir: 0, q: 60, all: 0, text: '', fav: 0},                                   // filtros del radar
   f: {figuras: 1, rupturas: 1, velas: 1, directrices: 0, rebotes: 0, sr: 1, sma: 1, vol: 1, rr: 0, hist: 0, dir: 0, act: 0, stop: 'a', q: 60},   // filtros del gráfico
   view_: {start: 0, ppb: 6}, hits: [], W: 0, H: 0, dpr: 1,
@@ -382,7 +385,7 @@ const distTxt = d => d == null ? '' : d < 0.1 ? 'en el disparo' : `a ${d.toFixed
 
 /* ───────────────────────── datos ───────────────────────── */
 async function J(path) {
-  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['ideas', 'ideas_track', 'ideas_playbook', 'plan_study'].includes(k)) return VP[k] || null; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
+  if (window.VP) { const k = path.replace(/\.json$/, ''); if (['ideas', 'ideas_track', 'ideas_playbook', 'ideas_casos', 'plan_study'].includes(k)) return VP[k] || null; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
   if (S.cache[path]) return S.cache[path];
   const r = await fetch(BASE + path + '?v=' + Math.floor(Date.now() / 3600000));
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -413,7 +416,7 @@ async function init() {
   try { S.idx = await J('index.json'); S.cat = await J('catalog.json'); } catch (e) { S.idx = null; }
   try { S.ev = await J('evidence.json'); } catch (e) { S.ev = null; }
   try { S.ps = await J('plan_study.json'); } catch (e) { S.ps = null; }
-  for (const [k, f] of [['ideas', 'ideas.json'], ['idt', 'ideas_track.json'], ['idp', 'ideas_playbook.json']]) { try { S[k] = (await J(f)) || null; } catch (e) { S[k] = null; } }
+  for (const [k, f] of [['ideas', 'ideas.json'], ['idt', 'ideas_track.json'], ['idp', 'ideas_playbook.json'], ['idc', 'ideas_casos.json']]) { try { S[k] = (await J(f)) || null; } catch (e) { S[k] = null; } }
   window.addEventListener('resize', () => { if (S.view === 'chart') resize(); else if (S.view === 'ev') drawStrip(); });
   window.addEventListener('keydown', onKey);
   window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (h) go(h); });                 // atrás/adelante del navegador y enlaces con #VALOR
@@ -460,7 +463,7 @@ function setChrome(view) {                                                   // 
     $('#foot').innerHTML = '';
   } else {
     $('#asof').innerHTML = S.idx ? `datos hasta <b>${dstr(S.idx.asof)}</b><br>${S.idx.symbols.length} valores` : '';
-    $('#foot').innerHTML = 'VP Scanner dibuja y mide patrones chartistas. No es una recomendación de inversión: el estudio de la pestaña Evidencia muestra qué han aportado de verdad. ' +
+    $('#foot').innerHTML = 'The Many Saints of Wall St dibuja y mide patrones chartistas. No es una recomendación de inversión: el estudio de la pestaña Evidencia muestra qué han aportado de verdad. ' +
       (S.ev ? `Evidencia: ${S.ev.meta.universe} acciones, ${S.ev.meta.from} → ${S.ev.meta.to}. ${esc(S.ev.meta.note)}` : '');
   }
 }
@@ -677,15 +680,16 @@ function renderGuide() {
 }
 
 /* ───────────────────────── IDEAS POR COYUNTURA (pantalla principal) ───────────────────────── */
+const LOGO = `<svg class="logo" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle cx="60" cy="60" r="56.5" stroke="currentColor" stroke-width="3"/><circle cx="60" cy="60" r="50.5" stroke="currentColor" stroke-width="1.6" stroke-dasharray="0.1 4.4" stroke-linecap="round"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M60 9.5v7M43 12.5l2.4 6.4M77 12.5l-2.4 6.4M28.5 21l4.6 5.2M91.5 21l-4.6 5.2"/></g><ellipse cx="60" cy="29.5" rx="19" ry="5.6" stroke="currentColor" stroke-width="3.4"/><g fill="currentColor"><path d="M43.5 53.5C31 54 18.5 46 19 27.5c3.5 10.5 12 16.5 25.5 17z"/><path d="M76.5 53.5C89 54 101.5 46 101 27.5c-3.5 10.5-12 16.5-25.5 17z"/><path d="M39.5 55.5 27 57.5c2.5 5.5 8 7.5 13.5 6z"/><path d="M80.5 55.5 93 57.5c-2.5 5.5-8 7.5-13.5 6z"/><path d="M40 49c12-6.5 28-6.5 40 0 1.5 9-.5 19-3 27-1 7-3.5 15-8.5 19.5-5 3.5-12 3.5-17 0C46.5 91 44 83 43 76c-2.5-8-4.500-18-3-27z"/></g><g fill="var(--bg)"><path d="M47 64.5c3.5-1.5 7-.5 8.5 2-3 1.5-6.5 1-8.5-2zM73 64.5c-3.5-1.5-7-.5-8.5 2 3 1.5 6.5 1 8.500-2z"/><ellipse cx="55.5" cy="89.3" rx="2" ry="1.5"/><ellipse cx="64.5" cy="89.3" rx="2" ry="1.5"/></g><path d="M51.5 83.5c5.5-2.5 11.5-2.5 17 0" stroke="var(--bg)" stroke-width="1.7" stroke-linecap="round"/></svg>`;
 const ST = {vigilancia: 'En vigilancia', abierta: 'Abierta', cerrada: 'Cerrada'};
 const fdate = s => { const d = new Date(s); return isNaN(d) ? esc(s) : `${d.getUTCDate()} ${mon[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
 const madrid = (d, o) => new Intl.DateTimeFormat('es-ES', {timeZone: 'Europe/Madrid', ...o}).format(d);
-function nextRun() {                                                          // próximas lecturas: 9:00 y 14:00 de Madrid, de lunes a viernes
+function nextRun() {                                                          // próximas lecturas: 9:00, 14:00 y 21:30 de Madrid, de lunes a viernes
   const now = new Date();
   for (let k = 0; k < 8 * 24 * 4; k++) {
     const t = new Date(Math.ceil(now / 9e5) * 9e5 + k * 9e5);
     const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {timeZone: 'Europe/Madrid', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}).formatToParts(t).map(x => [x.type, x.value]));
-    if (!['Sat', 'Sun'].includes(p.weekday) && p.minute === '00' && (p.hour === '09' || p.hour === '14')) return t;
+    if (!['Sat', 'Sun'].includes(p.weekday) && ['09:00', '14:00', '21:30'].includes(p.hour + ':' + p.minute)) return t;
   }
   return null;
 }
@@ -708,8 +712,8 @@ function tape() {                                                            // 
 }
 function mast(edition, when) {
   const d = when || new Date();
-  return `${tape()}<header class="x-mast"><h1>VP <i>Scanner</i></h1>
-    <div class="x-date"><span>${madrid(d, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'})}</span><span>Ideas por coyuntura · dos ediciones al día, 9:00 y 14:00</span><span class="x-live"><i></i><b>${edition}</b></span></div></header>`;
+  return `${tape()}<header class="x-mast"><h1>${LOGO}<span>The Many Saints <i>of Wall St</i></span></h1>
+    <div class="x-date"><span>${madrid(d, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'})}</span><span>Ideas por coyuntura · tres ediciones al día: 9:00, 14:00 y 21:30</span><span class="x-live"><i></i><b>${edition}</b></span></div></header>`;
 }
 function side() {                                                            // gráfico a tinta del S&P 500 (SPY) con sus cierres reales
   const x = S.idx && S.idx.symbols.find(q => q.sym === 'SPY');
@@ -783,6 +787,16 @@ function renderIdeas() {
   aiStart(ses.pulso || '');
 }
 
+function casosSec() {                                                         // lo que el propio diario ha dicho y lo que pasó después: es con lo que aprende
+  const C = S.idc; if (!C || !C.casos || !C.casos.length) return '';
+  const NOM = {estructural: 'Cambio duradero', susto: 'Susto de un día', obvio: 'Beneficiario evidente', panico: 'Pánico general', rival: 'Competencia del que tropieza', caido: 'Gigante caído', segundo: 'Segundo efecto', contagio: 'Buena noticia'};
+  const cell = v => v == null ? '<small class="t">pendiente</small>' : sgn(v);
+  const rows = C.casos.slice().reverse().map(c => `<tr><td>${esc(c.titulo)}<small>${fdate(c.fecha)} · ${esc(NOM[c.tipo] || c.tipo || '')} · ${esc((c.valores || []).join(' '))}</small></td><td>${c.dada ? '<b style="color:var(--go)">dada</b>' : '<b style="color:var(--no)">descartada</b>'}</td><td>${cell(c.e5)}</td><td>${cell(c.e20)}</td><td>${cell(c.e60)}</td></tr>`).join('');
+  const r = C.resumen || {}, line = k => r[k] && r[k].n ? `${r[k].n} con resultado a 20 sesiones: ${num(r[k].e20)} de media sobre el S&P 500, ${r[k].aciertos} de ${r[k].n} en el sentido esperado.` : 'todavía sin resultado a 20 sesiones.';
+  return `<section class="x-sec">${secHead('<b>Fe de erratas</b> · Casos propios', 'Lo que dije <em>y lo que pasó después</em>', 'Cada idea dada y cada idea descartada queda apuntada aquí con su fecha. Con el paso de las sesiones se mide lo que hicieron sus valores frente al S&P 500, y con eso se revisan las lecciones: si lo que descarto acaba subiendo, o lo que doy no funciona, el filtro cambia.')}
+    <div class="x-tw x-rv"><table class="x-tr"><thead><tr><th>Caso</th><th>decisión</th><th>5 sesiones</th><th>20 sesiones</th><th>60 sesiones</th></tr></thead><tbody>${rows}</tbody></table>
+    <p style="margin:14px 0 4px;font-style:italic;color:var(--sub);font-size:16px">Ideas dadas: ${line('dadas')} Ideas descartadas: ${line('descartadas')}</p></div></section>`;
+}
 function renderTrain() {
   const P = S.idp;
   if (!P) { $('#view').innerHTML = '<div class="empty">Sin datos de entrenamiento (data/ideas_playbook.json).</div>'; return; }
@@ -809,6 +823,7 @@ function renderTrain() {
     <div class="x-less">${P.lecciones.map(l => `<div class="x-les ${esc(l.veredicto)} x-rv"><span class="x-vd">${VD[l.veredicto] || ''}</span><h4>${esc(l.titulo)}</h4><p>${esc(l.texto)}</p><div class="fig">${esc(l.cifra)}</div></div>`).join('')}</div></section>
   ${types.length ? `<section class="x-sec">${secHead('<b>Hemeroteca</b> · Casos con nombre', `${named} episodios, <em>cinco tipos</em>`, 'Los episodios que todo el mundo recuerda, agrupados por el tipo de hecho. Lo que hizo el grupo de valores «lógico» el mismo día y, comprando al día siguiente, lo que ganó de más sobre el S&P 500. Están elegidos y clasificados a mano, a toro pasado: sirven de orientación, no de prueba.')}
     <div class="x-types">${types.map(e => `<div class="x-type x-rv"><h4>${esc(e.nombre.split(' (')[0])}<small>${e.n} casos · suben a 20 sesiones el ${e.hit20} %</small></h4>${bar(e.d0, 'el mismo día')}${bar(e.e20, '20 sesiones después')}${bar(e.e60, '60 sesiones después')}</div>`).join('')}</div></section>` : ''}
+  ${casosSec()}
   <section class="x-sec">${secHead('<b>Datos</b> · Los ensayos', 'Cada tipo de idea, <em>simulado</em>', '«El mismo día» es lo que se mueve el grupo el día de la noticia: eso ya no se puede comprar. Las otras columnas son lo que se gana de más sobre el S&P 500 comprando en la apertura del día siguiente y manteniendo 5, 20 o 60 sesiones. La t mide si se distingue del azar: hace falta 2 o más. La marca verde señala los que lo consiguen.')}
     <div class="x-tw x-rv"><table class="x-tr"><thead><tr><th>Idea</th><th>casos</th><th>el mismo día</th><th>5 sesiones</th><th>20 sesiones</th><th>60 sesiones</th></tr></thead><tbody>${rows}</tbody></table></div></section>
   <p class="x-end">${esc(P.cautelas)} Generado con <code>python -m vp.ideas_train</code>.</p></div>`;
