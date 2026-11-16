@@ -1,0 +1,30 @@
+{
+  "ideas": [
+    {
+      "id": "2026-11-16-iran-aerolineas",
+      "fecha": "2026-11-16",
+      "estado": "vigilancia",
+      "hecho": "Guerra de Irán sin acuerdo todavía («ni guerra ni paz»); el Brent ha caído de más de 110 a ~93 $ en tres semanas solo por la expectativa de acuerdo.",
+      "logica": "El combustible es el mayor coste variable de una aerolínea. Si se confirma el acuerdo y se reabre Ormuz, el petróleo pierde la prima de guerra que aún lleva y las aerolíneas y cruceros lo recogen en márgenes; las más castigadas (UAL, ALK) tienen más recorrido.",
+      "valores": ["UAL", "ALK", "DAL", "RCL"],
+      "disparador": "Anuncio confirmado de alto el fuego o reapertura del estrecho (no un titular de «progresos»). Entrar ese día o en la apertura siguiente.",
+      "invalidacion": "Ruptura de las conversaciones o nuevo ataque que devuelva el Brent por encima de 105 $.",
+      "horizonte": "1 a 3 meses desde el disparador",
+      "ref": {"UAL": 109.31, "ALK": 38.48, "DAL": 86.25, "RCL": 323.27, "SPY": 754.37},
+      "entrada": null
+    },
+    {
+      "id": "2026-11-16-nvda-sin-huang",
+      "fecha": "2026-11-16",
+      "estado": "vigilancia",
+      "hecho": "Jensen Huang dimite (12-nov) tras la investigación del consejo; NVDA −25 % en un mes y −32 % desde máximos. AMD y Broadcom subieron ~18 % en la semana y el viernes ya devolvieron parte (AMD −8,8 %).",
+      "logica": "El efecto obvio (comprar a la competencia) ya está en el precio y se está deshaciendo. Lo que no está resuelto es si el negocio de Nvidia cambia: los pedidos y los chips no dependen de quién sea el consejero delegado este trimestre; el riesgo real es regulatorio (vínculo con China). Los resultados de esta semana son la primera prueba.",
+      "valores": ["NVDA"],
+      "disparador": "Resultados de esta semana: guía mantenida o al alza Y sin restricciones nuevas de exportación ni salidas de clientes. Entrar tras los resultados, no antes.",
+      "invalidacion": "Recorte de guía, sanción o restricción de exportación derivada de la investigación, o que un cliente grande anuncie que desvía pedidos.",
+      "horizonte": "3 a 6 meses desde el disparador",
+      "ref": {"NVDA": 162.85, "SPY": 754.37},
+      "entrada": null
+    }
+  ]
+}
