@@ -1,5 +1,5 @@
 {
- "generado": 1794824126,
+ "generado": 1794828759,
  "ideas": {
   "2026-11-16-apagon-faa": {
    "estado": "vigilancia",
@@ -18,8 +18,8 @@
     },
     "IDR.MC": {
      "ref": 58.8,
-     "ahora": 59.02,
-     "pct": 0.37
+     "ahora": 59.16,
+     "pct": 0.61
     },
     "RTX": {
      "ref": 198.58,
@@ -27,7 +27,7 @@
      "pct": 0.0
     }
    },
-   "media": 0.09,
+   "media": 0.15,
    "spy": -0.0
   }
  }

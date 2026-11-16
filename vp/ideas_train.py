@@ -22,7 +22,8 @@ import numpy as np
 import pandas as pd
 
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
-EXTRA = 'SPY QQQ CL=F GC=F NG=F HG=F ^TNX XLU KRE GDX GEO CXW S ZS NTR SCCO COIN SNAP PINS ZM PTON X CLF'.split()
+EXTRA = ('SPY QQQ IWM CL=F GC=F NG=F HG=F ZW=F ^TNX ^VIX BTC-USD XLU KRE GDX VNQ TAN GEO CXW S ZS NTR SCCO COIN MSTR MARA RIOT SNAP PINS ZM PTON X CLF '
+         'XLK XLF XLE XLV XLY XLP XLI XLB XLRE XLC NVO BNTX EADSY ONON SEDG RUN').split()
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', default='data')
 ap.add_argument('--cache', default='.cache/ideas')
@@ -129,8 +130,9 @@ def study(days, basket, sign=1):
 OUT = []
 def add(grupo, nombre, logica, res):
     OUT.append({'grupo': grupo, 'nombre': nombre, 'logica': logica, **res})
-    print(f"{grupo[:10]:10s} {nombre[:58]:58s} n={res['n']:4d}  dia0 {res['d0']:+6.2f}%  | 5s {res['e5']:+6.2f}% (t {res.get('t5',0):+.1f}, {res.get('hit5',0)}%) | 20s {res['e20']:+6.2f}% (t {res.get('t20',0):+.1f}, {res.get('hit20',0)}%) | 60s {res['e60']:+6.2f}% (t {res.get('t60',0):+.1f})", flush=True)
-since = idx >= '2010-01-01'
+    f = lambda k: 'n/d' if res.get(k) is None else f'{res[k]:+6.2f}%'
+    print(f"{grupo[:10]:10s} {nombre[:60]:60s} n={res['n']:4d}  dia0 {f('d0')} | 5s {f('e5')} (t {res.get('t5', 0):+.1f}) | 20s {f('e20')} (t {res.get('t20', 0):+.1f}, {res.get('hit20', 0)}%) | 60s {f('e60')} (t {res.get('t60', 0):+.1f}, {res.get('hit60', 0)}%)", flush=True)
+since = idx >= '2008-01-01'
 oil = A['CL=F']; ro = R['CL=F'].where(oil.shift(1) > 20)
 AIR = 'DAL UAL AAL LUV ALK JBLU'.split(); CRU = 'CCL RCL NCLH'.split(); EP = 'XOM CVX COP OXY EOG DVN'.split(); REF = 'VLO MPC PSX'.split()
 BANK = 'JPM BAC WFC C KRE'.split(); HB = 'DHI LEN PHM TOL NVR'.split(); UTIL = ['XLU']; GOLDM = 'NEM GDX RGLD AEM'.split(); GAS = 'EQT AR RRC CTRA'.split(); COP_ = 'FCX SCCO'.split()
@@ -163,6 +165,42 @@ d = idx[since & (R['NG=F'] >= 0.08)]
 add(G, 'Gas natural sube ≥ 8 % en un día → productoras de gas', 'Precio de venta más alto.', study(d, GAS))
 d = idx[since & (R['HG=F'] >= 0.03)]
 add(G, 'Cobre sube ≥ 3 % en un día → mineras de cobre', 'Precio de venta más alto.', study(d, COP_))
+REIT = ['VNQ']; BTCB = 'COIN MSTR MARA RIOT'.split(); FERT = 'MOS CF NTR'.split(); AGRI = 'ADM BG DE'.split(); CHEM = 'DOW LYB CE'.split(); TRUCK = 'JBHT ODFL KNX'.split(); RETAIL = 'WMT TGT DG COST'.split(); SOLAR = 'FSLR ENPH TAN'.split()
+d = idx[since & (ro <= -0.04)]
+add(G, 'Petróleo cae ≥ 4 % en un día → transporte por carretera', 'Gasóleo más barato.', study(d, TRUCK))
+add(G, 'Petróleo cae ≥ 4 % en un día → grandes superficies', 'El consumidor gasta menos en gasolina y más en la tienda (segundo efecto).', study(d, RETAIL))
+add(G, 'Petróleo cae ≥ 4 % en un día → refino', 'Materia prima más barata.', study(d, REF))
+d = idx[since & (ro >= 0.04)]
+add(G, 'Petróleo sube ≥ 4 % en un día → energía solar', 'La energía cara hace más atractiva la alternativa (segundo efecto).', study(d, SOLAR))
+d = idx[since & (o20 <= -0.15) & (oil.shift(20) > 20)]
+add(G, 'Petróleo acumula −15 % en un mes → grandes superficies', 'El ahorro en gasolina llega al gasto del trimestre.', study(d, RETAIL))
+d = idx[since & (ty >= 0.12)]
+add(G, 'El bono a 10 años sube ≥ 12 pb en un día → inmobiliarias cotizadas (comprar el castigo)', 'Compiten con el bono: apostar a que el castigo es excesivo.', study(d, REIT))
+add(G, 'El bono a 10 años sube ≥ 12 pb en un día → eléctricas (comprar el castigo)', 'Compiten con el bono: apostar a que el castigo es excesivo.', study(d, UTIL))
+d = idx[since & (ty <= -0.12)]
+add(G, 'El bono a 10 años baja ≥ 12 pb en un día → inmobiliarias cotizadas', 'Su dividendo compite mejor con el bono.', study(d, REIT))
+add(G, 'El bono a 10 años baja ≥ 12 pb en un día → mineras de oro', 'Tipos más bajos, oro más atractivo (segundo efecto).', study(d, GOLDM))
+d = idx[since & (R['GC=F'] <= -0.02)]
+add(G, 'Oro cae ≥ 2 % en un día → mineras de oro (comprar la caída)', 'Apostar a que el castigo es excesivo.', study(d, GOLDM))
+rb = R['BTC-USD']
+add(G, 'Bitcoin sube ≥ 8 % en un día → bolsas y mineras de cripto', 'Más volumen y más valor en balance.', study(idx[since & (rb >= 0.08)], BTCB))
+add(G, 'Bitcoin cae ≥ 8 % en un día → bolsas y mineras de cripto (comprar la caída)', 'Apostar a que el castigo es excesivo.', study(idx[since & (rb <= -0.08)], BTCB))
+d = idx[since & (R['ZW=F'] >= 0.04)]
+add(G, 'Trigo sube ≥ 4 % en un día → fertilizantes', 'El agricultor gana más y abona más (segundo efecto).', study(d, FERT))
+add(G, 'Trigo sube ≥ 4 % en un día → comercializadoras y maquinaria agrícola', 'Más margen y más inversión en el campo.', study(d, AGRI))
+d = idx[since & (R['NG=F'] <= -0.08)]
+add(G, 'Gas natural cae ≥ 8 % en un día → químicas', 'El gas es su materia prima y su energía.', study(d, CHEM))
+# castigo o euforia de un sector entero frente al mercado
+G = 'Un sector entero frente al mercado'
+SECT = 'XLK XLF XLE XLV XLY XLP XLI XLB XLU XLRE XLC'.split()
+for sgn_, lab, logic in ((-1, 'Un sector cae ≥ 3 % más que el mercado en un día → comprar ese sector', 'El castigo a un sector entero suele ser excesivo.'), (1, 'Un sector sube ≥ 3 % más que el mercado en un día → comprar ese sector', 'La noticia buena de un sector tarda en digerirse.')):
+    rows = []
+    for e in SECT:
+        if e not in col: continue
+        rel = R[e] - R['SPY']; b_ = base([e])
+        for i in thin(idx[since & ((rel <= -0.03) if sgn_ < 0 else (rel >= 0.03))]):
+            rows.append((rel.values[i], after(i, [e], 5) - b_[5], after(i, [e], 20) - b_[20], after(i, [e], 60) - b_[60]))
+    add(G, lab, logic, summ(rows))
 G = 'Pánico de mercado'
 d = idx[since & (R['SPY'] <= -0.03)]
 rows = []
@@ -172,6 +210,18 @@ for i in thin(d):
 base = {h: float(np.nanmean(Av[h:, col['QQQ']] / Av[:-h, col['QQQ']] - 1)) for h in (5, 20, 60)}
 res = summ(rows); res['nota'] = f"rendimiento absoluto del Nasdaq-100 (no exceso); en un tramo cualquiera hace {100*base[5]:+.1f} % / {100*base[20]:+.1f} % / {100*base[60]:+.1f} %"
 add(G, 'El S&P 500 cae ≥ 3 % en un día → comprar el Nasdaq-100', 'El pánico vende de más.', res)
+def absol(days, sym, nota_sym):
+    rows = []
+    for i in thin(days):
+        f = lambda h: Av[i + h, col[sym]] / Ov[i + 1, col[sym]] - 1 if i + 1 + h < len(idx) else np.nan
+        rows.append((R.values[i, col['SPY']], f(5), f(20), f(60)))
+    b_ = {h: float(np.nanmean(Av[h:, col[sym]] / Av[:-h, col[sym]] - 1)) for h in (5, 20, 60)}
+    r_ = summ(rows); r_['nota'] = f"rendimiento absoluto de {nota_sym} (no exceso); en un tramo cualquiera hace {100*b_[5]:+.1f} % / {100*b_[20]:+.1f} % / {100*b_[60]:+.1f} %"
+    return r_
+add(G, 'El S&P 500 cae ≥ 2 % en un día → comprar el Nasdaq-100', 'Un mal día normal, no un pánico.', absol(idx[since & (R['SPY'] <= -0.02) & (R['SPY'] > -0.03)], 'QQQ', 'el Nasdaq-100'))
+add(G, 'El S&P 500 cae ≥ 3 % en un día → comprar las pequeñas (Russell 2000)', 'Las pequeñas caen más en el pánico.', absol(idx[since & (R['SPY'] <= -0.03)], 'IWM', 'el Russell 2000'))
+add(G, 'El índice del miedo (VIX) sube ≥ 30 % en un día → comprar el Nasdaq-100', 'El miedo se dispara de golpe.', absol(idx[since & (R['^VIX'] >= 0.30)], 'QQQ', 'el Nasdaq-100'))
+add(G, 'El S&P 500 sube ≥ 3 % en un día → comprar el Nasdaq-100 (perseguir la euforia)', 'Apuntarse a un gran día alcista.', absol(idx[since & (R['SPY'] >= 0.03)], 'QQQ', 'el Nasdaq-100'))
 # líder que tropieza / se dispara
 G = 'Tropiezo o salto de una empresa grande'
 subs = {}
@@ -215,39 +265,134 @@ add(G, '   …caída ≥ 20 %', 'Castigos extremos.', peer_study([e for e in c i
 add(G, 'Una grande sube ≥ 10 % en un día → sus competidoras', 'Las buenas noticias de una anticipan las del sector.', peer_study(u_, 'peers'))
 add(G, '   …cuando las competidoras apenas se movieron ese día (< 1 %)', 'El mercado aún no ha extendido la noticia.', peer_study([e for e in u_ if abs(e[4]) < 0.01], 'peers'))
 add(G, 'Una grande sube ≥ 10 % en un día → seguir comprándola', 'La noticia buena tarda en digerirse.', peer_study(u_, 'self'))
+# esperar a la prueba: entrar 20 sesiones después de la caída, según lo que haya hecho la acción entretanto
+def wait_study(sel, cond):
+    rows = []
+    for i, s_, peers, r, pm in sel:
+        j = col[s_]
+        if i + 21 >= len(idx) or not np.isfinite(Av[i + 20, j]) or not np.isfinite(Av[i, j]): continue
+        up = Av[i + 20, j] >= Av[i, j]
+        if cond is None or cond == up:
+            rows.append((r - spy[i], np.nan, after(i + 20, [s_], 20) - ubase(20), after(i + 20, [s_], 60) - ubase(60)))
+    return summ(rows)
+add(G, 'Una grande cae ≥ 10 % → esperar 20 sesiones y comprar entonces', 'No tener prisa: dejar pasar los titulares.', wait_study(c, None))
+add(G, '   …si en esas 20 sesiones NO ha perdido el precio del día de la caída', 'El mercado ha dado por buena la empresa: es la «prueba».', wait_study(c, True))
+add(G, '   …si en esas 20 sesiones ha seguido cayendo', 'Sin prueba: el problema sigue vivo.', wait_study(c, False))
+# las 50 mayores, con umbral del 7 %
+mega = {'caida': [], 'salto': []}
+for s_ in uni:
+    if s_ not in col or not uni[s_].get('sub'): continue
+    peers = [p for p in subs[uni[s_]['sub']] if p != s_]
+    if len(peers) < 2: continue
+    j = col[s_]
+    for i in np.flatnonzero(since & (np.abs(Rv[:, j]) >= 0.07)):
+        if i < 61 or not rk[i - 1, j] <= 50 or abs(spy[i]) > 0.02: continue
+        mega['caida' if Rv[i, j] < 0 else 'salto'].append((i, s_, peers, Rv[i, j], np.nanmean(Rv[i, [col[p] for p in peers]]) - spy[i]))
+add(G, 'Una de las 50 mayores cae ≥ 7 % en un día → comprar la propia caída', 'Los gigantes de verdad no desaparecen por un mal día.', peer_study(mega['caida'], 'self'))
+add(G, 'Una de las 50 mayores cae ≥ 7 % en un día → sus competidoras', 'Lo que pierde el gigante lo ganan las otras.', peer_study(mega['caida'], 'peers'))
+add(G, 'Una de las 50 mayores sube ≥ 7 % en un día → sus competidoras', 'Lo que anuncia el gigante vale para el sector.', peer_study(mega['salto'], 'peers'))
+add(G, 'Una de las 50 mayores sube ≥ 7 % en un día → seguir comprándola', 'La noticia buena tarda en digerirse.', peer_study(mega['salto'], 'self'))
 # casos con nombre
 G = 'Casos con nombre'
+TIPOS = {'E': 'Cambio duradero (guerra, paz, vacuna, gobierno, ley, tecnología)', 'S': 'Susto o anuncio de un día', 'C': 'Comprar al gigante caído', 'R': 'Competencia del que tropieza', 'B': 'Buena noticia que se contagia'}
 CASES = [
- ('2016-11-09', 'Trump gana (2016) → bancos y defensa', 'JPM BAC GS LMT NOC RTX'),
- ('2018-03-01', 'Aranceles al acero (2018) → acereras de EE. UU.', 'NUE STLD CLF X'),
- ('2020-11-09', 'Vacuna de Pfizer (2020) → aerolíneas y cruceros', 'DAL UAL AAL CCL RCL NCLH'),
- ('2022-02-24', 'Rusia invade Ucrania → defensa', 'LMT NOC RTX GD'),
- ('2022-02-24', 'Rusia invade Ucrania → fertilizantes y energía', 'MOS CF NTR XOM CVX'),
- ('2023-03-10', 'Quiebra de SVB → bancos grandes (refugio de depósitos)', 'JPM BAC WFC C'),
- ('2023-03-13', 'Quiebra de SVB → regionales (comprar el pánico)', 'KRE'),
- ('2023-05-25', 'Nvidia dispara su guía de IA (2023) → cadena de la IA', 'AVGO AMD MRVL ANET SMCI MU'),
- ('2023-10-09', 'Ataque de Hamás → defensa', 'LMT NOC RTX GD'),
- ('2024-07-19', 'Apagón de CrowdStrike → competidoras', 'S PANW ZS FTNT'),
- ('2024-07-19', 'Apagón de CrowdStrike → comprar la propia CrowdStrike', 'CRWD'),
- ('2024-11-06', 'Trump gana (2024) → bancos, prisiones privadas y cripto', 'JPM GS GEO CXW COIN'),
- ('2025-01-27', 'DeepSeek hunde a Nvidia → comprar Nvidia', 'NVDA'),
- ('2025-01-27', 'DeepSeek (IA barata) → software que usa IA', 'CRM NOW MSFT ADBE PLTR'),
- ('2025-04-09', 'Pausa de los aranceles (2025) → los más castigados', 'AAPL NKE BBY RH DECK'),
- ('2022-02-03', 'Meta se hunde un 26 % → comprar Meta', 'META'),
- ('2022-02-03', 'Meta se hunde → otras redes de publicidad', 'GOOGL SNAP PINS'),
- ('2019-03-11', 'Segundo accidente del 737 MAX → comprar Boeing', 'BA'),
- ('2020-03-16', 'Confinamientos → quedarse en casa', 'ZM NFLX AMZN CLX PTON'),
- ('2017-08-28', 'Huracán Harvey → reformas del hogar', 'HD LOW'),
- ('2022-09-29', 'Huracán Ian → reformas y generadores', 'HD LOW GNRC'),
+ # E · cambios duraderos
+ ('2014-11-28', 'La OPEP no recorta (petróleo barato durante años) → aerolíneas', 'DAL UAL AAL LUV ALK', 'E'),
+ ('2016-11-09', 'Trump gana (2016) → bancos y defensa', 'JPM BAC GS LMT NOC RTX', 'E'),
+ ('2016-11-09', 'Trump gana (2016) → infraestructuras y acero', 'VMC MLM NUE X', 'E'),
+ ('2020-03-16', 'Confinamientos → quedarse en casa', 'ZM NFLX AMZN CLX PTON', 'E'),
+ ('2020-11-09', 'Vacuna de Pfizer (2020) → aerolíneas y cruceros', 'DAL UAL AAL CCL RCL NCLH', 'E'),
+ ('2020-11-09', 'Vacuna de Pfizer (2020) → energía y bancos', 'XOM CVX JPM BAC', 'E'),
+ ('2022-02-24', 'Rusia invade Ucrania → defensa', 'LMT NOC RTX GD', 'E'),
+ ('2022-02-24', 'Rusia invade Ucrania → fertilizantes y energía', 'MOS CF NTR XOM CVX', 'E'),
+ ('2022-02-24', 'Rusia invade Ucrania → comercializadoras y maquinaria agrícola', 'ADM BG DE', 'E'),
+ ('2022-02-24', 'Rusia invade Ucrania → ciberseguridad', 'CRWD PANW FTNT', 'E'),
+ ('2022-07-28', 'Acuerdo para la ley del clima de EE. UU. (2022) → solar', 'ENPH FSLR SEDG RUN', 'E'),
+ ('2022-11-30', 'Sale ChatGPT → Microsoft y Nvidia', 'MSFT NVDA', 'E'),
+ ('2023-08-08', 'El fármaco de la obesidad protege el corazón → Lilly y Novo', 'LLY NVO', 'E'),
+ ('2024-09-18', 'Primera bajada de tipos de la Fed (2024) → constructoras y pequeñas', 'DHI LEN IWM', 'E'),
+ ('2024-11-06', 'Trump gana (2024) → bancos, prisiones privadas y cripto', 'JPM GS GEO CXW COIN', 'E'),
+ ('2024-11-06', 'Trump gana (2024) → Tesla', 'TSLA', 'E'),
+ ('2024-11-06', 'Trump gana (2024) → pequeñas y bancos regionales', 'IWM KRE', 'E'),
+ ('2025-01-22', 'Anuncio de Stargate (2025) → infraestructura de IA', 'ORCL VRT ANET', 'E'),
+ ('2025-06-24', 'Alto el fuego entre Israel e Irán (2025) → aerolíneas y cruceros', 'DAL UAL AAL CCL RCL', 'E'),
+ # S · sustos y anuncios de un día
+ ('2011-03-14', 'Fukushima → solar', 'FSLR', 'S'),
+ ('2012-10-31', 'Huracán Sandy → reformas del hogar', 'HD LOW', 'S'),
+ ('2016-06-24', 'Brexit → mineras de oro', 'NEM GDX', 'S'),
+ ('2017-06-16', 'Amazon compra Whole Foods → comprar los supermercados castigados', 'KR COST WMT TGT', 'S'),
+ ('2017-08-28', 'Huracán Harvey → reformas del hogar', 'HD LOW', 'S'),
+ ('2018-03-01', 'Aranceles al acero (2018) → acereras de EE. UU.', 'NUE STLD CLF X', 'S'),
+ ('2019-09-16', 'Ataque a la refinería saudí de Abqaiq → petroleras', 'XOM CVX COP OXY', 'S'),
+ ('2020-04-20', 'El petróleo cotiza en negativo → comprar petroleras', 'XOM CVX COP', 'S'),
+ ('2021-11-26', 'Variante ómicron → fabricantes de vacunas', 'MRNA PFE BNTX', 'S'),
+ ('2021-11-26', 'Variante ómicron → comprar las aerolíneas castigadas', 'DAL UAL AAL', 'S'),
+ ('2022-09-29', 'Huracán Ian → reformas y generadores', 'HD LOW GNRC', 'S'),
+ ('2023-03-10', 'Quiebra de SVB → bancos grandes (refugio de depósitos)', 'JPM BAC WFC C', 'S'),
+ ('2023-03-13', 'Quiebra de SVB → regionales (comprar el pánico)', 'KRE', 'S'),
+ ('2023-10-09', 'Ataque de Hamás → defensa', 'LMT NOC RTX GD', 'S'),
+ ('2023-10-09', 'Ataque de Hamás → petroleras', 'XOM CVX', 'S'),
+ ('2025-04-09', 'Pausa de los aranceles (2025) → los más castigados', 'AAPL NKE BBY RH DECK', 'S'),
+ ('2025-05-12', 'Tregua comercial EE. UU.–China (2025) → importadores', 'NKE BBY AAPL RH', 'S'),
+ ('2025-06-13', 'Israel ataca Irán (2025) → defensa y petróleo', 'LMT NOC RTX XOM CVX', 'S'),
+ # C · comprar al gigante caído
+ ('2010-04-16', 'La SEC acusa a Goldman Sachs → comprar Goldman', 'GS', 'C'),
+ ('2015-11-02', 'Brote de E. coli en Chipotle → comprar Chipotle', 'CMG', 'C'),
+ ('2016-09-08', 'Cuentas falsas de Wells Fargo → comprar Wells Fargo', 'WFC', 'C'),
+ ('2017-04-11', 'United arrastra a un pasajero → comprar United', 'UAL', 'C'),
+ ('2017-09-08', 'Robo de datos en Equifax → comprar Equifax', 'EFX', 'C'),
+ ('2018-03-19', 'Cambridge Analytica → comprar Facebook', 'META', 'C'),
+ ('2018-07-26', 'Facebook se hunde un 19 % → comprar Facebook', 'META', 'C'),
+ ('2018-12-14', 'Talco de Johnson & Johnson → comprar J&J', 'JNJ', 'C'),
+ ('2019-03-11', 'Segundo accidente del 737 MAX → comprar Boeing', 'BA', 'C'),
+ ('2022-02-02', 'PayPal se hunde un 25 % → comprar PayPal', 'PYPL', 'C'),
+ ('2022-02-03', 'Meta se hunde un 26 % → comprar Meta', 'META', 'C'),
+ ('2022-04-20', 'Netflix se hunde un 35 % → comprar Netflix', 'NFLX', 'C'),
+ ('2022-05-18', 'Target se hunde un 25 % → comprar Target', 'TGT', 'C'),
+ ('2022-10-27', 'Meta se hunde un 25 % (otoño de 2022) → comprar Meta', 'META', 'C'),
+ ('2023-02-08', 'Error de Bard en su presentación → comprar Alphabet', 'GOOGL', 'C'),
+ ('2024-01-08', 'Boeing pierde una puerta en vuelo → comprar Boeing', 'BA', 'C'),
+ ('2024-06-28', 'Nike se hunde un 20 % → comprar Nike', 'NKE', 'C'),
+ ('2024-07-19', 'Apagón de CrowdStrike → comprar la propia CrowdStrike', 'CRWD', 'C'),
+ ('2024-08-02', 'Intel se hunde un 26 % → comprar Intel', 'INTC', 'C'),
+ ('2025-01-27', 'DeepSeek hunde a Nvidia → comprar Nvidia', 'NVDA', 'C'),
+ ('2025-04-17', 'UnitedHealth se hunde un 22 % → comprar UnitedHealth', 'UNH', 'C'),
+ # R · competencia del que tropieza
+ ('2015-11-02', 'Brote en Chipotle → otras cadenas', 'MCD YUM DPZ', 'R'),
+ ('2016-09-08', 'Cuentas falsas de Wells Fargo → otros bancos', 'JPM BAC USB', 'R'),
+ ('2017-09-08', 'Robo de datos en Equifax → TransUnion', 'TRU', 'R'),
+ ('2019-03-11', 'Segundo accidente del 737 MAX → Airbus', 'EADSY', 'R'),
+ ('2022-02-03', 'Meta se hunde → otras redes de publicidad', 'GOOGL SNAP PINS', 'R'),
+ ('2022-04-20', 'Netflix se hunde → Disney', 'DIS', 'R'),
+ ('2022-05-18', 'Target se hunde → Walmart y Costco', 'WMT COST', 'R'),
+ ('2024-01-08', 'Boeing pierde una puerta → Airbus', 'EADSY', 'R'),
+ ('2024-06-28', 'Nike se hunde → Deckers y On', 'DECK ONON', 'R'),
+ ('2024-07-19', 'Apagón de CrowdStrike → competidoras', 'S PANW ZS FTNT', 'R'),
+ ('2024-08-02', 'Intel se hunde → AMD', 'AMD', 'R'),
+ ('2025-04-17', 'UnitedHealth se hunde → otras aseguradoras', 'ELV CI HUM', 'R'),
+ # B · buena noticia que se contagia
+ ('2023-02-02', 'Meta anuncia el «año de la eficiencia» (+23 %) → otras redes', 'GOOGL SNAP PINS', 'B'),
+ ('2023-05-25', 'Nvidia dispara su guía de IA (2023) → cadena de la IA', 'AVGO AMD MRVL ANET SMCI MU', 'B'),
+ ('2024-02-22', 'Resultados de Nvidia (feb-2024) → cadena de la IA', 'AMD AVGO SMCI MRVL', 'B'),
+ ('2025-01-27', 'DeepSeek (IA barata) → software que usa IA', 'CRM NOW MSFT ADBE PLTR', 'B'),
 ]
-for d, name, b in CASES:
+done = []
+for d, name, b, tp in CASES:
     d = pd.Timestamp(d)
     if d not in pos: d = idx[idx.searchsorted(d)]
-    i = pos[d]; b = b.split()
-    r = {'n': 1, 'd0': round(100 * day0(i, b), 2), 'e5': round(100 * after(i, b, 5), 2), 'e20': round(100 * after(i, b, 20), 2), 'e60': round(100 * after(i, b, 60), 2), 'valores': b, 'fecha': str(d.date())}
-    add(G, name, '', r)
-cs = [o for o in OUT if o['grupo'] == G]
-print(f"casos: media dia0 {np.mean([c['d0'] for c in cs]):+.2f}% · 5s {np.mean([c['e5'] for c in cs]):+.2f}% · 20s {np.mean([c['e20'] for c in cs]):+.2f}% ({sum(c['e20']>0 for c in cs)}/{len(cs)} positivos) · 60s {np.mean([c['e60'] for c in cs]):+.2f}% ({sum(c['e60']>0 for c in cs)}/{len(cs)})")
+    i = pos[d]; b = [x for x in b.split() if x in col and np.isfinite(Av[i, col[x]])]
+    if not b: print('  sin datos:', name); continue
+    v = lambda x: None if not np.isfinite(x) else round(100 * x, 2)
+    done.append({'n': 1, 'd0': v(day0(i, b)), 'e5': v(after(i, b, 5)), 'e20': v(after(i, b, 20)), 'e60': v(after(i, b, 60)), 'valores': b, 'fecha': str(d.date()), 'tipo': tp, 'nombre': name})
+G = 'Casos con nombre · resumen por tipo'
+for tp, lab in TIPOS.items():
+    cs = [c for c in done if c['tipo'] == tp]
+    m = lambda k: (lambda x: round(float(np.mean(x)), 2) if x else None)([c[k] for c in cs if c[k] is not None])
+    h = lambda k: (lambda x: int(round(100 * np.mean([y > 0 for y in x]))) if x else None)([c[k] for c in cs if c[k] is not None])
+    add(G, lab, f'{len(cs)} casos elegidos a mano', {'n': len(cs), 'd0': m('d0'), 'e5': m('e5'), 'e20': m('e20'), 'e60': m('e60'), 'hit20': h('e20'), 'hit60': h('e60'), 'tipo': tp})
+G = 'Casos con nombre'
+for c in sorted(done, key=lambda c: ('ESCRB'.index(c['tipo']), c['fecha'])):
+    add(G, c['nombre'], TIPOS[c['tipo']].split(' (')[0], {k: v for k, v in c.items() if k != 'nombre'})
 for o in OUT:
     o['nombre'] = '↳ ' + o['nombre'].strip() if o['nombre'].startswith('   ') else o['nombre'].strip()
 pb = os.path.join(ARGS.out, 'ideas_playbook.json')

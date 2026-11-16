@@ -10,7 +10,7 @@ La parte principal de VP Scanner no es un cribador ni una regla de precio. Es un
 4. **Barrido amplio antes de elegir**: mirar como mínimo estos frentes, no solo el titular del día: geopolítica · materias primas · tipos y bancos centrales · resultados y guías de la última semana · fusiones y compras · regulación, sentencias y política · accidentes, averías y catástrofes · salud y farmacia · tecnología · consumo. La idea tiene que salir de un hecho **de las últimas una o dos sesiones**. Un tema que ya tuvo su momento no se propone ni se lista como descarte «porque llegamos tarde»: simplemente no está. Los ejemplos que el usuario pone para explicarse (petróleo y aerolíneas, Nvidia y su competencia) son eso, ejemplos, y no temas a seguir.
 5. **Ideas nuevas**: para cada hecho, primer efecto (el obvio) y segundo efecto (el que tarda). Mirar cuánto se ha movido ya cada valor. Pasar el filtro de las lecciones (abajo). **Máximo 2 ideas nuevas por sesión; lo normal es ninguna.** No se rellena por rellenar.
 6. **Descartes**: las ideas que parecían buenas y no pasan el filtro se publican en `descartes` con la lección que las tumba. La lista se rehace en cada sesión (solo las de hoy).
-7. **Publicar**: reescribir `sesion` (pulso de 2–4 frases y 3–6 hechos), añadir una línea a `sesiones`, ejecutar `python -m vp.ideas` (precios y marcador), `python tests/test_vp.py ideas` y subir los cambios.
+7. **Publicar**: reescribir `sesion` (`titular`: una frase corta de periódico sobre lo más importante del día, con la parte clave entre asteriscos; pulso de 2–4 frases y 3–6 hechos), añadir una línea a `sesiones`, ejecutar `python -m vp.ideas` (precios y marcador), `python tests/test_vp.py ideas` y subir los cambios.
 
 ## El filtro: qué ideas se dan y cuáles no
 
@@ -18,13 +18,16 @@ Sale de simular cada tipo de idea sobre hechos pasados (`python -m vp.ideas_trai
 
 | Tipo | Veredicto | Por qué |
 |---|---|---|
-| Beneficiario evidente de una materia prima o de los tipos, al día siguiente | **No** | El primer efecto lo recoge el precio el mismo día; después no queda nada (petróleo −4 % → aerolíneas: +0,1 % en 5 sesiones, 99 casos). |
-| Hecho que cambia las cuentas durante trimestres (guerra, paz, vacuna, cambio de gobierno, clientes que cambian de proveedor) | **Sí** | Los beneficiarios siguieron subiendo semanas después del día de la noticia. Los sustos de un día se dieron la vuelta. |
-| Segundo efecto con poder de precio | **Sí** | Petróleo +4 % → refino: +4,7 % en 60 sesiones (t 2,6), frente a +0,5 % en 20 de las petroleras. |
-| Pánico general (S&P 500 −3 % en un día) | **Sí** | Nasdaq-100 +9,1 % en 60 sesiones (t 4,8), el doble de lo normal. |
-| Gigante que se hunde por un problema propio | **Esperar a la prueba** | Rebota de media, pero gana menos de la mitad de las veces y las primeras semanas suelen ser malas. |
-| Competencia del que tropieza | **Solo el primer día y si sube** | Una semana después es llegar tarde. |
-| Buena noticia de una grande que aún no se ha contagiado al sector | **Sí (pequeña)** | +1,3 % en 60 sesiones (t 3,3). |
+| Hecho que cambia las cuentas durante trimestres (guerra, paz, vacuna, gobierno, ley, tecnología) | **Sí** | 19 casos: +7,7 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 79 %. |
+| Susto o anuncio de un día (huracán, atentado, arancel anunciado, tregua) | **No** | 18 casos: −4,7 % en 20 sesiones; solo sube el 28 %. |
+| Beneficiario evidente de una materia prima o de los tipos, al día siguiente | **No** | El primer efecto lo recoge el precio el mismo día; después no se distingue del azar. |
+| Pánico general (S&P 500 −2 % o −3 % en un día) | **Sí** | Nasdaq-100 +7,6 % en 60 sesiones tras un −3 % (gana el 73 %); +5,6 % tras un −2 %. |
+| Competencia del que tropieza, cuando el problema es de la empresa y no del sector | **Sí** | 12 casos con nombre: +3,9 % en 60 sesiones (75 %); 1.846 caídas: +2,9 % (t 6,5). |
+| Gigante que se hunde por un problema propio | **Con condiciones** | 21 caídas famosas: −6,7 % en 20 sesiones. Hace falta una prueba de negocio, no dejar pasar el tiempo. |
+| Segundo efecto | **Con condiciones** | Funciona cuando el siguiente eslabón gana más de verdad (trigo → fertilizantes); no es regla general. |
+| Buena noticia de una grande | **Con condiciones** | Solo mientras las competidoras sigan quietas (+1,6 % en 60 sesiones); si ya saltaron, tarde. |
+
+La pregunta que separa un cambio duradero de un susto: ¿el motivo puede desaparecer con el siguiente titular, o cambia lo que esas empresas ganarán durante varios trimestres?
 
 La **convicción** (1–5) dice cuánto encaja la idea con un tipo de veredicto «sí» y cuánto queda sin recoger en el precio.
 
