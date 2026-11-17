@@ -855,7 +855,7 @@ function renderArch() {
 
 function casosSec() {                                                         // lo que el propio diario ha dicho y lo que pasó después: es con lo que aprende
   const C = S.idc; if (!C || !C.casos || !C.casos.length) return '';
-  const NOM = {estructural: 'Hecho consumado', decision: 'Decisión anunciada', norma: 'Sector castigado por una norma', susto: 'Susto de un día', obvio: 'Beneficiario evidente', panico: 'Pánico general', rival: 'Competencia del que tropieza', caido: 'Gigante caído', segundo: 'Segundo efecto', contagio: 'Buena noticia'};
+  const NOM = {estructural: 'Hecho consumado', decision: 'Decisión anunciada', norma: 'Sector castigado por una norma', ataque: 'Ataque que obliga a gastar', demanda: 'Demanda contra un gigante', opa: 'Tras una compra', canario: 'Aviso de otra empresa', victima: 'Víctima de una novedad', susto: 'Susto de un día', obvio: 'Beneficiario evidente', panico: 'Pánico general', rival: 'Competencia del que tropieza', caido: 'Gigante caído', segundo: 'Segundo efecto', contagio: 'Buena noticia'};
   const cell = v => v == null ? '<small class="t">pendiente</small>' : sgn(v);
   const rows = C.casos.slice().reverse().map(c => `<tr><td>${esc(c.titulo)}<small>${fdate(c.fecha)} · ${esc(NOM[c.tipo] || c.tipo || '')} · ${esc((c.valores || []).join(' '))}</small></td><td>${c.dada ? '<b style="color:var(--go)">dada</b>' : '<b style="color:var(--no)">descartada</b>'}</td><td>${cell(c.e5)}</td><td>${cell(c.e20)}</td><td>${cell(c.e60)}</td></tr>`).join('');
   const r = C.resumen || {}, line = k => r[k] && r[k].n ? `${r[k].n} con resultado a 20 sesiones: ${num(r[k].e20)} de media sobre el S&P 500, ${r[k].aciertos} de ${r[k].n} en el sentido esperado.` : 'todavía sin resultado a 20 sesiones.';
@@ -868,7 +868,7 @@ function renderTrain() {
   if (!P) { $('#view').innerHTML = '<div class="empty">Sin datos de entrenamiento (data/ideas_playbook.json).</div>'; return; }
   const VD = {dar: 'Sí la doy', esperar: 'Depende: con condiciones', no: 'No la doy'};
   const E = P.estudios, types = E.filter(e => e.grupo.includes('resumen por tipo')), rest = E.filter(e => !e.grupo.includes('resumen por tipo')), named = E.filter(e => e.grupo === 'Casos con nombre').length;
-  const total = rest.reduce((s, e) => s + e.n, 0), kinds = rest.filter(e => e.n > 1).length;
+  const cnt = rest.filter(e => !e.grupo.includes('según cómo fue')), total = cnt.reduce((s, e) => s + e.n, 0), kinds = cnt.filter(e => e.n > 1).length;
   const mxT = Math.max(...types.flatMap(e => [e.d0, e.e20, e.e60].map(v => Math.abs(v || 0))), 1);
   const bar = (v, lab) => `<div class="x-bars"><small>${lab}</small><i style="--w:${(Math.abs(v || 0) / mxT * 50).toFixed(1)}%;--x:${v >= 0 ? '0' : '-100%'};--c:${v >= 0 ? 'var(--go)' : 'var(--no)'}"></i><span>${sgn(v)}</span></div>`;
   let g = '', rows = '';
