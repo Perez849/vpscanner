@@ -1,54 +1,54 @@
 {
- "actualizado": "2026-11-17T07:41:26Z",
+ "actualizado": "2026-11-17T12:46:36Z",
  "sesion": {
-  "cuando": "2026-11-17T07:41:26Z",
-  "tipo": "mañana",
-  "titular": "Tres vetos de chips, tres rebotes. *Esta noche, Nvidia decide el cuarto.*",
+  "cuando": "2026-11-17T12:46:36Z",
+  "tipo": "preapertura",
+  "titular": "Wall Street, en pausa. *Todo espera a Nvidia esta noche.*",
   "hoy": {
    "accion": "vigilar",
-   "texto": "Nada que comprar hoy. Esta noche, tras el cierre, presenta Nvidia: si mantiene previsiones pese al veto, mañana se compran semiconductores (SMH, Applied Materials, Lam Research)."
+   "texto": "Nada que comprar hoy. Esta noche presenta Nvidia: si mantiene previsiones pese al veto, mañana se compran semiconductores (SMH, Applied Materials, Lam Research). Si reconoce ventas en riesgo por China, no hay idea."
   },
   "cambios": [
-   "Rectifico el descarte de ayer: comprar semiconductores tras el veto pasa a ser una idea en vigilancia. Las tres veces anteriores el sector se recuperó con creces; se entra solo si Nvidia mantiene previsiones esta noche.",
-   "La idea del pánico se cierra sin abrirse: el S&P 500 acabó en −1,92 %, por encima del −2 % que pedía el disparador.",
-   "Retiro la idea del control aéreo: con el entrenamiento ampliado ya no pasa el filtro (su disparador es una decisión anunciada y el precedente de 2023 fue negativo).",
-   "Dos descartes nuevos: comprar el Nasdaq «por miedo» y comprar Nvidia antes de sus resultados."
+   "Rumor nuevo, sin confirmar: unos 12.000 millones en chips de Nvidia habrían llegado a China a través de Megaspeed, en Singapur. Es justo la vía que cierra la norma del lunes, y añade riesgo a los resultados de esta noche.",
+   "Home Depot bate por poco, sube ligeramente su previsión anual y nombra nuevo consejero delegado; la acción cede antes de abrir.",
+   "Disney bate con holgura en beneficio e ingresos.",
+   "Los futuros del Nasdaq suben un 0,4 % tras la caída de ayer; Europa baja cerca de un 1 %."
   ],
-  "pulso": "Wall Street cerró ayer con el S&P 500 en −1,9 % y los semiconductores en −5,1 % por el veto de chips a China. No llegó al umbral de pánico, así que esa idea se cierra. Pero el entrenamiento ampliado de esta mañana cambia el cuadro: las tres veces anteriores que hubo un veto así, comprar el sector castigado salió muy bien. La condición es que Nvidia, que presenta esta noche, mantenga sus previsiones. Hasta entonces, nada.",
+  "pulso": "Tras el −1,9 % de ayer, Wall Street llega a la apertura casi plano: los futuros del S&P 500 no se mueven y los del Nasdaq suben un 0,4 %. Todo el día gira alrededor de los resultados de Nvidia de esta noche, y aparece un rumor que los complica: miles de millones en chips habrían llegado a China por Singapur. Home Depot y Disney cumplen. La idea de los chips sigue esperando a Nvidia.",
   "hechos": [
    {
-    "titulo": "Cierre del lunes: −1,9 % y el Nasdaq en corrección",
-    "detalle": "S&P 500 −1,92 %, Nasdaq −2,5 %, más de un 10 % bajo su máximo de octubre. Solo subieron consumo básico y eléctricas. El VIX subió un 19 %, a 22,9.",
-    "efecto": "No llegó al −2 % que abría la idea del pánico. Y el miedo venía de un nivel bajo, que es cuando menos compensa comprar la caída.",
+    "titulo": "Rumor: chips de Nvidia hacia China por Singapur",
+    "detalle": "Según un informe sin confirmar, unos 12.000 millones de dólares en chips de Nvidia habrían llegado a clientes chinos a través de Megaspeed, la empresa de Singapur ligada a la investigación de Jensen Huang. Además, Nvidia ha comunicado que reduce su participación en Intel, que cae antes de abrir.",
+    "efecto": "Es la vía que cierra la norma del lunes. Si Nvidia tiene que reconocer ventas en riesgo esta noche, el castigo a los chips deja de ser excesivo. Se trata como rumor hasta que se confirme.",
+    "tono": "riesgo",
+    "nuevo": true
+   },
+   {
+    "titulo": "Home Depot cumple y cambia de jefe",
+    "detalle": "Beneficio ajustado de 3,86 $ por acción y ventas de 43.400 millones (+4,9 %); ventas comparables +2,2 %. Sube su previsión de beneficio anual a +2 % y nombra consejero delegado a Richard McPhail. La acción cede alrededor de un 2 % antes de abrir.",
+    "efecto": "Resultados correctos de una empresa que había subido un 12 % en un mes. No es un hecho que cambie el mundo: no hay idea.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Los chips, lo más castigado",
-    "detalle": "Semiconductores −5,1 %. Micron −7,6 %, Intel −7,0 %, Lam Research −6,7 %, TSMC −6,3 %, AMD −5,6 %, Applied Materials −5,5 %, Nvidia −4,1 %.",
-    "efecto": "Castigo a todo el sector por igual, incluidos los fabricantes de equipos. Es el patrón de los tres vetos anteriores, que a 60 sesiones se habían recuperado con creces.",
-    "tono": "oportunidad",
+    "titulo": "Disney bate",
+    "detalle": "Beneficio ajustado de 1,77 $ por acción frente a 1,68 esperados e ingresos de unos 25.900 millones frente a 25.200.",
+    "efecto": "Resultado propio, sin consecuencias claras para terceros.",
+    "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Nvidia presenta esta noche",
-    "detalle": "Resultados tras el cierre, los primeros sin Jensen Huang. Según la prensa, el consejo no se plantea su vuelta.",
-    "efecto": "Es la prueba de cuánto pesa el veto. Decide si la idea de los chips se abre mañana o se descarta.",
+    "titulo": "Mercados antes de abrir",
+    "detalle": "Futuros del S&P 500 planos y del Nasdaq +0,4 %. DAX −0,8 % y Euro Stoxx 50 −0,9 %. Brent a 93 $. VIX en 22,7.",
+    "efecto": "El mercado espera a Nvidia sin más ventas.",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "Nvidia, esta noche",
+    "detalle": "Primeros resultados con Colette Kress como consejera delegada interina, un día después del veto y con el rumor de Singapur encima.",
+    "efecto": "Decide si mañana se compran semiconductores o no.",
     "tono": "riesgo"
-   },
-   {
-    "titulo": "Home Depot y Disney, antes de la apertura",
-    "detalle": "Home Depot llega tras subir un 12,6 % en un mes; el mercado espera un movimiento del 5 % en cualquier sentido.",
-    "efecto": "Primera lectura del consumidor con los tipos al alza. De momento son fechas, no hechos.",
-    "tono": "neutro",
-    "nuevo": true
-   },
-   {
-    "titulo": "Asia cae, los futuros planos",
-    "detalle": "Nikkei −1,3 %, Hang Seng −0,9 %. Futuros del S&P 500 −0,2 % y del Nasdaq +0,1 %. Brent a 91,7 $ (−0,8 %).",
-    "efecto": "Sin contagio adicional esta noche: el mercado espera a Nvidia.",
-    "tono": "neutro",
-    "nuevo": true
    }
   ]
  },
@@ -60,7 +60,6 @@
    "conviccion": 3,
    "tipo": "norma",
    "caduca": "2026-11-20",
-   "nuevo": true,
    "titulo": "Veto de chips a China → comprar el castigo, si Nvidia pasa la prueba",
    "resumen": "Ayer descarté comprar semiconductores tras la norma de exportación. El entrenamiento ampliado de esta mañana me lleva la contraria: las tres veces anteriores que EE. UU. vetó chips a China, el sector cayó el primer día y a tres meses se había recuperado con creces. Rectifico, con una condición: esperar a los resultados de Nvidia de esta noche.",
    "hecho": "El lunes, el Departamento de Comercio publicó una norma que exige licencia para enviar chips avanzados a Singapur, Brasil, Indonesia, Malasia y Tailandia, y da 90 días a los centros de datos que ya dan servicio. Cierra la vía por la que empresas chinas usaban chips vetados. Los semiconductores cayeron un 5,1 %; los fabricantes de equipos, entre un 5,5 % y un 6,7 %. Nvidia presenta resultados hoy tras el cierre, los primeros sin Jensen Huang.",
@@ -126,8 +125,13 @@
     {
      "fecha": "2026-11-17",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "Idea nueva, en vigilancia hasta los resultados de Nvidia de esta noche. Sustituye al descarte de ayer («comprar semiconductores porque han caído»), que el entrenamiento ampliado no respalda."
+    },
+    {
+     "fecha": "2026-11-17",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Antes de abrir, los chips recuperan algo de lo perdido (los futuros del Nasdaq suben un 0,4 % mientras los del S&P 500 están planos). Aparece un rumor, sin confirmar: unos 12.000 millones de dólares en chips de Nvidia habrían llegado a clientes chinos a través de Megaspeed, en Singapur, la empresa ligada a la investigación de Huang. Si se confirma y Nvidia tiene que reconocer ventas en riesgo esta noche, la idea se rompe. Sigue en vigilancia hasta los resultados."
     }
    ],
    "fuentes": [
@@ -142,6 +146,10 @@
     {
      "t": "Investing.com (resultados de la semana)",
      "u": "https://investing.com/news/stock-market-news/earnings-to-watch-nvidia-walmart-home-depot-and-more-report-this-week-93CH-5030799"
+    },
+    {
+     "t": "CNBC (preapertura)",
+     "u": "https://www.cnbc.com/2026/11/17/stocks-moving-the-most-today-live-updates.html"
     }
    ]
   },
@@ -204,7 +212,6 @@
     {
      "fecha": "2026-11-17",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El S&P 500 cerró ayer en −1,92 %, a ocho centésimas del umbral: el disparador no saltó y la idea se cierra sin haberse abierto. Además, el entrenamiento ampliado de esta mañana dice que tampoco habría sido buena: el miedo venía de un nivel bajo (VIX en 19 el viernes), y en esos casos comprar el Nasdaq dio +2,3 % en 60 sesiones, menos que un tramo cualquiera."
     }
    ],
@@ -315,7 +322,6 @@
     {
      "fecha": "2026-11-17",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "La retiro sin que llegara a abrirse. Con el entrenamiento ampliado ya no pasa el filtro por dos motivos. Uno: su disparador era que el Congreso se comprometiera con los fondos, y eso es una decisión anunciada, el tipo de hecho que peor sale (20 casos, −2,7 % en 20 sesiones). Dos: el precedente más directo, el apagón del sistema de avisos de la FAA en enero de 2023, no movió a los contratistas (−2 % en 20 sesiones y −6 % en 60). A eso se suma que el Congreso recibió mal la petición. Queda apuntada en los casos propios para ver qué hacen sus valores."
     }
    ],
@@ -372,8 +378,7 @@
    "tipo": "panico",
    "valores": [
     "QQQ"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-17",
@@ -383,8 +388,7 @@
    "tipo": "caido",
    "valores": [
     "NVDA"
-   ],
-   "nuevo": true
+   ]
   }
  ],
  "sesiones": [
@@ -407,6 +411,10 @@
   {
    "cuando": "2026-11-17T07:41:26Z",
    "resumen": "Mañana. Se cierran sin abrirse las dos ideas de ayer (pánico: no saltó; control aéreo: retirada tras ampliar el entrenamiento). Idea nueva en vigilancia: comprar chips tras el veto si Nvidia mantiene previsiones."
+  },
+  {
+   "cuando": "2026-11-17T12:46:36Z",
+   "resumen": "Preapertura (con retraso: la tarea programada no se ejecutó por falta de créditos y se lanzó a mano a las 13:45). Sin cambios en las ideas; aparece un rumor sobre chips de Nvidia hacia China por Singapur."
   }
  ]
 }
