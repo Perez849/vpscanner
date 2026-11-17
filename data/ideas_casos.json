@@ -105,6 +105,19 @@
    "e60": null
   },
   {
+   "id": "2026-11-17-comprar-el-nasdaq-al-cierre-por-el-segundo-dia-d",
+   "fecha": "2026-11-17",
+   "titulo": "Comprar el Nasdaq al cierre por el segundo día de caídas",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-17-comprar-el-nasdaq-porque-ayer-hubo-miedo",
    "fecha": "2026-11-17",
    "titulo": "Comprar el Nasdaq «porque ayer hubo miedo»",
@@ -158,5 +171,5 @@
    "aciertos": 0
   }
  },
- "generado": 1794919600
+ "generado": 1794946245
 }

@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-17-2010",
+  "cuando": "2026-11-17T20:10:40Z",
+  "tipo": "cierre",
+  "titular": "Segundo día de ventas. A las 22:20, Nvidia.",
+  "hoy": "Nada que comprar al cierre de hoy. Nvidia publica a las 22:20 (hora española): si mantiene previsiones pese al veto, mañana se compran semiconductores (SMH, Applied Materials, Lam Research). La edición de las 9:00 lo dirá.",
+  "accion": "vigilar",
+  "vivas": 1
+ },
+ {
   "id": "2026-11-17-1246",
   "cuando": "2026-11-17T12:46:36Z",
   "tipo": "preapertura",
