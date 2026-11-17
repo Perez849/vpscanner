@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-17-1246",
+  "cuando": "2026-11-17T12:46:36Z",
+  "tipo": "preapertura",
+  "titular": "Wall Street, en pausa. Todo espera a Nvidia esta noche.",
+  "hoy": "Nada que comprar hoy. Esta noche presenta Nvidia: si mantiene previsiones pese al veto, mañana se compran semiconductores (SMH, Applied Materials, Lam Research). Si reconoce ventas en riesgo por China, no hay idea.",
+  "accion": "vigilar",
+  "vivas": 1
+ },
+ {
   "id": "2026-11-17-0741",
   "cuando": "2026-11-17T07:41:26Z",
   "tipo": "mañana",
