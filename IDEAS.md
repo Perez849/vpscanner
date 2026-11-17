@@ -32,7 +32,7 @@ La parte principal de **The Many Saints of Wall St** no es un cribador ni una re
 
 ## Cómo aprende
 
-1. **Cada idea lleva su `tipo`** (`estructural`, `decision`, `susto`, `panico`, `norma`, `caido`, `rival`, `obvio`, `segundo`, `contagio`), y **cada descarte lleva también `tipo` y `valores`** (los tickers que se habrían comprado). Sin eso no se puede medir si descartar fue acertado.
+1. **Cada idea lleva su `tipo`** (`estructural`, `decision`, `susto`, `panico`, `norma`, `ataque`, `demanda`, `victima`, `opa`, `canario`, `caido`, `rival`, `obvio`, `segundo`, `contagio`), y **cada descarte lleva también `tipo` y `valores`** (los tickers que se habrían comprado). Sin eso no se puede medir si descartar fue acertado.
 2. `python -m vp.ideas` apunta cada idea dada y cada descarte en `data/ideas_casos.json` y, cuando pasan 5, 20 y 60 sesiones, mide lo que hicieron sus valores frente al SPY, igual que el entrenamiento (compra en la apertura siguiente). Los casos no se borran nunca.
 3. **Cada lunes, en la edición de las 9:00**, se lee el resumen de `ideas_casos.json`. Si un tipo de idea que se viene dando no funciona, o uno que se viene descartando acaba subiendo, se reescribe la lección correspondiente en `data/ideas_playbook.json` (veredicto, texto y cifra) y se dice en la nota de la sesión.
 4. **La primera edición de cada mes** se vuelve a ejecutar `python -m vp.ideas_train`, que incorpora las sesiones nuevas del mercado a los ensayos, y se añaden a `CASES` (en `vp/ideas_train.py`) los hechos con nombre propio del mes que hayan sido importantes, con su fecha, sus valores y su tipo. Después se revisan las lecciones con las cifras nuevas.
@@ -66,14 +66,18 @@ Sale de simular cada tipo de idea sobre hechos pasados (`python -m vp.ideas_trai
 |---|---|---|
 | Hecho consumado que cambia el mundo: guerra, paz, pandemia, vacuna, vuelco electoral, fármaco que funciona (`estructural`) | **Sí** | 17 casos: +8,8 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 82 %. |
 | Decisión anunciada: banco central, ley firmada, plan de empresa (`decision`) | **No** | 20 casos: −2,7 % en 20 sesiones; solo sube el 30 %. Se compra antes y se vende cuando llega. |
-| Susto o anuncio de un día: huracán, atentado, arancel, ataque, estímulo prometido (`susto`) | **No** | 30 casos: −3,2 % en 20 sesiones; solo sube el 27 %. |
+| Susto o anuncio de un día: huracán, atentado, arancel, ataque, estímulo prometido (`susto`) | **No** | 31 casos: −3,3 % en 20 sesiones; solo sube el 26 %. Si acaso, a 60 sesiones gana el castigado (7 casos, +4,7 %), nunca el beneficiario. |
 | Pánico general (`panico`) | **Sí, según el miedo** | Con el VIX previo ≥ 28: +10,0 % en 60 sesiones (78 %). Viniendo de calma (VIX < 20): +2,3 %, menos que un tramo cualquiera. Da igual comprar al cierre que en la apertura siguiente. |
 | Sector castigado por una norma o sanción, comprando el castigo (`norma`) | **Con condiciones** | 7 casos: +16,4 % en 60 sesiones (86 %), pero pocos y casi todos de chips en años de subida. |
 | Gigante que cae desde cerca de máximos (`caido`) | **No** | 417 casos: −1,5 % en 20 sesiones; 42 caídas famosas: −5,6 %. Solo rebotan las ya muy castigadas, y esa cifra está inflada. |
-| Competencia del que tropieza (`rival`) | **Con condiciones** | 22 casos con nombre: nada. En el recuento general solo destaca en días malos de mercado. |
+| Competencia del que tropieza (`rival`) | **Solo si suben ese día** | Si las competidoras suben ≥ 2 % el mismo día del tropiezo (51 casos): +7,5 % en 60 sesiones (t 2,5). Sin eso, nada. |
+| Ataque informático que obliga a gastar en protección (`ataque`) | **Con condiciones** | 6 casos: +6,4 % en 20 sesiones (83 %). Vale para ciberseguridad; el único caso de avería física (FAA, 2023) no funcionó. |
+| Demanda antimonopolio contra un gigante, comprando al gigante (`demanda`) | **Con condiciones** | 5 casos: nada a 20 sesiones, +5,0 % a 60 (80 %). Pista con muy pocos casos. |
+| Víctimas de la novedad de otro, comprando el castigo (`victima`) | **Con condiciones** | 7 casos: +6,4 % en 60 sesiones, sube el 57 %. |
+| Tras una gran compra, las siguientes candidatas (`opa`) · arrastradas por el aviso de otra (`canario`) | **No** | 11 y 7 casos: nada a 20 sesiones y negativo a 60. |
 | Beneficiario evidente de una materia prima o de los tipos (`obvio`) | **No** | Ni en un día ni en una semana: después del movimiento no queda nada. |
 | Segundo efecto (`segundo`) | **Con condiciones** | Solo en pares concretos: trigo → fertilizantes, tipos a la baja → constructoras. |
-| «Si al líder le va bien, al sector también» (`contagio`) | **No** | Amazon, Tesla, Meta o Nvidia al alza: sus competidoras no suben después, y a menudo bajan. |
+| El líder se dispara (`contagio`) | **Solo al revés** | Las competidoras no suben por contagio. Pero si el mercado las castiga ese día (≥ 1 % abajo, 145 casos), lo recuperan: +4,2 % en 60 sesiones (t 2,6). |
 
 Antes de dar una idea de tipo `estructural`, comprobar que no es en realidad una `decision`: si el hecho es que alguien **decide o anuncia** algo que se veía venir (un banco central, un parlamento, una empresa), es `decision` y no se da. Si es algo que **ha ocurrido** y nadie descontaba, es `estructural`.
 
