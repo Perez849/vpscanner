@@ -32,7 +32,7 @@ La parte principal de **The Many Saints of Wall St** no es un cribador ni una re
 
 ## Cómo aprende
 
-1. **Cada idea lleva su `tipo`** (`estructural`, `susto`, `obvio`, `panico`, `rival`, `caido`, `segundo`, `contagio`), y **cada descarte lleva también `tipo` y `valores`** (los tickers que se habrían comprado). Sin eso no se puede medir si descartar fue acertado.
+1. **Cada idea lleva su `tipo`** (`estructural`, `decision`, `susto`, `panico`, `norma`, `caido`, `rival`, `obvio`, `segundo`, `contagio`), y **cada descarte lleva también `tipo` y `valores`** (los tickers que se habrían comprado). Sin eso no se puede medir si descartar fue acertado.
 2. `python -m vp.ideas` apunta cada idea dada y cada descarte en `data/ideas_casos.json` y, cuando pasan 5, 20 y 60 sesiones, mide lo que hicieron sus valores frente al SPY, igual que el entrenamiento (compra en la apertura siguiente). Los casos no se borran nunca.
 3. **Cada lunes, en la edición de las 9:00**, se lee el resumen de `ideas_casos.json`. Si un tipo de idea que se viene dando no funciona, o uno que se viene descartando acaba subiendo, se reescribe la lección correspondiente en `data/ideas_playbook.json` (veredicto, texto y cifra) y se dice en la nota de la sesión.
 4. **La primera edición de cada mes** se vuelve a ejecutar `python -m vp.ideas_train`, que incorpora las sesiones nuevas del mercado a los ensayos, y se añaden a `CASES` (en `vp/ideas_train.py`) los hechos con nombre propio del mes que hayan sido importantes, con su fecha, sus valores y su tipo. Después se revisan las lecciones con las cifras nuevas.
@@ -62,16 +62,20 @@ Las lecturas las hace el modelo de IA que esté sirviendo la conversación en es
 
 Sale de simular cada tipo de idea sobre hechos pasados (`python -m vp.ideas_train`; cifras en la pestaña **Entrenamiento**):
 
-| Tipo | Veredicto | Por qué |
+| Tipo (`tipo`) | Veredicto | Por qué |
 |---|---|---|
-| Hecho que cambia las cuentas durante trimestres (guerra, paz, vacuna, gobierno, ley, tecnología) | **Sí** | 19 casos: +7,7 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 79 %. |
-| Susto o anuncio de un día (huracán, atentado, arancel anunciado, tregua) | **No** | 18 casos: −4,7 % en 20 sesiones; solo sube el 28 %. |
-| Beneficiario evidente de una materia prima o de los tipos, al día siguiente | **No** | El primer efecto lo recoge el precio el mismo día; después no se distingue del azar. |
-| Pánico general (S&P 500 −2 % o −3 % en un día) | **Sí** | Nasdaq-100 +7,6 % en 60 sesiones tras un −3 % (gana el 73 %); +5,6 % tras un −2 %. |
-| Competencia del que tropieza, cuando el problema es de la empresa y no del sector | **Sí** | 12 casos con nombre: +3,9 % en 60 sesiones (75 %); 1.846 caídas: +2,9 % (t 6,5). |
-| Gigante que se hunde por un problema propio | **Con condiciones** | 21 caídas famosas: −6,7 % en 20 sesiones. Hace falta una prueba de negocio, no dejar pasar el tiempo. |
-| Segundo efecto | **Con condiciones** | Funciona cuando el siguiente eslabón gana más de verdad (trigo → fertilizantes); no es regla general. |
-| Buena noticia de una grande | **Con condiciones** | Solo mientras las competidoras sigan quietas (+1,6 % en 60 sesiones); si ya saltaron, tarde. |
+| Hecho consumado que cambia el mundo: guerra, paz, pandemia, vacuna, vuelco electoral, fármaco que funciona (`estructural`) | **Sí** | 17 casos: +8,8 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 82 %. |
+| Decisión anunciada: banco central, ley firmada, plan de empresa (`decision`) | **No** | 20 casos: −2,7 % en 20 sesiones; solo sube el 30 %. Se compra antes y se vende cuando llega. |
+| Susto o anuncio de un día: huracán, atentado, arancel, ataque, estímulo prometido (`susto`) | **No** | 30 casos: −3,2 % en 20 sesiones; solo sube el 27 %. |
+| Pánico general (`panico`) | **Sí, según el miedo** | Con el VIX previo ≥ 28: +10,0 % en 60 sesiones (78 %). Viniendo de calma (VIX < 20): +2,3 %, menos que un tramo cualquiera. Da igual comprar al cierre que en la apertura siguiente. |
+| Sector castigado por una norma o sanción, comprando el castigo (`norma`) | **Con condiciones** | 7 casos: +16,4 % en 60 sesiones (86 %), pero pocos y casi todos de chips en años de subida. |
+| Gigante que cae desde cerca de máximos (`caido`) | **No** | 417 casos: −1,5 % en 20 sesiones; 42 caídas famosas: −5,6 %. Solo rebotan las ya muy castigadas, y esa cifra está inflada. |
+| Competencia del que tropieza (`rival`) | **Con condiciones** | 22 casos con nombre: nada. En el recuento general solo destaca en días malos de mercado. |
+| Beneficiario evidente de una materia prima o de los tipos (`obvio`) | **No** | Ni en un día ni en una semana: después del movimiento no queda nada. |
+| Segundo efecto (`segundo`) | **Con condiciones** | Solo en pares concretos: trigo → fertilizantes, tipos a la baja → constructoras. |
+| «Si al líder le va bien, al sector también» (`contagio`) | **No** | Amazon, Tesla, Meta o Nvidia al alza: sus competidoras no suben después, y a menudo bajan. |
+
+Antes de dar una idea de tipo `estructural`, comprobar que no es en realidad una `decision`: si el hecho es que alguien **decide o anuncia** algo que se veía venir (un banco central, un parlamento, una empresa), es `decision` y no se da. Si es algo que **ha ocurrido** y nadie descontaba, es `estructural`.
 
 La pregunta que separa un cambio duradero de un susto: ¿el motivo puede desaparecer con el siguiente titular, o cambia lo que esas empresas ganarán durante varios trimestres?
 
