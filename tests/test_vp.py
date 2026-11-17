@@ -1206,7 +1206,7 @@ def test_web_ideas():
     for i in D['ideas']:                                                     # cada idea lleva todo lo que la ficha enseña
         for k in ('id', 'fecha', 'estado', 'tipo', 'titulo', 'hecho', 'cadena', 'valores', 'en_precio', 'disparador', 'invalidacion', 'en_contra', 'horizonte', 'ref'):
             assert i.get(k), (i.get('id'), k)
-        assert i['estado'] in ('vigilancia', 'abierta', 'cerrada') and (i['estado'] == 'vigilancia') == (not i.get('entrada')), i['id']
+        assert i['estado'] in ('vigilancia', 'abierta', 'cerrada') and (i['estado'] != 'abierta' or i.get('entrada')) and (i['estado'] != 'vigilancia' or not i.get('entrada')) and (i['estado'] != 'cerrada' or i.get('motivo_cierre')), i['id']          # una idea puede cerrarse sin haberse abierto (no saltó, retirada)
         assert all(v['sym'] in i['ref'] for v in i['valores']) and 'SPY' in i['ref'], i['id']
         assert i['estado'] != 'vigilancia' or i.get('caduca'), i['id']          # toda idea en vigilancia lleva fecha de caducidad
     assert D['sesion'].get('titular') and D['sesion'].get('hoy', {}).get('accion') in ('nada', 'vigilar', 'comprar', 'vender') and D['sesion']['hoy'].get('texto') and isinstance(D['sesion'].get('cambios'), list)
