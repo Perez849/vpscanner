@@ -1,66 +1,157 @@
 {
- "actualizado": "2026-11-16T20:11:21Z",
+ "actualizado": "2026-11-17T07:41:26Z",
  "sesion": {
-  "cuando": "2026-11-16T20:11:21Z",
-  "tipo": "cierre",
-  "titular": "Los chips hunden a Wall Street. *Si cierra en −2 %, mañana se compra.*",
+  "cuando": "2026-11-17T07:41:26Z",
+  "tipo": "mañana",
+  "titular": "Tres vetos de chips, tres rebotes. *Esta noche, Nvidia decide el cuarto.*",
   "hoy": {
    "accion": "vigilar",
-   "texto": "Nada que comprar hoy al cierre. Mira el S&P 500 a las 22:00: si acaba en −2 % o peor, mañana a la apertura se compra Nasdaq-100 (QQQ). Si no, nada."
+   "texto": "Nada que comprar hoy. Esta noche, tras el cierre, presenta Nvidia: si mantiene previsiones pese al veto, mañana se compran semiconductores (SMH, Applied Materials, Lam Research)."
   },
   "cambios": [
-   "Idea nueva, condicionada al cierre de hoy: comprar el Nasdaq-100 mañana si el S&P 500 acaba en −2 % o peor. A las 21:10 está en −1,9 %.",
-   "Hecho nuevo: EE. UU. cierra el acceso de China a chips avanzados a través de centros de datos de otros países. Los semiconductores caen un 4,4 %.",
-   "La idea del control aéreo se enfría: los demócratas llaman «rescate» a la petición y exigen cuentas antes de dar dinero. Convicción de 3 a 2.",
-   "Dos descartes nuevos: comprar chips en la caída y comprar aerolíneas por el petróleo."
+   "Rectifico el descarte de ayer: comprar semiconductores tras el veto pasa a ser una idea en vigilancia. Las tres veces anteriores el sector se recuperó con creces; se entra solo si Nvidia mantiene previsiones esta noche.",
+   "La idea del pánico se cierra sin abrirse: el S&P 500 acabó en −1,92 %, por encima del −2 % que pedía el disparador.",
+   "Retiro la idea del control aéreo: con el entrenamiento ampliado ya no pasa el filtro (su disparador es una decisión anunciada y el precedente de 2023 fue negativo).",
+   "Dos descartes nuevos: comprar el Nasdaq «por miedo» y comprar Nvidia antes de sus resultados."
   ],
-  "pulso": "Wall Street pierde un 2 % a media hora del cierre, con los semiconductores un 4 % abajo por una norma que cierra a China el acceso a chips a través de terceros países. El miedo sube un 22 %. Si el índice acaba en −2 % o peor, el entrenamiento dice que mañana se compra el Nasdaq; si no, es solo un mal día. La idea del control aéreo, mientras, pierde fuerza en el Congreso.",
+  "pulso": "Wall Street cerró ayer con el S&P 500 en −1,9 % y los semiconductores en −5,1 % por el veto de chips a China. No llegó al umbral de pánico, así que esa idea se cierra. Pero el entrenamiento ampliado de esta mañana cambia el cuadro: las tres veces anteriores que hubo un veto así, comprar el sector castigado salió muy bien. La condición es que Nvidia, que presenta esta noche, mantenga sus previsiones. Hasta entonces, nada.",
   "hechos": [
    {
-    "titulo": "Wall Street, cerca del −2 %",
-    "detalle": "A las 21:10: S&P 500 −1,9 %, Nasdaq-100 −2,4 %, pequeñas −1,7 %. El VIX sube un 22 %, a 23,6. Solo aguantan consumo básico y eléctricas.",
-    "efecto": "En el umbral donde el entrenamiento dice que comprar el índice a la mañana siguiente ha compensado. Se decide con el cierre.",
-    "tono": "oportunidad",
-    "nuevo": true
-   },
-   {
-    "titulo": "Norma nueva contra los chips para China",
-    "detalle": "Comercio exige licencia para enviar semiconductores avanzados a Singapur, Brasil, Indonesia, Malasia y Tailandia, y da 90 días a los centros de datos que ya dan servicio. Cierra la vía por la que empresas chinas usaban chips vetados. Nvidia −4,2 %, AMD −5,1 %, Intel −6,6 %.",
-    "efecto": "Puede ser un cambio duradero para las ventas del sector, no un susto. Nvidia presenta resultados mañana tras el cierre: ahí se sabrá cuánto pesa.",
-    "tono": "riesgo",
-    "nuevo": true
-   },
-   {
-    "titulo": "El Congreso recibe mal la petición para el control aéreo",
-    "detalle": "La principal demócrata de presupuestos de la Cámara llama «rescate» a los 50.000 millones; su partido, que tomará las dos cámaras en enero, pide cuentas del dinero ya dado. Algunos republicanos apoyan al Gobierno.",
-    "efecto": "Lo contrario del compromiso que exige la idea. La petición, además, se cruza con la ley de gasto que hay que aprobar en diciembre.",
-    "tono": "riesgo",
-    "nuevo": true
-   },
-   {
-    "titulo": "El petróleo cae otro 3,5 %",
-    "detalle": "Brent a 92,3 $ y WTI a 85,6 $. Pesa la previsión de exceso de oferta para el cuarto trimestre.",
-    "efecto": "Las aerolíneas son de lo poco que sube hoy (United +0,9 %), pero el efecto ya está en el precio el mismo día.",
+    "titulo": "Cierre del lunes: −1,9 % y el Nasdaq en corrección",
+    "detalle": "S&P 500 −1,92 %, Nasdaq −2,5 %, más de un 10 % bajo su máximo de octubre. Solo subieron consumo básico y eléctricas. El VIX subió un 19 %, a 22,9.",
+    "efecto": "No llegó al −2 % que abría la idea del pánico. Y el miedo venía de un nivel bajo, que es cuando menos compensa comprar la caída.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Mañana, Nvidia",
-    "detalle": "Resultados tras el cierre del martes, los primeros sin Jensen Huang y un día después de la norma de exportación.",
-    "efecto": "El dato que puede alargar la venta de hoy o cortarla. Quien compre antes asume ese riesgo.",
-    "tono": "neutro"
+    "titulo": "Los chips, lo más castigado",
+    "detalle": "Semiconductores −5,1 %. Micron −7,6 %, Intel −7,0 %, Lam Research −6,7 %, TSMC −6,3 %, AMD −5,6 %, Applied Materials −5,5 %, Nvidia −4,1 %.",
+    "efecto": "Castigo a todo el sector por igual, incluidos los fabricantes de equipos. Es el patrón de los tres vetos anteriores, que a 60 sesiones se habían recuperado con creces.",
+    "tono": "oportunidad",
+    "nuevo": true
+   },
+   {
+    "titulo": "Nvidia presenta esta noche",
+    "detalle": "Resultados tras el cierre, los primeros sin Jensen Huang. Según la prensa, el consejo no se plantea su vuelta.",
+    "efecto": "Es la prueba de cuánto pesa el veto. Decide si la idea de los chips se abre mañana o se descarta.",
+    "tono": "riesgo"
+   },
+   {
+    "titulo": "Home Depot y Disney, antes de la apertura",
+    "detalle": "Home Depot llega tras subir un 12,6 % en un mes; el mercado espera un movimiento del 5 % en cualquier sentido.",
+    "efecto": "Primera lectura del consumidor con los tipos al alza. De momento son fechas, no hechos.",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "Asia cae, los futuros planos",
+    "detalle": "Nikkei −1,3 %, Hang Seng −0,9 %. Futuros del S&P 500 −0,2 % y del Nasdaq +0,1 %. Brent a 91,7 $ (−0,8 %).",
+    "efecto": "Sin contagio adicional esta noche: el mercado espera a Nvidia.",
+    "tono": "neutro",
+    "nuevo": true
    }
   ]
  },
  "ideas": [
   {
+   "id": "2026-11-17-veto-chips",
+   "fecha": "2026-11-17",
+   "estado": "vigilancia",
+   "conviccion": 3,
+   "tipo": "norma",
+   "caduca": "2026-11-20",
+   "nuevo": true,
+   "titulo": "Veto de chips a China → comprar el castigo, si Nvidia pasa la prueba",
+   "resumen": "Ayer descarté comprar semiconductores tras la norma de exportación. El entrenamiento ampliado de esta mañana me lleva la contraria: las tres veces anteriores que EE. UU. vetó chips a China, el sector cayó el primer día y a tres meses se había recuperado con creces. Rectifico, con una condición: esperar a los resultados de Nvidia de esta noche.",
+   "hecho": "El lunes, el Departamento de Comercio publicó una norma que exige licencia para enviar chips avanzados a Singapur, Brasil, Indonesia, Malasia y Tailandia, y da 90 días a los centros de datos que ya dan servicio. Cierra la vía por la que empresas chinas usaban chips vetados. Los semiconductores cayeron un 5,1 %; los fabricantes de equipos, entre un 5,5 % y un 6,7 %. Nvidia presenta resultados hoy tras el cierre, los primeros sin Jensen Huang.",
+   "cadena": [
+    "Una norma nueva quita al sector una parte de sus ventas, y el mercado no espera a saber cuánta: vende primero.",
+    "Lo que se vende es todo el sector por igual, incluidos los fabricantes de equipos, a los que la norma afecta de rebote y menos.",
+    "Las tres veces anteriores (octubre de 2022, octubre de 2023 y abril de 2025) la demanda del resto del mundo absorbió lo que se perdía en China, y el castigo del primer día resultó excesivo.",
+    "Esta vez hay una prueba inmediata que entonces no hubo: Nvidia dirá esta noche cuánto le resta la norma y si mantiene sus previsiones.",
+    "Si las mantiene, el castigo vuelve a ser excesivo y se compra el sector. Si las recorta, la norma pesa de verdad y no hay idea."
+   ],
+   "valores": [
+    {
+     "sym": "SMH",
+     "nombre": "Semiconductores (VanEck)",
+     "papel": "el sector",
+     "por_que": "La forma de comprar el castigo sin depender de una sola empresa. Cayó un 5,1 % ayer y está a un 31 % de su máximo."
+    },
+    {
+     "sym": "AMAT",
+     "nombre": "Applied Materials",
+     "papel": "equipos",
+     "por_que": "Fabrica las máquinas con las que se hacen los chips. Cayó un 5,5 % por una norma que le afecta de rebote."
+    },
+    {
+     "sym": "LRCX",
+     "nombre": "Lam Research",
+     "papel": "equipos",
+     "por_que": "El otro gran fabricante de equipos: −6,7 % ayer. Estaba en la cesta del veto de 2022, que a 60 sesiones ganó un 12 %."
+    }
+   ],
+   "en_precio": "El castigo sí: −5,1 % en un día para el sector, que ya venía cayendo. Lo que no está en el precio es la respuesta de Nvidia de esta noche, en un sentido o en otro.",
+   "disparador": "Que Nvidia, en sus resultados de hoy tras el cierre, mantenga o suba sus previsiones y no anuncie un golpe mayor por la norma. Si es así, se compra mañana miércoles; el entrenamiento dice que da igual hacerlo en la apertura o al cierre.",
+   "invalidacion": "Que Nvidia recorte previsiones citando la norma, o que Comercio la amplíe a más países o a chips menos avanzados.",
+   "en_contra": "Son solo siete casos de «sector castigado por una norma», y los tres de chips ocurrieron en plena fiebre de la inteligencia artificial, cuando todo el sector subía por otros motivos. Hoy el contexto es peor: Nvidia sin su fundador, la Fed a punto de subir tipos y el Nasdaq en corrección. Además, cuando Nvidia cae con fuerza, el resto de chips ha seguido cayendo unos días (−1,5 % en 5 sesiones). Y la idea depende de un único dato, esta noche.",
+   "no_hacer": "Comprar antes de los resultados de Nvidia: es jugarse la idea a cara o cruz cuando la respuesta llega en horas. Y comprar Nvidia sola: su problema no es solo la norma.",
+   "horizonte": "De 2 a 3 meses desde la entrada. En los tres vetos anteriores el grueso de la recuperación llegó entre la sesión 20 y la 60.",
+   "precedentes": [
+    {
+     "caso": "Primer veto de chips avanzados, 7-oct-2022",
+     "que_paso": "comprando chips y equipos al día siguiente: +9 % sobre el S&P 500 en 20 sesiones y +12 % en 60."
+    },
+    {
+     "caso": "Segundo veto, 17-oct-2023",
+     "que_paso": "+13 % en 20 sesiones y +25 % en 60."
+    },
+    {
+     "caso": "Veto al chip H20 de Nvidia, 16-abr-2025",
+     "que_paso": "+17 % en 20 sesiones y +51 % en 60."
+    },
+    {
+     "caso": "Los siete casos de sector castigado por una norma",
+     "que_paso": "de media −5,2 % el día de la noticia y, comprando al día siguiente, +16,4 % en 60 sesiones; seis de siete en positivo. Pero el veto a Huawei de 2019 tardó: −3 % a 20 sesiones."
+    }
+   ],
+   "ref": {
+    "SMH": 461.9,
+    "AMAT": 350.25,
+    "LRCX": 210.83,
+    "SPY": 739.95
+   },
+   "entrada": null,
+   "notas": [
+    {
+     "fecha": "2026-11-17",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "Idea nueva, en vigilancia hasta los resultados de Nvidia de esta noche. Sustituye al descarte de ayer («comprar semiconductores porque han caído»), que el entrenamiento ampliado no respalda."
+    }
+   ],
+   "fuentes": [
+    {
+     "t": "South China Morning Post (la norma)",
+     "u": "https://scmp.com/tech/article/3374639/us-tightens-ai-chip-export-curbs-close-chinas-overseas-data-centre-loophole"
+    },
+    {
+     "t": "CNN (cierre del lunes)",
+     "u": "https://www.cnn.com/2026/11/16/business/stocks-nvidia-ai-anthropic"
+    },
+    {
+     "t": "Investing.com (resultados de la semana)",
+     "u": "https://investing.com/news/stock-market-news/earnings-to-watch-nvidia-walmart-home-depot-and-more-report-this-week-93CH-5030799"
+    }
+   ]
+  },
+  {
    "id": "2026-11-16-panico-chips",
    "fecha": "2026-11-16",
-   "estado": "vigilancia",
+   "estado": "cerrada",
    "conviccion": 2,
    "tipo": "panico",
    "caduca": "2026-11-17",
-   "nuevo": true,
    "titulo": "Si Wall Street cierra hoy en −2 %, mañana se compra el Nasdaq",
    "resumen": "Los días en que el S&P 500 pierde un 2 % o más se vende de todo sin distinguir, y comprar el índice tecnológico a la mañana siguiente ha salido bien casi tres de cada cuatro veces. Hoy el índice ronda ese umbral a media hora del cierre. Es una idea de estadística, no de tesis, y llega con los resultados de Nvidia a un día.",
    "hecho": "A las 21:10 (hora española) el S&P 500 cae un 1,9 %, el Nasdaq-100 un 2,4 % y los semiconductores un 4,4 %. El índice del miedo (VIX) sube un 22 %, hasta 23,6. El detonante es una norma nueva del Departamento de Comercio que cierra el acceso de empresas chinas a chips avanzados a través de centros de datos en otros países, a un día de los resultados de Nvidia.",
@@ -108,8 +199,13 @@
     {
      "fecha": "2026-11-16",
      "edicion": "cierre",
-     "nuevo": true,
      "texto": "Edición de cierre. A las 21:10 el S&P 500 está en −1,9 %: a una décima del umbral. Se decide con el cierre de las 22:00; si no llega a −2 %, la idea caduca mañana sin haberse abierto."
+    },
+    {
+     "fecha": "2026-11-17",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "El S&P 500 cerró ayer en −1,92 %, a ocho centésimas del umbral: el disparador no saltó y la idea se cierra sin haberse abierto. Además, el entrenamiento ampliado de esta mañana dice que tampoco habría sido buena: el miedo venía de un nivel bajo (VIX en 19 el viernes), y en esos casos comprar el Nasdaq dio +2,3 % en 60 sesiones, menos que un tramo cualquiera."
     }
    ],
    "fuentes": [
@@ -125,12 +221,14 @@
      "t": "The Motley Fool (mediodía)",
      "u": "https://www.fool.com/coverage/stock-market-today/2026/11/16/stock-market-midday-nov-16-stocks-slide-as-tech-selling-intensifies-across-the-market/"
     }
-   ]
+   ],
+   "salida": "2026-11-17",
+   "motivo_cierre": "no saltó"
   },
   {
    "id": "2026-11-16-apagon-faa",
    "fecha": "2026-11-16",
-   "estado": "vigilancia",
+   "estado": "cerrada",
    "conviccion": 2,
    "tipo": "rival",
    "titulo": "Apagón del control aéreo → quien construye la red nueva",
@@ -212,8 +310,13 @@
     {
      "fecha": "2026-11-16",
      "edicion": "cierre",
-     "nuevo": true,
      "texto": "El disparador no ha saltado y el día ha ido en contra: la principal demócrata de la comisión de presupuestos de la Cámara ha llamado «rescate» a la petición, y su partido exige cuentas del dinero ya aprobado antes de dar más. Solo algunos republicanos la apoyan. Bajo la convicción de 3 a 2. En una sesión de −1,9 % para el S&P 500: Lumen −3,5 %, RTX −2,1 %, Indra −1,9 %, Leidos −0,7 %; L3Harris −4,4 %."
+    },
+    {
+     "fecha": "2026-11-17",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "La retiro sin que llegara a abrirse. Con el entrenamiento ampliado ya no pasa el filtro por dos motivos. Uno: su disparador era que el Congreso se comprometiera con los fondos, y eso es una decisión anunciada, el tipo de hecho que peor sale (20 casos, −2,7 % en 20 sesiones). Dos: el precedente más directo, el apagón del sistema de avisos de la FAA en enero de 2023, no movió a los contratistas (−2 % en 20 sesiones y −6 % en 60). A eso se suma que el Congreso recibió mal la petición. Queda apuntada en los casos propios para ver qué hacen sus valores."
     }
    ],
    "fuentes": [
@@ -255,33 +358,31 @@
     }
    ],
    "caduca": "2026-12-11",
-   "en_contra": "El dinero puede no llegar nunca: es una petición a un Congreso que cambia de manos en enero, y los demócratas ya responden que hay 11.000 millones aprobados sin gastar. Si la investigación concluye que el apagón fue un error de un contratista al cambiar unas líneas, y no cosa de equipos viejos, la urgencia desaparece. Y aunque el dinero llegue, el reparto es desfavorable: la empresa que más cobraría (Peraton) no cotiza, y para RTX, e incluso para Leidos, estos contratos son una parte pequeña de sus ingresos. Lumen sube y baja por su deuda, no por la FAA."
+   "en_contra": "El dinero puede no llegar nunca: es una petición a un Congreso que cambia de manos en enero, y los demócratas ya responden que hay 11.000 millones aprobados sin gastar. Si la investigación concluye que el apagón fue un error de un contratista al cambiar unas líneas, y no cosa de equipos viejos, la urgencia desaparece. Y aunque el dinero llegue, el reparto es desfavorable: la empresa que más cobraría (Peraton) no cotiza, y para RTX, e incluso para Leidos, estos contratos son una parte pequeña de sus ingresos. Lumen sube y baja por su deuda, no por la FAA.",
+   "salida": "2026-11-17",
+   "motivo_cierre": "retirada: no pasa el filtro tras ampliar el entrenamiento"
   }
  ],
  "descartes": [
   {
-   "fecha": "2026-11-16",
-   "titulo": "Comprar semiconductores porque han caído un 4 %",
-   "por_que": "La caída tiene un motivo concreto que puede durar (una norma que les quita ventas) y mañana presenta Nvidia. Es comprar al caído sin la prueba.",
-   "leccion": "al gigante que se hunde se le espera hasta que haya una prueba de negocio: 21 caídas famosas, −6,7 % en las 20 sesiones siguientes.",
-   "tipo": "caido",
+   "fecha": "2026-11-17",
+   "titulo": "Comprar el Nasdaq «porque ayer hubo miedo»",
+   "por_que": "El índice cerró en −1,9 % y el miedo venía de un nivel bajo (VIX en 19 el viernes). Es justo el caso en que comprar la caída casi no da ventaja.",
+   "leccion": "tras una caída del 2 % viniendo de calma: +2,3 % en 60 sesiones, menos que un tramo cualquiera (+4,1 %). Con el miedo ya alto: +10,0 %.",
+   "tipo": "panico",
    "valores": [
-    "SMH",
-    "NVDA",
-    "AMD"
+    "QQQ"
    ],
    "nuevo": true
   },
   {
-   "fecha": "2026-11-16",
-   "titulo": "Comprar aerolíneas porque el petróleo baja un 3,5 %",
-   "por_que": "Es el beneficiario evidente y ya sube hoy mismo. Sin un hecho duradero detrás (no hay acuerdo ni cambio en la guerra), mañana no queda nada que recoger.",
-   "leccion": "petróleo −4 % → aerolíneas: +0,8 % el mismo día y después nada que se distinga del azar.",
-   "tipo": "obvio",
+   "fecha": "2026-11-17",
+   "titulo": "Comprar Nvidia antes de sus resultados",
+   "por_que": "Su problema no es solo el veto: presenta sin su fundador y con una investigación abierta. Y la respuesta llega esta noche.",
+   "leccion": "cuando Nvidia cae un 7 % o más, comprarla al día siguiente dio −2,2 % en 5 sesiones; y el gigante caído no rebota por dejar pasar el tiempo, hace falta una prueba.",
+   "tipo": "caido",
    "valores": [
-    "DAL",
-    "UAL",
-    "JETS"
+    "NVDA"
    ],
    "nuevo": true
   }
@@ -302,6 +403,10 @@
   {
    "cuando": "2026-11-16T20:11:21Z",
    "resumen": "Cierre. Idea nueva condicionada al cierre (pánico: Nasdaq si el S&P 500 acaba en −2 %). La del control aéreo sigue en vigilancia con menos convicción. Dos descartes nuevos."
+  },
+  {
+   "cuando": "2026-11-17T07:41:26Z",
+   "resumen": "Mañana. Se cierran sin abrirse las dos ideas de ayer (pánico: no saltó; control aéreo: retirada tras ampliar el entrenamiento). Idea nueva en vigilancia: comprar chips tras el veto si Nvidia mantiene previsiones."
   }
  ]
 }
