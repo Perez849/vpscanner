@@ -1,64 +1,78 @@
 {
- "generado": "2026-11-16",
- "resumen": "He simulado 55 tipos de idea sobre más de 22.000 hechos pasados desde 2008, y 74 episodios con nombre propio. Lo evidente se paga el mismo día de la noticia. Lo que sigue dando dinero después son los hechos que cambian las cuentas durante trimestres, la competencia del que tropieza y el pánico general.",
+ "generado": "2026-11-17",
+ "resumen": "He simulado 110 tipos de idea sobre más de 31.000 hechos pasados desde 2008, y 149 episodios con nombre propio. Lo que paga: los hechos consumados que cambian el mundo, el pánico cuando el miedo ya es alto y comprar al sector castigado por una norma. Lo que no: lo evidente, los sustos de un día, las decisiones anunciadas y el gigante que cae desde máximos.",
  "metodo": "Para cada tipo de idea he buscado todos los días desde 2008 en que ocurrió el hecho (por ejemplo, el petróleo cayendo un 4 % o más) y he simulado comprar los valores «lógicos» en la apertura del día siguiente, que es cuando de verdad podrías actuar. Se mide lo que ganan de más sobre el S&P 500 y se resta lo que ese grupo hace en un día cualquiera. De ahí salen estas lecciones, que son el filtro de cada lectura.",
  "cautelas": "Cautelas: las acciones son las que hoy siguen en el S&P 1500, así que faltan las que quebraron o fueron excluidas; eso infla sobre todo «comprar la caída» en 2008–2009, donde solo vemos a las supervivientes. Los casos con nombre están elegidos y clasificados a mano, a toro pasado. Y un promedio histórico no garantiza el caso siguiente.",
  "lecciones": [
   {
    "id": "estructural",
    "veredicto": "dar",
-   "titulo": "Hechos que cambian las cuentas durante trimestres",
-   "texto": "Una guerra, una paz, una vacuna, un cambio de gobierno, una ley o una tecnología nueva no se agotan en un día: los beneficiarios siguieron subiendo semanas después. La pregunta que los separa de un susto es sencilla: ¿el motivo puede desaparecer con el siguiente titular, o cambia lo que esas empresas ganarán durante varios trimestres?",
-   "cifra": "19 cambios duraderos: +7,7 % sobre el S&P 500 en 20 sesiones (suben el 79 %) y +6,8 % en 60, comprando al día siguiente. Ucrania → fertilizantes +26 %; vacuna → aerolíneas +20 %; alto el fuego Israel–Irán → aerolíneas +12 %."
+   "titulo": "Hechos consumados que cambian el mundo",
+   "texto": "Una guerra, una paz, una pandemia, una vacuna, un vuelco electoral, un fármaco que funciona: algo que ya ha ocurrido y que cambia lo que muchas empresas ganarán durante trimestres. Los beneficiarios siguieron subiendo semanas después. Es la lección que mejor aguanta al ampliar los casos.",
+   "cifra": "17 casos: +8,8 % sobre el S&P 500 en 20 sesiones (suben el 82 %) y +7,5 % en 60 (71 %), comprando al día siguiente."
+  },
+  {
+   "id": "decision",
+   "veredicto": "no",
+   "titulo": "Decisiones anunciadas: banco central, ley firmada, plan de empresa",
+   "texto": "Parecen cambios duraderos, pero se ven venir: la subida o bajada de tipos, la ley que por fin se firma, el gran plan que anuncia una empresa. El mercado lo compra antes y lo vende cuando llega. Al separar estos casos de los anteriores, la diferencia es enorme. Ojo: la separación la hice después de ver los resultados, así que hay que tomarla con cautela.",
+   "cifra": "20 casos: −2,7 % en 20 sesiones (solo sube el 30 %) y −2,8 % en 60. Ley de chips → fabricantes −5 %; primera bajada de la Fed (2024) → constructoras −3 %; Stargate → infraestructura de IA −18 %."
   },
   {
    "id": "susto",
    "veredicto": "no",
    "titulo": "Sustos y anuncios de un día",
-   "texto": "Un huracán, un atentado, un arancel anunciado, una tregua comercial: el mercado reacciona con fuerza el primer día y lo devuelve después. Comprar al beneficiario «lógico» al día siguiente ha sido perder dinero casi siempre.",
-   "cifra": "18 sustos: +2,5 % el mismo día, y después −4,7 % en 20 sesiones (solo sube el 28 %) y −7,7 % en 60. Aranceles al acero −9 %; ataque a Abqaiq → petroleras −9 %; ómicron → vacunas −22 %."
+   "texto": "Un huracán, un atentado, un arancel anunciado, un ataque, un estímulo prometido: el mercado reacciona con fuerza el primer día y lo devuelve después. Con el doble de casos, la lección sigue igual.",
+   "cifra": "30 casos: +2,4 % el mismo día, y después −3,2 % en 20 sesiones (solo sube el 27 %) y −4,3 % en 60."
+  },
+  {
+   "id": "panico",
+   "veredicto": "dar",
+   "titulo": "El pánico se compra, sobre todo cuando el miedo ya es alto",
+   "texto": "Tras un día de −2 % del S&P 500, comprar el Nasdaq ha compensado. Pero no siempre igual: funciona de verdad cuando el mercado ya venía asustado, y casi nada cuando el golpe llega en plena calma. Comprar al cierre de ese mismo día o en la apertura siguiente da lo mismo. Y el umbral exacto importa poco: lo que cuenta es el nivel de miedo.",
+   "cifra": "Con el VIX previo en 28 o más: +4,1 % en 20 sesiones y +10,0 % en 60 (40 casos, gana el 78 %). Viniendo de calma (VIX bajo 20): +2,3 % en 60, menos que un tramo cualquiera (+4,1 %). Al cierre +5,9 %; en la apertura +5,8 %."
+  },
+  {
+   "id": "norma",
+   "veredicto": "esperar",
+   "titulo": "El sector castigado por una norma o una sanción",
+   "texto": "Cuando una regulación o un veto golpea a un sector entero (los tres vetos de chips a China, las amenazas a aseguradoras o farmacéuticas), el castigo del primer día ha solido ser excesivo y a tres meses se había recuperado con creces. Son pocos casos y casi todos de chips en años de subida, así que es una pista, no una regla.",
+   "cifra": "7 casos: −5,2 % el día de la noticia; comprando al día siguiente, +3,4 % en 20 sesiones y +16,4 % en 60 (suben 86 %). Los tres vetos de chips: +12 %, +25 % y +51 % a 60 sesiones."
+  },
+  {
+   "id": "caido",
+   "veredicto": "no",
+   "titulo": "El gigante que cae desde lo más alto",
+   "texto": "Cuando una empresa que estaba cerca de máximos se hunde un 10 % o más por un problema propio, comprarla al día siguiente ha sido mal negocio, y los casos famosos lo confirman. Lo que rebota son las que ya venían muy castigadas, pero esa cifra está inflada porque solo vemos a las que sobrevivieron.",
+   "cifra": "Cerca de máximos (417 casos): −1,5 % en 20 sesiones (t −2,2), gana el 40 %. 42 caídas famosas: −5,6 % en 20 (sube el 26 %). Ya hundidas más de un 30 %: +5,1 %, con el sesgo dicho."
+  },
+  {
+   "id": "rival",
+   "veredicto": "esperar",
+   "titulo": "La competencia del que tropieza",
+   "texto": "Con más casos, esta lección se enfría. En los episodios con nombre propio, las competidoras no ganaron nada. En el recuento general solo destacan cuando la caída ocurre en un día malo de mercado, lo que parece más un rebote del sector que un trasvase de clientes. Y si el que cae estaba en máximos, sus rivales tampoco se benefician.",
+   "cifra": "22 casos con nombre: +0,3 % en 20 sesiones y −0,8 % en 60 (50 %). En día de mercado a la baja: +1,8 % en 20 (t 5,0); en día al alza: −0,1 %."
   },
   {
    "id": "obvio",
    "veredicto": "no",
    "titulo": "El beneficiario evidente de una materia prima",
-   "texto": "Cuando el petróleo se desploma, las aerolíneas suben ese mismo día. Quien compra a la mañana siguiente ya no saca nada que se distinga del azar. Pasa igual con el oro y las mineras o con los tipos y los bancos: el primer efecto lo recoge el precio en horas.",
-   "cifra": "Petróleo −4 % → aerolíneas (120 casos): +0,8 % el mismo día; después +1,1 % en 20 sesiones (t 0,7) y −1,4 % en 60. Oro +2 % → mineras: +3,9 % el mismo día; después +0,2 % en 20. Bono +12 pb → bancos: +1,2 % y después −0,8 %."
-  },
-  {
-   "id": "panico",
-   "veredicto": "dar",
-   "titulo": "El pánico general se compra",
-   "texto": "Los días en que el S&P 500 cae un 2 % o un 3 % se vende de todo sin mirar. Comprar el índice tecnológico a la mañana siguiente es lo más rentable y repetido de todo el entrenamiento. Ojo: tras los días de +3 % pasa algo parecido; lo que paga es comprar en plena turbulencia, cuando da miedo.",
-   "cifra": "S&P 500 −3 % → Nasdaq-100: +7,6 % en 60 sesiones (42 casos, gana el 73 %, t 3,6). Con −2 %: +1,9 % en 20 y +5,6 % en 60 (88 casos, gana el 72 %). Un tramo cualquiera de 60 sesiones da +4,1 %."
-  },
-  {
-   "id": "rival",
-   "veredicto": "dar",
-   "titulo": "La competencia del que tropieza",
-   "texto": "Cuando el problema es de una empresa y no del sector, sus competidoras lo acaban recogiendo, y no solo el primer día: el efecto se nota a tres meses. Falla cuando el tropiezo destapa un problema de todos (UnitedHealth en 2025 arrastró a todas las aseguradoras).",
-   "cifra": "12 casos con nombre: +3,9 % en 60 sesiones (suben el 75 %). En 1.846 caídas de ≥ 10 % de una grande, sus competidoras: +0,7 % en 20 sesiones (t 3,0) y +2,9 % en 60 (t 6,5)."
-  },
-  {
-   "id": "caido",
-   "veredicto": "esperar",
-   "titulo": "El gigante que se hunde por un problema propio",
-   "texto": "La estadística general dice que rebota, pero gana menos de la mitad de las veces y está inflada por las supervivientes de 2008. En los escándalos que todos recordamos, comprar al día siguiente fue malo casi siempre. Esperar veinte sesiones tampoco lo arregla: lo que hace falta es una prueba de negocio (unos resultados, clientes que se quedan), no que pase el tiempo.",
-   "cifra": "21 caídas famosas: −6,7 % en 20 sesiones (solo sube el 19 %) y −4,5 % en 60. En 1.846 caídas de ≥ 10 %: +7,2 % de media en 60 sesiones, pero gana el 49 %. Esperando 20 sesiones: +6,8 %, gana el 52 %."
+   "texto": "Ni en un día ni en una semana. Cuando el petróleo, el oro o el cobre se mueven fuerte, quien se beneficia de forma evidente lo recoge en el momento. Comprarlo después no da nada, y a veces resta.",
+   "cifra": "Petróleo −4 % en un día → aerolíneas: +0,8 % ese día, después +1,1 % en 20 (t 0,7). Petróleo −10 % en cinco sesiones → aerolíneas: −1,2 % en las 5 siguientes. Oro +5 % en diez sesiones → mineras: −1,2 % (t −2,4)."
   },
   {
    "id": "segundo",
    "veredicto": "esperar",
-   "titulo": "El segundo efecto: a veces",
-   "texto": "El siguiente eslabón de la cadena tarda más en moverse que el primero, pero no siempre. Funciona cuando ese eslabón gana más dinero de verdad (trigo caro → el agricultor abona más). No funcionó donde yo creía: al ampliar el estudio a 2008, las refinerías tras una subida del petróleo dejaron de destacar.",
-   "cifra": "Trigo +4 % → fertilizantes: +1,0 % en 5 sesiones (t 2,2) y +3,1 % en 60 (t 1,9). Cobre +3 % → mineras: +4,3 % en 60 (t 2,2). Petróleo +4 % → refino: +1,2 % en 60 (t 0,7); → solar: −1,9 %."
+   "titulo": "El segundo efecto: pocas veces, pero existe",
+   "texto": "El eslabón siguiente de la cadena solo sigue subiendo cuando gana más dinero de verdad y tarda en verse. El trigo caro y los fertilizantes aguantan en un día y en dos semanas; los tipos a la baja y las constructoras, a tres meses. El resto de pares probados no se distingue del azar.",
+   "cifra": "Trigo +4 % en un día → fertilizantes: +3,1 % en 60 sesiones (t 1,9); trigo +10 % en diez sesiones: +4,7 % (t 2,4). Bono −30 pb en diez sesiones → constructoras: +4,7 % (t 2,0)."
   },
   {
    "id": "contagio",
-   "veredicto": "esperar",
-   "titulo": "La buena noticia de una grande",
-   "texto": "Solo sirve mientras las demás sigan quietas. Si las competidoras apenas se movieron el día de la noticia, acaban subiendo algo. Si ya saltaron con ella, como pasó tras los resultados de Nvidia, se llega tarde. Y un sector entero que cae o sube un 3 % frente al mercado no deja nada que aprovechar.",
-   "cifra": "Una grande +10 % y competidoras quietas: +1,6 % en 60 sesiones (848 casos, t 3,9). 4 contagios famosos, con las demás ya disparadas: −4,1 % en 20. Sector −3 % frente al mercado: +0,4 % en 20 (t 0,7)."
+   "veredicto": "no",
+   "titulo": "«Si al líder le va bien, al sector también»",
+   "texto": "Suena lógico y casi nunca se cumple. Cuando Nvidia, Amazon, Tesla o Meta se disparan, sus competidoras no suben después, y a menudo bajan: lo que gana el líder se lo quita a los demás. Y cuando Nvidia cae fuerte, el resto de chips sigue cayendo unos días. La excepción son los proveedores de Apple.",
+   "cifra": "Amazon +7 % → otro comercio electrónico: −3,4 % en 20 sesiones (t −2,4). Tesla +8 % → GM y Ford: −3,5 % en 60 (t −2,1). Nvidia −7 % → otros chips: −1,5 % en 5 (t −1,9). Apple +4 % → proveedores: +4,4 % en 60 (t 2,2)."
   }
  ],
  "estudios": [
@@ -711,63 +725,63 @@
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una grande cae ≥ 10 % en un día → sus competidoras",
    "logica": "Lo que pierde una lo ganan las otras.",
-   "n": 1846,
-   "d0": -1.95,
-   "e5": 0.43,
+   "n": 1804,
+   "d0": -1.94,
+   "e5": 0.44,
    "t5": 3.7,
-   "hit5": 53,
-   "e20": 0.69,
-   "t20": 3.0,
-   "hit20": 51,
+   "hit5": 52,
+   "e20": 0.74,
+   "t20": 3.2,
+   "hit20": 52,
    "e60": 2.85,
-   "t60": 6.5,
+   "t60": 6.4,
    "hit60": 51
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "↳ …cuando las competidoras subieron ese día (el mercado las ve ganadoras)",
    "logica": "Sustitución: clientes y cuota cambian de manos.",
-   "n": 254,
+   "n": 249,
    "d0": 1.54,
-   "e5": 0.72,
-   "t5": 2.4,
-   "hit5": 52,
-   "e20": 1.26,
-   "t20": 1.9,
+   "e5": 0.75,
+   "t5": 2.5,
+   "hit5": 51,
+   "e20": 1.46,
+   "t20": 2.2,
    "hit20": 54,
-   "e60": 3.95,
-   "t60": 3.1,
-   "hit60": 52
+   "e60": 4.14,
+   "t60": 3.2,
+   "hit60": 53
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "↳ …cuando las competidoras cayeron con ella (contagio)",
    "logica": "El problema se lee como de todo el sector: ¿rebotan?",
-   "n": 1054,
-   "d0": -3.63,
-   "e5": 0.64,
+   "n": 1025,
+   "d0": -3.62,
+   "e5": 0.65,
    "t5": 3.6,
-   "hit5": 54,
-   "e20": 1.0,
-   "t20": 2.9,
+   "hit5": 55,
+   "e20": 1.03,
+   "t20": 3.0,
    "hit20": 51,
-   "e60": 3.64,
-   "t60": 5.5,
+   "e60": 3.65,
+   "t60": 5.4,
    "hit60": 51
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una grande cae ≥ 10 % en un día → comprar la propia caída",
    "logica": "El castigo es excesivo y el negocio sigue.",
-   "n": 1846,
-   "d0": -13.77,
-   "e5": 1.12,
-   "t5": 3.7,
+   "n": 1804,
+   "d0": -13.74,
+   "e5": 1.15,
+   "t5": 3.8,
    "hit5": 49,
-   "e20": 1.83,
-   "t20": 3.3,
+   "e20": 1.91,
+   "t20": 3.4,
    "hit20": 47,
-   "e60": 7.22,
+   "e60": 7.27,
    "t60": 6.5,
    "hit60": 49
   },
@@ -775,15 +789,15 @@
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "↳ …caída ≥ 20 %",
    "logica": "Castigos extremos.",
-   "n": 178,
-   "d0": -25.78,
-   "e5": 1.8,
-   "t5": 1.5,
-   "hit5": 52,
-   "e20": 3.37,
+   "n": 170,
+   "d0": -25.8,
+   "e5": 1.68,
+   "t5": 1.3,
+   "hit5": 51,
+   "e20": 3.42,
    "t20": 1.8,
    "hit20": 54,
-   "e60": 8.26,
+   "e60": 8.23,
    "t60": 2.3,
    "hit60": 52
   },
@@ -791,61 +805,61 @@
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una grande sube ≥ 10 % en un día → sus competidoras",
    "logica": "Las buenas noticias de una anticipan las del sector.",
-   "n": 2490,
-   "d0": 2.5,
-   "e5": -0.04,
-   "t5": -0.4,
+   "n": 2437,
+   "d0": 2.52,
+   "e5": -0.01,
+   "t5": -0.1,
    "hit5": 49,
-   "e20": 3.35,
+   "e20": 3.43,
    "t20": 2.2,
    "hit20": 52,
-   "e60": 5.52,
-   "t60": 3.1,
+   "e60": 5.55,
+   "t60": 3.0,
    "hit60": 51
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "↳ …cuando las competidoras apenas se movieron ese día (< 1 %)",
    "logica": "El mercado aún no ha extendido la noticia.",
-   "n": 848,
+   "n": 829,
    "d0": 0.12,
    "e5": 0.18,
    "t5": 1.5,
    "hit5": 51,
-   "e20": 0.42,
-   "t20": 1.9,
-   "hit20": 54,
-   "e60": 1.55,
-   "t60": 3.9,
-   "hit60": 52
+   "e20": 0.38,
+   "t20": 1.7,
+   "hit20": 53,
+   "e60": 1.46,
+   "t60": 3.6,
+   "hit60": 51
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una grande sube ≥ 10 % en un día → seguir comprándola",
    "logica": "La noticia buena tarda en digerirse.",
-   "n": 2490,
+   "n": 2437,
    "d0": 13.88,
-   "e5": -0.44,
-   "t5": -2.0,
+   "e5": -0.39,
+   "t5": -1.7,
    "hit5": 48,
-   "e20": 0.82,
-   "t20": 1.9,
+   "e20": 0.92,
+   "t20": 2.1,
    "hit20": 47,
    "e60": 3.49,
-   "t60": 4.9,
+   "t60": 4.8,
    "hit60": 48
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una grande cae ≥ 10 % → esperar 20 sesiones y comprar entonces",
    "logica": "No tener prisa: dejar pasar los titulares.",
-   "n": 1795,
-   "d0": -13.79,
+   "n": 1753,
+   "d0": -13.76,
    "e5": null,
-   "e20": 2.42,
-   "t20": 4.3,
+   "e20": 2.27,
+   "t20": 4.2,
    "hit20": 49,
-   "e60": 6.79,
+   "e60": 6.86,
    "t60": 6.7,
    "hit60": 52
   },
@@ -853,59 +867,59 @@
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "↳ …si en esas 20 sesiones NO ha perdido el precio del día de la caída",
    "logica": "El mercado ha dado por buena la empresa: es la «prueba».",
-   "n": 909,
-   "d0": -13.97,
+   "n": 888,
+   "d0": -13.91,
    "e5": null,
-   "e20": 2.06,
-   "t20": 3.1,
-   "hit20": 48,
-   "e60": 4.05,
-   "t60": 3.7,
-   "hit60": 52
+   "e20": 1.85,
+   "t20": 2.9,
+   "hit20": 49,
+   "e60": 4.2,
+   "t60": 3.8,
+   "hit60": 53
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "↳ …si en esas 20 sesiones ha seguido cayendo",
    "logica": "Sin prueba: el problema sigue vivo.",
-   "n": 886,
+   "n": 865,
    "d0": -13.61,
    "e5": null,
-   "e20": 2.79,
+   "e20": 2.71,
    "t20": 3.1,
    "hit20": 49,
-   "e60": 9.57,
-   "t60": 5.6,
+   "e60": 9.54,
+   "t60": 5.5,
    "hit60": 52
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una de las 50 mayores cae ≥ 7 % en un día → comprar la propia caída",
    "logica": "Los gigantes de verdad no desaparecen por un mal día.",
-   "n": 962,
-   "d0": -9.52,
+   "n": 930,
+   "d0": -9.51,
    "e5": 1.36,
-   "t5": 3.8,
+   "t5": 3.7,
    "hit5": 52,
-   "e20": 0.77,
+   "e20": 0.76,
    "t20": 1.3,
    "hit20": 47,
-   "e60": 4.54,
-   "t60": 3.9,
+   "e60": 4.72,
+   "t60": 4.0,
    "hit60": 49
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una de las 50 mayores cae ≥ 7 % en un día → sus competidoras",
    "logica": "Lo que pierde el gigante lo ganan las otras.",
-   "n": 962,
-   "d0": -1.8,
-   "e5": 0.58,
+   "n": 930,
+   "d0": -1.79,
+   "e5": 0.59,
    "t5": 3.5,
    "hit5": 54,
-   "e20": 0.13,
-   "t20": 0.4,
-   "hit20": 49,
-   "e60": 1.96,
+   "e20": 0.14,
+   "t20": 0.5,
+   "hit20": 50,
+   "e60": 2.0,
    "t60": 3.5,
    "hit60": 49
   },
@@ -913,134 +927,1045 @@
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una de las 50 mayores sube ≥ 7 % en un día → sus competidoras",
    "logica": "Lo que anuncia el gigante vale para el sector.",
-   "n": 1224,
-   "d0": 1.8,
-   "e5": -0.19,
-   "t5": -1.3,
+   "n": 1186,
+   "d0": 1.78,
+   "e5": -0.22,
+   "t5": -1.5,
    "hit5": 46,
    "e20": -0.14,
    "t20": -0.6,
    "hit20": 47,
-   "e60": 0.89,
-   "t60": 1.9,
-   "hit60": 46
+   "e60": 0.84,
+   "t60": 1.8,
+   "hit60": 45
   },
   {
    "grupo": "Tropiezo o salto de una empresa grande",
    "nombre": "Una de las 50 mayores sube ≥ 7 % en un día → seguir comprándola",
    "logica": "La noticia buena tarda en digerirse.",
-   "n": 1224,
-   "d0": 9.89,
-   "e5": -0.91,
-   "t5": -3.4,
+   "n": 1186,
+   "d0": 9.91,
+   "e5": -0.88,
+   "t5": -3.2,
    "hit5": 44,
-   "e20": -0.15,
-   "t20": -0.3,
-   "hit20": 46,
-   "e60": 2.98,
-   "t60": 3.1,
+   "e20": 0.02,
+   "t20": 0.0,
+   "hit20": 47,
+   "e60": 3.19,
+   "t60": 3.2,
    "hit60": 47
   },
   {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 −2 % o peor, con el mercado en tendencia alcista → Nasdaq-100",
+   "logica": "El índice estaba por encima de su media de 200 sesiones: susto dentro de una subida.",
+   "n": 57,
+   "d0": -2.6,
+   "e5": 0.82,
+   "t5": 2.1,
+   "hit5": 61,
+   "e20": 1.78,
+   "t20": 2.2,
+   "hit20": 70,
+   "e60": 6.27,
+   "t60": 5.4,
+   "hit60": 79,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 −2 % o peor, con el mercado en tendencia bajista → Nasdaq-100",
+   "logica": "El índice ya estaba por debajo de su media de 200 sesiones: caída dentro de una bajada.",
+   "n": 53,
+   "d0": -2.95,
+   "e5": 0.65,
+   "t5": 0.9,
+   "hit5": 57,
+   "e20": 1.83,
+   "t20": 1.4,
+   "hit20": 58,
+   "e60": 5.61,
+   "t60": 2.7,
+   "hit60": 64,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 −2 % o peor viniendo de calma (VIX < 20) → Nasdaq-100",
+   "logica": "El golpe pilla al mercado tranquilo.",
+   "n": 34,
+   "d0": -2.52,
+   "e5": -0.06,
+   "t5": -0.1,
+   "hit5": 53,
+   "e20": 0.43,
+   "t20": 0.4,
+   "hit20": 70,
+   "e60": 2.26,
+   "t60": 1.2,
+   "hit60": 70,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 −2 % o peor con el miedo ya alto (VIX ≥ 28) → Nasdaq-100",
+   "logica": "Otra caída más en plena tormenta.",
+   "n": 40,
+   "d0": -3.31,
+   "e5": 2.25,
+   "t5": 2.7,
+   "hit5": 75,
+   "e20": 4.13,
+   "t20": 2.6,
+   "hit20": 68,
+   "e60": 10.01,
+   "t60": 4.5,
+   "hit60": 78,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 −2 % o peor → comprar el Nasdaq-100 al CIERRE de ese mismo día",
+   "logica": "Adelantarse a la apertura siguiente.",
+   "n": 106,
+   "d0": -2.75,
+   "e5": 0.81,
+   "t5": 2.1,
+   "hit5": 59,
+   "e20": 1.85,
+   "t20": 2.4,
+   "hit20": 68,
+   "e60": 5.94,
+   "t60": 4.8,
+   "hit60": 70,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 −2 % o peor → comprar el Nasdaq-100 en la APERTURA siguiente",
+   "logica": "Esperar a que el cierre confirme la caída.",
+   "n": 106,
+   "d0": -2.75,
+   "e5": 0.66,
+   "t5": 1.7,
+   "hit5": 58,
+   "e20": 1.71,
+   "t20": 2.2,
+   "hit20": 66,
+   "e60": 5.78,
+   "t60": 4.7,
+   "hit60": 70,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 entre −1,5 % y −2 % → Nasdaq-100",
+   "logica": "Un mal día que no llega al umbral.",
+   "n": 98,
+   "d0": -1.71,
+   "e5": 0.47,
+   "t5": 1.4,
+   "hit5": 60,
+   "e20": 2.05,
+   "t20": 3.3,
+   "hit20": 68,
+   "e60": 5.83,
+   "t60": 5.4,
+   "hit60": 72,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 pierde ≥ 5 % en cinco sesiones → Nasdaq-100",
+   "logica": "Una mala semana entera.",
+   "n": 40,
+   "d0": -2.71,
+   "e5": 0.89,
+   "t5": 1.2,
+   "hit5": 55,
+   "e20": 1.44,
+   "t20": 1.0,
+   "hit20": 60,
+   "e60": 6.12,
+   "t60": 3.1,
+   "hit60": 75,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "S&P 500 entra en corrección (−10 % desde su máximo de 60 sesiones) → Nasdaq-100",
+   "logica": "El primer día que cruza el −10 %.",
+   "n": 30,
+   "d0": -2.51,
+   "e5": -0.29,
+   "t5": -0.4,
+   "hit5": 47,
+   "e20": -0.22,
+   "t20": -0.2,
+   "hit20": 50,
+   "e60": 2.23,
+   "t60": 0.9,
+   "hit60": 63,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "El VIX cierra por encima de 30 por primera vez en 60 sesiones → Nasdaq-100",
+   "logica": "El miedo llega a niveles de crisis.",
+   "n": 13,
+   "d0": -3.25,
+   "e5": 2.32,
+   "t5": 3.0,
+   "hit5": 77,
+   "e20": 3.45,
+   "t20": 1.5,
+   "hit20": 69,
+   "e60": 7.3,
+   "t60": 1.7,
+   "hit60": 77,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · el pánico según el contexto",
+   "nombre": "Los bonos basura caen ≥ 1,2 % en un día → Nasdaq-100",
+   "logica": "El crédito avisa antes que la bolsa.",
+   "n": 61,
+   "d0": -2.86,
+   "e5": 0.41,
+   "t5": 0.8,
+   "hit5": 49,
+   "e20": 1.93,
+   "t20": 1.8,
+   "hit20": 57,
+   "e60": 6.59,
+   "t60": 3.8,
+   "hit60": 74,
+   "nota": "rendimiento absoluto de el Nasdaq-100; un tramo cualquiera hace +0.3 % / +1.3 % / +4.1 %"
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae ≥ 10 % estando cerca de máximos (a menos de un 10 %) → comprar la caída",
+   "logica": "Estaba cotizada para la perfección.",
+   "n": 417,
+   "d0": -13.58,
+   "e5": -0.55,
+   "t5": -1.5,
+   "hit5": 46,
+   "e20": -1.54,
+   "t20": -2.2,
+   "hit20": 40,
+   "e60": 0.03,
+   "t60": 0.0,
+   "hit60": 40
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae ≥ 10 % cuando ya venía hundida (más de un 30 % bajo máximos) → comprar la caída",
+   "logica": "Otra mala noticia sobre una acción ya castigada.",
+   "n": 827,
+   "d0": -13.96,
+   "e5": 2.79,
+   "t5": 4.8,
+   "hit5": 53,
+   "e20": 5.07,
+   "t20": 4.7,
+   "hit20": 52,
+   "e60": 15.7,
+   "t60": 7.3,
+   "hit60": 56
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae ≥ 10 % estando cerca de máximos → sus competidoras",
+   "logica": "El tropiezo del que iba primero.",
+   "n": 417,
+   "d0": -1.47,
+   "e5": 0.09,
+   "t5": 0.5,
+   "hit5": 52,
+   "e20": -0.2,
+   "t20": -0.6,
+   "hit20": 50,
+   "e60": 0.15,
+   "t60": 0.2,
+   "hit60": 46
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae entre 10 % y 15 % → sus competidoras",
+   "logica": "Tropiezo moderado.",
+   "n": 1315,
+   "d0": -2.0,
+   "e5": 0.52,
+   "t5": 3.6,
+   "hit5": 53,
+   "e20": 0.77,
+   "t20": 2.9,
+   "hit20": 52,
+   "e60": 2.98,
+   "t60": 5.7,
+   "hit60": 52
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae entre 15 % y 25 % → sus competidoras",
+   "logica": "Tropiezo serio.",
+   "n": 408,
+   "d0": -1.79,
+   "e5": 0.22,
+   "t5": 1.0,
+   "hit5": 51,
+   "e20": 0.8,
+   "t20": 1.6,
+   "hit20": 50,
+   "e60": 2.46,
+   "t60": 2.6,
+   "hit60": 50
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae más de un 25 % → sus competidoras",
+   "logica": "Desplome.",
+   "n": 81,
+   "d0": -1.62,
+   "e5": 0.31,
+   "t5": 0.6,
+   "hit5": 51,
+   "e20": -0.19,
+   "t20": -0.2,
+   "hit20": 50,
+   "e60": 2.73,
+   "t60": 1.6,
+   "hit60": 46
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae ≥ 10 % en un día en que el mercado sube → sus competidoras",
+   "logica": "El problema es solo suyo.",
+   "n": 395,
+   "d0": -1.57,
+   "e5": 0.78,
+   "t5": 3.0,
+   "hit5": 55,
+   "e20": -0.15,
+   "t20": -0.3,
+   "hit20": 47,
+   "e60": 1.69,
+   "t60": 2.4,
+   "hit60": 50
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Cae ≥ 10 % en un día en que el mercado baja → sus competidoras",
+   "logica": "El problema se mezcla con el mal día.",
+   "n": 927,
+   "d0": -2.26,
+   "e5": 0.71,
+   "t5": 4.2,
+   "hit5": 54,
+   "e20": 1.78,
+   "t20": 5.0,
+   "hit20": 56,
+   "e60": 4.83,
+   "t60": 6.5,
+   "hit60": 55
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Sube ≥ 10 % y marca máximo anual → seguir comprándola",
+   "logica": "Ruptura con noticia.",
+   "n": 639,
+   "d0": 14.83,
+   "e5": 0.25,
+   "t5": 0.7,
+   "hit5": 50,
+   "e20": 1.2,
+   "t20": 1.8,
+   "hit20": 51,
+   "e60": 3.47,
+   "t60": 2.6,
+   "hit60": 48
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Sube ≥ 10 % viniendo hundida (más de un 30 % bajo máximos) → seguir comprándola",
+   "logica": "El rebote del castigado.",
+   "n": 1281,
+   "d0": 14.02,
+   "e5": -0.83,
+   "t5": -2.3,
+   "hit5": 46,
+   "e20": 1.28,
+   "t20": 1.8,
+   "hit20": 46,
+   "e60": 4.14,
+   "t60": 3.9,
+   "hit60": 49
+  },
+  {
+   "grupo": "Afinar · tropiezos y saltos según el contexto",
+   "nombre": "Sube ≥ 15 % en un día → sus competidoras quietas (< 1 %)",
+   "logica": "Noticia muy buena que el sector aún no recoge.",
+   "n": 212,
+   "d0": 0.14,
+   "e5": 0.14,
+   "t5": 0.6,
+   "hit5": 50,
+   "e20": 0.31,
+   "t20": 0.7,
+   "hit20": 52,
+   "e60": 0.79,
+   "t60": 1.0,
+   "hit60": 53
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Petróleo acumula −10 % en cinco sesiones → aerolíneas",
+   "logica": "Bajada de una semana, no de un día.",
+   "n": 58,
+   "d0": 0.95,
+   "e5": -1.18,
+   "t5": -1.1,
+   "hit5": 47,
+   "e20": 0.17,
+   "t20": 0.1,
+   "hit20": 46,
+   "e60": -1.44,
+   "t60": -0.5,
+   "hit60": 48
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Petróleo acumula −10 % en cinco sesiones → cruceros",
+   "logica": "Combustible y consumo.",
+   "n": 58,
+   "d0": -0.06,
+   "e5": -1.31,
+   "t5": -1.0,
+   "hit5": 52,
+   "e20": -0.47,
+   "t20": -0.2,
+   "hit20": 44,
+   "e60": 4.43,
+   "t60": 1.4,
+   "hit60": 50
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Petróleo acumula +10 % en cinco sesiones → petroleras",
+   "logica": "Subida de una semana.",
+   "n": 60,
+   "d0": 1.27,
+   "e5": -0.35,
+   "t5": -0.6,
+   "hit5": 48,
+   "e20": 1.23,
+   "t20": 1.2,
+   "hit20": 47,
+   "e60": 1.83,
+   "t60": 0.9,
+   "hit60": 47
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Petróleo acumula +10 % en cinco sesiones → refino",
+   "logica": "Margen de refino.",
+   "n": 60,
+   "d0": 0.88,
+   "e5": -0.05,
+   "t5": -0.1,
+   "hit5": 52,
+   "e20": 0.82,
+   "t20": 0.5,
+   "hit20": 59,
+   "e60": -1.12,
+   "t60": -0.5,
+   "hit60": 41
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Petróleo acumula +10 % en cinco sesiones → aerolíneas (comprar el castigo)",
+   "logica": "Apostar a que el castigo es excesivo.",
+   "n": 60,
+   "d0": -0.24,
+   "e5": -0.52,
+   "t5": -0.6,
+   "hit5": 53,
+   "e20": 0.27,
+   "t20": 0.1,
+   "hit20": 51,
+   "e60": -3.13,
+   "t60": -1.3,
+   "hit60": 34
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Oro acumula +5 % en diez sesiones → mineras de oro",
+   "logica": "Subida sostenida.",
+   "n": 92,
+   "d0": 2.63,
+   "e5": -1.18,
+   "t5": -2.4,
+   "hit5": 38,
+   "e20": -0.18,
+   "t20": -0.2,
+   "hit20": 49,
+   "e60": -1.47,
+   "t60": -0.8,
+   "hit60": 44
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "El bono a 10 años sube ≥ 30 pb en diez sesiones → bancos",
+   "logica": "Tipos al alza de forma sostenida.",
+   "n": 56,
+   "d0": 0.14,
+   "e5": -0.31,
+   "t5": -0.5,
+   "hit5": 54,
+   "e20": 0.58,
+   "t20": 0.5,
+   "hit20": 54,
+   "e60": 2.31,
+   "t60": 1.0,
+   "hit60": 56
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "El bono a 10 años sube ≥ 30 pb en diez sesiones → constructoras (comprar el castigo)",
+   "logica": "Hipotecas más caras.",
+   "n": 56,
+   "d0": 0.13,
+   "e5": -0.61,
+   "t5": -1.2,
+   "hit5": 41,
+   "e20": 0.9,
+   "t20": 0.7,
+   "hit20": 55,
+   "e60": 3.35,
+   "t60": 1.9,
+   "hit60": 61
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "El bono a 10 años baja ≥ 30 pb en diez sesiones → constructoras",
+   "logica": "Hipotecas más baratas.",
+   "n": 48,
+   "d0": 0.5,
+   "e5": 0.98,
+   "t5": 0.9,
+   "hit5": 52,
+   "e20": 2.24,
+   "t20": 1.2,
+   "hit20": 50,
+   "e60": 4.68,
+   "t60": 2.0,
+   "hit60": 52
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "El bono a 10 años baja ≥ 30 pb en diez sesiones → inmobiliarias cotizadas",
+   "logica": "Dividendo frente a bono.",
+   "n": 48,
+   "d0": 0.07,
+   "e5": 0.33,
+   "t5": 0.6,
+   "hit5": 58,
+   "e20": 0.57,
+   "t20": 0.6,
+   "hit20": 56,
+   "e60": -0.1,
+   "t60": -0.1,
+   "hit60": 50
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Cobre acumula +7 % en diez sesiones → mineras de cobre",
+   "logica": "Subida sostenida.",
+   "n": 81,
+   "d0": 1.45,
+   "e5": 0.65,
+   "t5": 1.1,
+   "hit5": 53,
+   "e20": -0.84,
+   "t20": -0.7,
+   "hit20": 42,
+   "e60": 1.11,
+   "t60": 0.5,
+   "hit60": 49
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Gas natural acumula +15 % en cinco sesiones → productoras de gas",
+   "logica": "Subida de una semana.",
+   "n": 69,
+   "d0": 1.35,
+   "e5": 1.03,
+   "t5": 1.4,
+   "hit5": 59,
+   "e20": 1.52,
+   "t20": 1.1,
+   "hit20": 59,
+   "e60": 2.43,
+   "t60": 0.9,
+   "hit60": 55
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Trigo acumula +10 % en diez sesiones → fertilizantes",
+   "logica": "El campo gana más durante semanas.",
+   "n": 65,
+   "d0": 0.84,
+   "e5": 0.65,
+   "t5": 1.1,
+   "hit5": 57,
+   "e20": 2.12,
+   "t20": 2.0,
+   "hit20": 57,
+   "e60": 4.72,
+   "t60": 2.4,
+   "hit60": 56
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "Bitcoin acumula +15 % en cinco sesiones → bolsas y mineras de cripto",
+   "logica": "Subida de una semana.",
+   "n": 59,
+   "d0": 3.69,
+   "e5": 3.8,
+   "t5": 1.2,
+   "hit5": 47,
+   "e20": 8.76,
+   "t20": 1.6,
+   "hit20": 46,
+   "e60": 13.33,
+   "t60": 1.0,
+   "hit60": 38
+  },
+  {
+   "grupo": "Afinar · movimientos de varios días",
+   "nombre": "El dólar sube ≥ 2 % en cinco sesiones → emergentes (comprar el castigo)",
+   "logica": "Dólar fuerte castiga a los emergentes.",
+   "n": 70,
+   "d0": -0.54,
+   "e5": -0.04,
+   "t5": -0.1,
+   "hit5": 47,
+   "e20": 0.0,
+   "t20": 0.0,
+   "hit20": 50,
+   "e60": 1.72,
+   "t60": 1.6,
+   "hit60": 56
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Nvidia sube ≥ 7 % en un día → otros fabricantes de chips",
+   "logica": "Lo que anuncia el líder vale para el sector.",
+   "n": 44,
+   "d0": 2.38,
+   "e5": -0.45,
+   "t5": -0.8,
+   "hit5": 39,
+   "e20": 2.11,
+   "t20": 1.7,
+   "hit20": 57,
+   "e60": -1.21,
+   "t60": -0.5,
+   "hit60": 35
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Nvidia cae ≥ 7 % en un día → otros fabricantes de chips",
+   "logica": "¿Contagio que se recupera o aviso para todos?",
+   "n": 23,
+   "d0": -2.46,
+   "e5": -1.46,
+   "t5": -1.9,
+   "hit5": 39,
+   "e20": -1.63,
+   "t20": -1.0,
+   "hit20": 48,
+   "e60": -1.62,
+   "t60": -0.5,
+   "hit60": 39
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Nvidia cae ≥ 7 % en un día → comprar Nvidia",
+   "logica": "El líder castigado.",
+   "n": 23,
+   "d0": -9.77,
+   "e5": -2.19,
+   "t5": -1.4,
+   "hit5": 35,
+   "e20": -1.09,
+   "t20": -0.4,
+   "hit20": 43,
+   "e60": 1.47,
+   "t60": 0.3,
+   "hit60": 57
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Apple cae ≥ 4 % en un día → sus proveedores",
+   "logica": "Arrastra a quien le vende piezas.",
+   "n": 40,
+   "d0": -1.0,
+   "e5": 0.33,
+   "t5": 0.4,
+   "hit5": 48,
+   "e20": 0.01,
+   "t20": 0.0,
+   "hit20": 45,
+   "e60": 1.63,
+   "t60": 0.8,
+   "hit60": 45
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Apple sube ≥ 4 % en un día → sus proveedores",
+   "logica": "Buenas noticias aguas arriba.",
+   "n": 51,
+   "d0": 0.66,
+   "e5": 0.44,
+   "t5": 0.8,
+   "hit5": 47,
+   "e20": 1.12,
+   "t20": 1.2,
+   "hit20": 58,
+   "e60": 4.41,
+   "t60": 2.2,
+   "hit60": 56
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Tesla sube ≥ 8 % en un día → fabricantes tradicionales",
+   "logica": "Lo que gana una lo pierden las otras, o al revés.",
+   "n": 60,
+   "d0": -0.03,
+   "e5": 0.55,
+   "t5": 0.9,
+   "hit5": 50,
+   "e20": -0.74,
+   "t20": -0.9,
+   "hit20": 37,
+   "e60": -3.46,
+   "t60": -2.1,
+   "hit60": 35
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Tesla cae ≥ 8 % en un día → fabricantes tradicionales",
+   "logica": "Rival del que tropieza.",
+   "n": 37,
+   "d0": -0.55,
+   "e5": 0.65,
+   "t5": 1.3,
+   "hit5": 49,
+   "e20": -0.3,
+   "t20": -0.3,
+   "hit20": 51,
+   "e60": -2.68,
+   "t60": -1.6,
+   "hit60": 41
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "JPMorgan cae ≥ 4 % en un día → bancos regionales",
+   "logica": "Si tose el grande, ¿se resfrían los pequeños?",
+   "n": 44,
+   "d0": -2.1,
+   "e5": 0.22,
+   "t5": 0.3,
+   "hit5": 52,
+   "e20": -1.34,
+   "t20": -1.0,
+   "hit20": 41,
+   "e60": -1.9,
+   "t60": -0.8,
+   "hit60": 39
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Walmart cae ≥ 5 % en un día → Target y Costco",
+   "logica": "Aviso sobre el consumidor o problema propio.",
+   "n": 10,
+   "d0": -1.04,
+   "e5": 0.35,
+   "t5": 0.4,
+   "hit5": 80,
+   "e20": -1.5,
+   "t20": -0.7,
+   "hit20": 30,
+   "e60": 2.45,
+   "t60": 1.4,
+   "hit60": 89
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Amazon sube ≥ 7 % en un día → otro comercio electrónico",
+   "logica": "Marea que sube todos los barcos.",
+   "n": 25,
+   "d0": 0.55,
+   "e5": -0.46,
+   "t5": -0.6,
+   "hit5": 36,
+   "e20": -3.38,
+   "t20": -2.4,
+   "hit20": 36,
+   "e60": -3.38,
+   "t60": -1.2,
+   "hit60": 36
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Meta sube ≥ 8 % en un día → otra publicidad digital",
+   "logica": "El mercado publicitario va bien para todos.",
+   "n": 16,
+   "d0": 2.06,
+   "e5": -2.96,
+   "t5": -1.7,
+   "hit5": 31,
+   "e20": -1.86,
+   "t20": -0.7,
+   "hit20": 38,
+   "e60": 5.93,
+   "t60": 1.0,
+   "hit60": 47
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Meta cae ≥ 8 % en un día → otra publicidad digital",
+   "logica": "Rival o contagio.",
+   "n": 8,
+   "d0": 0.85,
+   "e5": 0.52,
+   "t5": 0.3,
+   "hit5": 50,
+   "e20": -3.02,
+   "t20": -1.2,
+   "hit20": 25,
+   "e60": -4.25,
+   "t60": -0.9,
+   "hit60": 25
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "UnitedHealth cae ≥ 5 % en un día → otras aseguradoras",
+   "logica": "Suele ser un problema del sector entero.",
+   "n": 25,
+   "d0": -4.26,
+   "e5": -0.68,
+   "t5": -0.6,
+   "hit5": 44,
+   "e20": 0.15,
+   "t20": 0.1,
+   "hit20": 44,
+   "e60": 2.24,
+   "t60": 0.6,
+   "hit60": 72
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Lilly sube ≥ 6 % en un día → Novo Nordisk",
+   "logica": "El mismo mercado, el otro jugador.",
+   "n": 16,
+   "d0": 1.4,
+   "e5": 1.85,
+   "t5": 2.6,
+   "hit5": 81,
+   "e20": -3.45,
+   "t20": -2.0,
+   "hit20": 40,
+   "e60": -0.4,
+   "t60": -0.1,
+   "hit60": 33
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Boeing cae ≥ 5 % en un día → Airbus",
+   "logica": "Duopolio: lo que pierde uno lo gana el otro.",
+   "n": 29,
+   "d0": -0.49,
+   "e5": -0.79,
+   "t5": -1.2,
+   "hit5": 45,
+   "e20": -0.67,
+   "t20": -0.5,
+   "hit20": 39,
+   "e60": 2.91,
+   "t60": 1.2,
+   "hit60": 52
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Microsoft sube ≥ 5 % en un día → otro software",
+   "logica": "El gasto en software va bien.",
+   "n": 20,
+   "d0": 1.03,
+   "e5": 0.5,
+   "t5": 0.6,
+   "hit5": 45,
+   "e20": 0.41,
+   "t20": 0.2,
+   "hit20": 42,
+   "e60": 3.72,
+   "t60": 1.6,
+   "hit60": 63
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Home Depot cae ≥ 5 % en un día → Lowe's",
+   "logica": "Mismo negocio, mismo cliente.",
+   "n": 8,
+   "d0": -3.03,
+   "e5": 0.46,
+   "t5": 0.7,
+   "hit5": 62,
+   "e20": 1.63,
+   "t20": 0.6,
+   "hit20": 50,
+   "e60": 3.01,
+   "t60": 1.0,
+   "hit60": 75
+  },
+  {
+   "grupo": "Cuando se mueve un líder con nombre",
+   "nombre": "Exxon cae ≥ 4 % en un día → refino",
+   "logica": "Petróleo abajo, materia prima más barata.",
+   "n": 25,
+   "d0": -2.66,
+   "e5": -0.02,
+   "t5": -0.0,
+   "hit5": 52,
+   "e20": 0.5,
+   "t20": 0.2,
+   "hit20": 54,
+   "e60": 0.25,
+   "t60": 0.1,
+   "hit60": 46
+  },
+  {
    "grupo": "Casos con nombre · resumen por tipo",
-   "nombre": "Cambio duradero (guerra, paz, vacuna, gobierno, ley, tecnología)",
-   "logica": "19 casos elegidos a mano",
-   "n": 19,
-   "d0": 8.52,
-   "e5": 3.58,
-   "e20": 7.69,
-   "e60": 6.77,
-   "hit20": 79,
-   "hit60": 68,
+   "nombre": "Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)",
+   "logica": "17 casos elegidos a mano",
+   "n": 17,
+   "d0": 9.1,
+   "e5": 4.94,
+   "e20": 8.83,
+   "e60": 7.53,
+   "hit20": 82,
+   "hit60": 71,
    "tipo": "E"
   },
   {
    "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Decisión anunciada (banco central, ley firmada, plan de empresa)",
+   "logica": "20 casos elegidos a mano",
+   "n": 20,
+   "d0": 1.69,
+   "e5": -2.48,
+   "e20": -2.69,
+   "e60": -2.79,
+   "hit20": 30,
+   "hit60": 45,
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
    "nombre": "Susto o anuncio de un día",
-   "logica": "18 casos elegidos a mano",
-   "n": 18,
-   "d0": 2.54,
-   "e5": -2.49,
-   "e20": -4.65,
-   "e60": -7.67,
-   "hit20": 28,
-   "hit60": 22,
+   "logica": "30 casos elegidos a mano",
+   "n": 30,
+   "d0": 2.44,
+   "e5": -1.27,
+   "e20": -3.21,
+   "e60": -4.28,
+   "hit20": 27,
+   "hit60": 33,
    "tipo": "S"
   },
   {
    "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Sector castigado por una norma o sanción → comprar el castigo",
+   "logica": "7 casos elegidos a mano",
+   "n": 7,
+   "d0": -5.24,
+   "e5": -1.02,
+   "e20": 3.4,
+   "e60": 16.39,
+   "hit20": 57,
+   "hit60": 86,
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Víctimas de la novedad de otro → comprar el castigo",
+   "logica": "4 casos elegidos a mano",
+   "n": 4,
+   "d0": -12.84,
+   "e5": 3.12,
+   "e20": -0.08,
+   "e60": 6.64,
+   "hit20": 25,
+   "hit60": 50,
+   "tipo": "V"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
    "nombre": "Comprar al gigante caído",
-   "logica": "21 casos elegidos a mano",
-   "n": 21,
-   "d0": -14.57,
-   "e5": -5.74,
-   "e20": -6.71,
-   "e60": -4.48,
-   "hit20": 19,
+   "logica": "42 casos elegidos a mano",
+   "n": 42,
+   "d0": -15.68,
+   "e5": -3.47,
+   "e20": -5.61,
+   "e60": -4.01,
+   "hit20": 26,
    "hit60": 43,
    "tipo": "C"
   },
   {
    "grupo": "Casos con nombre · resumen por tipo",
    "nombre": "Competencia del que tropieza",
-   "logica": "12 casos elegidos a mano",
-   "n": 12,
-   "d0": -1.85,
-   "e5": -1.05,
-   "e20": 0.5,
-   "e60": 3.9,
-   "hit20": 67,
-   "hit60": 75,
+   "logica": "22 casos elegidos a mano",
+   "n": 22,
+   "d0": -1.03,
+   "e5": -0.55,
+   "e20": 0.26,
+   "e60": -0.76,
+   "hit20": 55,
+   "hit60": 50,
    "tipo": "R"
   },
   {
    "grupo": "Casos con nombre · resumen por tipo",
    "nombre": "Buena noticia que se contagia",
-   "logica": "4 casos elegidos a mano",
-   "n": 4,
-   "d0": 7.64,
-   "e5": -1.71,
-   "e20": -4.11,
-   "e60": -5.04,
-   "hit20": 0,
-   "hit60": 25,
+   "logica": "7 casos elegidos a mano",
+   "n": 7,
+   "d0": 4.52,
+   "e5": -1.42,
+   "e20": -2.12,
+   "e60": -1.17,
+   "hit20": 14,
+   "hit60": 43,
    "tipo": "B"
   },
   {
    "grupo": "Casos con nombre",
-   "nombre": "La OPEP no recorta (petróleo barato durante años) → aerolíneas",
-   "logica": "Cambio duradero",
-   "n": 1,
-   "d0": 6.83,
-   "e5": 0.06,
-   "e20": 2.52,
-   "e60": 1.91,
-   "valores": [
-    "DAL",
-    "UAL",
-    "AAL",
-    "LUV",
-    "ALK"
-   ],
-   "fecha": "2014-11-28",
-   "tipo": "E"
-  },
-  {
-   "grupo": "Casos con nombre",
    "nombre": "Trump gana (2016) → bancos y defensa",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
-   "d0": 3.77,
-   "e5": 3.3,
-   "e20": 7.39,
-   "e60": 5.23,
+   "d0": 4.43,
+   "e5": 3.29,
+   "e20": 7.95,
+   "e60": 6.4,
    "valores": [
     "JPM",
     "BAC",
     "GS",
     "LMT",
     "NOC",
-    "RTX"
+    "GD"
    ],
    "fecha": "2016-11-09",
    "tipo": "E"
@@ -1048,7 +1973,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Trump gana (2016) → infraestructuras y acero",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 10.14,
    "e5": -0.54,
@@ -1065,7 +1990,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Confinamientos → quedarse en casa",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 11.1,
    "e5": 21.47,
@@ -1084,7 +2009,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Vacuna de Pfizer (2020) → aerolíneas y cruceros",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 23.11,
    "e5": -1.68,
@@ -1104,7 +2029,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Vacuna de Pfizer (2020) → energía y bancos",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 11.74,
    "e5": 0.66,
@@ -1121,8 +2046,42 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Los demócratas ganan el Senado → solar",
+   "logica": "Hecho consumado que cambia el mundo",
+   "n": 1,
+   "d0": 9.04,
+   "e5": -4.15,
+   "e20": -8.75,
+   "e60": -34.09,
+   "valores": [
+    "TAN",
+    "FSLR",
+    "ENPH"
+   ],
+   "fecha": "2021-01-06",
+   "tipo": "E"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La píldora de Pfizer contra la covid funciona → aerolíneas y cruceros",
+   "logica": "Hecho consumado que cambia el mundo",
+   "n": 1,
+   "d0": 7.54,
+   "e5": -7.43,
+   "e20": -17.31,
+   "e60": -12.47,
+   "valores": [
+    "DAL",
+    "UAL",
+    "CCL"
+   ],
+   "fecha": "2021-11-05",
+   "tipo": "E"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Rusia invade Ucrania → defensa",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 0.49,
    "e5": 9.36,
@@ -1140,7 +2099,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Rusia invade Ucrania → fertilizantes y energía",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": -0.07,
    "e5": 12.22,
@@ -1159,7 +2118,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Rusia invade Ucrania → comercializadoras y maquinaria agrícola",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 0.03,
    "e5": 7.44,
@@ -1176,7 +2135,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Rusia invade Ucrania → ciberseguridad",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 10.92,
    "e5": 4.82,
@@ -1192,42 +2151,24 @@
   },
   {
    "grupo": "Casos con nombre",
-   "nombre": "Acuerdo para la ley del clima de EE. UU. (2022) → solar",
-   "logica": "Cambio duradero",
+   "nombre": "China levanta la cuarentena → casinos de Macao",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
-   "d0": 13.2,
-   "e5": 2.19,
-   "e20": 9.38,
-   "e60": -3.5,
+   "d0": 4.72,
+   "e5": 7.86,
+   "e20": 16.26,
+   "e60": 16.27,
    "valores": [
-    "ENPH",
-    "FSLR",
-    "SEDG",
-    "RUN"
+    "LVS",
+    "WYNN"
    ],
-   "fecha": "2022-07-28",
-   "tipo": "E"
-  },
-  {
-   "grupo": "Casos con nombre",
-   "nombre": "Sale ChatGPT → Microsoft y Nvidia",
-   "logica": "Cambio duradero",
-   "n": 1,
-   "d0": 4.05,
-   "e5": -0.64,
-   "e20": -3.81,
-   "e60": 20.15,
-   "valores": [
-    "MSFT",
-    "NVDA"
-   ],
-   "fecha": "2022-11-30",
+   "fecha": "2022-12-27",
    "tipo": "E"
   },
   {
    "grupo": "Casos con nombre",
    "nombre": "El fármaco de la obesidad protege el corazón → Lilly y Novo",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 16.49,
    "e5": 3.99,
@@ -1242,25 +2183,8 @@
   },
   {
    "grupo": "Casos con nombre",
-   "nombre": "Primera bajada de tipos de la Fed (2024) → constructoras y pequeñas",
-   "logica": "Cambio duradero",
-   "n": 1,
-   "d0": -0.06,
-   "e5": -4.73,
-   "e20": -3.43,
-   "e60": -18.71,
-   "valores": [
-    "DHI",
-    "LEN",
-    "IWM"
-   ],
-   "fecha": "2024-09-18",
-   "tipo": "E"
-  },
-  {
-   "grupo": "Casos con nombre",
    "nombre": "Trump gana (2024) → bancos, prisiones privadas y cripto",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 22.88,
    "e5": 11.12,
@@ -1279,7 +2203,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Trump gana (2024) → Tesla",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 12.26,
    "e5": 13.62,
@@ -1294,7 +2218,7 @@
   {
    "grupo": "Casos con nombre",
    "nombre": "Trump gana (2024) → pequeñas y bancos regionales",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 7.12,
    "e5": -1.14,
@@ -1309,25 +2233,8 @@
   },
   {
    "grupo": "Casos con nombre",
-   "nombre": "Anuncio de Stargate (2025) → infraestructura de IA",
-   "logica": "Cambio duradero",
-   "n": 1,
-   "d0": 5.24,
-   "e5": -16.63,
-   "e20": -17.91,
-   "e60": -28.42,
-   "valores": [
-    "ORCL",
-    "VRT",
-    "ANET"
-   ],
-   "fecha": "2025-01-22",
-   "tipo": "E"
-  },
-  {
-   "grupo": "Casos con nombre",
    "nombre": "Alto el fuego entre Israel e Irán (2025) → aerolíneas y cruceros",
-   "logica": "Cambio duradero",
+   "logica": "Hecho consumado que cambia el mundo",
    "n": 1,
    "d0": 2.71,
    "e5": 3.07,
@@ -1342,6 +2249,346 @@
    ],
    "fecha": "2025-06-24",
    "tipo": "E"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Se firma el rescate bancario (TARP) → bancos",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": -6.97,
+   "e5": -0.51,
+   "e20": -2.03,
+   "e60": -23.41,
+   "valores": [
+    "JPM",
+    "BAC",
+    "WFC",
+    "C"
+   ],
+   "fecha": "2008-10-03",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Se firma la reforma sanitaria de Obama → hospitales",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": -1.34,
+   "e5": -4.75,
+   "e20": -3.44,
+   "e60": 3.41,
+   "valores": [
+    "THC",
+    "UHS"
+   ],
+   "fecha": "2010-03-23",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Draghi: «lo que haga falta» → bancos europeos",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 5.44,
+   "e5": -2.42,
+   "e20": 14.12,
+   "e60": 37.8,
+   "valores": [
+    "SAN",
+    "DB",
+    "ING"
+   ],
+   "fecha": "2012-07-26",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La Fed lanza la tercera ronda de compras → constructoras",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 1.23,
+   "e5": 3.25,
+   "e20": -0.93,
+   "e60": -1.27,
+   "valores": [
+    "DHI",
+    "LEN",
+    "PHM"
+   ],
+   "fecha": "2012-09-13",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La Fed avisa de que retirará estímulos → bancos",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 0.33,
+   "e5": 4.64,
+   "e20": 3.19,
+   "e60": 5.94,
+   "valores": [
+    "JPM",
+    "BAC",
+    "WFC"
+   ],
+   "fecha": "2013-05-22",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La OPEP no recorta (petróleo barato durante años) → aerolíneas",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 6.83,
+   "e5": 0.06,
+   "e20": 2.52,
+   "e60": 1.91,
+   "valores": [
+    "DAL",
+    "UAL",
+    "AAL",
+    "LUV",
+    "ALK"
+   ],
+   "fecha": "2014-11-28",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Primera subida de tipos en nueve años → bancos",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 0.46,
+   "e5": -1.52,
+   "e20": -6.39,
+   "e60": -12.9,
+   "valores": [
+    "JPM",
+    "BAC",
+    "WFC"
+   ],
+   "fecha": "2015-12-16",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La OPEP recorta producción → petroleras",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 4.98,
+   "e5": -2.69,
+   "e20": -0.43,
+   "e60": -12.7,
+   "valores": [
+    "XOM",
+    "CVX",
+    "COP",
+    "OXY"
+   ],
+   "fecha": "2016-11-30",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "El Congreso aprueba la rebaja fiscal → pequeñas y bancos regionales",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": -0.05,
+   "e5": -0.11,
+   "e20": -0.64,
+   "e60": 2.49,
+   "valores": [
+    "IWM",
+    "KRE"
+   ],
+   "fecha": "2017-12-20",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Powell se declara «paciente» → Nasdaq y pequeñas",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 0.66,
+   "e5": 1.15,
+   "e20": 1.49,
+   "e60": 1.15,
+   "valores": [
+    "QQQ",
+    "IWM"
+   ],
+   "fecha": "2019-01-04",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La Fed compra sin límite → Nasdaq",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 2.63,
+   "e5": -4.87,
+   "e20": -2.59,
+   "e60": 2.46,
+   "valores": [
+    "QQQ"
+   ],
+   "fecha": "2020-03-23",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Se firma el rescate por la pandemia → aerolíneas",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": -5.27,
+   "e5": -22.19,
+   "e20": -33.88,
+   "e60": -13.35,
+   "valores": [
+    "DAL",
+    "UAL",
+    "AAL"
+   ],
+   "fecha": "2020-03-27",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Primera subida de tipos de 2022 → bancos",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 1.31,
+   "e5": -1.36,
+   "e20": -9.1,
+   "e60": -8.3,
+   "valores": [
+    "JPM",
+    "BAC",
+    "WFC"
+   ],
+   "fecha": "2022-03-16",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Acuerdo para la ley del clima de EE. UU. (2022) → solar",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 13.2,
+   "e5": 2.19,
+   "e20": 9.38,
+   "e60": -3.5,
+   "valores": [
+    "ENPH",
+    "FSLR",
+    "SEDG",
+    "RUN"
+   ],
+   "fecha": "2022-07-28",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Se firma la ley de chips → fabricantes y equipos",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": -5.01,
+   "e5": 2.76,
+   "e20": -5.31,
+   "e60": -5.94,
+   "valores": [
+    "INTC",
+    "MU",
+    "AMAT",
+    "LRCX"
+   ],
+   "fecha": "2022-08-09",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Sale ChatGPT → Microsoft y Nvidia",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 4.05,
+   "e5": -0.64,
+   "e20": -3.81,
+   "e60": 20.15,
+   "valores": [
+    "MSFT",
+    "NVDA"
+   ],
+   "fecha": "2022-11-30",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La inflación cede (nov-2023) → pequeñas y constructoras",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 3.32,
+   "e5": -1.6,
+   "e20": 6.94,
+   "e60": 6.26,
+   "valores": [
+    "IWM",
+    "DHI",
+    "LEN"
+   ],
+   "fecha": "2023-11-14",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La Fed anuncia bajadas para 2024 → pequeñas, regionales y constructoras",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 2.74,
+   "e5": 0.42,
+   "e20": -1.57,
+   "e60": -8.87,
+   "valores": [
+    "IWM",
+    "KRE",
+    "DHI"
+   ],
+   "fecha": "2023-12-13",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Primera bajada de tipos de la Fed (2024) → constructoras y pequeñas",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": -0.06,
+   "e5": -4.73,
+   "e20": -3.43,
+   "e60": -18.71,
+   "valores": [
+    "DHI",
+    "LEN",
+    "IWM"
+   ],
+   "fecha": "2024-09-18",
+   "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Anuncio de Stargate (2025) → infraestructura de IA",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 5.24,
+   "e5": -16.63,
+   "e20": -17.91,
+   "e60": -28.42,
+   "valores": [
+    "ORCL",
+    "VRT",
+    "ANET"
+   ],
+   "fecha": "2025-01-22",
+   "tipo": "D"
   },
   {
    "grupo": "Casos con nombre",
@@ -1376,6 +2623,40 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Rusia ocupa Crimea → defensa",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 1.28,
+   "e5": -0.78,
+   "e20": -1.33,
+   "e60": -1.96,
+   "valores": [
+    "LMT",
+    "NOC",
+    "GD"
+   ],
+   "fecha": "2014-03-03",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Atentados de París → defensa",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 1.74,
+   "e5": -0.73,
+   "e20": -1.58,
+   "e60": 2.65,
+   "valores": [
+    "LMT",
+    "NOC",
+    "GD"
+   ],
+   "fecha": "2015-11-16",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Brexit → mineras de oro",
    "logica": "Susto o anuncio de un día",
    "n": 1,
@@ -1388,24 +2669,6 @@
     "GDX"
    ],
    "fecha": "2016-06-24",
-   "tipo": "S"
-  },
-  {
-   "grupo": "Casos con nombre",
-   "nombre": "Amazon compra Whole Foods → comprar los supermercados castigados",
-   "logica": "Susto o anuncio de un día",
-   "n": 1,
-   "d0": -6.58,
-   "e5": -2.88,
-   "e20": -2.3,
-   "e60": -0.76,
-   "valores": [
-    "KR",
-    "COST",
-    "WMT",
-    "TGT"
-   ],
-   "fecha": "2017-06-16",
    "tipo": "S"
   },
   {
@@ -1443,6 +2706,22 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Huracán Florence → reformas del hogar",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 0.4,
+   "e5": 1.32,
+   "e20": -2.95,
+   "e60": -10.26,
+   "valores": [
+    "HD",
+    "LOW"
+   ],
+   "fecha": "2018-09-14",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Ataque a la refinería saudí de Abqaiq → petroleras",
    "logica": "Susto o anuncio de un día",
    "n": 1,
@@ -1461,6 +2740,24 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "EE. UU. mata a Soleimani → defensa y petróleo",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 2.73,
+   "e5": -3.65,
+   "e20": -8.34,
+   "e60": -11.71,
+   "valores": [
+    "LMT",
+    "NOC",
+    "XOM",
+    "CVX"
+   ],
+   "fecha": "2020-01-03",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "El petróleo cotiza en negativo → comprar petroleras",
    "logica": "Susto o anuncio de un día",
    "n": 1,
@@ -1474,6 +2771,55 @@
     "COP"
    ],
    "fecha": "2020-04-20",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Ola de frío en Texas → generadores",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 7.33,
+   "e5": -4.1,
+   "e20": -8.29,
+   "e60": -21.56,
+   "valores": [
+    "GNRC"
+   ],
+   "fecha": "2021-02-16",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Ciberataque al oleoducto Colonial → ciberseguridad",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": -0.57,
+   "e5": 2.24,
+   "e20": 11.16,
+   "e60": 33.7,
+   "valores": [
+    "CRWD",
+    "PANW",
+    "FTNT"
+   ],
+   "fecha": "2021-05-10",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Huracán Ida → reformas y generadores",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 0.22,
+   "e5": 0.48,
+   "e20": 3.12,
+   "e60": 11.33,
+   "valores": [
+    "HD",
+    "LOW",
+    "GNRC"
+   ],
+   "fecha": "2021-08-30",
    "tipo": "S"
   },
   {
@@ -1508,6 +2854,23 @@
     "AAL"
    ],
    "fecha": "2021-11-26",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "EE. UU. veta el petróleo ruso → petroleras",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 2.29,
+   "e5": -2.13,
+   "e20": -4.31,
+   "e60": 21.57,
+   "valores": [
+    "XOM",
+    "CVX",
+    "OXY"
+   ],
+   "fecha": "2022-03-08",
    "tipo": "S"
   },
   {
@@ -1562,6 +2925,21 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Cae First Republic → regionales (comprar el pánico)",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": -2.71,
+   "e5": -8.43,
+   "e20": -3.85,
+   "e60": 8.0,
+   "valores": [
+    "KRE"
+   ],
+   "fecha": "2023-05-01",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Ataque de Hamás → defensa",
    "logica": "Susto o anuncio de un día",
    "n": 1,
@@ -1592,6 +2970,74 @@
     "CVX"
    ],
    "fecha": "2023-10-09",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Irán ataca Israel (abr-2024) → defensa y petróleo",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 0.91,
+   "e5": 3.11,
+   "e20": -0.73,
+   "e60": -12.83,
+   "valores": [
+    "LMT",
+    "NOC",
+    "XOM"
+   ],
+   "fecha": "2024-04-15",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "China anuncia estímulos → tecnológicas chinas y cobre",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 8.99,
+   "e5": 19.02,
+   "e20": 5.38,
+   "e60": -8.27,
+   "valores": [
+    "BABA",
+    "JD",
+    "BIDU",
+    "FCX"
+   ],
+   "fecha": "2024-09-24",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Huracán Milton → reformas y generadores",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": 0.17,
+   "e5": 2.72,
+   "e20": -1.98,
+   "e60": -9.02,
+   "valores": [
+    "HD",
+    "LOW",
+    "GNRC"
+   ],
+   "fecha": "2024-10-09",
+   "tipo": "S"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Aranceles a Canadá y México → comprar las automovilísticas castigadas",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": -1.85,
+   "e5": -5.33,
+   "e20": -1.18,
+   "e60": 7.04,
+   "valores": [
+    "GM",
+    "F"
+   ],
+   "fecha": "2025-02-03",
    "tipo": "S"
   },
   {
@@ -1652,6 +3098,189 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Clinton amenaza los precios de los fármacos → comprar biotecnología",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -5.49,
+   "e5": -11.26,
+   "e20": -12.76,
+   "e60": -11.35,
+   "valores": [
+    "IBB",
+    "XBI"
+   ],
+   "fecha": "2015-09-21",
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Miedo a la sanidad pública universal → comprar aseguradoras",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -6.57,
+   "e5": 3.16,
+   "e20": 6.56,
+   "e60": 18.64,
+   "valores": [
+    "UNH",
+    "ELV",
+    "HUM",
+    "CI"
+   ],
+   "fecha": "2019-04-16",
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Veto a Huawei → comprar a sus proveedores de chips",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -3.63,
+   "e5": -6.9,
+   "e20": -3.18,
+   "e60": 6.3,
+   "valores": [
+    "QCOM",
+    "MU",
+    "SWKS"
+   ],
+   "fecha": "2019-05-20",
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Pekín reprime a sus tecnológicas → comprar las chinas cotizadas en EE. UU.",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -7.48,
+   "e5": 10.93,
+   "e20": -6.56,
+   "e60": 13.29,
+   "valores": [
+    "BABA",
+    "JD",
+    "BIDU"
+   ],
+   "fecha": "2021-07-26",
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Primer veto de chips avanzados a China → comprar chips",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -5.68,
+   "e5": -6.45,
+   "e20": 9.43,
+   "e60": 11.93,
+   "valores": [
+    "NVDA",
+    "AMD",
+    "LRCX",
+    "AMAT"
+   ],
+   "fecha": "2022-10-07",
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Segundo veto de chips a China → comprar chips",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -2.96,
+   "e5": 2.86,
+   "e20": 12.93,
+   "e60": 24.89,
+   "valores": [
+    "NVDA",
+    "AMD"
+   ],
+   "fecha": "2023-10-17",
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Veto al chip H20 de Nvidia para China → comprar chips",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -4.89,
+   "e5": 0.51,
+   "e20": 17.35,
+   "e60": 51.04,
+   "valores": [
+    "NVDA",
+    "AMD"
+   ],
+   "fecha": "2025-04-16",
+   "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Amazon compra Whole Foods → comprar los supermercados castigados",
+   "logica": "Víctimas de la novedad de otro → comprar el castigo",
+   "n": 1,
+   "d0": -6.58,
+   "e5": -2.88,
+   "e20": -2.3,
+   "e60": -0.76,
+   "valores": [
+    "KR",
+    "COST",
+    "WMT",
+    "TGT"
+   ],
+   "fecha": "2017-06-16",
+   "tipo": "V"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Amazon compra PillPack → comprar las farmacias castigadas",
+   "logica": "Víctimas de la novedad de otro → comprar el castigo",
+   "n": 1,
+   "d0": -6.67,
+   "e5": -0.3,
+   "e20": -1.45,
+   "e60": 13.0,
+   "valores": [
+    "CVS"
+   ],
+   "fecha": "2018-06-28",
+   "tipo": "V"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "El fármaco de la obesidad protege el riñón → comprar diálisis castigada",
+   "logica": "Víctimas de la novedad de otro → comprar el castigo",
+   "n": 1,
+   "d0": -14.98,
+   "e5": 1.54,
+   "e20": 6.91,
+   "e60": 24.12,
+   "valores": [
+    "DVA",
+    "BAX"
+   ],
+   "fecha": "2023-10-11",
+   "tipo": "V"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "DeepSeek (IA que gasta menos) → comprar las eléctricas castigadas",
+   "logica": "Víctimas de la novedad de otro → comprar el castigo",
+   "n": 1,
+   "d0": -23.15,
+   "e5": 14.14,
+   "e20": -3.5,
+   "e60": -9.81,
+   "valores": [
+    "VST",
+    "CEG"
+   ],
+   "fecha": "2025-01-27",
+   "tipo": "V"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "La SEC acusa a Goldman Sachs → comprar Goldman",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -1663,6 +3292,81 @@
     "GS"
    ],
    "fecha": "2010-04-16",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Explota la plataforma Deepwater Horizon → comprar BP",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -0.46,
+   "e5": -2.68,
+   "e20": -16.73,
+   "e60": -26.72,
+   "valores": [
+    "BP"
+   ],
+   "fecha": "2010-04-21",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Netflix se hunde un 35 % (2011) → comprar Netflix",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -32.95,
+   "e5": 3.62,
+   "e20": -6.37,
+   "e60": 12.84,
+   "valores": [
+    "NFLX"
+   ],
+   "fecha": "2011-10-25",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La «ballena de Londres» de JPMorgan → comprar JPMorgan",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -8.98,
+   "e5": -3.83,
+   "e20": -6.93,
+   "e60": -1.64,
+   "valores": [
+    "JPM"
+   ],
+   "fecha": "2012-05-11",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Apple cae un 12 % tras resultados (2013) → comprar Apple",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -12.38,
+   "e5": 0.96,
+   "e20": -0.95,
+   "e60": -15.88,
+   "valores": [
+    "AAPL"
+   ],
+   "fecha": "2013-01-24",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Informe contra Valeant → comprar Valeant",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -18.55,
+   "e5": 3.41,
+   "e20": -36.84,
+   "e60": -12.32,
+   "valores": [
+    "BHC"
+   ],
+   "fecha": "2015-10-21",
    "tipo": "C"
   },
   {
@@ -1727,6 +3431,21 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "General Electric recorta el dividendo → comprar GE",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -7.27,
+   "e5": -4.66,
+   "e20": -8.32,
+   "e60": -22.05,
+   "valores": [
+    "GE"
+   ],
+   "fecha": "2017-11-13",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Cambridge Analytica → comprar Facebook",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -1757,6 +3476,36 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "La SEC demanda a Musk → comprar Tesla",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -13.91,
+   "e5": -12.86,
+   "e20": 17.39,
+   "e60": 21.88,
+   "valores": [
+    "TSLA"
+   ],
+   "fecha": "2018-09-28",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Nvidia se hunde un 19 % (resaca cripto) → comprar Nvidia",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -19.02,
+   "e5": -3.37,
+   "e20": -2.51,
+   "e60": -4.83,
+   "valores": [
+    "NVDA"
+   ],
+   "fecha": "2018-11-16",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Talco de Johnson & Johnson → comprar J&J",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -1772,6 +3521,21 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Apple avisa de menos ventas → comprar Apple",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -7.57,
+   "e5": 1.85,
+   "e20": 6.14,
+   "e60": 16.93,
+   "valores": [
+    "AAPL"
+   ],
+   "fecha": "2019-01-03",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Segundo accidente del 737 MAX → comprar Boeing",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -1783,6 +3547,51 @@
     "BA"
    ],
    "fecha": "2019-03-11",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Intel retrasa sus chips de 7 nm → comprar Intel",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -15.6,
+   "e5": -7.99,
+   "e20": -8.32,
+   "e60": 0.92,
+   "valores": [
+    "INTC"
+   ],
+   "fecha": "2020-07-24",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Zillow abandona la compra de casas → comprar Zillow",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -25.53,
+   "e5": -6.02,
+   "e20": -19.28,
+   "e60": -23.5,
+   "valores": [
+    "Z"
+   ],
+   "fecha": "2021-11-03",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Netflix se hunde un 22 % (ene-2022) → comprar Netflix",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -19.83,
+   "e5": -2.18,
+   "e20": 1.41,
+   "e60": -12.53,
+   "valores": [
+    "NFLX"
+   ],
+   "fecha": "2022-01-21",
    "tipo": "C"
   },
   {
@@ -1832,6 +3641,36 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Amazon cae un 14 % tras resultados → comprar Amazon",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -10.35,
+   "e5": -6.06,
+   "e20": -6.7,
+   "e60": 1.09,
+   "valores": [
+    "AMZN"
+   ],
+   "fecha": "2022-04-29",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Walmart cae un 11 % → comprar Walmart",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -13.43,
+   "e5": -0.66,
+   "e20": -0.73,
+   "e60": -2.58,
+   "valores": [
+    "WMT"
+   ],
+   "fecha": "2022-05-17",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Target se hunde un 25 % → comprar Target",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -1843,6 +3682,21 @@
     "TGT"
    ],
    "fecha": "2022-05-18",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Adobe compra Figma y cae un 17 % → comprar Adobe",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -15.66,
+   "e5": -1.19,
+   "e20": 3.53,
+   "e60": 8.45,
+   "valores": [
+    "ADBE"
+   ],
+   "fecha": "2022-09-15",
    "tipo": "C"
   },
   {
@@ -1862,6 +3716,21 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Disney cae un 13 % tras resultados → comprar Disney",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -11.1,
+   "e5": 2.77,
+   "e20": 1.01,
+   "e60": 16.89,
+   "valores": [
+    "DIS"
+   ],
+   "fecha": "2022-11-09",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Error de Bard en su presentación → comprar Alphabet",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -1877,6 +3746,21 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Chegg admite que ChatGPT le quita clientes → comprar Chegg",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -47.29,
+   "e5": 3.85,
+   "e20": -8.23,
+   "e60": -5.56,
+   "valores": [
+    "CHGG"
+   ],
+   "fecha": "2023-05-02",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Boeing pierde una puerta en vuelo → comprar Boeing",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -1888,6 +3772,51 @@
     "BA"
    ],
    "fecha": "2024-01-08",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Palo Alto se hunde un 28 % → comprar Palo Alto",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -28.53,
+   "e5": 14.88,
+   "e20": -0.7,
+   "e60": 10.34,
+   "valores": [
+    "PANW"
+   ],
+   "fecha": "2024-02-21",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Meta cae un 10 % por su gasto en IA → comprar Meta",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -10.18,
+   "e5": 0.31,
+   "e20": 1.64,
+   "e60": 1.09,
+   "valores": [
+    "META"
+   ],
+   "fecha": "2024-04-25",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Starbucks se hunde un 16 % → comprar Starbucks",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -15.55,
+   "e5": -4.46,
+   "e20": 2.29,
+   "e60": -7.24,
+   "valores": [
+    "SBUX"
+   ],
+   "fecha": "2024-05-01",
    "tipo": "C"
   },
   {
@@ -1967,6 +3896,54 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "UnitedHealth pierde a su consejero delegado → comprar UnitedHealth",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -18.45,
+   "e5": -0.82,
+   "e20": -5.69,
+   "e60": -30.12,
+   "valores": [
+    "UNH"
+   ],
+   "fecha": "2025-05-13",
+   "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Explota la plataforma de BP → otras petroleras",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": 0.07,
+   "e5": 0.55,
+   "e20": 0.26,
+   "e60": -2.38,
+   "valores": [
+    "XOM",
+    "CVX"
+   ],
+   "fecha": "2010-04-21",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La «ballena de Londres» → otros bancos",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": -1.64,
+   "e5": -3.47,
+   "e20": -2.9,
+   "e60": -2.51,
+   "valores": [
+    "BAC",
+    "WFC",
+    "C"
+   ],
+   "fecha": "2012-05-11",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Brote en Chipotle → otras cadenas",
    "logica": "Competencia del que tropieza",
    "n": 1,
@@ -2016,6 +3993,54 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Cambridge Analytica → Alphabet y Snap",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": -1.9,
+   "e5": -0.32,
+   "e20": -5.22,
+   "e60": -9.01,
+   "valores": [
+    "GOOGL",
+    "SNAP"
+   ],
+   "fecha": "2018-03-19",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Facebook se hunde un 19 % → Alphabet y Snap",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": 0.54,
+   "e5": -3.07,
+   "e20": -9.99,
+   "e60": -29.03,
+   "valores": [
+    "GOOGL",
+    "SNAP"
+   ],
+   "fecha": "2018-07-26",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La SEC demanda a Musk → GM y Ford",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": 0.1,
+   "e5": -0.44,
+   "e20": 5.23,
+   "e60": 6.98,
+   "valores": [
+    "GM",
+    "F"
+   ],
+   "fecha": "2018-09-28",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Segundo accidente del 737 MAX → Airbus",
    "logica": "Competencia del que tropieza",
    "n": 1,
@@ -2027,6 +4052,36 @@
     "EADSY"
    ],
    "fecha": "2019-03-11",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Intel retrasa sus chips → AMD",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": 17.15,
+   "e5": 10.24,
+   "e20": 15.42,
+   "e60": 11.6,
+   "valores": [
+    "AMD"
+   ],
+   "fecha": "2020-07-24",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Netflix se hunde (ene-2022) → Disney",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": -4.97,
+   "e5": 0.53,
+   "e20": 11.76,
+   "e60": -5.5,
+   "valores": [
+    "DIS"
+   ],
+   "fecha": "2022-01-21",
    "tipo": "R"
   },
   {
@@ -2079,6 +4134,23 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Meta se hunde (otoño de 2022) → Alphabet, Pinterest y Snap",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": -0.71,
+   "e5": -4.8,
+   "e20": -1.44,
+   "e60": -2.43,
+   "valores": [
+    "GOOGL",
+    "PINS",
+    "SNAP"
+   ],
+   "fecha": "2022-10-27",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Boeing pierde una puerta → Airbus",
    "logica": "Competencia del que tropieza",
    "n": 1,
@@ -2090,6 +4162,39 @@
     "EADSY"
    ],
    "fecha": "2024-01-08",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Palo Alto se hunde → otras de ciberseguridad",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": -9.28,
+   "e5": 4.48,
+   "e20": -4.77,
+   "e60": -11.05,
+   "valores": [
+    "CRWD",
+    "ZS",
+    "FTNT"
+   ],
+   "fecha": "2024-02-21",
+   "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Starbucks se hunde → McDonald's y Chipotle",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": 0.25,
+   "e5": -3.23,
+   "e20": -8.52,
+   "e60": -20.08,
+   "valores": [
+    "MCD",
+    "CMG"
+   ],
+   "fecha": "2024-05-01",
    "tipo": "R"
   },
   {
@@ -2197,6 +4302,23 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Resultados de Nvidia (ago-2023) → cadena de la IA",
+   "logica": "Buena noticia que se contagia",
+   "n": 1,
+   "d0": -4.06,
+   "e5": 3.71,
+   "e20": -2.34,
+   "e60": 8.9,
+   "valores": [
+    "AMD",
+    "AVGO",
+    "MRVL"
+   ],
+   "fecha": "2023-08-24",
+   "tipo": "B"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Resultados de Nvidia (feb-2024) → cadena de la IA",
    "logica": "Buena noticia que se contagia",
    "n": 1,
@@ -2211,6 +4333,24 @@
     "MRVL"
    ],
    "fecha": "2024-02-22",
+   "tipo": "B"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Resultados de Nvidia (may-2024) → cadena de la IA",
+   "logica": "Buena noticia que se contagia",
+   "n": 1,
+   "d0": -0.31,
+   "e5": -4.81,
+   "e20": -3.39,
+   "e60": -11.55,
+   "valores": [
+    "AMD",
+    "AVGO",
+    "MRVL",
+    "SMCI"
+   ],
+   "fecha": "2024-05-23",
    "tipo": "B"
   },
   {
@@ -2230,6 +4370,23 @@
     "PLTR"
    ],
    "fecha": "2025-01-27",
+   "tipo": "B"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Oracle dispara su cartera de pedidos de IA → cadena de la IA",
+   "logica": "Buena noticia que se contagia",
+   "n": 1,
+   "d0": 5.42,
+   "e5": -1.98,
+   "e20": 7.36,
+   "e60": 14.57,
+   "valores": [
+    "AVGO",
+    "NVDA",
+    "MU"
+   ],
+   "fecha": "2025-09-10",
    "tipo": "B"
   }
  ]
