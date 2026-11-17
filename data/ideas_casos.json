@@ -103,6 +103,47 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-17-comprar-el-nasdaq-porque-ayer-hubo-miedo",
+   "fecha": "2026-11-17",
+   "titulo": "Comprar el Nasdaq «porque ayer hubo miedo»",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-17-comprar-nvidia-antes-de-sus-resultados",
+   "fecha": "2026-11-17",
+   "titulo": "Comprar Nvidia antes de sus resultados",
+   "tipo": "caido",
+   "valores": [
+    "NVDA"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-17-veto-chips",
+   "fecha": "2026-11-17",
+   "titulo": "Veto de chips a China → comprar el castigo, si Nvidia pasa la prueba",
+   "tipo": "norma",
+   "valores": [
+    "SMH",
+    "AMAT",
+    "LRCX"
+   ],
+   "dada": true,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -117,5 +158,5 @@
    "aciertos": 0
   }
  },
- "generado": 1794859901
+ "generado": 1794901291
 }
