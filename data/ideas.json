@@ -1,53 +1,54 @@
 {
- "actualizado": "2026-11-18T12:36:13Z",
+ "actualizado": "2026-11-18T20:11:05Z",
  "sesion": {
-  "cuando": "2026-11-18T12:36:13Z",
-  "tipo": "preapertura",
-  "titular": "Los chips siguen por debajo del límite. *Se mantiene la compra.*",
+  "cuando": "2026-11-18T20:11:05Z",
+  "tipo": "cierre",
+  "titular": "Nvidia bate y aun así cae. *La idea de los chips aguanta.*",
   "hoy": {
-   "accion": "comprar",
-   "texto": "Se mantiene: comprar hoy SMH, Applied Materials y Lam Research, en la apertura o al cierre. Antes de abrir, el SMH está en 470,6 $, por debajo del límite de 486,75 $. Si lo supera al abrir, no se compra."
+   "accion": "nada",
+   "texto": "Nada nuevo que comprar al cierre. Quien compró hoy los chips (SMH, Applied Materials, Lam Research) los mantiene: la idea sigue abierta, sin ninguna condición de ruptura cumplida."
   },
   "cambios": [
-   "El rebote de los chips se modera antes de abrir: SMH +2,3 % (anoche +4 %), aún por debajo del límite de entrada. Se mantiene la compra.",
-   "Lowe's bate en beneficio pero mantiene su previsión anual algo por debajo de lo esperado: −4,4 % antes de abrir.",
-   "TJX sube un 7,5 % tras sus resultados; Target cede un 2,5 %.",
-   "Petróleo (−2,9 %) y oro (−2,4 %) siguen cayendo."
+   "El rebote de los chips se deshace en la sesión: el SMH abrió en 467,7 $ y está en 457,4 $. Nvidia cae un 2,7 % pese a sus resultados.",
+   "La idea sigue abierta: no se ha cumplido ninguna condición de ruptura.",
+   "El petróleo se hunde un 4,5 % (Brent a 89 $) y el oro un 3,6 %; el dólar marca máximos de 19 meses.",
+   "Un gobernador de la Fed defiende una subida de medio punto.",
+   "TJX (+9 %) y Target (+5,5 %) suben con fuerza tras sus resultados; Lowe's recupera lo que perdía antes de abrir."
   ],
-  "pulso": "La idea de los chips sigue en pie: a hora y media de la apertura, el sector sube un 2,3 % y queda por debajo del límite de entrada, así que hoy se compra. El mercado respira tras los resultados de Nvidia: futuros del Nasdaq +0,8 %. Entre las cadenas de consumo, resultados dispares: TJX sube un 7,5 %, Lowe's cae un 4,4 % y Target un 2,5 %.",
+  "pulso": "Nvidia batió todas las previsiones y aun así cae un 2,7 %: el mercado ha vendido sus buenos resultados, y con ellos se ha deshecho el rebote de los chips. La idea que se abrió esta mañana empieza en negativo, pero no se ha roto ninguna de sus condiciones. El S&P 500 cede un 0,3 %, el petróleo se hunde un 4,5 % y el dólar toca máximos de 19 meses con la Fed hablando de subir medio punto. Hoy no hay nada nuevo que comprar al cierre.",
   "hechos": [
    {
-    "titulo": "Los chips, por debajo del límite",
-    "detalle": "Antes de abrir: SMH 470,6 $ (+2,3 %), Nvidia +2,9 %, TSMC +3,2 %, Lam Research +3,0 %, Applied Materials +2,4 %, AMD +2,0 %.",
-    "efecto": "El límite de entrada es 486,75 $ (cierre de antes del veto). Queda un 3,4 % de margen: la compra de hoy sigue en pie.",
-    "tono": "oportunidad",
+    "titulo": "Nvidia bate y cae",
+    "detalle": "Tras subir un 5 % fuera de hora anoche, a las 21:10 cae un 2,7 %, a 151,3 $: su quinta sesión seguida a la baja y su nivel más bajo desde julio de 2025.",
+    "efecto": "Lo que vende el mercado es la empresa, no el sector: AMD y Broadcom suben un 4 %. Es lo que dice el entrenamiento sobre el gigante caído por un problema propio.",
+    "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Lowe's cae pese a batir",
-    "detalle": "Beneficio ajustado de 3,10 $ por acción frente a 2,88 esperados, pero mantiene la previsión anual (12,25 $) algo por debajo del consenso. −4,4 % antes de abrir.",
-    "efecto": "Gigante que cae por su propia previsión: el entrenamiento dice que no se compra.",
+    "titulo": "Los chips, divididos",
+    "detalle": "SMH −0,6 % en el día y −2,2 % desde la apertura. AMD +4,0 %, Broadcom +4,0 %, Applied Materials +0,5 %, TSMC +0,2 %, Lam Research −0,6 %, Micron −1,9 %.",
+    "efecto": "Primer día flojo para la idea, sin romperla. En los vetos anteriores la recuperación llegó entre la sesión 20 y la 60, no en la primera.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "TJX sube, Target cede",
-    "detalle": "TJX +7,5 % antes de abrir tras sus resultados. Target −2,5 %, pese a que algunas fuentes hablan de resultados mejores de lo esperado.",
-    "efecto": "Resultados de empresa, sin un hecho que cambie el sector. No hay idea.",
+    "titulo": "El petróleo se hunde y el dólar sube",
+    "detalle": "Brent −4,5 %, a 89 $; WTI a 82,2 $. Oro −3,6 %, a 3.724 $. Bitcoin −3,4 %. El dólar en máximos de 19 meses.",
+    "efecto": "Movimientos fuertes de un día. Las aerolíneas no son idea: el beneficiario evidente lo recoge en el momento.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Mercados antes de abrir",
-    "detalle": "Futuros del S&P 500 +0,3 % y del Nasdaq +0,8 %. DAX y Euro Stoxx 50 planos. Bono a 10 años en el 5,10 %.",
-    "efecto": "Alivio moderado tras Nvidia; nada que altere las ideas.",
-    "tono": "neutro",
+    "titulo": "La Fed, hacia medio punto",
+    "detalle": "El gobernador Christopher Waller ha defendido una subida de 50 puntos básicos. Las actas de la última reunión salieron esta tarde. El bono a 10 años baja al 5,06 %.",
+    "efecto": "Una decisión que se ve venir: el entrenamiento dice que el mercado la descuenta antes. No da idea.",
+    "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Petróleo y oro, otra vez abajo",
-    "detalle": "Brent −2,9 %, a 90,4 $; oro −2,4 %, a 3.771 $.",
-    "efecto": "Sin un hecho detrás, no dan idea.",
+    "titulo": "TJX y Target, fuertes",
+    "detalle": "TJX +9,2 % y Target +5,5 % tras sus resultados. Lowe's, que caía un 4,4 % antes de abrir, sube un 0,3 %.",
+    "efecto": "Resultados de empresa. Comprar a sus competidoras «por contagio» no ha funcionado en el entrenamiento.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -146,8 +147,13 @@
     {
      "fecha": "2026-11-18",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "A hora y media de la apertura, el SMH está en 470,6 $ (+2,3 % sobre el cierre de ayer), por debajo del límite de 486,75 $: se mantiene la compra de hoy. El rebote se ha moderado respecto a anoche (+4 %). Applied Materials +2,4 %, Lam Research +3,0 %."
+    },
+    {
+     "fecha": "2026-11-18",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Primer día dentro, y no ha sido bueno. El SMH abrió en 467,7 $ (por debajo del límite, así que la compra en la apertura era válida) y a las 21:10 está en 457,4 $: −2,2 % desde la apertura y −0,6 % en el día. Nvidia ha pasado de subir un 5 % fuera de hora a caer un 2,7 %: el mercado vende sus buenos resultados. Dentro del sector hay de todo: Broadcom y AMD +4 %, Micron −1,9 %. No se ha cumplido ninguna condición de ruptura (Nvidia no recortó previsiones y la norma no se ha ampliado), así que la idea sigue abierta. El marcador cuenta desde el cierre de hoy."
     }
    ],
    "fuentes": [
@@ -404,32 +410,37 @@
  "descartes": [
   {
    "fecha": "2026-11-18",
-   "titulo": "Comprar Nvidia tras sus resultados",
-   "por_que": "Ya sube un 4,8 % fuera de hora, y su problema no es solo la norma: sigue sin consejero delegado y con la investigación abierta. La idea se apoya en el sector entero, no en la empresa señalada.",
-   "leccion": "el beneficiario evidente de una noticia la recoge en el momento; y al gigante caído por un problema propio no se le compra aunque pase el examen trimestral.",
+   "titulo": "Comprar aerolíneas porque el petróleo se hunde un 4,5 %",
+   "por_que": "Es el beneficiario evidente y no hay un hecho detrás (ni acuerdo ni cambio en la guerra): es un movimiento de un día con el dólar al alza.",
+   "leccion": "petróleo −4 % → aerolíneas: incluso cuando aún no han reaccionado, nada que se distinga del azar en 20 sesiones.",
    "tipo": "obvio",
    "valores": [
-    "NVDA"
-   ]
+    "DAL",
+    "UAL",
+    "JETS"
+   ],
+   "nuevo": true
   },
   {
    "fecha": "2026-11-18",
-   "titulo": "Comprar oro o mineras porque el oro cae un 2,4 %",
-   "por_que": "No hay un hecho detrás: es un movimiento de un día con los tipos altos y el dólar firme.",
-   "leccion": "oro −2 % → mineras: después del primer día, nada que se distinga del azar.",
-   "tipo": "obvio",
+   "titulo": "Comprar a las competidoras de TJX y Target",
+   "por_que": "Han subido por sus propios resultados. Que al líder le vaya bien no ayuda a sus competidoras.",
+   "leccion": "líder +10 % y competidoras quietas: −0,1 % en 20 sesiones entre las 50 mayores.",
+   "tipo": "contagio",
    "valores": [
-    "GDX"
-   ]
+    "ROST",
+    "BURL"
+   ],
+   "nuevo": true
   },
   {
    "fecha": "2026-11-18",
-   "titulo": "Comprar Lowe's porque cae un 4,4 %",
-   "por_que": "Cae por su propia previsión para el año: el negocio va algo peor de lo que se creía.",
-   "leccion": "gigante caído por sus propios resultados o previsiones: 28 casos con nombre, −5,1 % en 20 sesiones.",
+   "titulo": "Comprar Nvidia porque cae tras batir",
+   "por_que": "El mercado vende a la empresa, no al sector. Sigue sin consejero delegado y con la investigación abierta.",
+   "leccion": "al gigante caído por un problema propio no se le compra aunque pase el examen trimestral.",
    "tipo": "caido",
    "valores": [
-    "LOW"
+    "NVDA"
    ],
    "nuevo": true
   }
@@ -470,6 +481,10 @@
   {
    "cuando": "2026-11-18T12:36:13Z",
    "resumen": "Preapertura. Se mantiene la compra de chips (SMH 470,6 $, por debajo del límite). Descarte nuevo: Lowe's."
+  },
+  {
+   "cuando": "2026-11-18T20:11:05Z",
+   "resumen": "Cierre. Nada nuevo que comprar. La idea de los chips, comprada esta mañana, empieza en negativo (Nvidia cae pese a batir) pero sigue abierta."
   }
  ]
 }
