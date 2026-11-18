@@ -64,10 +64,10 @@ Sale de simular cada tipo de idea sobre hechos pasados (`python -m vp.ideas_trai
 
 | Tipo (`tipo`) | Veredicto | Por qué |
 |---|---|---|
-| Hecho consumado que cambia el mundo: guerra, paz, pandemia, vacuna, vuelco electoral, fármaco que funciona (`estructural`) | **Sí** | 17 casos: +8,8 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 82 %. |
-| Decisión anunciada: banco central, ley firmada, plan de empresa (`decision`) | **No** | 20 casos: −2,7 % en 20 sesiones; solo sube el 30 %. Se compra antes y se vende cuando llega. |
-| Susto o anuncio de un día: huracán, atentado, arancel, ataque, estímulo prometido (`susto`) | **No** | 31 casos: −3,3 % en 20 sesiones; solo sube el 26 %. Si acaso, a 60 sesiones gana el castigado (7 casos, +4,7 %), nunca el beneficiario. |
-| Pánico general (`panico`) | **Sí, según el miedo** | Con el VIX previo ≥ 28: +10,0 % en 60 sesiones (78 %). Viniendo de calma (VIX < 20): +2,3 %, menos que un tramo cualquiera. Da igual comprar al cierre que en la apertura siguiente. |
+| Hecho consumado que cambia el mundo: guerra, paz, pandemia, vacuna, vuelco electoral, fármaco que funciona (`estructural`) | **Sí** | 22 casos: +8,3 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 73 %. |
+| Decisión anunciada: banco central, ley firmada, plan de empresa (`decision`) | **No** | 29 casos: −3,4 % en 20 sesiones; solo sube el 31 %. Se compra antes y se vende cuando llega. |
+| Susto o anuncio de un día: huracán, atentado, arancel, ataque, estímulo prometido (`susto`) | **No** | 51 casos: −2,5 % en 20 sesiones; sube el 35 %. El beneficiario pierde (−6,0 % a 60 sesiones); el castigado apenas gana. |
+| Pánico general (`panico`) | **Sí, según el miedo** | Vale para un día de −2 %, una racha de tres días que sume −3 % o un hueco grande a la baja. Con el VIX previo ≥ 28: +10,0 % en 60 sesiones (78 %); racha con miedo alto: +8,8 %. Viniendo de calma: +2,3 %, menos que un tramo cualquiera. Da igual comprar al cierre que en la apertura siguiente. |
 | Sector castigado por una norma o sanción, comprando el castigo (`norma`) | **Con condiciones** | 7 casos: +16,4 % en 60 sesiones (86 %), pero pocos y casi todos de chips en años de subida. |
 | Gigante que cae desde cerca de máximos (`caido`) | **No** | 417 casos: −1,5 % en 20 sesiones; 42 caídas famosas: −5,6 %. Solo rebotan las ya muy castigadas, y esa cifra está inflada. |
 | Competencia del que tropieza (`rival`) | **Solo si suben ese día** | Si las competidoras suben ≥ 2 % el mismo día del tropiezo (51 casos): +7,5 % en 60 sesiones (t 2,5). Sin eso, nada. |
