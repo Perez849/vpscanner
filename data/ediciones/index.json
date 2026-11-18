@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-18-0740",
+  "cuando": "2026-11-18T07:40:20Z",
+  "tipo": "mañana",
+  "titular": "Nvidia aprueba el examen. Hoy se compran los chips.",
+  "hoy": "Comprar semiconductores hoy, en la apertura o al cierre: SMH, Applied Materials y Lam Research. Límite: si el SMH abre por encima de 486,75 $ (su nivel de antes del veto), no se compra.",
+  "accion": "comprar",
+  "vivas": 1
+ },
+ {
   "id": "2026-11-17-2010",
   "cuando": "2026-11-17T20:10:40Z",
   "tipo": "cierre",
