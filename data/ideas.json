@@ -1,52 +1,53 @@
 {
- "actualizado": "2026-11-17T20:10:40Z",
+ "actualizado": "2026-11-18T07:40:20Z",
  "sesion": {
-  "cuando": "2026-11-17T20:10:40Z",
-  "tipo": "cierre",
-  "titular": "Segundo día de ventas. *A las 22:20, Nvidia.*",
+  "cuando": "2026-11-18T07:40:20Z",
+  "tipo": "mañana",
+  "titular": "Nvidia aprueba el examen. *Hoy se compran los chips.*",
   "hoy": {
-   "accion": "vigilar",
-   "texto": "Nada que comprar al cierre de hoy. Nvidia publica a las 22:20 (hora española): si mantiene previsiones pese al veto, mañana se compran semiconductores (SMH, Applied Materials, Lam Research). La edición de las 9:00 lo dirá."
+   "accion": "comprar",
+   "texto": "Comprar semiconductores hoy, en la apertura o al cierre: SMH, Applied Materials y Lam Research. Límite: si el SMH abre por encima de 486,75 $ (su nivel de antes del veto), no se compra."
   },
   "cambios": [
-   "Segundo día de caídas: S&P 500 −1,4 % a las 21:10 y semiconductores −2,0 %. El índice del miedo sube a 26,4.",
-   "No salta la idea del pánico: el S&P 500 no llega al −2 % y el miedo de ayer (VIX en 22,9) seguía por debajo de 28, donde el entrenamiento dice que compensa comprar.",
-   "El rumor de Singapur se matiza: los 12.000 millones serían pedidos, no envíos confirmados, y Nvidia y Megaspeed niegan desvíos.",
-   "Rumor nuevo, sin confirmar: según el Wall Street Journal, Jensen Huang estaría dispuesto a volver."
+   "Se abre la idea de los chips: Nvidia supera lo esperado y prevé 130.000 millones para el próximo trimestre sin contar China. Se compra hoy.",
+   "Límite nuevo de entrada: no comprar si el SMH abre por encima de 486,75 $, porque el castigo del veto estaría recuperado entero.",
+   "El consejo de Nvidia descarta la vuelta de Huang; el rumor del Wall Street Journal queda desmentido.",
+   "Wall Street cerró ayer en −1,0 % (dos días seguidos de caídas). Esta mañana, futuros del Nasdaq +0,7 % y semiconductores +4 % antes de abrir."
   ],
-  "pulso": "Wall Street encadena su segundo día de ventas: el S&P 500 pierde un 1,4 % y el Nasdaq otro tanto a media hora del cierre, con el miedo en 26. Nadie quiere quedarse expuesto antes de Nvidia, que presenta a las 22:20. No hay nada que comprar al cierre: la idea de los chips depende de lo que diga Nvidia esta noche, y la edición de las 9:00 lo resolverá.",
+  "pulso": "Nvidia ha pasado la prueba: ingresó 115.800 millones, casi 7.000 más de lo esperado, y prevé 130.000 para el próximo trimestre sin contar nada de China. Es la condición que esperaba la idea de los chips, que se abre hoy. Fuera de hora los semiconductores ya recuperan un 4 %, así que hay un límite: si el sector abre por encima de su nivel de antes del veto, no se compra. El S&P 500 cerró ayer en −1,0 %, su segundo día de caídas.",
   "hechos": [
    {
-    "titulo": "Segundo día de ventas",
-    "detalle": "A las 21:10: S&P 500 −1,4 %, Nasdaq-100 −1,4 %, pequeñas −1,6 %. Esta vez caen también consumo básico (−1,1 %) y eléctricas (−1,2 %): se vende de todo. El VIX sube un 15 %, hasta 26,4.",
-    "efecto": "En dos sesiones el S&P 500 lleva cerca de un −3,3 %. Si mañana el miedo pasa de 28 y llega una caída del 2 %, se cumpliría la versión de la idea del pánico que sí ha funcionado.",
-    "tono": "riesgo",
-    "nuevo": true
-   },
-   {
-    "titulo": "Los chips, otra vez abajo",
-    "detalle": "Semiconductores −2,0 %. TSMC −4,3 %, Intel −3,7 %, Micron −3,4 %, AMD −3,3 %, Applied Materials −2,7 %, Lam Research −2,3 %, Nvidia −2,1 %. Broadcom sube un 0,8 %.",
-    "efecto": "El castigo se amplía antes de los resultados de Nvidia. Si mañana se compran, se compran más baratos.",
+    "titulo": "Nvidia supera lo esperado",
+    "detalle": "Ingresos de 115.800 millones (+103 % en un año) frente a 109.000 esperados. Previsión para el próximo trimestre: unos 130.000 millones, ±3 %, sin contar nada de China; incluye una semana más. Ha dejado de vender en China los chips con licencia (2.400 millones en el trimestre).",
+    "efecto": "Es el disparador de la idea de los chips. El golpe de China es pequeño frente al total y ya está fuera de la previsión. Fuera de hora: Nvidia +4,8 %.",
     "tono": "oportunidad",
     "nuevo": true
    },
    {
-    "titulo": "Nvidia, a las 22:20",
-    "detalle": "El consenso espera unos 109.000 millones de ingresos, frente a los 108.000 que la propia empresa avanzó. Primeros resultados con Colette Kress como consejera delegada interina. Ha reducido un 25 % su participación en Intel.",
-    "efecto": "Decide la idea de los chips: previsión mantenida o al alza, se compra mañana; recorte por la norma, no hay idea.",
-    "tono": "riesgo"
-   },
-   {
-    "titulo": "El rumor de Singapur, matizado",
-    "detalle": "Los 12.000 millones que habría gestionado Megaspeed serían pedidos de entre marzo de 2024 y junio de 2025, no envíos comprobados. Nvidia dice que no hay pruebas de desvío y Megaspeed lo niega. Otro rumor sin confirmar: Jensen Huang estaría dispuesto a volver.",
-    "efecto": "Ambos siguen siendo rumores. Solo cuentan si Nvidia o el Gobierno los confirman.",
+    "titulo": "Huang no vuelve",
+    "detalle": "El consejo de Nvidia descarta su regreso y busca un consejero delegado. Colette Kress sigue como interina.",
+    "efecto": "Desmiente el rumor de ayer. Cierra una incertidumbre, aunque la búsqueda queda abierta.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Petróleo y oro, quietos",
-    "detalle": "Brent a 92,6 $, oro a 3.849 $. Bitcoin −1,8 %.",
-    "efecto": "Nada que mueva una idea hoy.",
+    "titulo": "Los chips rebotan antes de abrir",
+    "detalle": "Semiconductores +4,0 %; TSMC +4,7 %, Micron +4,7 %, Lam Research +4,3 %, AMD +3,9 %, Applied Materials +3,7 %. El SMH a 478 $, a un 2 % de su cierre de antes del veto (486,75 $).",
+    "efecto": "Parte del castigo ya se ha recuperado. Por eso el límite de entrada.",
+    "tono": "oportunidad",
+    "nuevo": true
+   },
+   {
+    "titulo": "Cierre de ayer y mercados esta mañana",
+    "detalle": "S&P 500 −1,0 % y Nasdaq-100 −0,7 % el martes; el VIX cerró en 25,5. Esta mañana: futuros del S&P 500 +0,3 % y del Nasdaq +0,7 %; Kospi +2,0 %, Nikkei +0,3 %, Hang Seng −0,9 %. El DAX cayó ayer un 2,1 %.",
+    "efecto": "Sin pánico que comprar: el S&P 500 no llegó al −2 % ningún día.",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "Oro y petróleo bajan",
+    "detalle": "Oro −2,4 %, hasta 3.773 $. Brent −1,7 %, a 91,5 $.",
+    "efecto": "Movimientos de un día sin un hecho que los explique: no dan idea.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -56,7 +57,7 @@
   {
    "id": "2026-11-17-veto-chips",
    "fecha": "2026-11-17",
-   "estado": "vigilancia",
+   "estado": "abierta",
    "conviccion": 3,
    "tipo": "norma",
    "caduca": "2026-11-20",
@@ -90,8 +91,8 @@
      "por_que": "El otro gran fabricante de equipos: −6,7 % ayer. Estaba en la cesta del veto de 2022, que a 60 sesiones ganó un 12 %."
     }
    ],
-   "en_precio": "El castigo sí: −5,1 % en un día para el sector, que ya venía cayendo. Lo que no está en el precio es la respuesta de Nvidia de esta noche, en un sentido o en otro.",
-   "disparador": "Que Nvidia, en sus resultados de hoy tras el cierre, mantenga o suba sus previsiones y no anuncie un golpe mayor por la norma. Si es así, se compra mañana miércoles; el entrenamiento dice que da igual hacerlo en la apertura o al cierre.",
+   "en_precio": "En parte. Antes de abrir, los semiconductores recuperan un 4 % y se quedan a un 2 % de su nivel de antes del veto. Lo que queda por delante no es el rebote del susto, sino lo que hicieron los vetos anteriores en las semanas siguientes: +9 %, +13 % y +17 % sobre el índice en 20 sesiones.",
+   "disparador": "Cumplido el 17-nov: Nvidia superó lo esperado, previó unos 130.000 millones para el trimestre siguiente (por encima del consenso y sin contar nada de China) y no anunció un golpe mayor por la norma. Se compra el miércoles 18, en la apertura o al cierre (da igual), salvo que el SMH abra por encima de 486,75 $, su cierre de antes del veto: entonces el castigo ya estaría recuperado entero y no queda idea.",
    "invalidacion": "Que Nvidia recorte previsiones citando la norma, o que Comercio la amplíe a más países o a chips menos avanzados.",
    "en_contra": "Son solo siete casos de «sector castigado por una norma», y los tres de chips ocurrieron en plena fiebre de la inteligencia artificial, cuando todo el sector subía por otros motivos. Hoy el contexto es peor: Nvidia sin su fundador, la Fed a punto de subir tipos y el Nasdaq en corrección. Además, cuando Nvidia cae con fuerza, el resto de chips ha seguido cayendo unos días (−1,5 % en 5 sesiones). Y la idea depende de un único dato, esta noche.",
    "no_hacer": "Comprar antes de los resultados de Nvidia: es jugarse la idea a cara o cruz cuando la respuesta llega en horas. Y comprar Nvidia sola: su problema no es solo la norma.",
@@ -120,7 +121,7 @@
     "LRCX": 210.83,
     "SPY": 739.95
    },
-   "entrada": null,
+   "entrada": "2026-11-18",
    "notas": [
     {
      "fecha": "2026-11-17",
@@ -135,8 +136,13 @@
     {
      "fecha": "2026-11-17",
      "edicion": "cierre",
-     "nuevo": true,
      "texto": "Segunda sesión de castigo: a las 21:10 los semiconductores pierden otro 2 % (Applied Materials −2,7 %, Lam Research −2,3 %, TSMC −4,3 %). No se compra al cierre: el disparador son los resultados de Nvidia, que salen a las 22:20. Sobre el rumor de Singapur: los 12.000 millones serían pedidos de 2024 y 2025, no envíos confirmados; Nvidia y Megaspeed niegan desvíos. Sigue siendo rumor."
+    },
+    {
+     "fecha": "2026-11-18",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "Salta el disparador. Nvidia ingresó 115.800 millones (se esperaban 109.000) y prevé unos 130.000 para el próximo trimestre, sin contar nada de China. Su directora financiera, hoy consejera delegada interina, dijo que han dejado de vender en China los chips con licencia (2.400 millones en el trimestre): un golpe pequeño frente al total. El consejo descarta la vuelta de Huang. Fuera de hora, Nvidia +4,8 % y los semiconductores +4 %. La idea se abre hoy, con un límite: no comprar si el SMH abre por encima de 486,75 $."
     }
    ],
    "fuentes": [
@@ -159,8 +165,21 @@
     {
      "t": "Yahoo Finance (sesión del martes)",
      "u": "https://finance.yahoo.com/markets/live/stock-market-today-tuesday-november-17-dow-sp-500-nasdaq-nvidia-earnings-retail-sales-143848454.html"
+    },
+    {
+     "t": "CNN (resultados de Nvidia)",
+     "u": "https://cnn.com/2026/11/17/tech/nvidia-earnings-jensen-huang-exit"
+    },
+    {
+     "t": "Quartz",
+     "u": "https://qz.com/nvidia-earnings-beat-estimates-jensen-huang-exit-111726"
+    },
+    {
+     "t": "The Daily Upside",
+     "u": "https://www.thedailyupside.com/technology/semiconductors/nvidias-first-post-huang-call-cant-escape-the-china-question/"
     }
-   ]
+   ],
+   "nuevo": true
   },
   {
    "id": "2026-11-16-panico-chips",
@@ -380,25 +399,26 @@
  ],
  "descartes": [
   {
-   "fecha": "2026-11-17",
-   "titulo": "Comprar el Nasdaq al cierre por el segundo día de caídas",
-   "por_que": "El S&P 500 no llega al −2 % y el miedo de ayer estaba por debajo de 28. Son las dos condiciones en las que comprar la caída casi no da ventaja.",
-   "leccion": "tras un día entre −1,5 % y −2 %, comprar el Nasdaq dio +5,8 % en 60 sesiones, casi lo mismo que un −2 %; pero viniendo de calma, solo +2,3 %, menos que un tramo cualquiera.",
-   "tipo": "panico",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar Nvidia tras sus resultados",
+   "por_que": "Ya sube un 4,8 % fuera de hora, y su problema no es solo la norma: sigue sin consejero delegado y con la investigación abierta. La idea se apoya en el sector entero, no en la empresa señalada.",
+   "leccion": "el beneficiario evidente de una noticia la recoge en el momento; y al gigante caído por un problema propio no se le compra aunque pase el examen trimestral.",
+   "tipo": "obvio",
    "valores": [
-    "QQQ"
+    "NVDA"
    ],
    "nuevo": true
   },
   {
-   "fecha": "2026-11-17",
-   "titulo": "Comprar Nvidia antes de sus resultados",
-   "por_que": "La respuesta llega a las 22:20, con dos rumores encima. Es jugársela a cara o cruz.",
-   "leccion": "cuando Nvidia cae un 7 % o más, comprarla al día siguiente dio −2,2 % en 5 sesiones; al gigante caído se le espera hasta que haya prueba.",
-   "tipo": "caido",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar oro o mineras porque el oro cae un 2,4 %",
+   "por_que": "No hay un hecho detrás: es un movimiento de un día con los tipos altos y el dólar firme.",
+   "leccion": "oro −2 % → mineras: después del primer día, nada que se distinga del azar.",
+   "tipo": "obvio",
    "valores": [
-    "NVDA"
-   ]
+    "GDX"
+   ],
+   "nuevo": true
   }
  ],
  "sesiones": [
@@ -429,6 +449,10 @@
   {
    "cuando": "2026-11-17T20:10:40Z",
    "resumen": "Cierre. Nada que comprar al cierre; la idea de los chips espera a los resultados de Nvidia (22:20). Segundo día de ventas, sin llegar al umbral de pánico."
+  },
+  {
+   "cuando": "2026-11-18T07:40:20Z",
+   "resumen": "Mañana. Se abre la idea de los chips (Nvidia pasa el examen): comprar hoy SMH, Applied Materials y Lam Research, con límite de entrada en 486,75 $ para el SMH."
   }
  ]
 }

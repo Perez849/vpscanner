@@ -157,6 +157,32 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-18-comprar-nvidia-tras-sus-resultados",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar Nvidia tras sus resultados",
+   "tipo": "obvio",
+   "valores": [
+    "NVDA"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-18-comprar-oro-o-mineras-porque-el-oro-cae-un-2-4",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar oro o mineras porque el oro cae un 2,4 %",
+   "tipo": "obvio",
+   "valores": [
+    "GDX"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -171,5 +197,5 @@
    "aciertos": 0
   }
  },
- "generado": 1794946245
+ "generado": 1794987625
 }
