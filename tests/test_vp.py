@@ -1226,6 +1226,10 @@ def test_ideas_score():
     assert r['media'] == 0.0 and r['spy'] == 0.99 and r['desde'] == '2026-01-05', r
     r = ideas.score({**base, 'estado': 'cerrada', 'entrada': '2026-01-02', 'salida': '2026-01-05'}, cl)
     assert r['media'] == 5.0 and r['spy'] == 1.0 and r['hasta'] == '2026-01-05', r
+    r = ideas.score({**base, 'estado': 'abierta', 'entrada': '2026-01-07'}, cl)       # comprada hoy, sin el cierre de hoy todavía
+    assert r['pendiente'] and r['media'] is None and r['spy'] is None, r
+    r = ideas.score({**base, 'estado': 'cerrada', 'entrada': None, 'salida': '2026-01-05'}, cl)   # cerrada sin comprarse
+    assert r['hipotetica'] and r['media'] == 5.0, r
     print('ok · ideas: marcador frente al SPY desde la referencia, la entrada y hasta la salida')
 
 

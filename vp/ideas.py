@@ -66,8 +66,14 @@ def score(idea: Dict, cl: Dict[str, Dict[str, float]]) -> Dict:
             por[s]['i0'] = next((i for i, k in enumerate(ks) if k >= desde), len(ks) - 1)
             hasta = b[0]
     vals = [por[s]['pct'] for s in symbols(idea) if s in por]
+    pendiente = bool(ent) and (hasta is None or hasta < ent)                  # abierta hoy y aún sin el cierre del día de entrada: no hay nada que medir
+    if pendiente:
+        for v in por.values():
+            v['pct'] = None
+    hipotetica = idea.get('estado') == 'cerrada' and not ent                  # se cerró sin comprarse: la cifra es solo lo que habría pasado, para aprender
     return {'estado': idea.get('estado'), 'desde': ent or idea.get('fecha'), 'hasta': hasta, 'por_valor': {s: v for s, v in por.items() if s != 'SPY'},
-            'media': round(sum(vals) / len(vals), 2) if vals else None, 'spy': por['SPY']['pct'] if 'SPY' in por else None}
+            'media': None if pendiente else (round(sum(vals) / len(vals), 2) if vals else None), 'spy': None if pendiente else (por['SPY']['pct'] if 'SPY' in por else None),
+            'pendiente': pendiente, 'hipotetica': hipotetica}
 
 
 def bars(sym: str) -> Dict[str, tuple]:
