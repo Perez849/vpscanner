@@ -1,5 +1,5 @@
 {
- "generado": 1794987622,
+ "generado": 1794988898,
  "ideas": {
   "2026-11-17-veto-chips": {
    "estado": "abierta",
@@ -9,7 +9,7 @@
     "SMH": {
      "ref": 460.1,
      "ahora": 460.1,
-     "pct": 0.0,
+     "pct": null,
      "serie": [
       555.82,
       555.77,
@@ -77,7 +77,7 @@
     "AMAT": {
      "ref": 349.23,
      "ahora": 349.23,
-     "pct": 0.0,
+     "pct": null,
      "serie": [
       480.04,
       479.76,
@@ -145,7 +145,7 @@
     "LRCX": {
      "ref": 210.69,
      "ahora": 210.69,
-     "pct": 0.0,
+     "pct": null,
      "serie": [
       314.66,
       312.88,
@@ -211,8 +211,10 @@
      "i0": 59
     }
    },
-   "media": 0.0,
-   "spy": 0.0
+   "media": null,
+   "spy": null,
+   "pendiente": true,
+   "hipotetica": false
   },
   "2026-11-16-panico-chips": {
    "estado": "cerrada",
@@ -289,7 +291,9 @@
     }
    },
    "media": -0.95,
-   "spy": -1.04
+   "spy": -1.04,
+   "pendiente": false,
+   "hipotetica": true
   },
   "2026-11-16-apagon-faa": {
    "estado": "cerrada",
@@ -570,7 +574,9 @@
     }
    },
    "media": 0.3,
-   "spy": -2.91
+   "spy": -2.91,
+   "pendiente": false,
+   "hipotetica": true
   }
  }
 }
