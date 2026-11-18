@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-18-1236",
+  "cuando": "2026-11-18T12:36:13Z",
+  "tipo": "preapertura",
+  "titular": "Los chips siguen por debajo del límite. Se mantiene la compra.",
+  "hoy": "Se mantiene: comprar hoy SMH, Applied Materials y Lam Research, en la apertura o al cierre. Antes de abrir, el SMH está en 470,6 $, por debajo del límite de 486,75 $. Si lo supera al abrir, no se compra.",
+  "accion": "comprar",
+  "vivas": 1
+ },
+ {
   "id": "2026-11-18-0740",
   "cuando": "2026-11-18T07:40:20Z",
   "tipo": "mañana",

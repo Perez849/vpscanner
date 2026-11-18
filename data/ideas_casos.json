@@ -159,6 +159,19 @@
    "e60": null
   },
   {
+   "id": "2026-11-18-comprar-lowe-s-porque-cae-un-4-4",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar Lowe's porque cae un 4,4 %",
+   "tipo": "caido",
+   "valores": [
+    "LOW"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-18-comprar-nvidia-tras-sus-resultados",
    "fecha": "2026-11-18",
    "titulo": "Comprar Nvidia tras sus resultados",
@@ -197,5 +210,5 @@
    "aciertos": 0
   }
  },
- "generado": 1794988901
+ "generado": 1795005379
 }
