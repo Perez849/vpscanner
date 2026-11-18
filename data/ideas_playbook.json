@@ -1,6 +1,6 @@
 {
  "generado": "2026-11-18",
- "resumen": "He simulado 178 tipos de idea sobre más de 37.000 hechos pasados desde 2008, y 245 episodios con nombre propio. Lo que paga: los hechos consumados que cambian el mundo, comprar el miedo cuando ya es alto (tras un día de −2 %, una racha de caídas o un hueco a la baja) y el sector castigado por una norma. Lo que no: lo evidente, los sustos de un día, las decisiones anunciadas y el gigante que cae desde máximos.",
+ "resumen": "He simulado 190 tipos de idea sobre más de 38.000 hechos pasados desde 2008, y 300 episodios con nombre propio de 19 familias distintas. Lo que paga: los hechos consumados que cambian el mundo, comprar el miedo cuando ya es alto y el sector castigado por una norma. Lo que no: lo evidente, los sustos de un día, las decisiones anunciadas, el gigante que cae desde máximos y las buenas noticias de la propia empresa.",
  "metodo": "Para cada tipo de idea he buscado todos los días desde 2008 en que ocurrió el hecho (por ejemplo, el petróleo cayendo un 4 % o más) y he simulado comprar los valores «lógicos» en la apertura del día siguiente, que es cuando de verdad podrías actuar. Se mide lo que ganan de más sobre el S&P 500 y se resta lo que ese grupo hace en un día cualquiera. De ahí salen estas lecciones, que son el filtro de cada lectura.",
  "cautelas": "Cautelas: las acciones son las que hoy siguen en el S&P 1500, así que faltan las que quebraron o fueron excluidas; eso infla «comprar la caída» en valores ya hundidos. Los casos con nombre están elegidos y clasificados a mano, a toro pasado, y varios tipos tienen menos de diez. Al revisar los «no» he probado unas cuarenta variantes: por puro azar, alguna tenía que salir bien, así que las excepciones encontradas son pistas a vigilar con los casos propios, no certezas. Y un promedio histórico no garantiza el caso siguiente.",
  "lecciones": [
@@ -23,7 +23,7 @@
    "veredicto": "no",
    "titulo": "Sustos y anuncios de un día",
    "texto": "Un huracán, un atentado, un arancel anunciado, un ataque, un estímulo prometido, un desplome de un día: el mercado reacciona con fuerza el primer día y lo devuelve después. Comprar al beneficiario «lógico» ha sido perder casi siempre. Comprar al castigado sale algo mejor a tres meses, pero no lo bastante como para ser idea por sí solo.",
-   "cifra": "51 sustos: −2,5 % en 20 sesiones (sube el 35 %). Comprando al beneficiario (29 casos): −6,0 % en 60 sesiones. Comprando al castigado (22 casos): −1,0 % en 20 y +2,4 % en 60."
+   "cifra": "51 sustos: −2,3 % en 20 sesiones (sube el 37 %). Comprando al beneficiario (29 casos): −4,5 % en 60 sesiones. Comprando al castigado (22 casos): −1,0 % en 20 y +2,4 % en 60."
   },
   {
    "id": "panico",
@@ -94,6 +94,34 @@
    "titulo": "«Tras esta compra, la siguiente será…» y «si esta avisa, las demás están baratas»",
    "texto": "Dos ideas tentadoras que no aguantan. Cuando una empresa compra a otra, apostar por las siguientes candidatas no da nada. Y cuando una empresa avisa de que su negocio se enfría y arrastra a las de su sector, comprarlas tampoco: unas veces el aviso era solo suyo y otras era verdad para todas.",
    "cifra": "13 grandes compras → otras del sector: +2,0 % en 20 sesiones y −3,4 % en 60. 10 avisos de «canario» → las arrastradas: −6,0 % en 20 y −8,4 % en 60."
+  },
+  {
+   "id": "empresa",
+   "veredicto": "no",
+   "titulo": "Las buenas noticias de la propia empresa se venden enseguida",
+   "texto": "Un consejero delegado estrella que llega, un fármaco que por fin aprueba el regulador, un inversor activista que entra en el capital: el primer día la acción sube y después lo devuelve. El mercado ya lo celebra en el momento, y lo difícil (que el nuevo jefe arregle la empresa, que el fármaco se venda, que el activista consiga cambios) tarda años y a menudo no llega. Las huelgas y bloqueos tampoco han dejado nada aprovechable.",
+   "cifra": "Cambio de consejero delegado (12 casos): +2,9 % el primer día y −9,0 % en 60 sesiones (solo sube el 33 %); Starbucks con Niccol −8 %, Boeing con Ortberg −20 %. Fármaco aprobado (6): −5,3 % en 20 (sube el 17 %). Activista (8): −2,9 % en 20. Huelgas (6): −6,5 % en 60."
+  },
+  {
+   "id": "impulso_corto",
+   "veredicto": "esperar",
+   "titulo": "Split y entrada en el S&P 500: empuje de unas semanas",
+   "texto": "Cuando una empresa anuncia que divide sus acciones o que entrará en el S&P 500, la subida suele seguir unas semanas, porque llegan compradores nuevos (pequeños inversores en un caso, fondos indexados en el otro). Pero es un empuje corto: con los splits se diluye a tres meses, y el día en que la empresa entra de verdad en el índice ya ha pasado lo mejor y después suele caer. Si se da, se da en el anuncio y con un horizonte corto.",
+   "cifra": "Splits (10 casos): +4,2 % en 20 sesiones (sube el 70 %) y +1,9 % en 60. Anuncio de entrada en el índice (8): +5,1 % en 20 (la mitad sube; Tesla y Palantir tiran de la media). Comprando el día que entra de verdad (239 casos): −0,9 % en 5 sesiones (t −2,7)."
+  },
+  {
+   "id": "bajista",
+   "veredicto": "esperar",
+   "titulo": "El informe de un bajista: depende de si tiene razón",
+   "texto": "Cuando un fondo bajista publica un informe acusando a una empresa, la acción se hunde. Lo que pasa después no tiene patrón: unas veces la acusación era cierta y la caída siguió (Icahn Enterprises, Super Micro), y otras era exagerada y la acción se recuperó con creces (Roblox, Carvana). No se compra el castigo hasta que haya una respuesta seria: un auditor, un regulador o unas cuentas presentadas a tiempo.",
+   "cifra": "5 casos: −8,3 % el primer día; después, Icahn −41 % y Super Micro −52 %, frente a Roblox +45 % y Carvana +17 % (a 60 sesiones, salvo Icahn a 20)."
+  },
+  {
+   "id": "agricola",
+   "veredicto": "no",
+   "titulo": "Café, cacao, azúcar y ganado",
+   "texto": "Las materias primas agrícolas se mueven mucho, pero no dejan ideas. Cuando el cacao se dispara, Hershey y Mondelez siguen cayendo después, así que su castigo no es excesivo; y con el café, el azúcar o el ganado no hay nada que se distinga del azar ni en el castigado ni en el beneficiado. Solo se repite el patrón del trigo: el maíz caro ayuda a los fabricantes de fertilizantes.",
+   "cifra": "Cacao +6 % → Hershey y Mondelez: −1,6 % en 20 sesiones (t −2,1). Café +6 % → Starbucks: −0,4 %. Ganado +3 % → cárnicas: −0,5 %. Maíz +4 % → fertilizantes: +2,3 % en 20 (t 1,9)."
   }
  ],
  "estudios": [
@@ -845,7 +873,7 @@
    "n": 819,
    "d0": 0.13,
    "e5": 0.18,
-   "t5": 1.5,
+   "t5": 1.4,
    "hit5": 51,
    "e20": 0.37,
    "t20": 1.6,
@@ -1268,7 +1296,7 @@
    "e5": 0.78,
    "t5": 3.0,
    "hit5": 55,
-   "e20": -0.23,
+   "e20": -0.24,
    "t20": -0.5,
    "hit20": 47,
    "e60": 1.41,
@@ -1303,7 +1331,7 @@
    "e20": 1.15,
    "t20": 1.7,
    "hit20": 51,
-   "e60": 3.5,
+   "e60": 3.51,
    "t60": 2.6,
    "hit60": 48
   },
@@ -2362,6 +2390,200 @@
    "hit60": 54
   },
   {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El café sube ≥ 6 % en un día → Starbucks (comprar el castigo)",
+   "logica": "Su materia prima se encarece.",
+   "n": 27,
+   "d0": 0.12,
+   "e5": 0.29,
+   "t5": 0.5,
+   "hit5": 59,
+   "e20": -0.38,
+   "t20": -0.4,
+   "hit20": 41,
+   "e60": 0.95,
+   "t60": 0.4,
+   "hit60": 44
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El café cae ≥ 6 % en un día → Starbucks",
+   "logica": "Su materia prima se abarata.",
+   "n": 17,
+   "d0": -0.46,
+   "e5": -0.83,
+   "t5": -1.5,
+   "hit5": 47,
+   "e20": 0.27,
+   "t20": 0.3,
+   "hit20": 59,
+   "e60": 3.59,
+   "t60": 1.1,
+   "hit60": 62
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El cacao sube ≥ 6 % en un día → Hershey y Mondelez (comprar el castigo)",
+   "logica": "El chocolate se encarece.",
+   "n": 36,
+   "d0": -0.72,
+   "e5": -1.22,
+   "t5": -2.6,
+   "hit5": 36,
+   "e20": -1.59,
+   "t20": -2.1,
+   "hit20": 31,
+   "e60": -2.02,
+   "t60": -1.2,
+   "hit60": 26
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El cacao cae ≥ 6 % en un día → Hershey y Mondelez",
+   "logica": "El chocolate se abarata.",
+   "n": 36,
+   "d0": 0.99,
+   "e5": 0.52,
+   "t5": 0.9,
+   "hit5": 58,
+   "e20": 0.18,
+   "t20": 0.1,
+   "hit20": 47,
+   "e60": 0.13,
+   "t60": 0.1,
+   "hit60": 46
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El azúcar sube ≥ 5 % en un día → refrescos y chocolate (comprar el castigo)",
+   "logica": "Coste de una materia prima menor.",
+   "n": 52,
+   "d0": -0.28,
+   "e5": -0.2,
+   "t5": -0.6,
+   "hit5": 52,
+   "e20": 0.07,
+   "t20": 0.1,
+   "hit20": 44,
+   "e60": 0.87,
+   "t60": 0.9,
+   "hit60": 49
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El maíz sube ≥ 4 % en un día → fertilizantes",
+   "logica": "El agricultor gana más y abona más.",
+   "n": 66,
+   "d0": 1.08,
+   "e5": 0.76,
+   "t5": 1.1,
+   "hit5": 52,
+   "e20": 2.3,
+   "t20": 1.9,
+   "hit20": 59,
+   "e60": 1.94,
+   "t60": 0.9,
+   "hit60": 51
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El maíz sube ≥ 4 % en un día → cárnicas (comprar el castigo)",
+   "logica": "El pienso se encarece.",
+   "n": 66,
+   "d0": -0.2,
+   "e5": -0.04,
+   "t5": -0.1,
+   "hit5": 50,
+   "e20": -0.06,
+   "t20": -0.1,
+   "hit20": 44,
+   "e60": 2.03,
+   "t60": 1.8,
+   "hit60": 55
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El maíz sube ≥ 4 % en un día → comercializadoras de grano",
+   "logica": "Más valor en lo que mueven.",
+   "n": 66,
+   "d0": 0.17,
+   "e5": -0.57,
+   "t5": -1.5,
+   "hit5": 41,
+   "e20": -0.29,
+   "t20": -0.3,
+   "hit20": 45,
+   "e60": -0.27,
+   "t60": -0.2,
+   "hit60": 40
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El ganado sube ≥ 3 % en un día → cárnicas (comprar el castigo)",
+   "logica": "La carne se encarece.",
+   "n": 23,
+   "d0": 0.22,
+   "e5": 0.06,
+   "t5": 0.1,
+   "hit5": 39,
+   "e20": -0.48,
+   "t20": -0.4,
+   "hit20": 52,
+   "e60": -0.9,
+   "t60": -0.4,
+   "hit60": 43
+  },
+  {
+   "grupo": "Más variedad · materias primas agrícolas",
+   "nombre": "El ganado sube ≥ 3 % en un día → cadenas de comida rápida (comprar el castigo)",
+   "logica": "La carne se encarece.",
+   "n": 23,
+   "d0": -0.56,
+   "e5": 0.8,
+   "t5": 0.7,
+   "hit5": 65,
+   "e20": 0.82,
+   "t20": 0.6,
+   "hit20": 57,
+   "e60": 2.0,
+   "t60": 0.8,
+   "hit60": 43
+  },
+  {
+   "grupo": "Más variedad · entrar en el S&P 500",
+   "nombre": "Una empresa entra en el S&P 500 → comprarla el día que entra",
+   "logica": "Los fondos indexados tienen que comprarla.",
+   "n": 239,
+   "d0": 4.23,
+   "e5": -0.87,
+   "t5": -2.7,
+   "hit5": 41,
+   "e20": -0.8,
+   "t20": -1.5,
+   "hit20": 44,
+   "e60": 0.26,
+   "t60": 0.2,
+   "hit60": 49,
+   "nota": "«el mismo día» es lo que subió de más en las 20 sesiones anteriores a entrar"
+  },
+  {
+   "grupo": "Más variedad · entrar en el S&P 500",
+   "nombre": "Una empresa entra en el S&P 500 → comprarla 5 sesiones antes de entrar",
+   "logica": "Adelantarse a los fondos (el anuncio suele llegar una semana antes).",
+   "n": 239,
+   "d0": 3.41,
+   "e5": 1.0,
+   "t5": 2.7,
+   "hit5": 55,
+   "e20": -0.02,
+   "t20": -0.0,
+   "hit20": 45,
+   "e60": 0.95,
+   "t60": 0.7,
+   "hit60": 45,
+   "nota": "«el mismo día» es lo que subió de más en las 20 sesiones anteriores"
+  },
+  {
    "grupo": "Más variedad · líderes de otros sectores",
    "nombre": "Coca-Cola cae ≥ 4 % en un día → PepsiCo",
    "logica": "Rival directo.",
@@ -2853,7 +3075,7 @@
    "e20": -1.07,
    "t20": -0.7,
    "hit20": 36,
-   "e60": -1.3,
+   "e60": -1.29,
    "t60": -0.4,
    "hit60": 39
   },
@@ -2972,12 +3194,12 @@
    "nombre": "Beneficiarios que el primer día casi no se mueven (menos de un 2 %)",
    "logica": "El mercado no ha visto la conexión.",
    "n": 54,
-   "d0": -0.43,
-   "e5": -0.06,
-   "e20": 0.02,
-   "e60": -0.06,
-   "hit20": 37,
-   "hit60": 44
+   "d0": -0.5,
+   "e5": -0.01,
+   "e20": 0.26,
+   "e60": 0.76,
+   "hit20": 39,
+   "hit60": 46
   },
   {
    "grupo": "Afinar · casos con nombre según cómo fue el primer día",
@@ -3008,12 +3230,12 @@
    "nombre": "Sustos · comprar al beneficiario",
    "logica": "Defensa tras un atentado, reformas tras un huracán.",
    "n": 29,
-   "d0": 3.25,
-   "e5": -0.8,
-   "e20": -3.7,
-   "e60": -6.0,
-   "hit20": 24,
-   "hit60": 24
+   "d0": 3.11,
+   "e5": -0.71,
+   "e20": -3.26,
+   "e60": -4.49,
+   "hit20": 28,
+   "hit60": 28
   },
   {
    "grupo": "Afinar · casos con nombre según cómo fue el primer día",
@@ -3077,6 +3299,97 @@
   },
   {
    "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Cambio de consejero delegado → comprar la empresa",
+   "logica": "12 casos elegidos a mano",
+   "n": 12,
+   "d0": 2.87,
+   "e5": -1.64,
+   "e20": -3.48,
+   "e60": -8.99,
+   "hit20": 33,
+   "hit60": 33,
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Informe de un bajista → comprar el castigo",
+   "logica": "5 casos elegidos a mano",
+   "n": 5,
+   "d0": -8.28,
+   "e5": 0.02,
+   "e20": 2.01,
+   "e60": -2.19,
+   "hit20": 60,
+   "hit60": 40,
+   "tipo": "X"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Anuncio de división de acciones (split) → comprar",
+   "logica": "10 casos elegidos a mano",
+   "n": 10,
+   "d0": 6.93,
+   "e5": 2.41,
+   "e20": 4.17,
+   "e60": 1.87,
+   "hit20": 70,
+   "hit60": 60,
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Anuncio de entrada en el S&P 500 → comprar",
+   "logica": "8 casos elegidos a mano",
+   "n": 8,
+   "d0": 9.48,
+   "e5": 4.64,
+   "e20": 5.14,
+   "e60": 16.0,
+   "hit20": 50,
+   "hit60": 62,
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Aprobación de un fármaco clave → comprar al laboratorio",
+   "logica": "6 casos elegidos a mano",
+   "n": 6,
+   "d0": 5.15,
+   "e5": 1.24,
+   "e20": -5.32,
+   "e60": -0.55,
+   "hit20": 17,
+   "hit60": 50,
+   "tipo": "F"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Huelga, bloqueo o escasez → el beneficiado o el castigado",
+   "logica": "6 casos elegidos a mano",
+   "n": 6,
+   "d0": -0.81,
+   "e5": 0.25,
+   "e20": 1.57,
+   "e60": -6.49,
+   "hit20": 33,
+   "hit60": 17,
+   "tipo": "H"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
+   "nombre": "Entra un inversor activista → comprar la empresa",
+   "logica": "8 casos elegidos a mano",
+   "n": 8,
+   "d0": 3.08,
+   "e5": -0.66,
+   "e20": -2.9,
+   "e60": -0.72,
+   "hit20": 38,
+   "hit60": 25,
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre · resumen por tipo",
    "nombre": "Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)",
    "logica": "22 casos elegidos a mano",
    "n": 22,
@@ -3106,12 +3419,12 @@
    "nombre": "Susto o anuncio de un día",
    "logica": "51 casos elegidos a mano",
    "n": 51,
-   "d0": 0.55,
-   "e5": -1.15,
-   "e20": -2.55,
-   "e60": -2.37,
-   "hit20": 35,
-   "hit60": 49,
+   "d0": 0.47,
+   "e5": -1.1,
+   "e20": -2.3,
+   "e60": -1.51,
+   "hit20": 37,
+   "hit60": 51,
    "tipo": "S"
   },
   {
@@ -4580,11 +4893,12 @@
    "nombre": "Un portacontenedores bloquea el canal de Suez → navieras",
    "logica": "Susto o anuncio de un día",
    "n": 1,
-   "d0": -4.9,
-   "e5": -3.85,
-   "e20": -8.84,
-   "e60": -18.08,
+   "d0": -8.95,
+   "e5": -1.32,
+   "e20": 3.89,
+   "e60": 25.9,
    "valores": [
+    "ZIM",
     "MATX"
    ],
    "fecha": "2021-03-23",
@@ -7203,6 +7517,845 @@
    ],
    "fecha": "2025-09-10",
    "tipo": "B"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Microsoft nombra consejero delegado a Satya Nadella",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": -1.06,
+   "e5": -1.69,
+   "e20": -1.62,
+   "e60": 2.82,
+   "valores": [
+    "MSFT"
+   ],
+   "fecha": "2014-02-04",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Dimite el jefe de Wells Fargo tras el escándalo de las cuentas",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": -0.93,
+   "e5": -0.41,
+   "e20": 13.96,
+   "e60": 15.56,
+   "valores": [
+    "WFC"
+   ],
+   "fecha": "2016-10-13",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "General Electric echa a su jefe y ficha a Larry Culp",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": 6.74,
+   "e5": 11.75,
+   "e20": 0.09,
+   "e60": -26.49,
+   "valores": [
+    "GE"
+   ],
+   "fecha": "2018-10-01",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Boeing despide a su consejero delegado",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": 2.76,
+   "e5": -4.17,
+   "e20": -9.59,
+   "e60": -43.44,
+   "valores": [
+    "BA"
+   ],
+   "fecha": "2019-12-23",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Iger deja Disney y llega Chapek",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": -3.4,
+   "e5": -2.95,
+   "e20": 2.81,
+   "e60": 1.24,
+   "valores": [
+    "DIS"
+   ],
+   "fecha": "2020-02-26",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Bezos anuncia que deja de dirigir Amazon",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": -2.07,
+   "e5": -3.16,
+   "e20": -8.95,
+   "e60": -5.2,
+   "valores": [
+    "AMZN"
+   ],
+   "fecha": "2021-02-03",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Disney recupera a Bob Iger",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": 6.66,
+   "e5": -2.03,
+   "e20": -6.67,
+   "e60": 5.32,
+   "valores": [
+    "DIS"
+   ],
+   "fecha": "2022-11-21",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "El jefe de Boeing anuncia su salida",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": 1.63,
+   "e5": -1.61,
+   "e20": -8.91,
+   "e60": -13.13,
+   "valores": [
+    "BA"
+   ],
+   "fecha": "2024-03-25",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Boeing nombra a Kelly Ortberg",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": -5.03,
+   "e5": -2.67,
+   "e20": -5.91,
+   "e60": -19.95,
+   "valores": [
+    "BA"
+   ],
+   "fecha": "2024-08-01",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Starbucks ficha a Brian Niccol",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": 22.85,
+   "e5": -4.83,
+   "e20": 1.44,
+   "e60": -7.88,
+   "valores": [
+    "SBUX"
+   ],
+   "fecha": "2024-08-13",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Nike recupera a Elliott Hill",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": 7.01,
+   "e5": 4.36,
+   "e20": -5.58,
+   "e60": -15.72,
+   "valores": [
+    "NKE"
+   ],
+   "fecha": "2024-09-20",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Intel echa a Pat Gelsinger",
+   "logica": "Cambio de consejero delegado → comprar la empresa",
+   "n": 1,
+   "d0": -0.68,
+   "e5": -12.33,
+   "e20": -12.79,
+   "e60": -1.04,
+   "valores": [
+    "INTC"
+   ],
+   "fecha": "2024-12-02",
+   "tipo": "J"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Hindenburg publica contra Block",
+   "logica": "Informe de un bajista → comprar el castigo",
+   "n": 1,
+   "d0": -15.09,
+   "e5": 11.6,
+   "e20": 1.05,
+   "e60": -0.19,
+   "valores": [
+    "XYZ"
+   ],
+   "fecha": "2023-03-23",
+   "tipo": "X"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Hindenburg publica contra Icahn Enterprises",
+   "logica": "Informe de un bajista → comprar el castigo",
+   "n": 1,
+   "d0": -18.83,
+   "e5": -3.48,
+   "e20": -40.76,
+   "e60": -20.76,
+   "valores": [
+    "IEP"
+   ],
+   "fecha": "2023-05-02",
+   "tipo": "X"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Hindenburg publica contra Super Micro",
+   "logica": "Informe de un bajista → comprar el castigo",
+   "n": 1,
+   "d0": -2.78,
+   "e5": -11.03,
+   "e20": -7.6,
+   "e60": -52.45,
+   "valores": [
+    "SMCI"
+   ],
+   "fecha": "2024-08-27",
+   "tipo": "X"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Hindenburg publica contra Roblox",
+   "logica": "Informe de un bajista → comprar el castigo",
+   "n": 1,
+   "d0": -3.07,
+   "e5": -0.79,
+   "e20": 25.41,
+   "e60": 45.28,
+   "valores": [
+    "RBLX"
+   ],
+   "fecha": "2024-10-08",
+   "tipo": "X"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Hindenburg publica contra Carvana",
+   "logica": "Informe de un bajista → comprar el castigo",
+   "n": 1,
+   "d0": -1.62,
+   "e5": 3.78,
+   "e20": 31.96,
+   "e60": 17.19,
+   "valores": [
+    "CVNA"
+   ],
+   "fecha": "2025-01-02",
+   "tipo": "X"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Apple anuncia un split de 4 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 9.68,
+   "e5": 0.97,
+   "e20": 8.78,
+   "e60": 2.74,
+   "valores": [
+    "AAPL"
+   ],
+   "fecha": "2020-07-31",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Tesla anuncia un split de 5 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 11.73,
+   "e5": 16.42,
+   "e20": 16.06,
+   "e60": 31.5,
+   "valores": [
+    "TSLA"
+   ],
+   "fecha": "2020-08-12",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Nvidia anuncia un split de 4 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 3.12,
+   "e5": 3.32,
+   "e20": 18.83,
+   "e60": 15.97,
+   "valores": [
+    "NVDA"
+   ],
+   "fecha": "2021-05-24",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Alphabet anuncia un split de 20 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 6.55,
+   "e5": -4.28,
+   "e20": -4.72,
+   "e60": -13.33,
+   "valores": [
+    "GOOGL"
+   ],
+   "fecha": "2022-02-02",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Amazon anuncia un split de 20 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 5.86,
+   "e5": 2.1,
+   "e20": 0.34,
+   "e60": -13.05,
+   "valores": [
+    "AMZN"
+   ],
+   "fecha": "2022-03-10",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Tesla anuncia otro split",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 7.32,
+   "e5": 4.08,
+   "e20": -11.35,
+   "e60": -18.89,
+   "valores": [
+    "TSLA"
+   ],
+   "fecha": "2022-03-28",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Walmart anuncia un split de 3 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 0.41,
+   "e5": 0.1,
+   "e20": 2.98,
+   "e60": 4.65,
+   "valores": [
+    "WMT"
+   ],
+   "fecha": "2024-01-30",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Chipotle anuncia un split de 50 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 2.56,
+   "e5": -0.95,
+   "e20": 3.04,
+   "e60": 7.1,
+   "valores": [
+    "CMG"
+   ],
+   "fecha": "2024-03-20",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Nvidia anuncia un split de 10 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 10.05,
+   "e5": 5.05,
+   "e20": 9.94,
+   "e60": 15.65,
+   "valores": [
+    "NVDA"
+   ],
+   "fecha": "2024-05-23",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Broadcom anuncia un split de 10 por 1",
+   "logica": "Anuncio de división de acciones",
+   "n": 1,
+   "d0": 12.07,
+   "e5": -2.67,
+   "e20": -2.21,
+   "e60": -13.65,
+   "valores": [
+    "AVGO"
+   ],
+   "fecha": "2024-06-13",
+   "tipo": "P"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Tesla entrará en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 8.75,
+   "e5": 23.23,
+   "e20": 36.34,
+   "e60": 68.43,
+   "valores": [
+    "TSLA"
+   ],
+   "fecha": "2020-11-17",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Uber, Jabil y Builders FirstSource entrarán en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 0.24,
+   "e5": 5.9,
+   "e20": 5.94,
+   "e60": 25.02,
+   "valores": [
+    "UBER",
+    "JBL",
+    "BLDR"
+   ],
+   "fecha": "2023-12-04",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Super Micro entrará en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 18.76,
+   "e5": 4.17,
+   "e20": -4.43,
+   "e60": -22.3,
+   "valores": [
+    "SMCI"
+   ],
+   "fecha": "2024-03-04",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "CrowdStrike, KKR y GoDaddy entrarán en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 6.49,
+   "e5": -1.17,
+   "e20": -4.78,
+   "e60": -7.83,
+   "valores": [
+    "CRWD",
+    "KKR",
+    "GDDY"
+   ],
+   "fecha": "2024-06-10",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Palantir y Dell entrarán en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 7.83,
+   "e5": 3.87,
+   "e20": 8.09,
+   "e60": 50.81,
+   "valores": [
+    "PLTR",
+    "DELL"
+   ],
+   "fecha": "2024-09-09",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "DoorDash y Williams-Sonoma entrarán en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 1.76,
+   "e5": -0.16,
+   "e20": -3.99,
+   "e60": -0.87,
+   "valores": [
+    "DASH",
+    "WSM"
+   ],
+   "fecha": "2025-03-10",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Coinbase entrará en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 23.31,
+   "e5": 0.9,
+   "e20": -4.71,
+   "e60": 12.18,
+   "valores": [
+    "COIN"
+   ],
+   "fecha": "2025-05-13",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "AppLovin, Robinhood y Emcor entrarán en el S&P 500",
+   "logica": "Anuncio de entrada en el S&P 500 → comprar",
+   "n": 1,
+   "d0": 8.69,
+   "e5": 0.35,
+   "e20": 8.63,
+   "e60": 2.54,
+   "valores": [
+    "APP",
+    "HOOD",
+    "EME"
+   ],
+   "fecha": "2025-09-08",
+   "tipo": "I"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La FDA aprueba Aduhelm contra el alzhéimer",
+   "logica": "Aprobación de un fármaco clave → comprar al laboratorio",
+   "n": 1,
+   "d0": 38.44,
+   "e5": 3.87,
+   "e20": -14.02,
+   "e60": -19.97,
+   "valores": [
+    "BIIB"
+   ],
+   "fecha": "2021-06-07",
+   "tipo": "F"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La FDA aprueba Wegovy contra la obesidad",
+   "logica": "Aprobación de un fármaco clave → comprar al laboratorio",
+   "n": 1,
+   "d0": 0.41,
+   "e5": 1.94,
+   "e20": 0.55,
+   "e60": 14.9,
+   "valores": [
+    "NVO"
+   ],
+   "fecha": "2021-06-07",
+   "tipo": "F"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La FDA aprueba Leqembi contra el alzhéimer",
+   "logica": "Aprobación de un fármaco clave → comprar al laboratorio",
+   "n": 1,
+   "d0": -1.57,
+   "e5": 1.89,
+   "e20": -1.94,
+   "e60": -3.07,
+   "valores": [
+    "BIIB"
+   ],
+   "fecha": "2023-01-09",
+   "tipo": "F"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La FDA aprueba Zepbound contra la obesidad",
+   "logica": "Aprobación de un fármaco clave → comprar al laboratorio",
+   "n": 1,
+   "d0": -3.71,
+   "e5": -4.14,
+   "e20": -4.86,
+   "e60": 7.43,
+   "valores": [
+    "LLY"
+   ],
+   "fecha": "2023-11-09",
+   "tipo": "F"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La FDA aprueba Wegovy para el corazón",
+   "logica": "Aprobación de un fármaco clave → comprar al laboratorio",
+   "n": 1,
+   "d0": -1.29,
+   "e5": 0.78,
+   "e20": -5.89,
+   "e60": 3.46,
+   "valores": [
+    "NVO"
+   ],
+   "fecha": "2024-03-11",
+   "tipo": "F"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "La FDA aprueba Kisunla contra el alzhéimer",
+   "logica": "Aprobación de un fármaco clave → comprar al laboratorio",
+   "n": 1,
+   "d0": -1.4,
+   "e5": 3.12,
+   "e20": -5.76,
+   "e60": -6.05,
+   "valores": [
+    "LLY"
+   ],
+   "fecha": "2024-07-03",
+   "tipo": "F"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Se evita la huelga del ferrocarril → ferroviarias",
+   "logica": "Huelga, bloqueo o escasez → el beneficiado o el castigado",
+   "n": 1,
+   "d0": 0.18,
+   "e5": -0.35,
+   "e20": -2.65,
+   "e60": 1.33,
+   "valores": [
+    "UNP",
+    "CSX",
+    "NSC"
+   ],
+   "fecha": "2022-09-15",
+   "tipo": "H"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Empieza la huelga de guionistas → comprar Disney y Netflix",
+   "logica": "Huelga, bloqueo o escasez → el beneficiado o el castigado",
+   "n": 1,
+   "d0": -0.68,
+   "e5": 2.96,
+   "e20": 4.17,
+   "e60": -1.83,
+   "valores": [
+    "DIS",
+    "NFLX"
+   ],
+   "fecha": "2023-05-02",
+   "tipo": "H"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "UPS evita la huelga → UPS",
+   "logica": "Huelga, bloqueo o escasez → el beneficiado o el castigado",
+   "n": 1,
+   "d0": -2.21,
+   "e5": 0.79,
+   "e20": -4.53,
+   "e60": -10.3,
+   "valores": [
+    "UPS"
+   ],
+   "fecha": "2023-07-25",
+   "tipo": "H"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Ataques en el mar Rojo desvían a las navieras → navieras",
+   "logica": "Huelga, bloqueo o escasez → el beneficiado o el castigado",
+   "n": 1,
+   "d0": 1.34,
+   "e5": 4.65,
+   "e20": 24.12,
+   "e60": -9.48,
+   "valores": [
+    "ZIM",
+    "MATX"
+   ],
+   "fecha": "2023-12-18",
+   "tipo": "H"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Huelga de los mecánicos de Boeing → comprar Boeing",
+   "logica": "Huelga, bloqueo o escasez → el beneficiado o el castigado",
+   "n": 1,
+   "d0": -4.21,
+   "e5": -3.36,
+   "e20": -6.84,
+   "e60": -7.47,
+   "valores": [
+    "BA"
+   ],
+   "fecha": "2024-09-13",
+   "tipo": "H"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Huelga en los puertos de la costa este → ferroviarias",
+   "logica": "Huelga, bloqueo o escasez → el beneficiado o el castigado",
+   "n": 1,
+   "d0": 0.71,
+   "e5": -3.21,
+   "e20": -4.84,
+   "e60": -11.18,
+   "valores": [
+    "UNP",
+    "CSX",
+    "NSC"
+   ],
+   "fecha": "2024-10-01",
+   "tipo": "H"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Trian (Peltz) va a por Disney",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 3.25,
+   "e5": 3.55,
+   "e20": 5.07,
+   "e60": -3.44,
+   "valores": [
+    "DIS"
+   ],
+   "fecha": "2023-01-12",
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Elliott entra en Salesforce",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 1.85,
+   "e5": 5.25,
+   "e20": 3.62,
+   "e60": 23.37,
+   "valores": [
+    "CRM"
+   ],
+   "fecha": "2023-01-23",
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Elliott entra en Phillips 66",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 3.65,
+   "e5": 2.02,
+   "e20": 3.17,
+   "e60": 7.54,
+   "valores": [
+    "PSX"
+   ],
+   "fecha": "2023-11-29",
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Elliott entra en Texas Instruments",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 0.14,
+   "e5": -2.22,
+   "e20": -5.92,
+   "e60": -1.86,
+   "valores": [
+    "TXN"
+   ],
+   "fecha": "2024-05-28",
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Elliott entra en Southwest",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 6.72,
+   "e5": -4.91,
+   "e20": -11.19,
+   "e60": -0.93,
+   "valores": [
+    "LUV"
+   ],
+   "fecha": "2024-06-10",
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Starboard entra en Pfizer",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 3.07,
+   "e5": -2.88,
+   "e20": -4.86,
+   "e60": -10.32,
+   "valores": [
+    "PFE"
+   ],
+   "fecha": "2024-10-07",
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Elliott entra en Honeywell",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 4.16,
+   "e5": -1.23,
+   "e20": -3.74,
+   "e60": -13.18,
+   "valores": [
+    "HON"
+   ],
+   "fecha": "2024-11-12",
+   "tipo": "W"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Elliott entra en PepsiCo",
+   "logica": "Entra un inversor activista → comprar la empresa",
+   "n": 1,
+   "d0": 1.84,
+   "e5": -4.83,
+   "e20": -9.37,
+   "e60": -6.93,
+   "valores": [
+    "PEP"
+   ],
+   "fecha": "2025-09-02",
+   "tipo": "W"
   }
  ]
 }
