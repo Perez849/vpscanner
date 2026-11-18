@@ -85,6 +85,15 @@ Sale de simular cada tipo de idea sobre hechos pasados desde 2000 (`python -m vp
 
 Antes de dar una idea de tipo `estructural`, comprobar que no es en realidad una `decision`: si el hecho es que alguien **decide o anuncia** algo que se veía venir (un banco central, un parlamento, una empresa), es `decision` y no se da. Si es algo que **ha ocurrido** y nadie descontaba, es `estructural`.
 
+**Antes de descartar, cruzar con el miedo.** Al combinar lecciones (validando cada combinación por separado en 2000–2013 y en 2014–2026) sale un multiplicador común: el índice del miedo (VIX). Con el VIX en 28 o más:
+
+- Pánico del mercado: comprar **semiconductores (SMH)** ha dado más que el Nasdaq entero (+10,4 % frente a +8,9 % en 60 sesiones).
+- Una acción grande que cae un 10 % en un día de tormenta, **sin un problema propio** detrás: +18,6 % en 60 sesiones. En calma, lo contrario (−1,4 %).
+- Competidoras castigadas el día en que el líder se dispara: +9,0 %.
+- El castigado de un susto: +4,8 % (16 casos).
+
+Así que un descarte de tipo `caido`, `susto` (comprar al castigado) o `contagio` se revisa si ese día el VIX está en 28 o más. Si la caída es por un escándalo o por malos resultados propios, sigue siendo «no» aunque haya tormenta.
+
 La pregunta que separa un cambio duradero de un susto: ¿el motivo puede desaparecer con el siguiente titular, o cambia lo que esas empresas ganarán durante varios trimestres?
 
 La **convicción** (1–5) dice cuánto encaja la idea con un tipo de veredicto «sí» y cuánto queda sin recoger en el precio.
