@@ -27,7 +27,9 @@ EXTRA = ('SPY QQQ IWM CL=F GC=F NG=F HG=F ZW=F ^TNX ^VIX BTC-USD XLU KRE GDX VNQ
          'XLK XLF XLE XLV XLY XLP XLI XLB XLRE XLC NVO BNTX EADSY ONON SEDG RUN '
          'BP SAN DB ING LYG BCS LVS WYNN BABA JD BIDU IBB XBI VST CEG WBA Z CHGG BHC EEM HYG UUP SHOP EBAY ETSY '
          'SMH JETS ITA XHB XOP XRT IYT FXI CHKP DOCU BOX EA TTWO FANG XPO TM GDRX DLTR '
-         'ROST BURL KSS M DDS BBY CVX MPC KO PFE MRK ABBV BMY AZN VZ T CMCSA CHTR UPS FDX CSX UNP NSC').split()
+         'ROST BURL KSS M DDS BBY CVX MPC KO PFE MRK ABBV BMY AZN VZ T CMCSA CHTR UPS FDX CSX UNP NSC '
+         'KC=F CC=F SB=F ZC=F LE=F SBUX HSY MDLZ TSN HRL CAG XYZ IEP RBLX CVNA APP HOOD EME DASH WSM JBL BLDR KKR GDDY DELL PLTR '
+         'BIIB ZIM MATX LUV TXN PSX HON CRM NFLX CMG').split()
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', default='data')
 ap.add_argument('--cache', default='.cache/ideas')
@@ -82,6 +84,28 @@ def fetch(s):
 
 
 uni = universe()
+
+
+def join_dates():
+    """Fecha en que cada miembro actual entró en el S&P 500 (columna «Date added» de Wikipedia). Vacío si falla: el ensayo se salta."""
+    p = os.path.join(ARGS.cache, 'sp500_added.json')
+    if os.path.exists(p) and time.time() - os.path.getmtime(p) < 30 * 86400:
+        return json.load(open(p))
+    try:
+        t = pd.read_html(io.StringIO(get('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies').decode()))[0]
+        t.columns = [str(c) for c in t.columns]
+        dc = next(c for c in t.columns if 'Date added' in c or 'Date first added' in c)
+        out = {}
+        for _, r in t.iterrows():
+            m = re.search(r'(\d{4})-(\d{2})-(\d{2})', str(r[dc]))
+            if m: out[str(r['Symbol']).strip().upper().replace('.', '-')] = m.group(0)
+        json.dump(out, open(p, 'w'))
+        return out
+    except Exception as e:
+        print('  fechas de entrada en el S&P 500: no disponibles', e)
+        return {}
+
+
 with ThreadPoolExecutor(max_workers=6) as ex:
     got = sum(ex.map(fetch, sorted(set(list(uni) + EXTRA))))
 print(f'precios: {got} de {len(set(list(uni) + EXTRA))}', flush=True)
@@ -438,6 +462,43 @@ add(G, 'El dólar cae ≥ 1 % en un día → emergentes', 'Dólar débil de golp
 add(G, 'El oro cae ≥ 3 % en un día → mineras de oro (comprar el castigo)', 'Caída fuerte del oro.', study(idx[since & (R['GC=F'] <= -0.03)], GOLDM))
 add(G, 'El petróleo cae ≥ 4 % con el dólar subiendo ≥ 0,5 % → petroleras (comprar el castigo)', 'Caída del crudo por dólar fuerte, no por oferta.', study(idx[since & (ro <= -0.04) & (ru >= 0.005)], EP))
 
+G = 'Más variedad · materias primas agrícolas'
+def soft(sym, thr, basket, nombre, logica):
+    if sym not in col: return
+    r_ = R[sym].where(A[sym].shift(1) > 0).values
+    m = since & ((r_ >= thr) if thr > 0 else (r_ <= thr))
+    add(G, nombre, logica, study(idx[m], [b for b in basket if b in col]))
+soft('KC=F', 0.06, ['SBUX'], 'El café sube ≥ 6 % en un día → Starbucks (comprar el castigo)', 'Su materia prima se encarece.')
+soft('KC=F', -0.06, ['SBUX'], 'El café cae ≥ 6 % en un día → Starbucks', 'Su materia prima se abarata.')
+soft('CC=F', 0.06, ['HSY', 'MDLZ'], 'El cacao sube ≥ 6 % en un día → Hershey y Mondelez (comprar el castigo)', 'El chocolate se encarece.')
+soft('CC=F', -0.06, ['HSY', 'MDLZ'], 'El cacao cae ≥ 6 % en un día → Hershey y Mondelez', 'El chocolate se abarata.')
+soft('SB=F', 0.05, ['KO', 'PEP', 'HSY'], 'El azúcar sube ≥ 5 % en un día → refrescos y chocolate (comprar el castigo)', 'Coste de una materia prima menor.')
+soft('ZC=F', 0.04, ['MOS', 'CF', 'NTR'], 'El maíz sube ≥ 4 % en un día → fertilizantes', 'El agricultor gana más y abona más.')
+soft('ZC=F', 0.04, ['TSN', 'HRL'], 'El maíz sube ≥ 4 % en un día → cárnicas (comprar el castigo)', 'El pienso se encarece.')
+soft('ZC=F', 0.04, ['ADM', 'BG'], 'El maíz sube ≥ 4 % en un día → comercializadoras de grano', 'Más valor en lo que mueven.')
+soft('LE=F', 0.03, ['TSN', 'HRL'], 'El ganado sube ≥ 3 % en un día → cárnicas (comprar el castigo)', 'La carne se encarece.')
+soft('LE=F', 0.03, ['MCD', 'CMG'], 'El ganado sube ≥ 3 % en un día → cadenas de comida rápida (comprar el castigo)', 'La carne se encarece.')
+
+G = 'Más variedad · entrar en el S&P 500'
+JD = join_dates()
+inc = []
+for s_, d_ in JD.items():
+    if s_ not in col: continue
+    t_ = pd.Timestamp(d_)
+    if t_ < pd.Timestamp('2009-06-01') or t_ > idx[-62]: continue
+    i = int(idx.searchsorted(t_))
+    if i < 30 or i >= len(idx) - 62: continue
+    inc.append((i, s_, [], Rv[i, col[s_]], 0.0))
+if inc:
+    def inc_study(sel, lag, nota):
+        rows = []
+        for i, s_, _, r, _ in sel:
+            j = i + lag
+            if j + 61 < len(idx): rows.append((Av[j, col[s_]] / Av[j - 20, col[s_]] - 1 - (Av[j, col['SPY']] / Av[j - 20, col['SPY']] - 1), after(j, [s_], 5) - ubase(5), after(j, [s_], 20) - ubase(20), after(j, [s_], 60) - ubase(60)))
+        r_ = summ(rows); r_['nota'] = nota; return r_
+    add(G, 'Una empresa entra en el S&P 500 → comprarla el día que entra', 'Los fondos indexados tienen que comprarla.', inc_study(inc, 0, '«el mismo día» es lo que subió de más en las 20 sesiones anteriores a entrar'))
+    add(G, 'Una empresa entra en el S&P 500 → comprarla 5 sesiones antes de entrar', 'Adelantarse a los fondos (el anuncio suele llegar una semana antes).', inc_study(inc, -5, '«el mismo día» es lo que subió de más en las 20 sesiones anteriores'))
+
 G = 'Más variedad · líderes de otros sectores'
 lider('KO', -0.04, ['PEP'], 'Coca-Cola cae ≥ 4 % en un día → PepsiCo', 'Rival directo.')
 lider('PFE', -0.05, ['MRK', 'ABBV', 'BMY'], 'Pfizer cae ≥ 5 % en un día → otras farmacéuticas', '¿Problema propio o del sector?')
@@ -510,7 +571,7 @@ add(G, 'Una de las 50 mayores sube ≥ 7 % y sus competidoras quietas (< 1 %) �
 add(G, 'Una grande cae ≥ 10 % y sus competidoras suben ≥ 2 % ese día → sus competidoras', 'Trasvase claro de negocio.', peer_study([e for e in c if e[4] >= 0.02], 'peers'))
 
 G = 'Casos con nombre'
-TIPOS = {'E': 'Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)', 'D': 'Decisión anunciada (banco central, ley firmada, plan de empresa)', 'S': 'Susto o anuncio de un día', 'N': 'Sector castigado por una norma o sanción → comprar el castigo', 'V': 'Víctimas de la novedad de otro → comprar el castigo', 'A': 'Ataque o avería que obliga a gastar en protección', 'M': 'Gran compra de empresa → las siguientes candidatas', 'K': 'El canario avisa: comprar a las arrastradas por el aviso de otra', 'L': 'Demanda antimonopolio contra un gigante → comprar el gigante', 'C': 'Comprar al gigante caído', 'R': 'Competencia del que tropieza', 'B': 'Buena noticia que se contagia'}
+TIPOS = {'J': 'Cambio de consejero delegado → comprar la empresa', 'X': 'Informe de un bajista → comprar el castigo', 'P': 'Anuncio de división de acciones (split) → comprar', 'I': 'Anuncio de entrada en el S&P 500 → comprar', 'F': 'Aprobación de un fármaco clave → comprar al laboratorio', 'H': 'Huelga, bloqueo o escasez → el beneficiado o el castigado', 'W': 'Entra un inversor activista → comprar la empresa', 'E': 'Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)', 'D': 'Decisión anunciada (banco central, ley firmada, plan de empresa)', 'S': 'Susto o anuncio de un día', 'N': 'Sector castigado por una norma o sanción → comprar el castigo', 'V': 'Víctimas de la novedad de otro → comprar el castigo', 'A': 'Ataque o avería que obliga a gastar en protección', 'M': 'Gran compra de empresa → las siguientes candidatas', 'K': 'El canario avisa: comprar a las arrastradas por el aviso de otra', 'L': 'Demanda antimonopolio contra un gigante → comprar el gigante', 'C': 'Comprar al gigante caído', 'R': 'Competencia del que tropieza', 'B': 'Buena noticia que se contagia'}
 CASES = [
  # E · cambios duraderos
  ('2014-11-28', 'La OPEP no recorta (petróleo barato durante años) → aerolíneas', 'DAL UAL AAL LUV ALK', 'D'),
@@ -666,6 +727,62 @@ CASES = [
  ('2023-08-24', 'Resultados de Nvidia (ago-2023) → cadena de la IA', 'AMD AVGO MRVL', 'B'),
  ('2024-05-23', 'Resultados de Nvidia (may-2024) → cadena de la IA', 'AMD AVGO MRVL SMCI', 'B'),
  ('2025-09-10', 'Oracle dispara su cartera de pedidos de IA → cadena de la IA', 'AVGO NVDA MU', 'B'),
+ # ── tipos nuevos (3) ──
+ ('2014-02-04', 'Microsoft nombra consejero delegado a Satya Nadella', 'MSFT', 'J'),
+ ('2016-10-13', 'Dimite el jefe de Wells Fargo tras el escándalo de las cuentas', 'WFC', 'J'),
+ ('2018-10-01', 'General Electric echa a su jefe y ficha a Larry Culp', 'GE', 'J'),
+ ('2019-12-23', 'Boeing despide a su consejero delegado', 'BA', 'J'),
+ ('2020-02-26', 'Iger deja Disney y llega Chapek', 'DIS', 'J'),
+ ('2021-02-03', 'Bezos anuncia que deja de dirigir Amazon', 'AMZN', 'J'),
+ ('2022-11-21', 'Disney recupera a Bob Iger', 'DIS', 'J'),
+ ('2024-03-25', 'El jefe de Boeing anuncia su salida', 'BA', 'J'),
+ ('2024-08-01', 'Boeing nombra a Kelly Ortberg', 'BA', 'J'),
+ ('2024-08-13', 'Starbucks ficha a Brian Niccol', 'SBUX', 'J'),
+ ('2024-09-20', 'Nike recupera a Elliott Hill', 'NKE', 'J'),
+ ('2024-12-02', 'Intel echa a Pat Gelsinger', 'INTC', 'J'),
+ ('2023-03-23', 'Hindenburg publica contra Block', 'XYZ', 'X'),
+ ('2023-05-02', 'Hindenburg publica contra Icahn Enterprises', 'IEP', 'X'),
+ ('2024-08-27', 'Hindenburg publica contra Super Micro', 'SMCI', 'X'),
+ ('2024-10-08', 'Hindenburg publica contra Roblox', 'RBLX', 'X'),
+ ('2025-01-02', 'Hindenburg publica contra Carvana', 'CVNA', 'X'),
+ ('2020-07-31', 'Apple anuncia un split de 4 por 1', 'AAPL', 'P'),
+ ('2020-08-12', 'Tesla anuncia un split de 5 por 1', 'TSLA', 'P'),
+ ('2021-05-24', 'Nvidia anuncia un split de 4 por 1', 'NVDA', 'P'),
+ ('2022-02-02', 'Alphabet anuncia un split de 20 por 1', 'GOOGL', 'P'),
+ ('2022-03-10', 'Amazon anuncia un split de 20 por 1', 'AMZN', 'P'),
+ ('2022-03-28', 'Tesla anuncia otro split', 'TSLA', 'P'),
+ ('2024-01-30', 'Walmart anuncia un split de 3 por 1', 'WMT', 'P'),
+ ('2024-03-20', 'Chipotle anuncia un split de 50 por 1', 'CMG', 'P'),
+ ('2024-05-23', 'Nvidia anuncia un split de 10 por 1', 'NVDA', 'P'),
+ ('2024-06-13', 'Broadcom anuncia un split de 10 por 1', 'AVGO', 'P'),
+ ('2020-11-17', 'Tesla entrará en el S&P 500', 'TSLA', 'I'),
+ ('2023-12-04', 'Uber, Jabil y Builders FirstSource entrarán en el S&P 500', 'UBER JBL BLDR', 'I'),
+ ('2024-03-04', 'Super Micro entrará en el S&P 500', 'SMCI', 'I'),
+ ('2024-06-10', 'CrowdStrike, KKR y GoDaddy entrarán en el S&P 500', 'CRWD KKR GDDY', 'I'),
+ ('2024-09-09', 'Palantir y Dell entrarán en el S&P 500', 'PLTR DELL', 'I'),
+ ('2025-03-10', 'DoorDash y Williams-Sonoma entrarán en el S&P 500', 'DASH WSM', 'I'),
+ ('2025-05-13', 'Coinbase entrará en el S&P 500', 'COIN', 'I'),
+ ('2025-09-08', 'AppLovin, Robinhood y Emcor entrarán en el S&P 500', 'APP HOOD EME', 'I'),
+ ('2021-06-07', 'La FDA aprueba Aduhelm contra el alzhéimer', 'BIIB', 'F'),
+ ('2021-06-07', 'La FDA aprueba Wegovy contra la obesidad', 'NVO', 'F'),
+ ('2023-11-09', 'La FDA aprueba Zepbound contra la obesidad', 'LLY', 'F'),
+ ('2024-03-11', 'La FDA aprueba Wegovy para el corazón', 'NVO', 'F'),
+ ('2024-07-03', 'La FDA aprueba Kisunla contra el alzhéimer', 'LLY', 'F'),
+ ('2023-01-09', 'La FDA aprueba Leqembi contra el alzhéimer', 'BIIB', 'F'),
+ ('2022-09-15', 'Se evita la huelga del ferrocarril → ferroviarias', 'UNP CSX NSC', 'H'),
+ ('2023-05-02', 'Empieza la huelga de guionistas → comprar Disney y Netflix', 'DIS NFLX', 'H'),
+ ('2023-07-25', 'UPS evita la huelga → UPS', 'UPS', 'H'),
+ ('2023-12-18', 'Ataques en el mar Rojo desvían a las navieras → navieras', 'ZIM MATX', 'H'),
+ ('2024-09-13', 'Huelga de los mecánicos de Boeing → comprar Boeing', 'BA', 'H'),
+ ('2024-10-01', 'Huelga en los puertos de la costa este → ferroviarias', 'UNP CSX NSC', 'H'),
+ ('2023-01-12', 'Trian (Peltz) va a por Disney', 'DIS', 'W'),
+ ('2023-01-23', 'Elliott entra en Salesforce', 'CRM', 'W'),
+ ('2023-11-29', 'Elliott entra en Phillips 66', 'PSX', 'W'),
+ ('2024-05-28', 'Elliott entra en Texas Instruments', 'TXN', 'W'),
+ ('2024-06-10', 'Elliott entra en Southwest', 'LUV', 'W'),
+ ('2024-10-07', 'Starboard entra en Pfizer', 'PFE', 'W'),
+ ('2024-11-12', 'Elliott entra en Honeywell', 'HON', 'W'),
+ ('2025-09-02', 'Elliott entra en PepsiCo', 'PEP', 'W'),
  # ── más variedad (2) ──
  ('2009-03-10', 'Citi dice que vuelve a ganar dinero → bancos', 'JPM BAC WFC C', 'E'),
  ('2010-05-10', 'Europa crea su fondo de rescate de 750.000 millones → bancos europeos', 'SAN DB ING', 'D'),
@@ -797,7 +914,7 @@ for tp, lab in TIPOS.items():
     h = lambda k: (lambda x: int(round(100 * np.mean([y > 0 for y in x]))) if x else None)([c[k] for c in cs if c[k] is not None])
     add(G, lab, f'{len(cs)} casos elegidos a mano', {'n': len(cs), 'd0': m('d0'), 'e5': m('e5'), 'e20': m('e20'), 'e60': m('e60'), 'hit20': h('e20'), 'hit60': h('e60'), 'tipo': tp})
 G = 'Casos con nombre'
-for c in sorted(done, key=lambda c: ('EDSNVAMKLCRB'.index(c['tipo']), c['fecha'])):
+for c in sorted(done, key=lambda c: ('EDSNVAMKLCRBJXPIFHW'.index(c['tipo']), c['fecha'])):
     add(G, c['nombre'], TIPOS[c['tipo']].split(' (')[0], {k: v for k, v in c.items() if k != 'nombre'})
 for o in OUT:
     o['nombre'] = '↳ ' + o['nombre'].strip() if o['nombre'].startswith('   ') else o['nombre'].strip()

@@ -32,7 +32,7 @@ La parte principal de **The Many Saints of Wall St** no es un cribador ni una re
 
 ## Cómo aprende
 
-1. **Cada idea lleva su `tipo`** (`estructural`, `decision`, `susto`, `panico`, `norma`, `ataque`, `demanda`, `victima`, `opa`, `canario`, `caido`, `rival`, `obvio`, `segundo`, `contagio`), y **cada descarte lleva también `tipo` y `valores`** (los tickers que se habrían comprado). Sin eso no se puede medir si descartar fue acertado.
+1. **Cada idea lleva su `tipo`** (`estructural`, `decision`, `susto`, `panico`, `norma`, `ataque`, `demanda`, `victima`, `opa`, `canario`, `jefe`, `farmaco`, `activista`, `huelga`, `split`, `indice`, `bajista`, `agricola`, `caido`, `rival`, `obvio`, `segundo`, `contagio`), y **cada descarte lleva también `tipo` y `valores`** (los tickers que se habrían comprado). Sin eso no se puede medir si descartar fue acertado.
 2. `python -m vp.ideas` apunta cada idea dada y cada descarte en `data/ideas_casos.json` y, cuando pasan 5, 20 y 60 sesiones, mide lo que hicieron sus valores frente al SPY, igual que el entrenamiento (compra en la apertura siguiente). Los casos no se borran nunca.
 3. **Cada lunes, en la edición de las 9:00**, se lee el resumen de `ideas_casos.json`. Si un tipo de idea que se viene dando no funciona, o uno que se viene descartando acaba subiendo, se reescribe la lección correspondiente en `data/ideas_playbook.json` (veredicto, texto y cifra) y se dice en la nota de la sesión.
 4. **La primera edición de cada mes** se vuelve a ejecutar `python -m vp.ideas_train`, que incorpora las sesiones nuevas del mercado a los ensayos, y se añaden a `CASES` (en `vp/ideas_train.py`) los hechos con nombre propio del mes que hayan sido importantes, con su fecha, sus valores y su tipo. Después se revisan las lecciones con las cifras nuevas.
@@ -74,6 +74,10 @@ Sale de simular cada tipo de idea sobre hechos pasados (`python -m vp.ideas_trai
 | Ataque informático que obliga a gastar en protección (`ataque`) | **Con condiciones** | 6 casos: +6,4 % en 20 sesiones (83 %). Vale para ciberseguridad; el único caso de avería física (FAA, 2023) no funcionó. |
 | Demanda antimonopolio contra un gigante, comprando al gigante (`demanda`) | **Con condiciones** | 5 casos: nada a 20 sesiones, +5,0 % a 60 (80 %). Pista con muy pocos casos. |
 | Víctimas de la novedad de otro, comprando el castigo (`victima`) | **Con condiciones** | 7 casos: +6,4 % en 60 sesiones, sube el 57 %. |
+| Noticias de la propia empresa: nuevo consejero delegado (`jefe`), fármaco aprobado (`farmaco`), entra un activista (`activista`), huelga o bloqueo (`huelga`) | **No** | Suben el primer día y lo devuelven: cambio de jefe, 12 casos, −9,0 % en 60 sesiones; fármaco aprobado, 6 casos, −5,3 % en 20. |
+| Anuncio de split (`split`) o de entrada en el S&P 500 (`indice`) | **Con condiciones** | Empuje de unas semanas (split: +4,2 % en 20 sesiones, sube el 70 %), que se diluye a tres meses. El día en que entra de verdad en el índice, ya tarde: −0,9 % en 5 sesiones. |
+| Informe de un fondo bajista, comprando el castigo (`bajista`) | **Con condiciones** | Sin patrón: unas veces tenía razón y otras no. Solo tras una respuesta seria (auditor, regulador, cuentas a tiempo). |
+| Café, cacao, azúcar, ganado (`agricola`) | **No** | Nada que se distinga del azar; el cacao caro sigue castigando al chocolate después. |
 | Tras una gran compra, las siguientes candidatas (`opa`) · arrastradas por el aviso de otra (`canario`) | **No** | 11 y 7 casos: nada a 20 sesiones y negativo a 60. |
 | Beneficiario evidente de una materia prima o de los tipos (`obvio`) | **No** | Ni en un día ni en una semana: después del movimiento no queda nada. |
 | Segundo efecto (`segundo`) | **Con condiciones** | Solo en pares concretos: trigo → fertilizantes, tipos a la baja → constructoras. |
