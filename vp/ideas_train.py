@@ -29,7 +29,7 @@ EXTRA = ('SPY QQQ IWM CL=F GC=F NG=F HG=F ZW=F ^TNX ^VIX BTC-USD XLU KRE GDX VNQ
          'SMH JETS ITA XHB XOP XRT IYT FXI CHKP DOCU BOX EA TTWO FANG XPO TM GDRX DLTR '
          'ROST BURL KSS M DDS BBY CVX MPC KO PFE MRK ABBV BMY AZN VZ T CMCSA CHTR UPS FDX CSX UNP NSC '
          'KC=F CC=F SB=F ZC=F LE=F SBUX HSY MDLZ TSN HRL CAG XYZ IEP RBLX CVNA APP HOOD EME DASH WSM JBL BLDR KKR GDDY DELL PLTR '
-         'BIIB ZIM MATX LUV TXN PSX HON CRM NFLX CMG').split()
+         'BIIB ZIM MATX LUV TXN PSX HON CRM NFLX CMG HPQ MSI CL KMB').split()
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', default='data')
 ap.add_argument('--cache', default='.cache/ideas')
@@ -68,16 +68,23 @@ def universe():
     return uni
 
 
+DESDE = 946684800                                                    # 1-ene-2000: los precios se piden desde aquí
+
+
 def fetch(s):
     p = os.path.join(PX, s + '.json')
     if os.path.exists(p) and time.time() - os.path.getmtime(p) < 7 * 86400:
-        return 1
+        try:
+            if json.load(open(p)).get('desde', 10 ** 12) <= DESDE:          # ya descargado con el historial completo
+                return 1
+        except Exception:
+            pass
     time.sleep(random.random() * 0.3)
-    d = get(f'https://{random.choice(["query1", "query2"])}.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(s)}?period1=1167609600&period2={int(time.time()) + 86400}&interval=1d&includeAdjustedClose=true')
+    d = get(f'https://{random.choice(["query1", "query2"])}.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(s)}?period1={DESDE}&period2={int(time.time()) + 86400}&interval=1d&includeAdjustedClose=true')
     try:
         r = json.loads(d)['chart']['result'][0]
         q = r['indicators']['quote'][0]
-        json.dump({'t': r['timestamp'], 'o': q['open'], 'c': q['close'], 'v': q['volume'], 'a': r['indicators']['adjclose'][0]['adjclose']}, open(p, 'w'))
+        json.dump({'desde': DESDE, 't': r['timestamp'], 'o': q['open'], 'c': q['close'], 'v': q['volume'], 'a': r['indicators']['adjclose'][0]['adjclose']}, open(p, 'w'))
         return 1
     except Exception:
         return 0
@@ -160,7 +167,7 @@ def add(grupo, nombre, logica, res):
     OUT.append({'grupo': grupo, 'nombre': nombre, 'logica': logica, **res})
     f = lambda k: 'n/d' if res.get(k) is None else f'{res[k]:+6.2f}%'
     print(f"{grupo[:10]:10s} {nombre[:60]:60s} n={res['n']:4d}  dia0 {f('d0')} | 5s {f('e5')} (t {res.get('t5', 0):+.1f}) | 20s {f('e20')} (t {res.get('t20', 0):+.1f}, {res.get('hit20', 0)}%) | 60s {f('e60')} (t {res.get('t60', 0):+.1f}, {res.get('hit60', 0)}%)", flush=True)
-since = idx >= '2008-01-01'
+since = idx >= '2000-01-01'
 oil = A['CL=F']; ro = R['CL=F'].where(oil.shift(1) > 20)
 AIR = 'DAL UAL AAL LUV ALK JBLU'.split(); CRU = 'CCL RCL NCLH'.split(); EP = 'XOM CVX COP OXY EOG DVN'.split(); REF = 'VLO MPC PSX'.split()
 BANK = 'JPM BAC WFC C KRE'.split(); HB = 'DHI LEN PHM TOL NVR'.split(); UTIL = ['XLU']; GOLDM = 'NEM GDX RGLD AEM'.split(); GAS = 'EQT AR RRC CTRA'.split(); COP_ = 'FCX SCCO'.split()
@@ -428,7 +435,7 @@ rf = R['FXI']
 add(G, 'La bolsa china sube ≥ 4 % en un día → casinos de Macao y cobre', 'China gasta más.', study(idx[since & (rf >= 0.04)], ['LVS', 'WYNN', 'FCX']))
 add(G, 'La bolsa china cae ≥ 4 % en un día → casinos de Macao y cobre (comprar el castigo)', 'Apostar a que el castigo es excesivo.', study(idx[since & (rf <= -0.04)], ['LVS', 'WYNN', 'FCX']))
 add(G, 'La bolsa china sube ≥ 4 % en un día → chinas cotizadas en EE. UU.', 'Seguir el impulso.', study(idx[since & (rf >= 0.04)], ['BABA', 'JD', 'BIDU']))
-ELEC = ['2008-11-04', '2010-11-02', '2012-11-06', '2014-11-04', '2016-11-08', '2018-11-06', '2020-11-03', '2022-11-08', '2024-11-05']
+ELEC = ['2000-11-07', '2002-11-05', '2004-11-02', '2006-11-07', '2008-11-04', '2010-11-02', '2012-11-06', '2014-11-04', '2016-11-08', '2018-11-06', '2020-11-03', '2022-11-08', '2024-11-05']
 em = np.isin(idx.strftime('%Y-%m-%d'), ELEC)
 add(G, 'Día de elecciones en EE. UU. → comprar el Nasdaq-100 al día siguiente', 'Se despeja la incertidumbre.', absol2(em, 'QQQ', 'el Nasdaq-100'))
 add(G, 'Día de elecciones en EE. UU. → comprar las pequeñas al día siguiente', 'Se despeja la incertidumbre.', absol2(em, 'IWM', 'el Russell 2000'))
@@ -727,6 +734,54 @@ CASES = [
  ('2023-08-24', 'Resultados de Nvidia (ago-2023) → cadena de la IA', 'AMD AVGO MRVL', 'B'),
  ('2024-05-23', 'Resultados de Nvidia (may-2024) → cadena de la IA', 'AMD AVGO MRVL SMCI', 'B'),
  ('2025-09-10', 'Oracle dispara su cartera de pedidos de IA → cadena de la IA', 'AVGO NVDA MU', 'B'),
+ # ── 2000-2007 ──
+ ('2000-04-14', 'Desplome del Nasdaq (abril de 2000) → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2001-09-17', 'Reapertura tras el 11-S → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2001-09-17', 'Reapertura tras el 11-S → comprar aerolíneas castigadas', 'LUV', 'S'),
+ ('2001-09-17', 'Reapertura tras el 11-S → defensa', 'LMT NOC GD', 'E'),
+ ('2001-09-17', 'Reapertura tras el 11-S → seguridad y vigilancia', 'LHX', 'A'),
+ ('2003-03-20', 'Empieza la guerra de Irak → defensa', 'LMT NOC GD', 'E'),
+ ('2003-03-20', 'Empieza la guerra de Irak → comprar el Nasdaq', 'QQQ', 'E'),
+ ('2003-04-02', 'Alerta de la OMS por el SARS → comprar aerolíneas castigadas', 'LUV', 'S'),
+ ('2004-03-11', 'Atentados de Madrid → defensa', 'LMT NOC GD', 'S'),
+ ('2005-07-07', 'Atentados de Londres → defensa', 'LMT NOC GD', 'S'),
+ ('2005-08-29', 'Huracán Katrina → refino', 'VLO', 'S'),
+ ('2005-08-29', 'Huracán Katrina → reformas del hogar', 'HD LOW', 'S'),
+ ('2007-02-27', 'Desplome de la bolsa de Shanghái → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2007-08-09', 'BNP congela fondos: estalla la crisis hipotecaria → comprar bancos', 'JPM BAC WFC', 'S'),
+ ('2008-03-17', 'Cae Bear Stearns → comprar bancos', 'JPM BAC WFC', 'S'),
+ ('2008-09-15', 'Quiebra Lehman Brothers → comprar bancos', 'JPM BAC WFC', 'S'),
+ ('2008-09-29', 'El Congreso rechaza el primer rescate → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2004-11-03', 'Bush reelegido (2004) → farmacéuticas y defensa', 'PFE MRK LMT', 'E'),
+ ('2006-11-08', 'Los demócratas ganan el Congreso (2006) → farmacéuticas (comprar el castigo)', 'PFE MRK', 'E'),
+ ('2008-11-05', 'Obama gana (2008) → solar', 'FSLR', 'E'),
+ ('2001-01-03', 'La Fed recorta los tipos por sorpresa (2001) → Nasdaq', 'QQQ', 'D'),
+ ('2003-05-28', 'Se firma la rebaja de impuestos sobre dividendos → eléctricas', 'XLU', 'D'),
+ ('2004-06-30', 'La Fed empieza a subir tipos (2004) → bancos', 'JPM BAC WFC', 'D'),
+ ('2007-09-18', 'La Fed recorta 50 pb (2007) → constructoras', 'DHI LEN PHM', 'D'),
+ ('2008-01-22', 'Recorte de emergencia de 75 pb → bancos', 'JPM BAC WFC', 'D'),
+ ('2008-09-08', 'Intervención de Fannie Mae y Freddie Mac → bancos', 'JPM BAC WFC', 'D'),
+ ('2008-10-08', 'Recorte de tipos coordinado mundial → Nasdaq', 'QQQ', 'D'),
+ ('2000-09-22', 'Intel avisa de menos ventas (2000) → comprar Intel', 'INTC', 'C'),
+ ('2000-09-29', 'Apple se hunde un 52 % (2000) → comprar Apple', 'AAPL', 'C'),
+ ('2004-09-30', 'Merck retira el Vioxx → comprar Merck', 'MRK', 'C'),
+ ('2000-09-22', 'Intel avisa → AMD', 'AMD', 'R'),
+ ('2004-09-30', 'Merck retira el Vioxx → Pfizer', 'PFE', 'R'),
+ ('2000-04-03', 'Un juez falla contra Microsoft por monopolio → comprar Microsoft', 'MSFT', 'L'),
+ ('2000-01-10', 'AOL compra Time Warner → otros medios', 'DIS', 'M'),
+ ('2005-01-28', 'Procter & Gamble compra Gillette → otras de consumo', 'CL KMB', 'M'),
+ ('2006-07-24', 'AMD compra ATI → Nvidia', 'NVDA', 'M'),
+ ('2007-01-09', 'Apple presenta el iPhone → comprar a la castigada Motorola', 'MSI', 'V'),
+ ('2007-02-08', 'HSBC avisa de pérdidas hipotecarias → comprar otros bancos', 'JPM BAC WFC', 'K'),
+ ('2000-11-27', 'General Electric nombra a Jeff Immelt', 'GE', 'J'),
+ ('2005-02-09', 'Hewlett-Packard echa a Carly Fiorina', 'HPQ', 'J'),
+ ('2005-03-14', 'Disney nombra a Bob Iger', 'DIS', 'J'),
+ ('2003-01-17', 'Microsoft anuncia un split de 2 por 1', 'MSFT', 'P'),
+ ('2005-02-14', 'Apple anuncia un split de 2 por 1', 'AAPL', 'P'),
+ ('2005-11-21', 'Amazon entrará en el S&P 500', 'AMZN', 'I'),
+ ('2006-03-27', 'Google entrará en el S&P 500', 'GOOGL', 'I'),
+ ('2003-01-27', 'Gusano informático Slammer → ciberseguridad', 'CHKP', 'A'),
+ ('2002-10-01', 'Cierre de los puertos de la costa oeste → ferroviarias', 'UNP CSX', 'H'),
  # ── tipos nuevos (3) ──
  ('2014-02-04', 'Microsoft nombra consejero delegado a Satya Nadella', 'MSFT', 'J'),
  ('2016-10-13', 'Dimite el jefe de Wells Fargo tras el escándalo de las cuentas', 'WFC', 'J'),

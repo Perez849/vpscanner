@@ -904,7 +904,7 @@ function renderTrain() {
     <span class="x-kick">El libro de estilo</span>
     <h1 class="x-h1">${headline('Qué ideas doy *y cuáles me callo.*')}</h1>
     <p class="x-pulse" id="aipulse" style="min-height:0;max-width:78ch">${esc(P.resumen || '')}</p>
-    <div class="x-stats"><div class="x-stat"><span class="x-mono">Hechos simulados</span><b data-n="${total}">${total.toLocaleString('es-ES')}</b></div><div class="x-stat"><span class="x-mono">Tipos de idea</span><b data-n="${kinds}">${kinds}</b></div><div class="x-stat"><span class="x-mono">Casos con nombre</span><b data-n="${named}">${named}</b></div><div class="x-stat"><span class="x-mono">Desde</span><b>2008</b></div></div>
+    <div class="x-stats"><div class="x-stat"><span class="x-mono">Hechos simulados</span><b data-n="${total}">${total.toLocaleString('es-ES')}</b></div><div class="x-stat"><span class="x-mono">Tipos de idea</span><b data-n="${kinds}">${kinds}</b></div><div class="x-stat"><span class="x-mono">Casos con nombre</span><b data-n="${named}">${named}</b></div><div class="x-stat"><span class="x-mono">Desde</span><b>${P.desde || 2008}</b></div></div>
   </div></section>
   <section class="x-sec">${secHead('<b>Editorial</b> · Lecciones', 'Lo que enseñan <em>los hechos pasados</em>', esc(P.metodo))}
     <div class="x-less">${P.lecciones.map(l => `<div class="x-les ${esc(l.veredicto)} x-rv"><span class="x-vd">${VD[l.veredicto] || ''}</span><h4>${esc(l.titulo)}</h4><p>${esc(l.texto)}</p><div class="fig">${esc(l.cifra)}</div></div>`).join('')}</div></section>
