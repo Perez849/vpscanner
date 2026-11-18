@@ -307,6 +307,8 @@ a.x-val:hover{background:var(--hl);padding-inline:10px}
 .x-sc h4{font-family:var(--fh);font-weight:900;font-size:clamp(22px,2.3vw,30px);line-height:1.02;margin:0 0 8px;letter-spacing:-.022em}
 .x-sc .v{font-family:var(--fh);font-weight:900;font-size:clamp(30px,3.4vw,46px);line-height:.9;text-align:right;font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.02em;white-space:nowrap}.x-sc .v small{display:block;font-family:var(--fm);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-top:8px;font-weight:500}
 .x-up{color:var(--go)}.x-dn{color:var(--no)}
+.x-sc .v.hip{color:var(--dim)}.x-sc.hip h4{color:var(--sub)}.x-sc .v.pend{font-family:var(--fm);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)}
+.x-subh{font-family:var(--fh);font-weight:900;font-size:28px;letter-spacing:-.02em;margin:40px 0 6px}.x-subp{margin:0 0 16px;font-style:italic;color:var(--sub);font-size:16.5px;line-height:1.46;max-width:80ch}.x-subp a{color:var(--ink)}
 .x-end{margin-top:clamp(44px,6vw,80px);padding-top:18px;border-top:4px double var(--ink);color:var(--sub);font-size:14.5px;font-style:italic;line-height:1.5;max-width:96ch}.x-end a{color:var(--ink)}
 /* entrenamiento */
 .x-less{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0;border-top:1.5px solid var(--ink);border-left:1.5px solid var(--ink)}
@@ -787,6 +789,15 @@ function ideaCard(I, k) {
   </article>`;
 }
 
+function scRow(i) {
+  const t = S.idt && S.idt.ideas && S.idt.ideas[i.id], hip = i.estado === 'cerrada' && !i.entrada, pend = t && t.pendiente;
+  const sub = hip ? `cerrada sin comprarse · ${esc(i.motivo_cierre || '')} · ${fdate(i.fecha)} → ${fdate(i.salida || (t && t.hasta) || i.fecha)}`
+    : i.estado === 'abierta' ? `abierta · comprada el ${fdate(i.entrada)}${pend ? ' · empieza a contar con el cierre de ese día' : t && t.hasta ? ' · hasta el ' + fdate(t.hasta) : ''}`
+    : i.estado === 'cerrada' ? `cerrada · ${esc(i.motivo_cierre || '')} · ${fdate(i.entrada)} → ${fdate(i.salida || '')}`
+    : `en vigilancia · desde el ${fdate(i.fecha)}, solo como referencia`;
+  const v = (x, lab) => pend ? `<div class="v pend">pendiente<small>${lab}</small></div>` : `<div class="v${hip ? ' hip' : ''}">${x != null ? (hip ? num(x) : sgn(x)) : '—'}<small>${hip ? (lab === 'la idea' ? 'habría hecho' : 'S&amp;P 500 igual') : lab}</small></div>`;
+  return `<div class="x-sc x-rv${hip ? ' hip' : ''}"><div><h4>${esc(i.titulo)}</h4><span class="x-mono">${sub}</span></div>${v(t && t.media, 'la idea')}${v(t && t.spy, 'S&amp;P 500').replace('class="v', 'class="v spy')}</div>`;
+}
 function renderIdeas() {
   const D = S.ideas;
   if (!D) { $('#view').innerHTML = '<div class="empty">Todavía no hay ninguna lectura guardada (data/ideas.json).</div>'; return; }
@@ -822,9 +833,9 @@ function renderIdeas() {
   ${disc.length ? `<section class="x-sec">${secHead('<b>Papelera</b> · Descartadas', 'Parecían buenas <em>y no te las doy</em>', 'Tan importante como dar una idea es saber cuál callarse. Cada descarte lleva la lección del entrenamiento que lo explica.')}
     ${disc.map(d => `<div class="x-dis x-rv"><h4>${d.nuevo ? NEW : ''}${esc(d.titulo)}</h4><div><p>${esc(d.por_que)}</p>${d.leccion ? `<div class="le"><b>Lección</b>${esc(d.leccion)}</div>` : ''}</div></div>`).join('')}</section>` : ''}
 
-  <section class="x-sec">${secHead('<b>Resultados</b> · Marcador', 'Cada idea, <em>contra el S&amp;P 500</em>', 'Las ideas no se borran ni se retocan. Las abiertas cuentan desde el cierre del día en que saltó su disparador; las que siguen en vigilancia, desde el precio del día en que se dieron, solo como referencia.')}
-    ${ideas.map(i => { const t = S.idt && S.idt.ideas && S.idt.ideas[i.id]; return `<div class="x-sc x-rv"><div><h4>${esc(i.titulo)}</h4><span class="x-mono">${ST[i.estado] || ''} · ${fdate(i.entrada || i.fecha)}${t && t.hasta ? ' → ' + fdate(t.hasta) : ''}</span></div><div class="v">${t && t.media != null ? sgn(t.media) : '—'}<small>la idea</small></div><div class="v spy">${t && t.spy != null ? sgn(t.spy) : '—'}<small>S&amp;P 500</small></div></div>`; }).join('')}
-    ${closed.length ? `<div style="margin-top:40px">${closed.map((c, k) => ideaCard(c, live.length + k)).join('')}</div>` : ''}
+  <section class="x-sec">${secHead('<b>Resultados</b> · Marcador', 'Cada idea, <em>contra el S&amp;P 500</em>', 'Las ideas no se borran ni se retocan. Una idea abierta cuenta desde el cierre del día en que se compró; hasta que exista ese cierre, sale como pendiente. Las que siguen en vigilancia se miden desde el precio del día en que se dieron, solo como referencia.')}
+    ${live.map(scRow).join('')}
+    ${closed.length ? `<h3 class="x-subh">Cerradas</h3><p class="x-subp">Las que se cerraron sin llegar a comprarse no suman ni restan: la cifra en gris es lo que habrían hecho sus valores entre el día en que se dieron y el día en que se cerraron. Sirve para aprender (queda apuntada en los casos propios), no es una ganancia ni una pérdida real. La ficha completa de cada una está en la <a href="#hemeroteca">Hemeroteca</a>.</p>${closed.map(scRow).join('')}` : ''}
   </section>
   <p class="x-end">Esto no es una recomendación de inversión personalizada. Es un razonamiento público, con su registro, para que juzgues tú. Las noticias salen de búsquedas en prensa y pueden contener errores; los precios son de Yahoo Finance al último cierre. En <a href="#entrenamiento">Entrenamiento</a> está lo que se ha aprendido probando este tipo de ideas con hechos pasados.</p></div>`;
   aiStart(ses.pulso || '');
