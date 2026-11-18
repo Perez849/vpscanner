@@ -577,6 +577,71 @@ add(G, 'Una grande sube ≥ 10 % y sus competidoras suben con ella (≥ 2 %) →
 add(G, 'Una de las 50 mayores sube ≥ 7 % y sus competidoras quietas (< 1 %) → sus competidoras', 'Lo mismo, con los gigantes de verdad.', peer_study([e for e in mega['salto'] if abs(e[4]) < 0.01], 'peers'))
 add(G, 'Una grande cae ≥ 10 % y sus competidoras suben ≥ 2 % ese día → sus competidoras', 'Trasvase claro de negocio.', peer_study([e for e in c if e[4] >= 0.02], 'peers'))
 
+# ── combinaciones: cruzar dos condiciones y exigir que funcionen en las dos mitades del periodo ──
+G = 'Combinaciones (validadas en dos mitades)'
+CUT = int(idx.searchsorted(pd.Timestamp('2014-01-01')))
+COMBOS = []
+def combo(nombre, logica, rows):
+    """rows: [(i, d0, e5, e20, e60)] ya en exceso. Se resume entero y por mitades (antes y después de 2014)."""
+    rows = [r for r in rows if r is not None]
+    if not rows: return
+    allr = summ([r[1:] for r in rows]); a = summ([r[1:] for r in rows if r[0] < CUT]); b = summ([r[1:] for r in rows if r[0] >= CUT])
+    allr['mitad1'] = {k: a.get(k) for k in ('n', 'e20', 'e60', 't60')}; allr['mitad2'] = {k: b.get(k) for k in ('n', 'e20', 'e60', 't60')}
+    ok = all((m.get('e60') or -1) > 0 and (m.get('n') or 0) >= 5 for m in (allr['mitad1'], allr['mitad2'])) and (allr.get('t60') or 0) >= 2
+    allr['robusta'] = bool(ok)
+    allr['nota'] = f"2000–2013: {'n/d' if a.get('e60') is None else f'{a[chr(101)+chr(54)+chr(48)]:+.1f} %'} a 60 sesiones ({a['n']} casos) · 2014–2026: {'n/d' if b.get('e60') is None else f'{b[chr(101)+chr(54)+chr(48)]:+.1f} %'} ({b['n']} casos){' · funciona en las dos mitades' if ok else ''}"
+    COMBOS.append(nombre); add(G, nombre, logica, allr)
+_qb = {}
+def qbase(sym, h, half):
+    k = (sym, h, half)
+    if k not in _qb:
+        j = col[sym]; ii = np.arange(int(np.argmax(since)) + 1, len(idx) - 62, 3)
+        ii = ii[ii < CUT] if half == 0 else ii[ii >= CUT]
+        _qb[k] = float(np.nanmean([Av[i + h, j] / Ov[i + 1, j] - 1 for i in ii]))
+    return _qb[k]
+def idx_rows(mask, sym):
+    out = []; j = col[sym]
+    for i in thin(idx[mask]):
+        if i + 61 >= len(idx) or not np.isfinite(Ov[i + 1, j]): continue
+        hf = 0 if i < CUT else 1
+        out.append((i, rs[i], *[Av[i + h, j] / Ov[i + 1, j] - 1 - qbase(sym, h, hf) for h in (5, 20, 60)]))
+    return out
+def stock_rows(sel, who):
+    out = []
+    for e in sel:
+        i, s_, peers, r, pm = e
+        if i + 61 >= len(idx): continue
+        b_ = peers if who == 'peers' else [s_]
+        out.append((i, pm if who == 'peers' else r - spy[i], *[after(i, b_, h) - ubase(h) for h in (5, 20, 60)]))
+    return out
+pan2 = since & (rs <= -0.02)
+combo('Pánico con miedo alto (VIX ≥ 28) → Nasdaq-100', 'La regla de referencia, para comparar.', idx_rows(pan2 & (vixp >= 28), 'QQQ'))
+combo('Pánico con miedo alto y mercado en tendencia alcista → Nasdaq-100', 'Susto fuerte dentro de una subida.', idx_rows(pan2 & (vixp >= 28) & above, 'QQQ'))
+combo('Pánico con miedo alto y mercado en tendencia bajista → Nasdaq-100', 'Susto fuerte dentro de una bajada.', idx_rows(pan2 & (vixp >= 28) & ~above, 'QQQ'))
+combo('Pánico con miedo extremo (VIX ≥ 35) → Nasdaq-100', 'Solo las tormentas de verdad.', idx_rows(pan2 & (vixp >= 35), 'QQQ'))
+combo('Pánico con miedo alto → pequeñas (Russell 2000)', 'Lo más castigado en el pánico.', idx_rows(pan2 & (vixp >= 28), 'IWM'))
+combo('Pánico con miedo alto → semiconductores', 'Lo que más cae, ¿más rebota?', idx_rows(pan2 & (vixp >= 28), 'SMH') if 'SMH' in col else [])
+combo('Pánico con miedo alto y el bono a 10 años bajando ≥ 10 pb → Nasdaq-100', 'Huida a los bonos: los tipos bajan a favor del rebote.', idx_rows(pan2 & (vixp >= 28) & (ty.values <= -0.10), 'QQQ'))
+combo('Racha de tres días (−3 %) con miedo alto y tendencia alcista → Nasdaq-100', 'Mala semana dentro de una subida.', idx_rows(since & dn3 & (d3 <= -0.03) & (vixp >= 28) & above, 'QQQ'))
+combo('Hueco de apertura ≥ 1,5 % a la baja con miedo alto → Nasdaq-100 al cierre', 'Susto nocturno en plena tormenta.', [(i, d0, e5, e20, e60) for (i, d0, e5, e20, e60) in idx_rows(since & (gap <= -0.015) & (vixp >= 28), 'QQQ')])
+vxs = lambda e: vixp[e[0]]
+combo('Una grande cae ≥ 10 % con el miedo alto (VIX ≥ 28) → comprar la caída', 'La caída de una empresa en plena tormenta: ¿exceso de ventas?', stock_rows([e for e in c if vxs(e) >= 28], 'self'))
+combo('Una grande cae ≥ 10 % con el miedo bajo (VIX < 18) → comprar la caída', 'La caída de una empresa en plena calma: problema propio.', stock_rows([e for e in c if vxs(e) < 18], 'self'))
+combo('Una grande ya hundida (−30 %) cae otro 10 % con el miedo alto → comprar la caída', 'Capitulación.', stock_rows([e for e in c if off(e) < -0.30 and vxs(e) >= 28], 'self'))
+combo('Cae ≥ 10 % desde máximos con el miedo alto → comprar la caída', 'El que iba primero, en plena tormenta.', stock_rows([e for e in c if off(e) > -0.10 and vxs(e) >= 28], 'self'))
+combo('Tropiezo con competidoras subiendo ≥ 2 % y miedo bajo (VIX < 20) → sus competidoras', 'Trasvase de negocio sin ruido de mercado.', stock_rows([e for e in c if e[4] >= 0.02 and vxs(e) < 20], 'peers'))
+combo('Tropiezo con competidoras subiendo ≥ 2 % y caída ≥ 20 % → sus competidoras', 'Trasvase tras un desplome.', stock_rows([e for e in c if e[4] >= 0.02 and e[3] <= -0.20], 'peers'))
+combo('Tropiezo con competidoras subiendo ≥ 2 % desde máximos → sus competidoras', 'Tropieza el que iba primero y los demás lo celebran.', stock_rows([e for e in c if e[4] >= 0.02 and off(e) > -0.10], 'peers'))
+peer_off = lambda e: np.nanmean([OFF[e[0], col[p]] for p in e[2] if p in col])
+combo('El líder sube ≥ 10 % y castigan a competidoras ya hundidas (−25 %) → sus competidoras', 'Castigo sobre castigo.', stock_rows([e for e in u_ if e[4] <= -0.01 and peer_off(e) < -0.25], 'peers'))
+combo('El líder sube ≥ 10 % y castigan a competidoras con el miedo alto → sus competidoras', 'Castigo en plena tormenta.', stock_rows([e for e in u_ if e[4] <= -0.01 and vxs(e) >= 25], 'peers'))
+combo('El líder sube ≥ 15 % y castigan a sus competidoras → sus competidoras', 'Gran noticia del líder, castigo a los demás.', stock_rows([e for e in u_ if e[4] <= -0.01 and e[3] >= 0.15], 'peers'))
+rzc = R['ZC=F'].values if 'ZC=F' in col else np.zeros(len(idx))
+combo('Trigo +4 % y maíz +2 % el mismo día → fertilizantes', 'Todo el grano sube a la vez.', [(i, d0, *x) for i, d0, *x in [(i, day0(i, FERT), after(i, FERT, 5) - base(FERT)[5], after(i, FERT, 20) - base(FERT)[20], after(i, FERT, 60) - base(FERT)[60]) for i in thin(idx[since & (R['ZW=F'].values >= 0.04) & (rzc >= 0.02)]) if i + 61 < len(idx)]])
+combo('Petróleo −4 % con el miedo alto → aerolíneas', 'Crudo barato y mercado asustado.', [(i, day0(i, AIR), after(i, AIR, 5) - base(AIR)[5], after(i, AIR, 20) - base(AIR)[20], after(i, AIR, 60) - base(AIR)[60]) for i in thin(idx[since & (ro.values <= -0.04) & (vixp >= 28)]) if i + 61 < len(idx)])
+combo('Bono a 10 años −30 pb en diez sesiones con miedo alto → constructoras', 'Hipotecas más baratas en plena tormenta.', [(i, day0(i, HB), after(i, HB, 5) - base(HB)[5], after(i, HB, 20) - base(HB)[20], after(i, HB, 60) - base(HB)[60]) for i in thin(idx[since & (t10.values <= -0.30) & (vixp >= 28)]) if i + 61 < len(idx)])
+print(f'combinaciones probadas: {len(COMBOS)} · por azar cabe esperar que alguna salga bien en las dos mitades', flush=True)
+
 G = 'Casos con nombre'
 TIPOS = {'J': 'Cambio de consejero delegado → comprar la empresa', 'X': 'Informe de un bajista → comprar el castigo', 'P': 'Anuncio de división de acciones (split) → comprar', 'I': 'Anuncio de entrada en el S&P 500 → comprar', 'F': 'Aprobación de un fármaco clave → comprar al laboratorio', 'H': 'Huelga, bloqueo o escasez → el beneficiado o el castigado', 'W': 'Entra un inversor activista → comprar la empresa', 'E': 'Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)', 'D': 'Decisión anunciada (banco central, ley firmada, plan de empresa)', 'S': 'Susto o anuncio de un día', 'N': 'Sector castigado por una norma o sanción → comprar el castigo', 'V': 'Víctimas de la novedad de otro → comprar el castigo', 'A': 'Ataque o avería que obliga a gastar en protección', 'M': 'Gran compra de empresa → las siguientes candidatas', 'K': 'El canario avisa: comprar a las arrastradas por el aviso de otra', 'L': 'Demanda antimonopolio contra un gigante → comprar el gigante', 'C': 'Comprar al gigante caído', 'R': 'Competencia del que tropieza', 'B': 'Buena noticia que se contagia'}
 CASES = [
@@ -953,6 +1018,14 @@ def bucket(nombre, logica, sel):
     hh = lambda k: (lambda v: int(round(100 * np.mean([y > 0 for y in v]))) if v else None)([c_[k] for c_ in x if c_[k] is not None])
     add(G, nombre, logica, {'n': len(x), 'd0': m('d0'), 'e5': m('e5'), 'e20': m('e20'), 'e60': m('e60'), 'hit20': hh('e20'), 'hit60': hh('e60')})
 ben = lambda c_: c_['tipo'] in 'EDSAMB' and 'comprar' not in c_['nombre'].lower()
+vix_at = lambda c_: vixp[pos[pd.Timestamp(c_['fecha'])]] if pd.Timestamp(c_['fecha']) in pos else np.nan
+bucket('Hechos consumados con el miedo alto ese día (VIX ≥ 25)', 'Un cambio duradero que llega en plena tormenta.', lambda c_: c_['tipo'] == 'E' and vix_at(c_) >= 25)
+bucket('Hechos consumados con el miedo bajo ese día (VIX < 25)', 'Un cambio duradero que llega en calma.', lambda c_: c_['tipo'] == 'E' and vix_at(c_) < 25)
+bucket('Hechos consumados cuyo primer día fue pequeño (< 3 %)', 'El mercado aún no ha visto todo el alcance.', lambda c_: c_['tipo'] == 'E' and c_['d0'] is not None and c_['d0'] < 3)
+bucket('Hechos consumados cuyo primer día fue grande (≥ 3 %)', 'El mercado ya reaccionó con fuerza.', lambda c_: c_['tipo'] == 'E' and c_['d0'] is not None and c_['d0'] >= 3)
+bucket('Sustos · comprar al castigado con el miedo alto (VIX ≥ 25)', 'Castigo en plena tormenta.', lambda c_: c_['tipo'] == 'S' and 'comprar' in c_['nombre'].lower() and vix_at(c_) >= 25)
+bucket('Sustos · comprar al castigado con el miedo bajo (VIX < 25)', 'Castigo en calma.', lambda c_: c_['tipo'] == 'S' and 'comprar' in c_['nombre'].lower() and vix_at(c_) < 25)
+bucket('Gigante caído famoso con el miedo alto (VIX ≥ 25)', 'Escándalo o mal resultado en plena tormenta.', lambda c_: c_['tipo'] == 'C' and vix_at(c_) >= 25)
 bucket('Beneficiarios que el primer día casi no se mueven (menos de un 2 %)', 'El mercado no ha visto la conexión.', lambda c_: ben(c_) and c_['d0'] is not None and c_['d0'] < 2)
 bucket('Beneficiarios que el primer día suben entre un 2 % y un 6 %', 'Reacción normal.', lambda c_: ben(c_) and c_['d0'] is not None and 2 <= c_['d0'] < 6)
 bucket('Beneficiarios que el primer día suben más de un 6 %', 'Reacción fuerte: ¿queda algo?', lambda c_: ben(c_) and c_['d0'] is not None and c_['d0'] >= 6)
