@@ -159,12 +159,54 @@
    "e60": null
   },
   {
+   "id": "2026-11-18-comprar-a-las-competidoras-de-tjx-y-target",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar a las competidoras de TJX y Target",
+   "tipo": "contagio",
+   "valores": [
+    "ROST",
+    "BURL"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-18-comprar-aerolineas-porque-el-petroleo-se-hunde-u",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar aerolíneas porque el petróleo se hunde un 4,5 %",
+   "tipo": "obvio",
+   "valores": [
+    "DAL",
+    "UAL",
+    "JETS"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-18-comprar-lowe-s-porque-cae-un-4-4",
    "fecha": "2026-11-18",
    "titulo": "Comprar Lowe's porque cae un 4,4 %",
    "tipo": "caido",
    "valores": [
     "LOW"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-18-comprar-nvidia-porque-cae-tras-batir",
+   "fecha": "2026-11-18",
+   "titulo": "Comprar Nvidia porque cae tras batir",
+   "tipo": "caido",
+   "valores": [
+    "NVDA"
    ],
    "dada": false,
    "e5": null,
@@ -210,5 +252,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795005379
+ "generado": 1795032672
 }
