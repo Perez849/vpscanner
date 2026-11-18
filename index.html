@@ -359,6 +359,14 @@ table.x-tr tr.sig td:first-child{box-shadow:inset 4px 0 0 var(--go);padding-left
 .x-mini{width:104px;height:30px;display:block}
 .x-val{grid-template-columns:92px minmax(0,1fr) 104px auto}
 .x-day{font-family:var(--fh);font-weight:900;font-size:26px;letter-spacing:-.02em;margin:34px 0 0;padding-bottom:8px;border-bottom:3px solid var(--ink)}
+.x-dayg{margin-top:26px}
+.x-dayg>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:14px;margin:0;user-select:none}
+.x-dayg>summary::-webkit-details-marker{display:none}
+.x-dayg>summary::before{content:'+';font-family:var(--fm);font-weight:700;font-size:20px;width:22px;flex:none;color:var(--red)}
+.x-dayg[open]>summary::before{content:'−'}
+.x-dayg>summary small{margin-left:auto;font-family:var(--fm);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--sub)}
+.x-dayg>summary:hover span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.x-dayg>summary:focus-visible{outline:2px solid var(--red);outline-offset:4px}
 .x-day::first-letter{text-transform:uppercase}
 .x-ed{display:grid;grid-template-columns:96px minmax(0,1fr) auto auto;gap:20px;align-items:center;padding:16px 0;border-bottom:1px solid var(--rule2);text-decoration:none;color:inherit;transition:background .2s,padding .2s}
 .x-ed:hover{background:var(--hl);padding-inline:12px}
@@ -853,10 +861,12 @@ async function openEd(id) {
 }
 function renderArch() {
   const E = S.eds || [], TIPO = {manual: 'Especial', mañana: 'Mañana', manana: 'Mañana', preapertura: 'Preapertura', cierre: 'Cierre'}, ACC = {nada: 'Nada que hacer', vigilar: 'Solo vigilar', comprar: 'Comprar', vender: 'Vender'};
-  let day = '', rows = '';
+  const days = [];                                                              // ediciones agrupadas por día; cada día es plegable y solo el más reciente sale abierto
   for (const e of E) { const d = new Date(e.cuando), dk = madrid(d, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
-    if (dk !== day) { day = dk; rows += `<h3 class="x-day">${dk}</h3>`; }
-    rows += `<a class="x-ed x-rv" href="#hemeroteca" data-ed="${esc(e.id)}"><time>${madrid(d, {hour: '2-digit', minute: '2-digit'})}<small>${TIPO[e.tipo] || esc(e.tipo || '')}</small></time><div><h4>${esc(e.titular || 'Sin titular')}</h4>${e.hoy ? `<p>${esc(e.hoy)}</p>` : ''}</div><span class="x-acc ${esc(e.accion || 'nada')}">${ACC[e.accion] || '—'}</span><span class="x-mono">${e.vivas} idea${e.vivas === 1 ? '' : 's'} viva${e.vivas === 1 ? '' : 's'}</span></a>`; }
+    if (!days.length || days[days.length - 1].dk !== dk) days.push({dk, html: '', n: 0});
+    const g = days[days.length - 1]; g.n++;
+    g.html += `<a class="x-ed" href="#hemeroteca" data-ed="${esc(e.id)}"><time>${madrid(d, {hour: '2-digit', minute: '2-digit'})}<small>${TIPO[e.tipo] || esc(e.tipo || '')}</small></time><div><h4>${esc(e.titular || 'Sin titular')}</h4>${e.hoy ? `<p>${esc(e.hoy)}</p>` : ''}</div><span class="x-acc ${esc(e.accion || 'nada')}">${ACC[e.accion] || '—'}</span><span class="x-mono">${e.vivas} idea${e.vivas === 1 ? '' : 's'} viva${e.vivas === 1 ? '' : 's'}</span></a>`; }
+  const rows = days.map((g, k) => `<details class="x-dayg"${k === 0 ? ' open' : ''}><summary class="x-day"><span>${g.dk.charAt(0).toUpperCase() + g.dk.slice(1)}</span><small>${g.n} edici${g.n === 1 ? 'ón' : 'ones'}</small></summary>${g.html}</details>`).join('');
   $('#view').innerHTML = `<div class="x-wrap">${mast('hemeroteca')}
     <section class="x-sec" style="margin-top:28px">${secHead('<b>Archivo</b> · Hemeroteca', 'Todas las ediciones, <em>tal como se publicaron</em>', 'Cada lectura queda guardada entera el día que sale. Nada se corrige después: si una idea salió mal, aquí sigue como se dijo. Abre cualquiera para leerla.')}
     ${rows || '<div class="x-none"><h3>Todavía no hay ediciones guardadas.</h3><p>La hemeroteca empieza a llenarse con la próxima lectura.</p></div>'}</section></div>`;
