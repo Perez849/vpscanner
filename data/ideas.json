@@ -1,53 +1,53 @@
 {
- "actualizado": "2026-11-18T07:40:20Z",
+ "actualizado": "2026-11-18T12:36:13Z",
  "sesion": {
-  "cuando": "2026-11-18T07:40:20Z",
-  "tipo": "mañana",
-  "titular": "Nvidia aprueba el examen. *Hoy se compran los chips.*",
+  "cuando": "2026-11-18T12:36:13Z",
+  "tipo": "preapertura",
+  "titular": "Los chips siguen por debajo del límite. *Se mantiene la compra.*",
   "hoy": {
    "accion": "comprar",
-   "texto": "Comprar semiconductores hoy, en la apertura o al cierre: SMH, Applied Materials y Lam Research. Límite: si el SMH abre por encima de 486,75 $ (su nivel de antes del veto), no se compra."
+   "texto": "Se mantiene: comprar hoy SMH, Applied Materials y Lam Research, en la apertura o al cierre. Antes de abrir, el SMH está en 470,6 $, por debajo del límite de 486,75 $. Si lo supera al abrir, no se compra."
   },
   "cambios": [
-   "Se abre la idea de los chips: Nvidia supera lo esperado y prevé 130.000 millones para el próximo trimestre sin contar China. Se compra hoy.",
-   "Límite nuevo de entrada: no comprar si el SMH abre por encima de 486,75 $, porque el castigo del veto estaría recuperado entero.",
-   "El consejo de Nvidia descarta la vuelta de Huang; el rumor del Wall Street Journal queda desmentido.",
-   "Wall Street cerró ayer en −1,0 % (dos días seguidos de caídas). Esta mañana, futuros del Nasdaq +0,7 % y semiconductores +4 % antes de abrir."
+   "El rebote de los chips se modera antes de abrir: SMH +2,3 % (anoche +4 %), aún por debajo del límite de entrada. Se mantiene la compra.",
+   "Lowe's bate en beneficio pero mantiene su previsión anual algo por debajo de lo esperado: −4,4 % antes de abrir.",
+   "TJX sube un 7,5 % tras sus resultados; Target cede un 2,5 %.",
+   "Petróleo (−2,9 %) y oro (−2,4 %) siguen cayendo."
   ],
-  "pulso": "Nvidia ha pasado la prueba: ingresó 115.800 millones, casi 7.000 más de lo esperado, y prevé 130.000 para el próximo trimestre sin contar nada de China. Es la condición que esperaba la idea de los chips, que se abre hoy. Fuera de hora los semiconductores ya recuperan un 4 %, así que hay un límite: si el sector abre por encima de su nivel de antes del veto, no se compra. El S&P 500 cerró ayer en −1,0 %, su segundo día de caídas.",
+  "pulso": "La idea de los chips sigue en pie: a hora y media de la apertura, el sector sube un 2,3 % y queda por debajo del límite de entrada, así que hoy se compra. El mercado respira tras los resultados de Nvidia: futuros del Nasdaq +0,8 %. Entre las cadenas de consumo, resultados dispares: TJX sube un 7,5 %, Lowe's cae un 4,4 % y Target un 2,5 %.",
   "hechos": [
    {
-    "titulo": "Nvidia supera lo esperado",
-    "detalle": "Ingresos de 115.800 millones (+103 % en un año) frente a 109.000 esperados. Previsión para el próximo trimestre: unos 130.000 millones, ±3 %, sin contar nada de China; incluye una semana más. Ha dejado de vender en China los chips con licencia (2.400 millones en el trimestre).",
-    "efecto": "Es el disparador de la idea de los chips. El golpe de China es pequeño frente al total y ya está fuera de la previsión. Fuera de hora: Nvidia +4,8 %.",
+    "titulo": "Los chips, por debajo del límite",
+    "detalle": "Antes de abrir: SMH 470,6 $ (+2,3 %), Nvidia +2,9 %, TSMC +3,2 %, Lam Research +3,0 %, Applied Materials +2,4 %, AMD +2,0 %.",
+    "efecto": "El límite de entrada es 486,75 $ (cierre de antes del veto). Queda un 3,4 % de margen: la compra de hoy sigue en pie.",
     "tono": "oportunidad",
     "nuevo": true
    },
    {
-    "titulo": "Huang no vuelve",
-    "detalle": "El consejo de Nvidia descarta su regreso y busca un consejero delegado. Colette Kress sigue como interina.",
-    "efecto": "Desmiente el rumor de ayer. Cierra una incertidumbre, aunque la búsqueda queda abierta.",
+    "titulo": "Lowe's cae pese a batir",
+    "detalle": "Beneficio ajustado de 3,10 $ por acción frente a 2,88 esperados, pero mantiene la previsión anual (12,25 $) algo por debajo del consenso. −4,4 % antes de abrir.",
+    "efecto": "Gigante que cae por su propia previsión: el entrenamiento dice que no se compra.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Los chips rebotan antes de abrir",
-    "detalle": "Semiconductores +4,0 %; TSMC +4,7 %, Micron +4,7 %, Lam Research +4,3 %, AMD +3,9 %, Applied Materials +3,7 %. El SMH a 478 $, a un 2 % de su cierre de antes del veto (486,75 $).",
-    "efecto": "Parte del castigo ya se ha recuperado. Por eso el límite de entrada.",
-    "tono": "oportunidad",
-    "nuevo": true
-   },
-   {
-    "titulo": "Cierre de ayer y mercados esta mañana",
-    "detalle": "S&P 500 −1,0 % y Nasdaq-100 −0,7 % el martes; el VIX cerró en 25,5. Esta mañana: futuros del S&P 500 +0,3 % y del Nasdaq +0,7 %; Kospi +2,0 %, Nikkei +0,3 %, Hang Seng −0,9 %. El DAX cayó ayer un 2,1 %.",
-    "efecto": "Sin pánico que comprar: el S&P 500 no llegó al −2 % ningún día.",
+    "titulo": "TJX sube, Target cede",
+    "detalle": "TJX +7,5 % antes de abrir tras sus resultados. Target −2,5 %, pese a que algunas fuentes hablan de resultados mejores de lo esperado.",
+    "efecto": "Resultados de empresa, sin un hecho que cambie el sector. No hay idea.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Oro y petróleo bajan",
-    "detalle": "Oro −2,4 %, hasta 3.773 $. Brent −1,7 %, a 91,5 $.",
-    "efecto": "Movimientos de un día sin un hecho que los explique: no dan idea.",
+    "titulo": "Mercados antes de abrir",
+    "detalle": "Futuros del S&P 500 +0,3 % y del Nasdaq +0,8 %. DAX y Euro Stoxx 50 planos. Bono a 10 años en el 5,10 %.",
+    "efecto": "Alivio moderado tras Nvidia; nada que altere las ideas.",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "Petróleo y oro, otra vez abajo",
+    "detalle": "Brent −2,9 %, a 90,4 $; oro −2,4 %, a 3.771 $.",
+    "efecto": "Sin un hecho detrás, no dan idea.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -141,8 +141,13 @@
     {
      "fecha": "2026-11-18",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "Salta el disparador. Nvidia ingresó 115.800 millones (se esperaban 109.000) y prevé unos 130.000 para el próximo trimestre, sin contar nada de China. Su directora financiera, hoy consejera delegada interina, dijo que han dejado de vender en China los chips con licencia (2.400 millones en el trimestre): un golpe pequeño frente al total. El consejo descarta la vuelta de Huang. Fuera de hora, Nvidia +4,8 % y los semiconductores +4 %. La idea se abre hoy, con un límite: no comprar si el SMH abre por encima de 486,75 $."
+    },
+    {
+     "fecha": "2026-11-18",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "A hora y media de la apertura, el SMH está en 470,6 $ (+2,3 % sobre el cierre de ayer), por debajo del límite de 486,75 $: se mantiene la compra de hoy. El rebote se ha moderado respecto a anoche (+4 %). Applied Materials +2,4 %, Lam Research +3,0 %."
     }
    ],
    "fuentes": [
@@ -178,8 +183,7 @@
      "t": "The Daily Upside",
      "u": "https://www.thedailyupside.com/technology/semiconductors/nvidias-first-post-huang-call-cant-escape-the-china-question/"
     }
-   ],
-   "nuevo": true
+   ]
   },
   {
    "id": "2026-11-16-panico-chips",
@@ -406,8 +410,7 @@
    "tipo": "obvio",
    "valores": [
     "NVDA"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-18",
@@ -417,6 +420,16 @@
    "tipo": "obvio",
    "valores": [
     "GDX"
+   ]
+  },
+  {
+   "fecha": "2026-11-18",
+   "titulo": "Comprar Lowe's porque cae un 4,4 %",
+   "por_que": "Cae por su propia previsión para el año: el negocio va algo peor de lo que se creía.",
+   "leccion": "gigante caído por sus propios resultados o previsiones: 28 casos con nombre, −5,1 % en 20 sesiones.",
+   "tipo": "caido",
+   "valores": [
+    "LOW"
    ],
    "nuevo": true
   }
@@ -453,6 +466,10 @@
   {
    "cuando": "2026-11-18T07:40:20Z",
    "resumen": "Mañana. Se abre la idea de los chips (Nvidia pasa el examen): comprar hoy SMH, Applied Materials y Lam Research, con límite de entrada en 486,75 $ para el SMH."
+  },
+  {
+   "cuando": "2026-11-18T12:36:13Z",
+   "resumen": "Preapertura. Se mantiene la compra de chips (SMH 470,6 $, por debajo del límite). Descarte nuevo: Lowe's."
   }
  ]
 }
