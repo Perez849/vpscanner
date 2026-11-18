@@ -166,11 +166,92 @@ def caducadas(D: Dict, hoy: str) -> List[str]:
     return [i['id'] for i in D.get('ideas', []) if i.get('estado') == 'vigilancia' and i.get('caduca') and i['caduca'] < hoy]
 
 
+# ── alertas: qué lecciones se activan con las condiciones de hoy ──
+WATCH = ('SPY', 'QQQ', 'SMH', '^VIX', '^TNX', 'CL=F', 'ZW=F', 'ZC=F', 'GC=F')
+
+
+def metricas(cl: Dict[str, Dict[str, float]]) -> Dict[str, Optional[float]]:
+    """De los cierres diarios: último movimiento del S&P 500, racha, VIX de hoy y de ayer, bono, petróleo, trigo, maíz y oro."""
+    def serie(s):
+        c = cl.get(s, {})
+        return [c[k] for k in sorted(c)]
+    spy, vix, tnx = serie('SPY'), serie('^VIX'), serie('^TNX')
+    r = lambda x, n=1: (x[-1] / x[-1 - n] - 1) if len(x) > n else None
+    m: Dict[str, Optional[float]] = {'spy_1d': r(spy), 'spy_3d': r(spy, 3), 'vix': vix[-1] if vix else None, 'vix_prev': vix[-2] if len(vix) > 1 else None,
+                                     'tnx_1d': (tnx[-1] - tnx[-2]) if len(tnx) > 1 else None, 'tnx_10d': (tnx[-1] - tnx[-11]) if len(tnx) > 10 else None}
+    m['racha'] = sum(1 for k in range(1, min(len(spy), 6)) if spy[-k] < spy[-k - 1]) if len(spy) > 6 else None
+    if m['racha'] is not None:                                            # días seguidos a la baja contando desde el último
+        n = 0
+        for k in range(1, len(spy)):
+            if spy[-k] < spy[-k - 1]: n += 1
+            else: break
+        m['racha'] = n
+    for s, k in (('CL=F', 'oil_1d'), ('ZW=F', 'trigo_1d'), ('ZC=F', 'maiz_1d'), ('GC=F', 'oro_1d')):
+        m[k] = r(serie(s))
+    return m
+
+
+def reglas(m: Dict[str, Optional[float]], movers: List[tuple]) -> List[str]:
+    """Traduce las condiciones del día a las lecciones de data/ideas_playbook.json que hay que tener en cuenta. Pura: sin red."""
+    out: List[str] = []
+    v, vp_ = m.get('vix'), m.get('vix_prev')
+    alto = vp_ is not None and vp_ >= 28
+    if v is not None and v >= 28:
+        out.append(f'Miedo alto (VIX {v:.1f}): revisa los descartes de «comprar la caída», «comprar al castigado» y «competidoras castigadas» (lección «miedo»). Sigue siendo «no» si la caída es por un problema propio.')
+    s1 = m.get('spy_1d')
+    if s1 is not None and s1 <= -0.02:
+        out.append(f'S&P 500 {100 * s1:+.1f} % con el VIX previo en {vp_:.1f}: ' + ('IDEA de pánico con miedo alto → Nasdaq-100 y, mejor aún, semiconductores (lección «panico»).' if alto else 'caída del 2 % sin miedo alto: no es idea (lección «panico»).'))
+    s3, ra = m.get('spy_3d'), m.get('racha')
+    if s3 is not None and ra is not None and ra >= 3 and s3 <= -0.03:
+        out.append(f'Racha de {ra} días a la baja ({100 * s3:+.1f} % en tres sesiones) con el VIX previo en {vp_:.1f}: ' + ('IDEA de pánico con miedo alto (lección «panico»).' if alto else 'sin miedo alto la ventaja es pequeña (lección «panico»).'))
+    t1, t10 = m.get('tnx_1d'), m.get('tnx_10d')
+    if t1 is not None and abs(t1) >= 0.12:
+        out.append(f'Bono a 10 años {t1 * 100:+.0f} pb en un día: el beneficiario evidente (bancos, constructoras) ya lo ha recogido (lección «obvio»).')
+    if t10 is not None and t10 <= -0.30:
+        out.append(f'Bono a 10 años {t10 * 100:+.0f} pb en diez sesiones: pista de constructoras a 60 sesiones (lección «segundo»).')
+    o = m.get('oil_1d')
+    if o is not None and abs(o) >= 0.04:
+        out.append(f'Petróleo {100 * o:+.1f} %: no comprar aerolíneas ni petroleras por el movimiento en sí (lección «obvio»); solo cuenta si hay un hecho duradero detrás (lección «estructural»).')
+    for k, nom in (('trigo_1d', 'Trigo'), ('maiz_1d', 'Maíz')):
+        x = m.get(k)
+        if x is not None and x >= 0.04:
+            out.append(f'{nom} {100 * x:+.1f} %: pista de fertilizantes (lección «segundo»).')
+    g = m.get('oro_1d')
+    if g is not None and abs(g) >= 0.02:
+        out.append(f'Oro {100 * g:+.1f} %: las mineras lo recogen el mismo día (lección «obvio»).')
+    for sym, ch in movers:
+        if ch <= -10:
+            out.append(f'{sym} {ch:+.1f} %: ' + ('con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).' if alto else 'gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»).'))
+        elif ch >= 10:
+            out.append(f'{sym} {ch:+.1f} %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.')
+    return out
+
+
+def alertas(out: str = 'data') -> List[str]:
+    cl = {s: closes(s) for s in WATCH}
+    movers: List[tuple] = []
+    try:
+        movers = [(x['sym'], float(x['chg'])) for x in json.load(open(f'{out}/index.json', encoding='utf-8'))['symbols'] if x.get('chg') is not None and abs(float(x['chg'])) >= 10]
+    except (OSError, ValueError, KeyError):
+        pass
+    m = metricas(cl)
+    al = reglas(m, movers)
+    print('ALERTAS DE HOY (cada una se atiende en la edición: en una idea, un descarte o un cambio)')
+    for a in al or ['Ninguna condición del entrenamiento activada hoy.']:
+        print(' · ' + a)
+    print('   métricas: ' + ', '.join(f'{k}={v:.4f}' if isinstance(v, float) else f'{k}={v}' for k, v in m.items()))
+    return al
+
+
 def main(out: str = 'data') -> None:
     ideas = json.load(open(f'{out}/ideas.json', encoding='utf-8'))['ideas']
     syms = sorted({s for i in ideas for s in symbols(i)} | {'SPY'})
     cl = {s: closes(s) for s in syms}
     track = {'generado': int(time.time()), 'ideas': {i['id']: score(i, cl) for i in ideas}}
+    try:
+        track['alertas'] = alertas(out)
+    except Exception as e:                                                # las alertas nunca deben impedir el marcador
+        print(f'alertas no disponibles: {e}')
     json.dump(track, open(f'{out}/ideas_track.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     D = json.load(open(f'{out}/ideas.json', encoding='utf-8'))
     pc = f'{out}/ideas_casos.json'
@@ -193,4 +274,7 @@ def main(out: str = 'data') -> None:
 
 
 if __name__ == '__main__':
-    main(*sys.argv[1:2])
+    if sys.argv[1:2] == ['alertas']:
+        alertas(*sys.argv[2:3])
+    else:
+        main(*sys.argv[1:2])
