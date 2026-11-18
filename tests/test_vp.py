@@ -1268,8 +1268,24 @@ def test_ideas_archivo():
     print('ok · ideas: hemeroteca de ediciones, caducidad de las ideas en vigilancia y serie de precios de cada valor')
 
 
+def test_ideas_alertas():
+    """Alertas del día: el pánico solo es idea con el VIX previo ≥ 28; una caída del 10 % se lee distinto con o sin miedo; sin condiciones, no hay alertas."""
+    from vp import ideas
+    base = {'spy_1d': 0.001, 'spy_3d': 0.0, 'racha': 0, 'vix': 18.0, 'vix_prev': 17.0, 'tnx_1d': 0.0, 'tnx_10d': 0.0, 'oil_1d': 0.0, 'trigo_1d': 0.0, 'maiz_1d': 0.0, 'oro_1d': 0.0}
+    assert ideas.reglas(base, []) == []
+    a = ideas.reglas({**base, 'spy_1d': -0.025, 'vix_prev': 30.0, 'vix': 34.0}, [])
+    assert any('IDEA de pánico' in x for x in a) and any('Miedo alto' in x for x in a), a
+    a = ideas.reglas({**base, 'spy_1d': -0.025, 'vix_prev': 22.0}, [])
+    assert any('no es idea' in x for x in a) and not any('IDEA' in x for x in a), a
+    a = ideas.reglas({**base, 'spy_3d': -0.032, 'racha': 3, 'vix_prev': 25.0}, [('XYZ', -12.0), ('ABC', 11.0)])
+    assert any('Racha de 3' in x and 'ventaja es pequeña' in x for x in a) and any('XYZ' in x and '«caido»' in x for x in a) and any('ABC' in x and '«contagio»' in x for x in a), a
+    a = ideas.reglas({**base, 'vix_prev': 29.0}, [('XYZ', -12.0)])
+    assert any('XYZ' in x and '«miedo»' in x for x in a), a
+    print('ok · ideas: alertas del día según las lecciones (pánico, miedo, rachas, caídas y saltos)')
+
+
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,
-       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_ideas, test_ideas_score, test_ideas_casos, test_ideas_archivo]
+       test_data_parse, test_data_retries, test_lab_json, test_study_mechanics, test_controls_detect_planted_momentum, test_study_no_edge_on_random_walk, test_plan_study, test_outcome_counts_real_result, test_group_trades, test_combos_unique_valuedays, test_ml_pipeline, test_ml_features_causal, test_confluence_causal, test_context_experiment, test_search_sim, test_search_procedure, test_search_no_lookahead, test_search_confirm, test_universe_changes_and_survivorship, test_screen, test_track_and_clusters, test_fiab_model, test_cartera, test_web_ideas, test_ideas_score, test_ideas_casos, test_ideas_archivo, test_ideas_alertas]
 
 if __name__ == '__main__':
     only = sys.argv[1:]                                                      # python tests/test_vp.py screen → solo las pruebas cuyo nombre contiene «screen»
