@@ -26,7 +26,8 @@ UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 EXTRA = ('SPY QQQ IWM CL=F GC=F NG=F HG=F ZW=F ^TNX ^VIX BTC-USD XLU KRE GDX VNQ TAN GEO CXW S ZS NTR SCCO COIN MSTR MARA RIOT SNAP PINS ZM PTON X CLF '
          'XLK XLF XLE XLV XLY XLP XLI XLB XLRE XLC NVO BNTX EADSY ONON SEDG RUN '
          'BP SAN DB ING LYG BCS LVS WYNN BABA JD BIDU IBB XBI VST CEG WBA Z CHGG BHC EEM HYG UUP SHOP EBAY ETSY '
-         'SMH JETS ITA XHB XOP XRT IYT FXI CHKP DOCU BOX EA TTWO FANG XPO TM GDRX DLTR').split()
+         'SMH JETS ITA XHB XOP XRT IYT FXI CHKP DOCU BOX EA TTWO FANG XPO TM GDRX DLTR '
+         'ROST BURL KSS M DDS BBY CVX MPC KO PFE MRK ABBV BMY AZN VZ T CMCSA CHTR UPS FDX CSX UNP NSC').split()
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', default='data')
 ap.add_argument('--cache', default='.cache/ideas')
@@ -416,6 +417,45 @@ rq = (R['QQQ'] - R['SPY']).values
 add(G, 'El Nasdaq-100 cae ≥ 1,5 % más que el S&P 500 en un día → Nasdaq-100', 'Rotación contra la tecnología.', absol2(since & (rq <= -0.015), 'QQQ', 'el Nasdaq-100'))
 
 # ── los «no»: ¿hay condiciones en que sí? ──
+G = 'Más variedad · sorpresas de la noche y rachas'
+gap = (O['SPY'] / A['SPY'].shift(1) - 1).values
+add(G, 'El S&P 500 abre ≥ 1,5 % abajo por una noticia de la noche → Nasdaq-100 al cierre de ese día', 'Susto nocturno: ¿se recupera en la sesión o sigue?', absol2(since & (gap <= -0.015), 'QQQ', 'el Nasdaq-100', at_close=True))
+add(G, 'El S&P 500 abre ≥ 1,5 % arriba por una noticia de la noche → Nasdaq-100 al cierre de ese día', 'Alegría nocturna.', absol2(since & (gap >= 0.015), 'QQQ', 'el Nasdaq-100', at_close=True))
+d3 = (SPYc / SPYc.shift(3) - 1).values; dn3 = (pd.Series(rs) < 0).rolling(3).sum().values == 3
+add(G, 'El S&P 500 cae tres días seguidos y pierde ≥ 3 % en total → Nasdaq-100', 'Racha de ventas sin un día de pánico.', absol2(since & dn3 & (d3 <= -0.03), 'QQQ', 'el Nasdaq-100'))
+rach = since & dn3 & (d3 <= -0.03)
+add(G, '↳ …con el miedo bajo (VIX previo < 20)', 'La racha llega desde la calma.', absol2(rach & (vixp < 20), 'QQQ', 'el Nasdaq-100'))
+add(G, '↳ …con el miedo medio (VIX previo entre 20 y 28)', 'La racha llega con nervios.', absol2(rach & (vixp >= 20) & (vixp < 28), 'QQQ', 'el Nasdaq-100'))
+add(G, '↳ …con el miedo alto (VIX previo ≥ 28)', 'La racha llega en plena tormenta.', absol2(rach & (vixp >= 28), 'QQQ', 'el Nasdaq-100'))
+add(G, '↳ …comprando al CIERRE del tercer día', 'Adelantarse a la apertura siguiente.', absol2(rach, 'QQQ', 'el Nasdaq-100', at_close=True))
+dn5 = (pd.Series(rs) < 0).rolling(5).sum().values == 5
+add(G, 'El S&P 500 cae cinco días seguidos → Nasdaq-100', 'Una semana entera en rojo.', absol2(since & dn5, 'QQQ', 'el Nasdaq-100'))
+add(G, 'El bono a 10 años baja ≥ 15 pb en un día → Nasdaq-100', 'Tipos más bajos favorecen a las tecnológicas.', absol2(since & (ty.values <= -0.15), 'QQQ', 'el Nasdaq-100'))
+add(G, 'El bono a 10 años sube ≥ 15 pb en un día → Nasdaq-100 (comprar el castigo)', 'Tipos más altos castigan a las tecnológicas.', absol2(since & (ty.values >= 0.15), 'QQQ', 'el Nasdaq-100'))
+ru = R['UUP'].values
+add(G, 'El dólar sube ≥ 1 % en un día → emergentes (comprar el castigo)', 'Dólar fuerte de golpe.', study(idx[since & (ru >= 0.01)], ['EEM']))
+add(G, 'El dólar cae ≥ 1 % en un día → emergentes', 'Dólar débil de golpe.', study(idx[since & (ru <= -0.01)], ['EEM']))
+add(G, 'El oro cae ≥ 3 % en un día → mineras de oro (comprar el castigo)', 'Caída fuerte del oro.', study(idx[since & (R['GC=F'] <= -0.03)], GOLDM))
+add(G, 'El petróleo cae ≥ 4 % con el dólar subiendo ≥ 0,5 % → petroleras (comprar el castigo)', 'Caída del crudo por dólar fuerte, no por oferta.', study(idx[since & (ro <= -0.04) & (ru >= 0.005)], EP))
+
+G = 'Más variedad · líderes de otros sectores'
+lider('KO', -0.04, ['PEP'], 'Coca-Cola cae ≥ 4 % en un día → PepsiCo', 'Rival directo.')
+lider('PFE', -0.05, ['MRK', 'ABBV', 'BMY'], 'Pfizer cae ≥ 5 % en un día → otras farmacéuticas', '¿Problema propio o del sector?')
+lider('MRK', -0.05, ['PFE', 'ABBV', 'BMY'], 'Merck cae ≥ 5 % en un día → otras farmacéuticas', '¿Problema propio o del sector?')
+lider('LLY', -0.06, ['NVO'], 'Lilly cae ≥ 6 % en un día → Novo Nordisk', 'El otro jugador de la obesidad.')
+lider('VZ', -0.04, ['T'], 'Verizon cae ≥ 4 % en un día → AT&T', 'Rival directo.')
+lider('CMCSA', -0.05, ['CHTR'], 'Comcast cae ≥ 5 % en un día → Charter', 'Mismo negocio de cable.')
+lider('FDX', -0.06, ['UPS'], 'FedEx cae ≥ 6 % en un día → UPS', 'Duopolio de paquetería.')
+lider('FDX', 0.06, ['UPS'], 'FedEx sube ≥ 6 % en un día → UPS', 'Duopolio de paquetería.')
+lider('UNP', -0.04, ['CSX', 'NSC'], 'Union Pacific cae ≥ 4 % en un día → otras ferroviarias', 'Mismo negocio.')
+lider('XOM', 0.04, ['CVX', 'COP'], 'Exxon sube ≥ 4 % en un día → otras petroleras', 'Contagio dentro del petróleo.')
+lider('TGT', -0.08, ['WMT', 'COST', 'DG'], 'Target cae ≥ 8 % en un día → otras cadenas', '¿Aviso sobre el consumidor o problema propio?')
+lider('TGT', 0.08, ['KSS', 'M', 'DDS'], 'Target sube ≥ 8 % en un día → grandes almacenes', 'El consumidor va mejor de lo creído.')
+lider('BBY', -0.08, ['AMZN', 'WMT'], 'Best Buy cae ≥ 8 % en un día → Amazon y Walmart', 'Quien se queda con sus clientes.')
+lider('GS', -0.04, ['MS', 'JPM'], 'Goldman cae ≥ 4 % en un día → Morgan Stanley y JPMorgan', 'Banca de inversión.')
+lider('AMD', 0.08, ['NVDA'], 'AMD sube ≥ 8 % en un día → Nvidia', 'El rival le quita negocio, o el sector va bien.')
+lider('INTC', -0.07, ['AMD'], 'Intel cae ≥ 7 % en un día → AMD', 'Lo que pierde uno lo gana el otro.')
+
 G = 'Revisar los «no» · el beneficiario evidente'
 def study_if(days, basket, cond):
     b = base(basket); rows = []
@@ -626,6 +666,65 @@ CASES = [
  ('2023-08-24', 'Resultados de Nvidia (ago-2023) → cadena de la IA', 'AMD AVGO MRVL', 'B'),
  ('2024-05-23', 'Resultados de Nvidia (may-2024) → cadena de la IA', 'AMD AVGO MRVL SMCI', 'B'),
  ('2025-09-10', 'Oracle dispara su cartera de pedidos de IA → cadena de la IA', 'AVGO NVDA MU', 'B'),
+ # ── más variedad (2) ──
+ ('2009-03-10', 'Citi dice que vuelve a ganar dinero → bancos', 'JPM BAC WFC C', 'E'),
+ ('2010-05-10', 'Europa crea su fondo de rescate de 750.000 millones → bancos europeos', 'SAN DB ING', 'D'),
+ ('2011-08-08', 'EE. UU. pierde la triple A → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2013-06-20', 'Bernanke anuncia el fin de las compras («taper tantrum») → comprar constructoras', 'DHI LEN PHM', 'S'),
+ ('2014-10-15', 'Pánico relámpago de octubre de 2014 → comprar pequeñas', 'IWM', 'S'),
+ ('2015-08-24', 'China devalúa y el mercado se hunde → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2016-02-11', 'Petróleo en mínimos de 13 años → comprar petroleras', 'XOM CVX COP', 'S'),
+ ('2018-02-05', 'Estalla la apuesta contra la volatilidad → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2018-12-24', 'Nochebuena bajista de 2018 → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2019-08-05', 'China deja caer el yuan por la guerra comercial → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2020-03-09', 'Guerra de precios del petróleo → comprar petroleras', 'XOM CVX COP', 'S'),
+ ('2022-06-13', 'La inflación sorprende al alza → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2024-08-05', 'Se deshace la apuesta con el yen → comprar el Nasdaq', 'QQQ', 'S'),
+ ('2016-06-24', 'Brexit → comprar bancos británicos castigados', 'LYG BCS', 'S'),
+ ('2013-03-25', 'Rescate de Chipre con quita a depositantes → bancos europeos', 'SAN DB ING', 'S'),
+ ('2014-06-12', 'El Estado Islámico avanza en Irak → petroleras', 'XOM CVX', 'S'),
+ ('2017-08-09', 'Corea del Norte amenaza a Guam → defensa', 'LMT NOC GD', 'S'),
+ ('2019-06-20', 'Irán derriba un dron de EE. UU. → defensa', 'LMT NOC GD', 'S'),
+ ('2010-07-15', 'Se aprueba la reforma financiera Dodd-Frank → bancos', 'JPM BAC GS', 'D'),
+ ('2019-07-31', 'Primera bajada de tipos desde 2008 → constructoras', 'DHI LEN PHM', 'D'),
+ ('2021-11-15', 'Se firma la ley de infraestructuras → cementeras y maquinaria', 'VMC MLM CAT', 'D'),
+ ('2022-09-21', 'Tercera subida de 75 pb → bancos', 'JPM BAC WFC', 'D'),
+ ('2024-03-20', 'La Fed mantiene tres bajadas para 2024 → pequeñas', 'IWM', 'D'),
+ ('2017-04-03', 'Amazon y otras tiendas en línea crecen; cierre masivo de tiendas → comprar grandes almacenes', 'M KSS DDS', 'V'),
+ ('2019-10-01', 'Charles Schwab elimina las comisiones → comprar los brókeres castigados', 'SCHW', 'V'),
+ ('2020-11-17', 'Amazon abre farmacia → comprar la farmacia castigada CVS', 'CVS', 'V'),
+ ('2022-11-30', 'ChatGPT → comprar al buscador castigado', 'GOOGL', 'V'),
+ ('2012-10-18', 'Google se hunde por un adelanto de resultados → comprar Google', 'GOOGL', 'C'),
+ ('2014-01-28', 'Apple decepciona en ventas de iPhone → comprar Apple', 'AAPL', 'C'),
+ ('2016-01-20', 'Netflix y el temor a la competencia → comprar Netflix', 'NFLX', 'C'),
+ ('2018-10-11', 'GE se desploma por sus cuentas → comprar GE', 'GE', 'C'),
+ ('2019-02-22', 'Kraft Heinz recorta valor de marcas y se hunde un 27 % → comprar Kraft Heinz', 'KHC', 'C'),
+ ('2022-02-24', 'Rusia invade Ucrania → comprar las aerolíneas castigadas', 'DAL UAL AAL', 'S'),
+ ('2023-01-26', 'Intel se hunde por su previsión → comprar Intel', 'INTC', 'C'),
+ ('2023-04-26', 'Meta gasta en IA y sube un 14 % → otras de publicidad', 'GOOGL PINS SNAP', 'B'),
+ ('2024-01-31', 'Microsoft y Alphabet decepcionan con la IA → comprar Alphabet', 'GOOGL', 'C'),
+ ('2019-02-22', 'Kraft Heinz se hunde → otras de alimentación', 'GIS CPB MDLZ', 'R'),
+ ('2014-01-28', 'Apple decepciona → Samsung y proveedores (Qualcomm)', 'QCOM', 'R'),
+ ('2016-01-20', 'Netflix se hunde → Disney', 'DIS', 'R'),
+ ('2020-01-30', 'Primer brote de coronavirus fuera de China → mascarillas y guantes', 'MMM', 'A'),
+ ('2016-03-22', 'Atentados de Bruselas → ciberseguridad y vigilancia', 'PANW FTNT', 'A'),
+ ('2019-03-15', 'El Gobierno demanda a Facebook por privacidad → comprar Facebook', 'META', 'L'),
+ ('2019-06-03', 'Se abren investigaciones antimonopolio a las grandes tecnológicas → comprar Alphabet y Facebook', 'GOOGL META', 'L'),
+ ('2018-04-30', 'T-Mobile y Sprint anuncian su fusión → Verizon y AT&T', 'VZ T', 'M'),
+ ('2022-03-07', 'Google compra Mandiant → otras de ciberseguridad', 'CRWD PANW ZS', 'M'),
+ ('2019-08-07', 'Uber pierde mucho más de lo previsto → comprar a la castigada Lyft', 'LYFT', 'K'),
+ ('2022-04-26', 'Alphabet decepciona en publicidad → comprar otra publicidad digital', 'META SNAP PINS', 'K'),
+ ('2023-05-17', 'Target avisa de robos y menos ventas → comprar Walmart', 'WMT', 'K'),
+ ('2016-04-14', 'Se firma el acuerdo de la OPEP en Doha y fracasa → comprar petroleras', 'XOM CVX COP', 'S'),
+ ('2020-06-11', 'Segunda ola de contagios en EE. UU. → comprar las aerolíneas castigadas', 'DAL UAL AAL', 'S'),
+ ('2021-03-23', 'Un portacontenedores bloquea el canal de Suez → navieras', 'ZIM MATX', 'S'),
+ ('2024-01-08', 'La SEC aprueba los fondos de bitcoin al contado → mineras y bolsa de cripto', 'COIN MARA RIOT', 'D'),
+ ('2016-11-09', 'Trump gana (2016) → constructoras de cárceles privadas', 'GEO CXW', 'E'),
+ ('2020-11-04', 'Victoria de Biden y Congreso dividido (2020) → Nasdaq', 'QQQ', 'E'),
+ ('2022-11-09', 'Elecciones de mitad de mandato (2022) → pequeñas', 'IWM', 'E'),
+ ('2014-11-05', 'Los republicanos ganan el Senado (2014) → sanidad y energía', 'XLV XLE', 'E'),
+ ('2023-03-31', 'La OPEP+ anuncia un recorte sorpresa → petroleras', 'XOM CVX COP', 'D'),
+ ('2020-03-16', 'La Fed baja los tipos a cero un domingo → comprar bancos', 'JPM BAC WFC', 'D'),
  # ── más variedad ──
  ('2013-12-19', 'Robo de tarjetas en Target → ciberseguridad', 'PANW FTNT CHKP', 'A'),
  ('2014-11-24', 'Ataque informático a Sony → ciberseguridad', 'PANW FTNT CHKP', 'A'),
