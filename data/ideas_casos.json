@@ -238,6 +238,61 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-19-comprar-el-indice-tras-cinco-dias-a-la-baja",
+   "fecha": "2026-11-19",
+   "titulo": "Comprar el índice tras cinco días a la baja",
+   "tipo": "panico",
+   "valores": [
+    "SPY",
+    "QQQ"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-19-comprar-elevance-cigna-o-humana-porque-unitedhea",
+   "fecha": "2026-11-19",
+   "titulo": "Comprar Elevance, Cigna o Humana porque UnitedHealth se hunde",
+   "tipo": "rival",
+   "valores": [
+    "ELV",
+    "CI",
+    "HUM"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-19-comprar-mineras-de-oro-porque-el-oro-cae-un-3-2",
+   "fecha": "2026-11-19",
+   "titulo": "Comprar mineras de oro porque el oro cae un 3,2 %",
+   "tipo": "obvio",
+   "valores": [
+    "GDX"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-19-comprar-unitedhealth-tras-hundirse-un-10-por-la-",
+   "fecha": "2026-11-19",
+   "titulo": "Comprar UnitedHealth tras hundirse un 10 % por la norma de Medicare",
+   "tipo": "caido",
+   "valores": [
+    "UNH"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -252,5 +307,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795032672
+ "generado": 1795074220
 }

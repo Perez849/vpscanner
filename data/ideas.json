@@ -1,54 +1,46 @@
 {
- "actualizado": "2026-11-18T20:11:05Z",
+ "actualizado": "2026-11-19T07:43:33Z",
  "sesion": {
-  "cuando": "2026-11-18T20:11:05Z",
-  "tipo": "cierre",
-  "titular": "Nvidia bate y aun así cae. *La idea de los chips aguanta.*",
+  "cuando": "2026-11-19T07:43:33Z",
+  "tipo": "mañana",
+  "titular": "La sanidad se desploma por una norma de Medicare y los futuros suben: *no se compra el castigo*",
   "hoy": {
    "accion": "nada",
-   "texto": "Nada nuevo que comprar al cierre. Quien compró hoy los chips (SMH, Applied Materials, Lam Research) los mantiene: la idea sigue abierta, sin ninguna condición de ruptura cumplida."
+   "texto": "Hoy no se compra nada nuevo. La idea de chips sigue abierta y no requiere ninguna acción. La caída de las aseguradoras se queda en vigilancia: el entrenamiento dice que comprarlas tras un hundimiento de UnitedHealth no ha dado nada (33 casos)."
   },
   "cambios": [
-   "El rebote de los chips se deshace en la sesión: el SMH abrió en 467,7 $ y está en 457,4 $. Nvidia cae un 2,7 % pese a sus resultados.",
-   "La idea sigue abierta: no se ha cumplido ninguna condición de ruptura.",
-   "El petróleo se hunde un 4,5 % (Brent a 89 $) y el oro un 3,6 %; el dólar marca máximos de 19 meses.",
-   "Un gobernador de la Fed defiende una subida de medio punto.",
-   "TJX (+9 %) y Target (+5,5 %) suben con fuerza tras sus resultados; Lowe's recupera lo que perdía antes de abrir."
+   "Chips (abierta): cierre de entrada fijado en 459,54 $ para el SMH; sin condiciones de ruptura.",
+   "Nueva alerta atendida: UnitedHealth −10,2 % y todo el sector a la baja → descarte (lecciones «caido» y «rival»).",
+   "Alerta de racha bajista: cinco días a la baja con el VIX en 25,5, por debajo de 28 → no se compra (lección «panico»).",
+   "Oro −3,2 % y Brent −2,8 %: movimientos de materias primas sin un hecho nuevo detrás → descarte (lección «obvio»)."
   ],
-  "pulso": "Nvidia batió todas las previsiones y aun así cae un 2,7 %: el mercado ha vendido sus buenos resultados, y con ellos se ha deshecho el rebote de los chips. La idea que se abrió esta mañana empieza en negativo, pero no se ha roto ninguna de sus condiciones. El S&P 500 cede un 0,3 %, el petróleo se hunde un 4,5 % y el dólar toca máximos de 19 meses con la Fed hablando de subir medio punto. Hoy no hay nada nuevo que comprar al cierre.",
+  "pulso": "Ayer Wall Street cerró mixta: el Dow −1,1 %, el S&P 500 −0,3 % y el Nasdaq +0,4 %. Las actas de la Fed fueron duras: el mercado da casi por segura una subida de tipos en diciembre. El VIX bajó a 24,6. Esta noche Asia ha ido dispar (Nikkei +0,7 %, Kospi +1,0 %, Hang Seng −1,9 %) y los futuros americanos suben con fuerza (S&P +1,1 %, Nasdaq +1,9 %) a la espera del estreno en bolsa de Anthropic. Por coherencia, de ese estreno no se hace idea. Walmart presenta resultados antes de la apertura.",
   "hechos": [
    {
-    "titulo": "Nvidia bate y cae",
-    "detalle": "Tras subir un 5 % fuera de hora anoche, a las 21:10 cae un 2,7 %, a 151,3 $: su quinta sesión seguida a la baja y su nivel más bajo desde julio de 2025.",
-    "efecto": "Lo que vende el mercado es la empresa, no el sector: AMD y Broadcom suben un 4 %. Es lo que dice el entrenamiento sobre el gigante caído por un problema propio.",
+    "titulo": "Medicare propone recuperar pagos de años atrás y hunde a las aseguradoras",
+    "detalle": "Los CMS publicaron el 16-nov una propuesta de norma que permitiría extrapolar los resultados de las auditorías de ajuste de riesgo de Medicare Advantage desde el año de pago 2018. Eso abre la puerta a reclamar a las aseguradoras pagos de años anteriores. UnitedHealth cayó un 10,2 % (349,91 $) y Humana un 13,0 %, Elevance un 7,6 %, Centene un 7,0 %, Molina un 6,6 %, CVS un 5,2 % y Cigna un 3,0 %. Es una propuesta: aún tiene que pasar el periodo de comentarios, y el impacto en cada empresa no está cuantificado.",
+    "efecto": "Es un golpe a todo el sector, no a una sola empresa. Ninguna competidora subió, así que no hay trasvase de negocio. Con el VIX por debajo de 28, comprar al gigante caído no ha funcionado nunca en el entrenamiento.",
     "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Los chips, divididos",
-    "detalle": "SMH −0,6 % en el día y −2,2 % desde la apertura. AMD +4,0 %, Broadcom +4,0 %, Applied Materials +0,5 %, TSMC +0,2 %, Lam Research −0,6 %, Micron −1,9 %.",
-    "efecto": "Primer día flojo para la idea, sin romperla. En los vetos anteriores la recuperación llegó entre la sesión 20 y la 60, no en la primera.",
-    "tono": "neutro",
-    "nuevo": true
-   },
-   {
-    "titulo": "El petróleo se hunde y el dólar sube",
-    "detalle": "Brent −4,5 %, a 89 $; WTI a 82,2 $. Oro −3,6 %, a 3.724 $. Bitcoin −3,4 %. El dólar en máximos de 19 meses.",
-    "efecto": "Movimientos fuertes de un día. Las aerolíneas no son idea: el beneficiario evidente lo recoge en el momento.",
-    "tono": "neutro",
-    "nuevo": true
-   },
-   {
-    "titulo": "La Fed, hacia medio punto",
-    "detalle": "El gobernador Christopher Waller ha defendido una subida de 50 puntos básicos. Las actas de la última reunión salieron esta tarde. El bono a 10 años baja al 5,06 %.",
-    "efecto": "Una decisión que se ve venir: el entrenamiento dice que el mercado la descuenta antes. No da idea.",
+    "titulo": "Actas de la Fed: más subidas de tipos sobre la mesa",
+    "detalle": "Las actas de la reunión de octubre muestran a la Fed centrada en la inflación y abierta a nuevas subidas. El mercado descuenta casi con seguridad +0,25 en diciembre.",
+    "efecto": "Es un viento en contra para las valoraciones altas, pero ya está en el precio. No da para ninguna idea concreta.",
     "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "TJX y Target, fuertes",
-    "detalle": "TJX +9,2 % y Target +5,5 % tras sus resultados. Lowe's, que caía un 4,4 % antes de abrir, sube un 0,3 %.",
-    "efecto": "Resultados de empresa. Comprar a sus competidoras «por contagio» no ha funcionado en el entrenamiento.",
+    "titulo": "Walmart presenta resultados antes de la apertura",
+    "detalle": "Se esperan unos 0,64 $ por acción y unos 187.200 millones de ventas. Es el termómetro del consumo estadounidense.",
+    "efecto": "Se revisa en la edición de las 14:00 con la cifra ya publicada. Por sí solos, unos resultados no son una idea (lección «empresa»).",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "Materias primas a la baja",
+    "detalle": "Ayer el oro cayó un 3,2 % y el Brent un 2,8 %, hasta 89,4 $.",
+    "efecto": "Las mineras y las petroleras reaccionan el mismo día y no queda ventaja. Sin un hecho nuevo detrás, no hay idea.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -152,8 +144,13 @@
     {
      "fecha": "2026-11-18",
      "edicion": "cierre",
-     "nuevo": true,
      "texto": "Primer día dentro, y no ha sido bueno. El SMH abrió en 467,7 $ (por debajo del límite, así que la compra en la apertura era válida) y a las 21:10 está en 457,4 $: −2,2 % desde la apertura y −0,6 % en el día. Nvidia ha pasado de subir un 5 % fuera de hora a caer un 2,7 %: el mercado vende sus buenos resultados. Dentro del sector hay de todo: Broadcom y AMD +4 %, Micron −1,9 %. No se ha cumplido ninguna condición de ruptura (Nvidia no recortó previsiones y la norma no se ha ampliado), así que la idea sigue abierta. El marcador cuenta desde el cierre de hoy."
+    },
+    {
+     "fecha": "2026-11-19",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "El SMH cerró ayer en 459,54 $ (−0,1 % en el día): ese es el precio desde el que cuenta el marcador. Dentro del sector hubo de todo: AMD +5,3 %, Broadcom +3,6 %, Applied Materials +0,9 % y Lam Research +0,5 %, frente a Nvidia −2,9 % y Micron −1,0 %. Esta mañana el futuro del Nasdaq sube un 1,9 %, así que lo normal es que el sector abra al alza. No se ha cumplido ninguna condición de ruptura: Nvidia no ha recortado previsiones (al contrario, las subió) y Comercio no ha ampliado la norma. Sigue abierta hasta el viernes 20; no hay que hacer nada."
     }
    ],
    "fuentes": [
@@ -409,6 +406,53 @@
  ],
  "descartes": [
   {
+   "fecha": "2026-11-19",
+   "titulo": "Comprar UnitedHealth tras hundirse un 10 % por la norma de Medicare",
+   "por_que": "Es un gigante caído con el VIX en 25, por debajo de 28. El entrenamiento no ha encontrado ninguna variante en la que comprarlo salga bien sin miedo alto. En 2025 sus dos hundimientos anteriores siguieron cayendo un 30–55 % en tres meses.",
+   "leccion": "«caido»: no se compra al que cae desde lo más alto, salvo que el VIX esté en 28 o más.",
+   "tipo": "caido",
+   "valores": [
+    "UNH"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-19",
+   "titulo": "Comprar Elevance, Cigna o Humana porque UnitedHealth se hunde",
+   "por_que": "Las competidoras cayeron con ella, así que no hay trasvase de negocio. En el entrenamiento, una caída de UnitedHealth de un 5 % o más no da nada a sus rivales: +1,3 % a 20 sesiones y +3,2 % a 60, con t de 0,8 y 1,0 en 33 casos. Queda en vigilancia como norma sectorial: si la norma se suaviza o se retira, el castigo podría haber sido excesivo (en el caso de 2019, «sanidad pública universal», el sector ganó un 18,6 % en 60 sesiones). Pero es un solo caso, y aquí hay además presión política sobre el modelo integrado.",
+   "leccion": "«rival» sin competidoras al alza no da nada; «norma» es una pista, no una regla, y casi todos sus casos son de chips.",
+   "tipo": "rival",
+   "valores": [
+    "ELV",
+    "CI",
+    "HUM"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-19",
+   "titulo": "Comprar el índice tras cinco días a la baja",
+   "por_que": "La racha suma −3,2 % en tres sesiones, pero el VIX previo estaba en 25,5. Sin miedo alto (28 o más), comprar tras rachas bajistas da lo mismo que un tramo cualquiera desde que el entrenamiento incluye 2000–2008.",
+   "leccion": "«panico»: solo con el VIX en 28 o más.",
+   "tipo": "panico",
+   "valores": [
+    "SPY",
+    "QQQ"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-19",
+   "titulo": "Comprar mineras de oro porque el oro cae un 3,2 %",
+   "por_que": "Las mineras ya recogieron la caída el mismo día y no hay un hecho nuevo detrás.",
+   "leccion": "«obvio»: el beneficiario evidente ya está en el precio.",
+   "tipo": "obvio",
+   "valores": [
+    "GDX"
+   ],
+   "nuevo": true
+  },
+  {
    "fecha": "2026-11-18",
    "titulo": "Comprar aerolíneas porque el petróleo se hunde un 4,5 %",
    "por_que": "Es el beneficiario evidente y no hay un hecho detrás (ni acuerdo ni cambio en la guerra): es un movimiento de un día con el dólar al alza.",
@@ -418,8 +462,7 @@
     "DAL",
     "UAL",
     "JETS"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-18",
@@ -430,8 +473,7 @@
    "valores": [
     "ROST",
     "BURL"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-18",
@@ -441,8 +483,7 @@
    "tipo": "caido",
    "valores": [
     "NVDA"
-   ],
-   "nuevo": true
+   ]
   }
  ],
  "sesiones": [
@@ -485,6 +526,10 @@
   {
    "cuando": "2026-11-18T20:11:05Z",
    "resumen": "Cierre. Nada nuevo que comprar. La idea de los chips, comprada esta mañana, empieza en negativo (Nvidia cae pese a batir) pero sigue abierta."
+  },
+  {
+   "cuando": "2026-11-19T07:43:33Z",
+   "resumen": "Mañana: las aseguradoras se hunden por una propuesta de Medicare (UNH −10 %, HUM −13 %) → descarte. Racha bajista sin miedo alto → no. Chips sigue abierta desde 459,54 $. Hoy no se compra nada."
   }
  ]
 }
