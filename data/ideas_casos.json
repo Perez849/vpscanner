@@ -293,6 +293,34 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-19-comprar-walmart-tras-batir-y-mejorar-previsiones",
+   "fecha": "2026-11-19",
+   "titulo": "Comprar Walmart tras batir y mejorar previsiones",
+   "tipo": "empresa",
+   "valores": [
+    "WMT"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-19-subirse-a-palo-alto-y-la-ciberseguridad-tras-su-",
+   "fecha": "2026-11-19",
+   "titulo": "Subirse a Palo Alto y la ciberseguridad tras su +10 %",
+   "tipo": "empresa",
+   "valores": [
+    "PANW",
+    "CRWD",
+    "ZS"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -307,5 +335,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795074220
+ "generado": 1795091769
 }
