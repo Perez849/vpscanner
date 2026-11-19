@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-19-1236",
+  "cuando": "2026-11-19T12:36:02Z",
+  "tipo": "preapertura",
+  "titular": "Los chips tiran del Nasdaq antes de abrir y Walmart mejora previsiones pero cae",
+  "hoy": "Hoy no se compra nada nuevo. La idea de chips sigue abierta y va ganando en la preapertura (SMH +2,9 % sobre la entrada). Se mantiene sin tocar hasta su caducidad de mañana. Las aseguradoras siguen en vigilancia: ninguna competidora de UnitedHealth sube.",
+  "accion": "nada",
+  "vivas": 1
+ },
+ {
   "id": "2026-11-19-0743",
   "cuando": "2026-11-19T07:43:33Z",
   "tipo": "mañana",

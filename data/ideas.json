@@ -1,47 +1,40 @@
 {
- "actualizado": "2026-11-19T07:43:33Z",
+ "actualizado": "2026-11-19T12:36:02Z",
  "sesion": {
-  "cuando": "2026-11-19T07:43:33Z",
-  "tipo": "mañana",
-  "titular": "La sanidad se desploma por una norma de Medicare y los futuros suben: *no se compra el castigo*",
+  "cuando": "2026-11-19T12:36:02Z",
+  "tipo": "preapertura",
+  "titular": "Los chips tiran del Nasdaq antes de abrir y Walmart *mejora previsiones pero cae*",
   "hoy": {
    "accion": "nada",
-   "texto": "Hoy no se compra nada nuevo. La idea de chips sigue abierta y no requiere ninguna acción. La caída de las aseguradoras se queda en vigilancia: el entrenamiento dice que comprarlas tras un hundimiento de UnitedHealth no ha dado nada (33 casos)."
+   "texto": "Hoy no se compra nada nuevo. La idea de chips sigue abierta y va ganando en la preapertura (SMH +2,9 % sobre la entrada). Se mantiene sin tocar hasta su caducidad de mañana. Las aseguradoras siguen en vigilancia: ninguna competidora de UnitedHealth sube."
   },
   "cambios": [
-   "Chips (abierta): cierre de entrada fijado en 459,54 $ para el SMH; sin condiciones de ruptura.",
-   "Nueva alerta atendida: UnitedHealth −10,2 % y todo el sector a la baja → descarte (lecciones «caido» y «rival»).",
-   "Alerta de racha bajista: cinco días a la baja con el VIX en 25,5, por debajo de 28 → no se compra (lección «panico»).",
-   "Oro −3,2 % y Brent −2,8 %: movimientos de materias primas sin un hecho nuevo detrás → descarte (lección «obvio»)."
+   "Chips (abierta): SMH en 473,0 $ en la preapertura, +2,9 % sobre la entrada; Applied y Lam +4,2 %.",
+   "Walmart bate y sube previsiones, pero cae un 1,3 % antes de abrir → descarte (lección «empresa»).",
+   "UnitedHealth plana en la preapertura y sus rivales sin subir (Cigna −1,2 %, Centene +0,2 %): sigue sin cumplirse la lección «rival».",
+   "Las alertas de la mañana (racha bajista sin miedo alto, oro −3,2 %) siguen igual. El VIX baja a 22,3: aún más lejos del umbral de 28."
   ],
-  "pulso": "Ayer Wall Street cerró mixta: el Dow −1,1 %, el S&P 500 −0,3 % y el Nasdaq +0,4 %. Las actas de la Fed fueron duras: el mercado da casi por segura una subida de tipos en diciembre. El VIX bajó a 24,6. Esta noche Asia ha ido dispar (Nikkei +0,7 %, Kospi +1,0 %, Hang Seng −1,9 %) y los futuros americanos suben con fuerza (S&P +1,1 %, Nasdaq +1,9 %) a la espera del estreno en bolsa de Anthropic. Por coherencia, de ese estreno no se hace idea. Walmart presenta resultados antes de la apertura.",
+  "pulso": "Europa va plana: el Euro Stoxx 50 +0,4 %, el DAX +0,1 % y el Ibex −0,1 %. En EE. UU., los futuros del Nasdaq suben un 2,0 % y los del S&P un 1,1 %; los del Dow solo un 0,6 %. Tiran los chips y el software: Palo Alto sube un 10 % tras mejorar previsiones. Todo ello, en vísperas del estreno de Anthropic, que se ha colocado por encima del rango y del que no se hace idea. El VIX cae a 22,3 y el bono a 10 años al 5,07 %.",
   "hechos": [
    {
-    "titulo": "Medicare propone recuperar pagos de años atrás y hunde a las aseguradoras",
-    "detalle": "Los CMS publicaron el 16-nov una propuesta de norma que permitiría extrapolar los resultados de las auditorías de ajuste de riesgo de Medicare Advantage desde el año de pago 2018. Eso abre la puerta a reclamar a las aseguradoras pagos de años anteriores. UnitedHealth cayó un 10,2 % (349,91 $) y Humana un 13,0 %, Elevance un 7,6 %, Centene un 7,0 %, Molina un 6,6 %, CVS un 5,2 % y Cigna un 3,0 %. Es una propuesta: aún tiene que pasar el periodo de comentarios, y el impacto en cada empresa no está cuantificado.",
-    "efecto": "Es un golpe a todo el sector, no a una sola empresa. Ninguna competidora subió, así que no hay trasvase de negocio. Con el VIX por debajo de 28, comprar al gigante caído no ha funcionado nunca en el entrenamiento.",
-    "tono": "riesgo",
-    "nuevo": true
-   },
-   {
-    "titulo": "Actas de la Fed: más subidas de tipos sobre la mesa",
-    "detalle": "Las actas de la reunión de octubre muestran a la Fed centrada en la inflación y abierta a nuevas subidas. El mercado descuenta casi con seguridad +0,25 en diciembre.",
-    "efecto": "Es un viento en contra para las valoraciones altas, pero ya está en el precio. No da para ninguna idea concreta.",
-    "tono": "riesgo",
-    "nuevo": true
-   },
-   {
-    "titulo": "Walmart presenta resultados antes de la apertura",
-    "detalle": "Se esperan unos 0,64 $ por acción y unos 187.200 millones de ventas. Es el termómetro del consumo estadounidense.",
-    "efecto": "Se revisa en la edición de las 14:00 con la cifra ya publicada. Por sí solos, unos resultados no son una idea (lección «empresa»).",
+    "titulo": "Walmart bate y mejora previsiones, pero la acción baja",
+    "detalle": "Beneficio ajustado de 0,65 $ por acción (se esperaban 0,64 $) y ventas de 188.800 millones (frente a 187.300). En EE. UU. vende un 2,9 % más a tiendas comparables, el comercio electrónico crece un 17 % y la publicidad un 25 %. Sube la previsión anual de ventas al 4,9–5,2 % y la de beneficio a 2,84–2,89 $. Aun así, cae un 1,3 % en la preapertura (125,7 $).",
+    "efecto": "El consumo estadounidense aguanta, lo que es una buena señal para el mercado en general. Para la acción, el «vender la noticia» de unos buenos resultados no es una idea.",
     "tono": "neutro",
     "nuevo": true
    },
    {
-    "titulo": "Materias primas a la baja",
-    "detalle": "Ayer el oro cayó un 3,2 % y el Brent un 2,8 %, hasta 89,4 $.",
-    "efecto": "Las mineras y las petroleras reaccionan el mismo día y no queda ventaja. Sin un hecho nuevo detrás, no hay idea.",
-    "tono": "neutro",
+    "titulo": "Los chips y el software tiran de los futuros",
+    "detalle": "Micron +4,6 %, Applied Materials y Lam Research +4,2 %, AMD +2,7 % y Nvidia +1,5 %, que rebota tras cinco sesiones a la baja. Palo Alto sube un 10 % tras mejorar su previsión de 2027 y arrastra a CrowdStrike, Cloudflare y Zscaler.",
+    "efecto": "Es bueno para la idea abierta de chips. Lo de Palo Alto son unos resultados de una sola empresa, que por sí solos no son una idea.",
+    "tono": "oportunidad",
+    "nuevo": true
+   },
+   {
+    "titulo": "Las aseguradoras no rebotan",
+    "detalle": "UnitedHealth (350,8 $) y Humana (386,0 $) están planas en la preapertura tras sus desplomes de ayer. La propuesta de Medicare sigue sobre la mesa.",
+    "efecto": "No hay ni rebote ni trasvase a las competidoras. Sigue en vigilancia y solo cambiaría si la norma se suaviza.",
+    "tono": "riesgo",
     "nuevo": true
    }
   ]
@@ -149,8 +142,13 @@
     {
      "fecha": "2026-11-19",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El SMH cerró ayer en 459,54 $ (−0,1 % en el día): ese es el precio desde el que cuenta el marcador. Dentro del sector hubo de todo: AMD +5,3 %, Broadcom +3,6 %, Applied Materials +0,9 % y Lam Research +0,5 %, frente a Nvidia −2,9 % y Micron −1,0 %. Esta mañana el futuro del Nasdaq sube un 1,9 %, así que lo normal es que el sector abra al alza. No se ha cumplido ninguna condición de ruptura: Nvidia no ha recortado previsiones (al contrario, las subió) y Comercio no ha ampliado la norma. Sigue abierta hasta el viernes 20; no hay que hacer nada."
+    },
+    {
+     "fecha": "2026-11-19",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Hora y media antes de la apertura, el SMH cotiza en 473,0 $: +2,9 % sobre el cierre de entrada (459,54 $). Applied Materials está en 366,9 $ (+4,2 %) y Lam Research en 220,6 $ (+4,2 %). Tira todo el sector: Micron +4,6 %, AMD +2,7 % y Nvidia +1,5 %. No se cumple ninguna condición de ruptura. Caduca mañana, viernes 20. No hay que hacer nada: el cierre de la idea se decide en la edición de mañana por la noche."
     }
    ],
    "fuentes": [
@@ -407,14 +405,37 @@
  "descartes": [
   {
    "fecha": "2026-11-19",
+   "titulo": "Comprar Walmart tras batir y mejorar previsiones",
+   "por_que": "Son unos buenos resultados de una sola empresa, sin un hecho que cambie el sector, y el mercado ya los está vendiendo en la preapertura.",
+   "leccion": "«empresa»: unos resultados por sí solos no dan ventaja que dure.",
+   "tipo": "empresa",
+   "valores": [
+    "WMT"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-19",
+   "titulo": "Subirse a Palo Alto y la ciberseguridad tras su +10 %",
+   "por_que": "Es otra mejora de previsiones de una sola empresa que el mercado ya ha recogido con un salto de dos cifras, y sus rivales suben por simpatía.",
+   "leccion": "«empresa» y «obvio»: el salto del primer día ya está en el precio.",
+   "tipo": "empresa",
+   "valores": [
+    "PANW",
+    "CRWD",
+    "ZS"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-19",
    "titulo": "Comprar UnitedHealth tras hundirse un 10 % por la norma de Medicare",
    "por_que": "Es un gigante caído con el VIX en 25, por debajo de 28. El entrenamiento no ha encontrado ninguna variante en la que comprarlo salga bien sin miedo alto. En 2025 sus dos hundimientos anteriores siguieron cayendo un 30–55 % en tres meses.",
    "leccion": "«caido»: no se compra al que cae desde lo más alto, salvo que el VIX esté en 28 o más.",
    "tipo": "caido",
    "valores": [
     "UNH"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-19",
@@ -426,8 +447,7 @@
     "ELV",
     "CI",
     "HUM"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-19",
@@ -438,8 +458,7 @@
    "valores": [
     "SPY",
     "QQQ"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-19",
@@ -449,8 +468,7 @@
    "tipo": "obvio",
    "valores": [
     "GDX"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-18",
@@ -530,6 +548,10 @@
   {
    "cuando": "2026-11-19T07:43:33Z",
    "resumen": "Mañana: las aseguradoras se hunden por una propuesta de Medicare (UNH −10 %, HUM −13 %) → descarte. Racha bajista sin miedo alto → no. Chips sigue abierta desde 459,54 $. Hoy no se compra nada."
+  },
+  {
+   "cuando": "2026-11-19T12:36:02Z",
+   "resumen": "Preapertura: los chips tiran de los futuros (SMH +2,9 % sobre la entrada). Walmart bate y mejora previsiones pero cae → descarte. Aseguradoras planas y sin trasvase. Hoy no se compra nada."
   }
  ]
 }
