@@ -422,7 +422,8 @@ const distTxt = d => d == null ? '' : d < 0.1 ? 'en el disparo' : `a ${d.toFixed
 async function J(path) {
   if (window.VP) { const k = path.replace(/\.json$/, ''); if (['ideas', 'ideas_track', 'ideas_playbook', 'ideas_casos', 'plan_study'].includes(k)) return VP[k] || null; if (k.startsWith('ediciones/')) return (VP.ediciones || {})[k.slice(10)] || null; return k === 'index' ? VP.index : k === 'catalog' ? VP.catalog : k === 'evidence' ? VP.evidence : VP.charts[k.replace('charts/', '')]; }
   if (S.cache[path]) return S.cache[path];
-  const r = await fetch(BASE + path + '?v=' + Math.floor(Date.now() / 3600000));
+  const fresh = /^(ideas|ediciones\/)/.test(path);   /* las ediciones cambian tres veces al día: siempre la última */
+  const r = await fetch(BASE + path + '?v=' + Math.floor(Date.now() / (fresh ? 60000 : 3600000)), {cache: fresh ? 'no-cache' : 'default'});
   if (!r.ok) throw new Error(path + ' ' + r.status);
   return S.cache[path] = await r.json();
 }
