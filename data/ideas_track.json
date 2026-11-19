@@ -1,17 +1,16 @@
 {
- "generado": 1795032668,
+ "generado": 1795074215,
  "ideas": {
   "2026-11-17-veto-chips": {
    "estado": "abierta",
    "desde": "2026-11-18",
-   "hasta": "2026-11-17",
+   "hasta": "2026-11-18",
    "por_valor": {
     "SMH": {
-     "ref": 460.1,
-     "ahora": 460.1,
-     "pct": null,
+     "ref": 459.54,
+     "ahora": 459.54,
+     "pct": 0.0,
      "serie": [
-      555.82,
       555.77,
       573.0,
       553.11,
@@ -70,16 +69,16 @@
       501.73,
       486.75,
       461.9,
-      460.1
+      460.1,
+      459.54
      ],
      "i0": 59
     },
     "AMAT": {
-     "ref": 349.23,
-     "ahora": 349.23,
-     "pct": null,
+     "ref": 352.3,
+     "ahora": 352.3,
+     "pct": 0.0,
      "serie": [
-      480.04,
       479.76,
       482.36,
       461.67,
@@ -138,16 +137,16 @@
       380.95,
       370.5,
       350.25,
-      349.23
+      349.23,
+      352.3
      ],
      "i0": 59
     },
     "LRCX": {
-     "ref": 210.69,
-     "ahora": 210.69,
-     "pct": null,
+     "ref": 211.67,
+     "ahora": 211.67,
+     "pct": 0.0,
      "serie": [
-      314.66,
       312.88,
       318.58,
       301.9,
@@ -206,14 +205,15 @@
       233.78,
       225.92,
       210.83,
-      210.69
+      210.69,
+      211.67
      ],
      "i0": 59
     }
    },
-   "media": null,
-   "spy": null,
-   "pendiente": true,
+   "media": 0.0,
+   "spy": 0.0,
+   "pendiente": false,
    "hipotetica": false
   },
   "2026-11-16-panico-chips": {
@@ -578,5 +578,10 @@
    "pendiente": false,
    "hipotetica": true
   }
- }
+ },
+ "alertas": [
+  "Racha de 5 días a la baja (-3.2 % en tres sesiones) con el VIX previo en 25.5: sin miedo alto la ventaja es pequeña (lección «panico»).",
+  "Oro -3.2 %: las mineras lo recogen el mismo día (lección «obvio»).",
+  "UNH -10.2 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»)."
+ ]
 }
