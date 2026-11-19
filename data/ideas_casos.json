@@ -240,12 +240,38 @@
    "e60": null
   },
   {
+   "id": "2026-11-19-comprar-amd-tras-hundirse-un-9-por-el-informe-de",
+   "fecha": "2026-11-19",
+   "titulo": "Comprar AMD tras hundirse un 9 % por el informe de un bajista",
+   "tipo": "bajista",
+   "valores": [
+    "AMD"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-19-comprar-el-indice-tras-cinco-dias-a-la-baja",
    "fecha": "2026-11-19",
    "titulo": "Comprar el índice tras cinco días a la baja",
    "tipo": "panico",
    "valores": [
     "SPY",
+    "QQQ"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-19-comprar-el-nasdaq-al-cierre-de-hoy-por-la-caida-",
+   "fecha": "2026-11-19",
+   "titulo": "Comprar el Nasdaq al cierre de hoy por la caída del 2 %",
+   "tipo": "panico",
+   "valores": [
     "QQQ"
    ],
    "dada": false,
@@ -308,6 +334,19 @@
    "e60": null
   },
   {
+   "id": "2026-11-19-panico-miedo",
+   "fecha": "2026-11-19",
+   "titulo": "Si el miedo llega a 28 y la caída sigue, se compra el Nasdaq",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "dada": true,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-19-subirse-a-palo-alto-y-la-ciberseguridad-tras-su-",
    "fecha": "2026-11-19",
    "titulo": "Subirse a Palo Alto y la ciberseguridad tras su +10 %",
@@ -335,5 +374,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795091769
+ "generado": 1795119116
 }

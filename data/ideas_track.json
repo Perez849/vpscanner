@@ -1,6 +1,16 @@
 {
- "generado": 1795091763,
+ "generado": 1795119108,
  "ideas": {
+  "2026-11-19-panico-miedo": {
+   "estado": "vigilancia",
+   "desde": "2026-11-19",
+   "hasta": null,
+   "por_valor": {},
+   "media": null,
+   "spy": null,
+   "pendiente": false,
+   "hipotetica": false
+  },
   "2026-11-17-veto-chips": {
    "estado": "abierta",
    "desde": "2026-11-18",
