@@ -1,45 +1,112 @@
 {
- "actualizado": "2026-11-19T12:36:02Z",
+ "actualizado": "2026-11-19T20:11:47Z",
  "sesion": {
-  "cuando": "2026-11-19T12:36:02Z",
-  "tipo": "preapertura",
-  "titular": "Los chips tiran del Nasdaq antes de abrir y Walmart *mejora previsiones pero cae*",
+  "cuando": "2026-11-19T20:11:47Z",
+  "tipo": "cierre",
+  "titular": "Wall Street se da la vuelta y el miedo *roza el umbral*: hoy no, quizá mañana",
   "hoy": {
-   "accion": "nada",
-   "texto": "Hoy no se compra nada nuevo. La idea de chips sigue abierta y va ganando en la preapertura (SMH +2,9 % sobre la entrada). Se mantiene sin tocar hasta su caducidad de mañana. Las aseguradoras siguen en vigilancia: ninguna competidora de UnitedHealth sube."
+   "accion": "vigilar",
+   "texto": "Al cierre de hoy no se compra nada. El S&P 500 cae un 1,9 %, pero el miedo de ayer (VIX 24,6) no llegaba a 28, y con ese nivel un día así no ha dado ventaja. Queda una idea nueva en vigilancia: si el VIX cierra hoy en 28 o más y mañana el SPY cierra por debajo de unos 710,5 $ (o cae un 2 %), se compra QQQ al cierre de mañana. La idea de chips sigue abierta: no caduca mañana, su horizonte es de 2 a 3 meses."
   },
   "cambios": [
-   "Chips (abierta): SMH en 473,0 $ en la preapertura, +2,9 % sobre la entrada; Applied y Lam +4,2 %.",
-   "Walmart bate y sube previsiones, pero cae un 1,3 % antes de abrir → descarte (lección «empresa»).",
-   "UnitedHealth plana en la preapertura y sus rivales sin subir (Cigna −1,2 %, Centene +0,2 %): sigue sin cumplirse la lección «rival».",
-   "Las alertas de la mañana (racha bajista sin miedo alto, oro −3,2 %) siguen igual. El VIX baja a 22,3: aún más lejos del umbral de 28."
+   "Nueva en vigilancia: pánico con miedo alto → QQQ, si el VIX cierra en 28 o más y llega otro golpe antes del 25-nov.",
+   "Chips (abierta): SMH −2,4 % desde la entrada. Corrijo lo dicho esta mañana: no caduca mañana; ya está dentro y manda el horizonte de 2 a 3 meses.",
+   "AMD −9 % por el informe de un bajista → descarte (lección «bajista»).",
+   "UnitedHealth −5,7 % más y sus rivales también caen (Cigna −4,8 %, Elevance −3,1 %): sigue sin cumplirse la lección «rival»; con el VIX de ayer en 24,6, la de «caido» sigue diciendo no.",
+   "Alerta de racha (seis días a la baja): sin miedo alto todavía no se compra; es justo lo que vigila la idea nueva."
   ],
-  "pulso": "Europa va plana: el Euro Stoxx 50 +0,4 %, el DAX +0,1 % y el Ibex −0,1 %. En EE. UU., los futuros del Nasdaq suben un 2,0 % y los del S&P un 1,1 %; los del Dow solo un 0,6 %. Tiran los chips y el software: Palo Alto sube un 10 % tras mejorar previsiones. Todo ello, en vísperas del estreno de Anthropic, que se ha colocado por encima del rango y del que no se hace idea. El VIX cae a 22,3 y el bono a 10 años al 5,07 %.",
+  "pulso": "Giro completo en la sesión. El S&P 500 abrió con un +0,7 % y a las 21:10 cae un 1,9 % (SPY 716,6 $); el Nasdaq-100 cae un 2,1 % y el Russell 2000 un 1,9 %. El VIX sube a 27,7 y el S&P 500 pierde su media de 200 sesiones. El bono a 10 años sigue en el 5,06 %. Los chips, que abrieron con subidas del 3–5 % por el estreno de Anthropic, se dieron la vuelta (SMH −2,4 %). Walmart cierra con un −1,2 % pese a mejorar previsiones. El oro cae un 1,5 % y el petróleo sube un 1,1 %.",
   "hechos": [
    {
-    "titulo": "Walmart bate y mejora previsiones, pero la acción baja",
-    "detalle": "Beneficio ajustado de 0,65 $ por acción (se esperaban 0,64 $) y ventas de 188.800 millones (frente a 187.300). En EE. UU. vende un 2,9 % más a tiendas comparables, el comercio electrónico crece un 17 % y la publicidad un 25 %. Sube la previsión anual de ventas al 4,9–5,2 % y la de beneficio a 2,84–2,89 $. Aun así, cae un 1,3 % en la preapertura (125,7 $).",
-    "efecto": "El consumo estadounidense aguanta, lo que es una buena señal para el mercado en general. Para la acción, el «vender la noticia» de unos buenos resultados no es una idea.",
-    "tono": "neutro",
+    "titulo": "El mercado se da la vuelta: de +0,7 % a −1,9 %",
+    "detalle": "Sexta sesión seguida a la baja del S&P 500, que cae por debajo de su media de 200 sesiones. El VIX sube un 12,8 %, hasta 27,7. Las subidas de primera hora, con el estreno de Anthropic y los chips, se borraron a lo largo del día.",
+    "efecto": "Es el tipo de día que, si llega con el miedo ya alto, se ha comprado bien. Hoy aún no: por eso queda en vigilancia.",
+    "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Los chips y el software tiran de los futuros",
-    "detalle": "Micron +4,6 %, Applied Materials y Lam Research +4,2 %, AMD +2,7 % y Nvidia +1,5 %, que rebota tras cinco sesiones a la baja. Palo Alto sube un 10 % tras mejorar su previsión de 2027 y arrastra a CrowdStrike, Cloudflare y Zscaler.",
-    "efecto": "Es bueno para la idea abierta de chips. Lo de Palo Alto son unos resultados de una sola empresa, que por sí solos no son una idea.",
-    "tono": "oportunidad",
+    "titulo": "Un fondo bajista ataca a AMD",
+    "detalle": "Hunterbrook ha revelado una posición corta y un informe que asegura que el firmware de AMD aparece en una empresa china vetada y en tres vinculadas a ella. También señala compromisos de financiación de unos 28.000 millones. Son acusaciones sin verificar. AMD cae un 9,3 % (480,7 $).",
+    "efecto": "No se compra el castigo hasta que haya una respuesta seria (lección «bajista»). Para la idea de chips, es ruido mientras Comercio no amplíe la norma.",
+    "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Las aseguradoras no rebotan",
-    "detalle": "UnitedHealth (350,8 $) y Humana (386,0 $) están planas en la preapertura tras sus desplomes de ayer. La propuesta de Medicare sigue sobre la mesa.",
-    "efecto": "No hay ni rebote ni trasvase a las competidoras. Sigue en vigilancia y solo cambiaría si la norma se suaviza.",
+    "titulo": "Las aseguradoras siguen cayendo",
+    "detalle": "UnitedHealth cae otro 5,7 % (330 $), Cigna un 4,8 %, Centene un 3,5 %, Elevance un 3,1 % y Humana un 2,0 %. La propuesta de Medicare sigue sobre la mesa.",
+    "efecto": "Es castigo de sector entero, sin trasvase a las competidoras. Sigue sin idea.",
     "tono": "riesgo",
     "nuevo": true
    }
   ]
  },
  "ideas": [
+  {
+   "id": "2026-11-19-panico-miedo",
+   "fecha": "2026-11-19",
+   "estado": "vigilancia",
+   "conviccion": 2,
+   "tipo": "panico",
+   "caduca": "2026-11-25",
+   "nuevo": true,
+   "titulo": "Si el miedo llega a 28 y la caída sigue, se compra el Nasdaq",
+   "resumen": "Hoy Wall Street ha pasado de subir un 1 % a caer casi un 2 %, y el índice del miedo roza el umbral que, en el entrenamiento, separa los pánicos que se compran de los que no. Todavía no se cumple: el VIX de ayer estaba en 24,6. Si hoy cierra en 28 o más y en los próximos días llega otro golpe, sí.",
+   "hecho": "A las 21:10 (hora española), el S&P 500 cae un 1,9 % y el Nasdaq-100 un 2,1 %, tras abrir con subidas: es la sexta sesión seguida a la baja. El VIX sube un 12,8 %, hasta 27,7. Los chips, que abrieron al alza con el estreno de Anthropic, se dieron la vuelta. AMD cae un 9 % por el informe de un fondo bajista. El S&P 500 está ya por debajo de su media de 200 sesiones. Las actas de la Fed de ayer dan casi por segura una subida de tipos en diciembre.",
+   "cadena": [
+    "Una caída que empieza con subidas y acaba en −2 % es venta de quien necesita reducir riesgo, no de quien ha cambiado de opinión sobre las empresas.",
+    "En el entrenamiento, ese tipo de día no da nada si el mercado venía tranquilo (VIX por debajo de 28). Lo que se recupera con fuerza es el castigo que llega cuando el miedo ya está instalado.",
+    "Hoy el VIX está a punto de cruzar esa línea. Si cierra en 28 o más, el siguiente golpe (otro −2 %, o tres días seguidos a la baja que sumen −3 %) llega ya con el miedo alto.",
+    "Con miedo alto, y aunque el mercado esté en tendencia bajista, el Nasdaq ha ganado de media un 9 % más que el S&P 500 a tres meses, en las dos mitades del periodo.",
+    "Se compra el índice entero (QQQ) y no los chips, porque los chips ya están en la idea abierta del veto."
+   ],
+   "valores": [
+    {
+     "sym": "QQQ",
+     "nombre": "Nasdaq-100 (Invesco QQQ)",
+     "papel": "el índice",
+     "por_que": "Es lo que se midió en el entrenamiento. Cae un 2,1 % hoy y lleva seis sesiones a la baja."
+    }
+   ],
+   "en_precio": "La caída de hoy, sí. Lo que se compra no es este día, sino el siguiente golpe con el miedo ya alto, que según el entrenamiento suele marcar el exceso.",
+   "disparador": "Las dos cosas a la vez, cualquier día hasta el martes 25: (1) que el VIX haya cerrado el día anterior en 28 o más (hoy está en 27,7 y el cierre se sabe después de las 22:00), y (2) que ese día el S&P 500 cierre con −2 % o peor, o complete tres días seguidos a la baja que sumen −3 %. Para mañana viernes, eso es que el SPY cierre por debajo de unos 710,5 $ (hoy 716,6 $). Si salta, se compra QQQ al cierre de ese día o en la apertura siguiente: da lo mismo.",
+   "invalidacion": "Que el VIX vuelva por debajo de 24 sin que haya saltado el disparador: el susto se habrá pasado sin llegar a pánico. Si ya se está dentro: que la caída pase a ser por un problema propio de las grandes tecnológicas (unos resultados que recortan previsiones) y no por venta generalizada.",
+   "no_hacer": "Comprar hoy: el VIX de ayer estaba en 24,6, y con ese nivel de miedo un día de −2 % no ha dado nada (+0,7 % viniendo de calma). Tampoco comprar AMD por su caída: es el informe de un bajista, y hasta que haya una respuesta seria no se toca.",
+   "horizonte": "De 1 a 3 meses desde la entrada. El grueso llega entre la sesión 20 y la 60.",
+   "en_contra": "El mercado está en tendencia bajista y con la Fed subiendo tipos, el tipo de entorno en que en 2000–2002 y 2008 los rebotes duraban poco antes de una caída mayor. El resultado medio esconde esas rachas. Además, depende de un umbral (28) que hoy se roza: una décima arriba o abajo cambia la decisión, y eso es frágil. Por eso la convicción es 2.",
+   "precedentes": [
+    {
+     "caso": "Pánico (S&P 500 −2 %) con el VIX previo en 28 o más → Nasdaq-100",
+     "que_paso": "+5,0 % en 20 sesiones y +10,7 % en 60, sobre lo normal (57 casos desde 2000; gana el 77 %)."
+    },
+    {
+     "caso": "El mismo pánico con el mercado en tendencia bajista",
+     "que_paso": "+4,6 % en 20 sesiones y +9,0 % en 60 (48 casos), positivo en 2000–2013 y en 2014–2026."
+    },
+    {
+     "caso": "Un día de −2 % viniendo de calma (VIX por debajo de 20)",
+     "que_paso": "+0,7 % en 60 sesiones: nada. Por eso hoy no se compra."
+    }
+   ],
+   "ref": {
+    "QQQ": 645.44,
+    "SPY": 716.59
+   },
+   "notas": [],
+   "fuentes": [
+    {
+     "t": "CNBC: los valores que más se mueven hoy",
+     "u": "https://www.cnbc.com/2026/11/19/stocks-moving-the-most-today-live-updates.html"
+    },
+    {
+     "t": "Seeking Alpha vía TradingView: el rally de chips se da la vuelta",
+     "u": "https://www.tradingview.com/news/seekingalpha:7e7b13eb5094b:0-anthropic-fueled-rally-in-chip-stocks-fades/"
+    },
+    {
+     "t": "TipRanks: por qué cae AMD",
+     "u": "https://www.tipranks.com/news/why-amd-stock-suddenly-tumbles-and-what-it-means-for-investors"
+    }
+   ]
+  },
   {
    "id": "2026-11-17-veto-chips",
    "fecha": "2026-11-17",
@@ -147,8 +214,13 @@
     {
      "fecha": "2026-11-19",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Hora y media antes de la apertura, el SMH cotiza en 473,0 $: +2,9 % sobre el cierre de entrada (459,54 $). Applied Materials está en 366,9 $ (+4,2 %) y Lam Research en 220,6 $ (+4,2 %). Tira todo el sector: Micron +4,6 %, AMD +2,7 % y Nvidia +1,5 %. No se cumple ninguna condición de ruptura. Caduca mañana, viernes 20. No hay que hacer nada: el cierre de la idea se decide en la edición de mañana por la noche."
+    },
+    {
+     "fecha": "2026-11-19",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Mal día. El SMH abrió en 473 $ y a las 21:10 está en 448,7 $: −2,4 % en el día y −2,4 % desde la entrada (459,54 $). Applied Materials −3,7 % y Lam Research −3,5 %. AMD se hunde un 9 % por el informe de un fondo bajista, que dice que su firmware aparece en una empresa china vetada. Son acusaciones sin verificar, y no cumplen la condición de ruptura: Comercio no ha ampliado la norma y Nvidia no ha recortado previsiones. La idea sigue abierta.\n\nUna corrección a lo que dije esta mañana: la idea no caduca mañana. La fecha del 20-nov era el plazo para que saltara el disparador, y ya saltó. Ahora manda el horizonte, de 2 a 3 meses desde la entrada. Mañana no hay que vender nada."
     }
    ],
    "fuentes": [
@@ -405,14 +477,35 @@
  "descartes": [
   {
    "fecha": "2026-11-19",
+   "titulo": "Comprar AMD tras hundirse un 9 % por el informe de un bajista",
+   "por_que": "Las acusaciones (firmware en una empresa china vetada, compromisos de financiación) no están verificadas en ningún sentido. En el entrenamiento, tras un informe bajista la mitad de las veces la caída siguió (Super Micro −52 %) y la otra mitad se recuperó.",
+   "leccion": "«bajista»: no se compra hasta que haya una respuesta seria (un auditor, un regulador o unas cuentas).",
+   "tipo": "bajista",
+   "valores": [
+    "AMD"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-19",
+   "titulo": "Comprar el Nasdaq al cierre de hoy por la caída del 2 %",
+   "por_que": "El VIX de ayer estaba en 24,6. Un día de −2 % sin miedo previo alto no ha dado nada en el entrenamiento (+0,7 % a 60 sesiones viniendo de calma). Queda en vigilancia por si el miedo se instala.",
+   "leccion": "«panico»: solo con el VIX previo en 28 o más.",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-19",
    "titulo": "Comprar Walmart tras batir y mejorar previsiones",
    "por_que": "Son unos buenos resultados de una sola empresa, sin un hecho que cambie el sector, y el mercado ya los está vendiendo en la preapertura.",
    "leccion": "«empresa»: unos resultados por sí solos no dan ventaja que dure.",
    "tipo": "empresa",
    "valores": [
     "WMT"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-19",
@@ -424,8 +517,7 @@
     "PANW",
     "CRWD",
     "ZS"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-19",
@@ -552,6 +644,10 @@
   {
    "cuando": "2026-11-19T12:36:02Z",
    "resumen": "Preapertura: los chips tiran de los futuros (SMH +2,9 % sobre la entrada). Walmart bate y mejora previsiones pero cae → descarte. Aseguradoras planas y sin trasvase. Hoy no se compra nada."
+  },
+  {
+   "cuando": "2026-11-19T20:11:47Z",
+   "resumen": "Cierre: Wall Street pasa de +0,7 % a −1,9 % y el VIX roza 28 (27,7). Hoy no se compra; nueva en vigilancia: pánico con miedo alto → QQQ hasta el 25-nov. AMD −9 % por un bajista → descarte. Chips −2,4 % desde la entrada, sigue abierta (no caduca mañana)."
   }
  ]
 }

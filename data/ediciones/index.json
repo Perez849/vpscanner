@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-19-2011",
+  "cuando": "2026-11-19T20:11:47Z",
+  "tipo": "cierre",
+  "titular": "Wall Street se da la vuelta y el miedo roza el umbral: hoy no, quizá mañana",
+  "hoy": "Al cierre de hoy no se compra nada. El S&P 500 cae un 1,9 %, pero el miedo de ayer (VIX 24,6) no llegaba a 28, y con ese nivel un día así no ha dado ventaja. Queda una idea nueva en vigilancia: si el VIX cierra hoy en 28 o más y mañana el SPY cierra por debajo de unos 710,5 $ (o cae un 2 %), se compra QQQ al cierre de mañana. La idea de chips sigue abierta: no caduca mañana, su horizonte es de 2 a 3 meses.",
+  "accion": "vigilar",
+  "vivas": 2
+ },
+ {
   "id": "2026-11-19-1236",
   "cuando": "2026-11-19T12:36:02Z",
   "tipo": "preapertura",
