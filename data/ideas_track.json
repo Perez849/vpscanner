@@ -1,15 +1,15 @@
 {
- "generado": 1795178164,
+ "generado": 1795205475,
  "ideas": {
   "2026-11-19-panico-miedo": {
-   "estado": "vigilancia",
-   "desde": "2026-11-19",
+   "estado": "abierta",
+   "desde": "2026-11-20",
    "hasta": "2026-11-19",
    "por_valor": {
     "QQQ": {
-     "ref": 645.44,
+     "ref": 645.04,
      "ahora": 645.04,
-     "pct": -0.06,
+     "pct": null,
      "serie": [
       721.11,
       716.43,
@@ -75,9 +75,9 @@
      "i0": 59
     }
    },
-   "media": -0.06,
-   "spy": -0.1,
-   "pendiente": false,
+   "media": null,
+   "spy": null,
+   "pendiente": true,
    "hipotetica": false
   },
   "2026-11-17-veto-chips": {

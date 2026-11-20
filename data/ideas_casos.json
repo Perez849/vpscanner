@@ -336,7 +336,7 @@
   {
    "id": "2026-11-19-panico-miedo",
    "fecha": "2026-11-19",
-   "titulo": "Si el miedo llega a 28 y la caída sigue, se compra el Nasdaq",
+   "titulo": "Pánico con el miedo ya alto → comprar el Nasdaq",
    "tipo": "panico",
    "valores": [
     "QQQ"
@@ -362,12 +362,40 @@
    "e60": null
   },
   {
+   "id": "2026-11-20-comprar-amd-tras-caer-otro-12-6",
+   "fecha": "2026-11-20",
+   "titulo": "Comprar AMD tras caer otro 12,6 %",
+   "tipo": "bajista",
+   "valores": [
+    "AMD"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-20-comprar-en-la-apertura-porque-el-spy-ya-esta-en-",
    "fecha": "2026-11-20",
    "titulo": "Comprar en la apertura porque el SPY ya está en el umbral",
    "tipo": "panico",
    "valores": [
     "QQQ"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-20-comprar-nvidia-broadcom-o-micron-por-su-caida-de",
+   "fecha": "2026-11-20",
+   "titulo": "Comprar Nvidia, Broadcom o Micron por su caída del 12–14 % con el miedo alto",
+   "tipo": "caido",
+   "valores": [
+    "NVDA",
+    "AVGO",
+    "MU"
    ],
    "dada": false,
    "e5": null,
@@ -415,5 +443,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795178170
+ "generado": 1795205482
 }
