@@ -1,27 +1,95 @@
 {
- "generado": 1795119108,
+ "generado": 1795160475,
  "ideas": {
   "2026-11-19-panico-miedo": {
    "estado": "vigilancia",
    "desde": "2026-11-19",
-   "hasta": null,
-   "por_valor": {},
-   "media": null,
-   "spy": null,
+   "hasta": "2026-11-19",
+   "por_valor": {
+    "QQQ": {
+     "ref": 645.44,
+     "ahora": 645.04,
+     "pct": -0.06,
+     "serie": [
+      721.11,
+      716.43,
+      716.76,
+      707.64,
+      709.24,
+      717.67,
+      718.96,
+      718.36,
+      716.31,
+      708.69,
+      714.88,
+      709.18,
+      704.54,
+      704.72,
+      716.92,
+      721.45,
+      741.47,
+      747.46,
+      741.21,
+      741.1,
+      744.5,
+      736.53,
+      737.93,
+      739.77,
+      742.03,
+      749.58,
+      756.2,
+      759.66,
+      757.73,
+      747.58,
+      751.27,
+      746.04,
+      743.57,
+      728.95,
+      728.0,
+      709.8,
+      718.36,
+      717.63,
+      725.2,
+      704.47,
+      704.4,
+      712.2,
+      721.25,
+      725.61,
+      715.34,
+      690.49,
+      681.09,
+      685.28,
+      691.95,
+      647.05,
+      656.1,
+      679.35,
+      674.76,
+      690.38,
+      688.17,
+      679.89,
+      661.75,
+      656.95,
+      659.51,
+      645.04
+     ],
+     "i0": 59
+    }
+   },
+   "media": -0.06,
+   "spy": -0.1,
    "pendiente": false,
    "hipotetica": false
   },
   "2026-11-17-veto-chips": {
    "estado": "abierta",
    "desde": "2026-11-18",
-   "hasta": "2026-11-18",
+   "hasta": "2026-11-19",
    "por_valor": {
     "SMH": {
      "ref": 459.54,
-     "ahora": 459.54,
-     "pct": 0.0,
+     "ahora": 447.48,
+     "pct": -2.62,
      "serie": [
-      555.77,
       573.0,
       553.11,
       556.63,
@@ -80,16 +148,16 @@
       486.75,
       461.9,
       460.1,
-      459.54
+      459.54,
+      447.48
      ],
-     "i0": 59
+     "i0": 58
     },
     "AMAT": {
      "ref": 352.3,
-     "ahora": 352.3,
-     "pct": 0.0,
+     "ahora": 338.93,
+     "pct": -3.8,
      "serie": [
-      479.76,
       482.36,
       461.67,
       458.39,
@@ -148,16 +216,16 @@
       370.5,
       350.25,
       349.23,
-      352.3
+      352.3,
+      338.93
      ],
-     "i0": 59
+     "i0": 58
     },
     "LRCX": {
      "ref": 211.67,
-     "ahora": 211.67,
-     "pct": 0.0,
+     "ahora": 203.68,
+     "pct": -3.77,
      "serie": [
-      312.88,
       318.58,
       301.9,
       301.49,
@@ -216,13 +284,14 @@
       225.92,
       210.83,
       210.69,
-      211.67
+      211.67,
+      203.68
      ],
-     "i0": 59
+     "i0": 58
     }
    },
-   "media": 0.0,
-   "spy": 0.0,
+   "media": -3.4,
+   "spy": -1.96,
    "pendiente": false,
    "hipotetica": false
   },
@@ -590,8 +659,7 @@
   }
  },
  "alertas": [
-  "Racha de 5 días a la baja (-3.2 % en tres sesiones) con el VIX previo en 25.5: sin miedo alto la ventaja es pequeña (lección «panico»).",
-  "Oro -3.2 %: las mineras lo recogen el mismo día (lección «obvio»).",
-  "UNH -10.2 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»)."
+  "Miedo alto (VIX 28.4): revisa los descartes de «comprar la caída», «comprar al castigado» y «competidoras castigadas» (lección «miedo»). Sigue siendo «no» si la caída es por un problema propio.",
+  "Racha de 6 días a la baja (-3.3 % en tres sesiones) con el VIX previo en 24.6: sin miedo alto la ventaja es pequeña (lección «panico»)."
  ]
 }

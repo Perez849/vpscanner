@@ -360,6 +360,34 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-20-comprar-softbank-samsung-o-sk-hynix-tras-el-desp",
+   "fecha": "2026-11-20",
+   "titulo": "Comprar SoftBank, Samsung o SK Hynix tras el desplome de Asia",
+   "tipo": "panico",
+   "valores": [
+    "SFTBY",
+    "005930.KS",
+    "000660.KS"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-20-comprar-ya-antes-del-cierre-porque-el-vix-ha-cru",
+   "fecha": "2026-11-20",
+   "titulo": "Comprar ya, antes del cierre, porque el VIX ha cruzado 28",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -374,5 +402,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795119116
+ "generado": 1795160481
 }
