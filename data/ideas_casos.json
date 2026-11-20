@@ -362,6 +362,19 @@
    "e60": null
   },
   {
+   "id": "2026-11-20-comprar-en-la-apertura-porque-el-spy-ya-esta-en-",
+   "fecha": "2026-11-20",
+   "titulo": "Comprar en la apertura porque el SPY ya está en el umbral",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-20-comprar-softbank-samsung-o-sk-hynix-tras-el-desp",
    "fecha": "2026-11-20",
    "titulo": "Comprar SoftBank, Samsung o SK Hynix tras el desplome de Asia",
@@ -402,5 +415,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795160481
+ "generado": 1795178170
 }

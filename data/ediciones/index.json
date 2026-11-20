@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-20-1236",
+  "cuando": "2026-11-20T12:36:02Z",
+  "tipo": "preapertura",
+  "titular": "El SPY abre justo en el umbral: el cierre de hoy decide la compra",
+  "hoy": "Ahora no se compra nada. El SPY cotiza antes de abrir en 710,46 $, justo en el umbral de 710,5 $ que activaría la compra de QQQ al cierre. El VIX está ya en 30. La decisión se toma al cierre: la edición de las 21:30 dirá si salta. La idea de chips cae un 5,6 % desde la entrada, pero no hay condición de ruptura. Se mantiene.",
+  "accion": "vigilar",
+  "vivas": 2
+ },
+ {
   "id": "2026-11-20-0741",
   "cuando": "2026-11-20T07:41:14Z",
   "tipo": "mañana",
