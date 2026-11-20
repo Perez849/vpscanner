@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-20-2011",
+  "cuando": "2026-11-20T20:11:13Z",
+  "tipo": "cierre",
+  "titular": "Salta el pánico con miedo alto: se compra el Nasdaq al cierre",
+  "hoy": "Comprar QQQ al cierre de hoy (o en la apertura del lunes, que da lo mismo). Se cumplen las dos condiciones: el VIX cerró ayer en 28,4 y hoy el S&P 500 cae un 3,0 % (SPY 694,1 $ a las 21:10, muy por debajo del umbral de 710,5 $). La idea de chips (SMH) se mantiene sin tocar, aunque va un 12 % abajo: no hay condición de ruptura. No se compran más chips: ya están en esa idea.",
+  "accion": "comprar",
+  "vivas": 2
+ },
+ {
   "id": "2026-11-20-1236",
   "cuando": "2026-11-20T12:36:02Z",
   "tipo": "preapertura",

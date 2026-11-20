@@ -1,33 +1,41 @@
 {
- "actualizado": "2026-11-20T12:36:02Z",
+ "actualizado": "2026-11-20T20:11:13Z",
  "sesion": {
-  "cuando": "2026-11-20T12:36:02Z",
-  "tipo": "preapertura",
-  "titular": "El SPY abre *justo en el umbral*: el cierre de hoy decide la compra",
+  "cuando": "2026-11-20T20:11:13Z",
+  "tipo": "cierre",
+  "titular": "Salta el pánico con miedo alto: *se compra el Nasdaq al cierre*",
   "hoy": {
-   "accion": "vigilar",
-   "texto": "Ahora no se compra nada. El SPY cotiza antes de abrir en 710,46 $, justo en el umbral de 710,5 $ que activaría la compra de QQQ al cierre. El VIX está ya en 30. La decisión se toma al cierre: la edición de las 21:30 dirá si salta. La idea de chips cae un 5,6 % desde la entrada, pero no hay condición de ruptura. Se mantiene."
+   "accion": "comprar",
+   "texto": "Comprar QQQ al cierre de hoy (o en la apertura del lunes, que da lo mismo). Se cumplen las dos condiciones: el VIX cerró ayer en 28,4 y hoy el S&P 500 cae un 3,0 % (SPY 694,1 $ a las 21:10, muy por debajo del umbral de 710,5 $). La idea de chips (SMH) se mantiene sin tocar, aunque va un 12 % abajo: no hay condición de ruptura. No se compran más chips: ya están en esa idea."
   },
   "cambios": [
-   "Pánico con miedo alto (vigilancia): SPY en 710,46 $ en la preapertura, en el filo del umbral de 710,5 $; VIX 30,4. Se decide al cierre.",
-   "Chips (abierta): SMH 434 $ antes de abrir, −5,6 % desde la entrada. Sin condición de ruptura; se mantiene.",
-   "Alerta de miedo alto: UnitedHealth sube un 1,5 % antes de abrir y AMD cae otro 5,8 %. Siguen en no: en UnitedHealth el miedo no era alto cuando cayó, y lo de AMD es un problema propio.",
-   "Europa cae cerca de un 2 % (Euro Stoxx 50 −2,1 %, DAX −2,0 %, Ibex −1,4 %)."
+   "Pánico con miedo alto: salta el disparador → abierta, comprar QQQ al cierre de hoy. Convicción 3.",
+   "Chips (abierta): SMH −9,9 % hoy y −12,2 % desde la entrada. La venta es por la inteligencia artificial, no por la norma: no hay ruptura y se mantiene.",
+   "Alerta de miedo alto: Nvidia, Broadcom y Micron caen un 12–14 % con el VIX previo en 28. Es la combinación de «grande cae un 10 % con miedo alto», pero ya está cubierta por el SMH y el QQQ → descarte por concentración.",
+   "Alerta de racha: siete días a la baja; esta vez con miedo alto, y es la que salta en la idea del Nasdaq.",
+   "UnitedHealth rebota un 3,4 % y Humana un 3,2 %, como refugio. Sigue sin idea."
   ],
-  "pulso": "Europa contagiada: el Euro Stoxx 50 cae un 2,1 %, el DAX un 2,0 % y el Ibex un 1,4 %, tras el desplome de Asia (Nikkei −5,1 %, Kospi −5,2 %). En EE. UU., los futuros del S&P 500 caen un 0,8 % y los del Nasdaq un 1,7 %. El VIX está en 30,4. Los chips vuelven a caer en la preapertura (SMH −3,0 %, AMD −5,8 %, Nvidia −2,5 %), y Anthropic cae cerca de un 6 % en su segundo día. El oro rebota ligeramente (3.580 $) y el Brent está en 89,2 $.",
+  "pulso": "Desplome de la tecnología. A las 21:10, el S&P 500 cae un 3,0 % (SPY 694,1 $), el Nasdaq-100 un 4,9 %, el Russell 2000 un 2,4 % y el Dow un 1,4 %. Es la séptima sesión seguida a la baja. El VIX sube a 34,1. Los semiconductores se hunden un 9,9 % (SMH): Nvidia −12,2 %, Broadcom −12,3 %, Micron −14,1 %, AMD −12,6 %. El dinero huye hacia los bonos (10 años al 4,92 %, −13 puntos básicos) y hacia la sanidad defensiva (UnitedHealth +3,4 %). El oro cae un 3,9 %. Hoy vencen las opciones mensuales, lo que amplifica los movimientos.",
   "hechos": [
    {
-    "titulo": "El VIX supera 30 antes de la apertura",
-    "detalle": "El índice del miedo marca 30,4, frente a los 28,4 de ayer al cierre. Es el nivel más alto de este episodio.",
-    "efecto": "Refuerza la condición de miedo alto de la idea de pánico. Falta el golpe al cierre: el SPY por debajo de 710,5 $.",
+    "titulo": "La venta de la inteligencia artificial se convierte en desplome",
+    "detalle": "Los chips caen entre un 10 % y un 14 % en un día. Según la prensa, pesan las dudas sobre la financiación de la inteligencia artificial, que Anthropic cae en su segundo día, la rebaja de perspectiva de Moody's a Nvidia (de positiva a estable) y la salida de Jensen Huang. El vencimiento mensual de opciones obliga a los creadores de mercado a vender con la tendencia.",
+    "efecto": "Con el VIX ya en 28 o más, es el tipo de venta indiscriminada que el entrenamiento ha visto recuperarse. Salta la compra del Nasdaq.",
     "tono": "oportunidad",
     "nuevo": true
    },
    {
-    "titulo": "La venta de tecnología sigue en la preapertura",
-    "detalle": "Nvidia −2,5 %, AMD −5,8 % y Applied Materials −3,2 %. Anthropic cae cerca de un 6 % en su segundo día, según la prensa.",
-    "efecto": "Si la venta se mantiene durante la sesión, es exactamente el golpe con miedo alto que vigila la idea. Para la idea de chips, más dolor a corto plazo.",
-    "tono": "riesgo",
+    "titulo": "El VIX sube a 34",
+    "detalle": "Sube un 19,8 % en el día. El índice del miedo está en su nivel más alto del episodio.",
+    "efecto": "Con este nivel de miedo, las ventas son en buena parte de quien tiene que reducir riesgo, no de quien ha cambiado de opinión.",
+    "tono": "oportunidad",
+    "nuevo": true
+   },
+   {
+    "titulo": "Huida a los bonos y a lo defensivo",
+    "detalle": "El bono a 10 años baja al 4,92 % (desde el 5,05 %). Las aseguradoras rebotan: UnitedHealth +3,4 %, Humana +3,2 %, Elevance +2,1 %.",
+    "efecto": "Es la rotación típica de un día de pánico. No da idea por sí sola.",
+    "tono": "neutro",
     "nuevo": true
    }
   ]
@@ -36,11 +44,11 @@
   {
    "id": "2026-11-19-panico-miedo",
    "fecha": "2026-11-19",
-   "estado": "vigilancia",
-   "conviccion": 2,
+   "estado": "abierta",
+   "conviccion": 3,
    "tipo": "panico",
    "caduca": "2026-11-25",
-   "titulo": "Si el miedo llega a 28 y la caída sigue, se compra el Nasdaq",
+   "titulo": "Pánico con el miedo ya alto → comprar el Nasdaq",
    "resumen": "Hoy Wall Street ha pasado de subir un 1 % a caer casi un 2 %, y el índice del miedo roza el umbral que, en el entrenamiento, separa los pánicos que se compran de los que no. Todavía no se cumple: el VIX de ayer estaba en 24,6. Si hoy cierra en 28 o más y en los próximos días llega otro golpe, sí.",
    "hecho": "A las 21:10 (hora española), el S&P 500 cae un 1,9 % y el Nasdaq-100 un 2,1 %, tras abrir con subidas: es la sexta sesión seguida a la baja. El VIX sube un 12,8 %, hasta 27,7. Los chips, que abrieron al alza con el estreno de Anthropic, se dieron la vuelta. AMD cae un 9 % por el informe de un fondo bajista. El S&P 500 está ya por debajo de su media de 200 sesiones. Las actas de la Fed de ayer dan casi por segura una subida de tipos en diciembre.",
    "cadena": [
@@ -59,11 +67,11 @@
     }
    ],
    "en_precio": "La caída de hoy, sí. Lo que se compra no es este día, sino el siguiente golpe con el miedo ya alto, que según el entrenamiento suele marcar el exceso.",
-   "disparador": "Las dos cosas a la vez, cualquier día hasta el martes 25: (1) que el VIX haya cerrado el día anterior en 28 o más (hoy está en 27,7 y el cierre se sabe después de las 22:00), y (2) que ese día el S&P 500 cierre con −2 % o peor, o complete tres días seguidos a la baja que sumen −3 %. Para mañana viernes, eso es que el SPY cierre por debajo de unos 710,5 $ (hoy 716,6 $). Si salta, se compra QQQ al cierre de ese día o en la apertura siguiente: da lo mismo.",
+   "disparador": "Cumplido el 20-nov. El VIX cerró el jueves en 28,44 (28 o más) y el viernes el S&P 500 cae un 3,0 % (SPY 694,1 $ a las 21:10), muy por debajo del umbral de 710,5 $ y del −2 %. Se compra QQQ al cierre del viernes (o en la apertura del lunes, que en el entrenamiento da lo mismo).",
    "invalidacion": "Que el VIX vuelva por debajo de 24 sin que haya saltado el disparador: el susto se habrá pasado sin llegar a pánico. Si ya se está dentro: que la caída pase a ser por un problema propio de las grandes tecnológicas (unos resultados que recortan previsiones) y no por venta generalizada.",
    "no_hacer": "Comprar hoy: el VIX de ayer estaba en 24,6, y con ese nivel de miedo un día de −2 % no ha dado nada (+0,7 % viniendo de calma). Tampoco comprar AMD por su caída: es el informe de un bajista, y hasta que haya una respuesta seria no se toca.",
    "horizonte": "De 1 a 3 meses desde la entrada. El grueso llega entre la sesión 20 y la 60.",
-   "en_contra": "El mercado está en tendencia bajista y con la Fed subiendo tipos, el tipo de entorno en que en 2000–2002 y 2008 los rebotes duraban poco antes de una caída mayor. El resultado medio esconde esas rachas. Además, depende de un umbral (28) que hoy se roza: una décima arriba o abajo cambia la decisión, y eso es frágil. Por eso la convicción es 2.",
+   "en_contra": "El mercado está en tendencia bajista, con la Fed subiendo tipos y una venta concentrada en la inteligencia artificial, que es casi la mitad del Nasdaq. Ese tipo de entorno, en 2000–2002 y en 2008, dio rebotes que duraron poco antes de una caída mayor, y el resultado medio esconde esas rachas. Además, el golpe de hoy coincide con el vencimiento mensual de opciones, que exagera los movimientos en ambos sentidos. Y se suma a la idea de chips, que ya está dentro: si la venta de la inteligencia artificial sigue, las dos pierden a la vez.",
    "precedentes": [
     {
      "caso": "Pánico (S&P 500 −2 %) con el VIX previo en 28 o más → Nasdaq-100",
@@ -91,8 +99,13 @@
     {
      "fecha": "2026-11-20",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "A hora y media de la apertura, el SPY cotiza en 710,46 $: exactamente en el umbral de 710,5 $. El QQQ cae un 1,6 % (634,8 $) y el VIX sube a 30,4. Europa cae cerca de un 2 %. Todo depende del cierre de hoy. Si el SPY termina por debajo de 710,5 $, se compra QQQ al cierre. Si termina por encima, la idea sigue en vigilancia hasta el martes 25, con el miedo ya alto. La edición de las 21:30 lo dirá con los precios de media hora antes del cierre."
+    },
+    {
+     "fecha": "2026-11-20",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Salta el disparador. A las 21:10, el SPY cae un 3,0 % (694,1 $), el QQQ un 4,9 % (613,7 $) y el VIX sube a 34,1. Es la séptima sesión seguida a la baja. Se compra QQQ al cierre de hoy y el marcador cuenta desde ese cierre. Subo la convicción a 3: ya no depende de una décima en el umbral, y el VIX está en 34, de lleno en la zona en la que el entrenamiento ve la ventaja. Mantengo QQQ y no lo cambio por los chips, aunque estos hayan caído más: es lo que se dijo antes de que saltara, y los chips ya están en la otra idea."
     }
    ],
    "fuentes": [
@@ -108,7 +121,9 @@
      "t": "TipRanks: por qué cae AMD",
      "u": "https://www.tipranks.com/news/why-amd-stock-suddenly-tumbles-and-what-it-means-for-investors"
     }
-   ]
+   ],
+   "entrada": "2026-11-20",
+   "nuevo": true
   },
   {
    "id": "2026-11-17-veto-chips",
@@ -232,8 +247,13 @@
     {
      "fecha": "2026-11-20",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Antes de abrir, el SMH está en 434 $: −3,0 % hoy y −5,6 % desde la entrada. Applied Materials −3,2 %, Lam Research −3,7 %, AMD −5,8 % y Nvidia −2,5 %. La venta de chips sigue por las dudas sobre el gasto en inteligencia artificial y por el informe contra AMD. No hay noticias sobre la norma de exportación. No se cumple ninguna condición de ruptura. Es un mal comienzo, pero el horizonte es de 2 a 3 meses, y con el miedo alto el entrenamiento dice que este castigo se ha recuperado. Se mantiene."
+    },
+    {
+     "fecha": "2026-11-20",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Día muy malo. A las 21:10, el SMH cae un 9,9 % (403,3 $): −12,2 % desde la entrada. Applied Materials −10,3 % (303,9 $), Lam Research −10,2 % (183,0 $), Nvidia −12,2 %, Broadcom −12,3 % y Micron −14,1 %. La causa es la venta general de todo lo ligado a la inteligencia artificial: dudas sobre su financiación, Moody's rebaja la perspectiva de Nvidia a estable, y el vencimiento de opciones lo amplifica. No es la norma de exportación. No he encontrado ninguna noticia de que Comercio la haya ampliado, ni de que Nvidia haya recortado previsiones, así que no se cumple ninguna condición de ruptura.\n\nLo que cambia es el contexto, y a favor de mantener: ahora la caída llega con el VIX en 28 o más. En el entrenamiento, comprar semiconductores en pánicos con miedo alto ha ganado un +10,4 % a 60 sesiones (55 casos, positivo en 2000–2013 y en 2014–2026). Lo que no se puede negar: la idea va un 12 % abajo en tres sesiones, y la cronología de mi entrada fue mala. Se mantiene. No se promedia: la compra de hoy es la del Nasdaq, en la otra idea."
     }
    ],
    "fuentes": [
@@ -490,14 +510,37 @@
  "descartes": [
   {
    "fecha": "2026-11-20",
+   "titulo": "Comprar Nvidia, Broadcom o Micron por su caída del 12–14 % con el miedo alto",
+   "por_que": "Es la combinación más fuerte del entrenamiento (+18,6 % a 60 sesiones en 635 casos con el VIX en 28 o más), y aquí la caída es del sector entero, no un problema propio. Pero sería la tercera apuesta por lo mismo: los chips ya están en el SMH y el Nasdaq tiene a Nvidia y Broadcom entre sus mayores pesos. Si la venta de la inteligencia artificial sigue, las tres perderían a la vez.",
+   "leccion": "«miedo»: la señal es buena, pero una sola apuesta por sector.",
+   "tipo": "caido",
+   "valores": [
+    "NVDA",
+    "AVGO",
+    "MU"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-20",
+   "titulo": "Comprar AMD tras caer otro 12,6 %",
+   "por_que": "Sigue pesando el informe del bajista sin respuesta seria, y eso es un problema propio. Con problema propio, ni con miedo alto se ha recuperado (−7,7 % a 20 sesiones).",
+   "leccion": "«bajista» y «miedo»: con problema propio, sigue siendo no.",
+   "tipo": "bajista",
+   "valores": [
+    "AMD"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-20",
    "titulo": "Comprar en la apertura porque el SPY ya está en el umbral",
    "por_que": "El disparador se mide al cierre: una preapertura en 710,46 $ puede terminar en 715 $ o en 700 $. Comprar al cierre o en la apertura siguiente da lo mismo en el entrenamiento, así que no hay ventaja en adelantarse.",
    "leccion": "«panico»: se compra cuando se cumple la condición, no cuando parece que se va a cumplir.",
    "tipo": "panico",
    "valores": [
     "QQQ"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-20",
@@ -700,6 +743,10 @@
   {
    "cuando": "2026-11-20T12:36:02Z",
    "resumen": "Preapertura: el SPY en 710,46 $, justo en el umbral de la compra de QQQ; VIX 30,4; Europa −2 %. Se decide al cierre. Chips −5,6 % desde la entrada, sin ruptura."
+  },
+  {
+   "cuando": "2026-11-20T20:11:13Z",
+   "resumen": "Cierre: el S&P 500 cae un 3 % y el Nasdaq un 4,9 % con el VIX previo en 28,4 → salta el pánico con miedo alto: comprar QQQ al cierre. Chips −12 % desde la entrada, sin ruptura; se mantiene. Nvidia, Broadcom y Micron −12–14 % → descarte por concentración."
   }
  ]
 }
