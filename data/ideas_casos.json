@@ -460,6 +460,19 @@
    "e60": null
   },
   {
+   "id": "2026-11-23-comprar-nvidia-por-la-peticion-de-trump-de-que-v",
+   "fecha": "2026-11-23",
+   "titulo": "Comprar Nvidia por la petición de Trump de que vuelva Huang",
+   "tipo": "obvio",
+   "valores": [
+    "NVDA"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-23-comprar-oro-mineras-o-bancos-por-los-movimientos",
    "fecha": "2026-11-23",
    "titulo": "Comprar oro, mineras o bancos por los movimientos del viernes",
@@ -486,5 +499,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795419673
+ "generado": 1795437335
 }

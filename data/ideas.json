@@ -1,40 +1,31 @@
 {
- "actualizado": "2026-11-23T07:41:05Z",
+ "actualizado": "2026-11-23T12:35:26Z",
  "sesion": {
-  "cuando": "2026-11-23T07:41:05Z",
-  "tipo": "mañana",
-  "titular": "Tras la peor semana de los chips desde 2001, *los futuros rebotan un 3 %*",
+  "cuando": "2026-11-23T12:35:26Z",
+  "tipo": "preapertura",
+  "titular": "Los chips lideran el rebote antes de abrir: *Nvidia +7 %*",
   "hoy": {
    "accion": "nada",
-   "texto": "Hoy no se compra nada nuevo. El Nasdaq ya se compró al cierre del viernes (QQQ a 608,45 $). Los chips (SMH) siguen dentro desde el día 18. Las dos ideas apuestan por lo mismo, el rebote de la tecnología tras el pánico, así que no se añade nada más. Semana corta: el jueves Wall Street está cerrado por Acción de Gracias y el viernes cierra antes."
+   "texto": "Hoy no se compra nada nuevo. Las dos ideas abiertas, el Nasdaq (QQQ) y los chips (SMH), suben con fuerza en la preapertura: el QQQ un 3,3 % sobre la entrada y el SMH un 5,4 % en el día. No hay que hacer nada con ninguna de las dos."
   },
   "cambios": [
-   "Pánico con miedo alto (abierta): entrada al cierre del viernes, QQQ en 608,45 $; los futuros del Nasdaq suben un 3 %.",
-   "Chips (abierta): SMH 400,06 $, −12,9 % desde la entrada; sin ruptura.",
-   "Alertas de caídas ≥ 10 % con miedo alto (Nvidia, Broadcom, Micron, Arm, Applied, Lam, KLA, Marvell, Arista): todas son de la misma venta de chips, que ya cubren el SMH y el QQQ → descarte por concentración. Intuit −12,8 %: probablemente por sus resultados del jueves, un problema propio → no.",
-   "Bono a 10 años −14 pb y oro −4,6 % el viernes: beneficiarios evidentes que ya lo han recogido (lección «obvio»).",
-   "Revisión del lunes: hay 31 casos propios apuntados, pero ninguno tiene aún 5 sesiones completas de resultado. No hay nada que corregir en las lecciones todavía."
+   "Pánico con miedo alto (abierta): QQQ en 628,5 $ antes de abrir, +3,3 % sobre la entrada.",
+   "Chips (abierta): SMH +5,4 % hoy (421,7 $), todavía −8,2 % desde la entrada. Las noticias de Nvidia (Trump pide que vuelva Huang; investigación en California) no son condición de ruptura.",
+   "Las alertas de pánico y miedo alto siguen siendo las de la mañana: ya están atendidas con la idea del Nasdaq y los descartes por concentración."
   ],
-  "pulso": "El viernes Wall Street cerró su peor semana del año. El S&P 500 cayó un 3,6 % en el día (SPY 689,81 $), el Nasdaq-100 un 5,7 % y los semiconductores un 10,6 %; el VIX cerró en 35,9. Los tres grandes índices están en corrección y el Nasdaq ya pierde en el año. El bono a 10 años bajó al 4,91 %. Este fin de semana los futuros han rebotado: a las 8:30, el S&P 500 sube un 2,2 % y el Nasdaq un 3,0 %. Asia, en cambio, sigue cayendo: el Kospi cae un 3,3 % y el Hang Seng está plano; Japón está cerrado por festivo. El oro rebota un 3,3 % (3.630 $) y el Brent está en 89,5 $.",
+  "pulso": "Rebote general antes de abrir. Los futuros del S&P 500 suben un 2,4 % y los del Nasdaq un 3,0 %; el VIX baja de 35,9 a 31,0. Europa rebota menos: el Euro Stoxx 50 +0,8 %, el DAX +0,8 % y el Ibex +0,7 %. Los chips lideran: Nvidia +7,2 %, Lam Research +6,4 %, Applied Materials +6,1 %. El Brent cae a 88,6 $ y el oro está en 3.614 $.",
   "hechos": [
    {
-    "titulo": "La peor semana de los chips desde 2001",
-    "detalle": "El índice de semiconductores de Filadelfia perdió cerca de un 17 % en la semana, la peor desde la que siguió al 11-S. Nvidia cayó un 14 % el viernes (125,53 $), Micron un 13,9 %, AMD un 13,2 % y Broadcom un 12,2 %.",
-    "efecto": "Es el castigo que las dos ideas abiertas apuestan a que se recupere. Ninguna noticia de la norma ni de las previsiones de Nvidia lo explica. Es venta de todo lo ligado a la inteligencia artificial.",
+    "titulo": "Nvidia rebota con fuerza tras su peor semana desde 2008",
+    "detalle": "Sube un 7–9 % en la preapertura (134,6 $ en mi última lectura) tras caer un 14 % el viernes, hasta su mínimo de un año. Según la prensa, Trump ha pedido en público que el consejo vuelva a contratar a Jensen Huang, y el consejo lo ha descartado. California investiga a la empresa con una citación que podría acabar en multas; no hay conclusiones.",
+    "efecto": "Es bueno para las dos ideas abiertas. Las noticias políticas y legales son de Nvidia, no de la norma de exportación, y no cambian nada en la idea de chips.",
     "tono": "oportunidad",
     "nuevo": true
    },
    {
-    "titulo": "Los futuros rebotan con fuerza el domingo",
-    "detalle": "Los futuros del S&P 500 suben un 2,2 % y los del Nasdaq-100 un 3,0 %. La prensa está dividida sobre si el rebote aguantará.",
-    "efecto": "Es bueno para las dos ideas, pero un día no decide nada. En el entrenamiento, la ganancia llega sobre todo entre la sesión 20 y la 60.",
-    "tono": "oportunidad",
-    "nuevo": true
-   },
-   {
-    "titulo": "Semana corta por Acción de Gracias",
-    "detalle": "Wall Street cierra el jueves 26 y el viernes 27 abre media sesión.",
-    "efecto": "Menos volumen y movimientos que pueden exagerarse. Las ediciones del jueves se limitarán a lo que pase fuera de Wall Street.",
+    "titulo": "El VIX baja a 31",
+    "detalle": "Baja desde los 35,9 del viernes. Sigue por encima de 28.",
+    "efecto": "Con el miedo todavía alto, un nuevo golpe del −2 % seguiría contando como pánico con miedo alto. Pero la idea del Nasdaq ya está dentro y no se compra dos veces.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -109,8 +100,13 @@
     {
      "fecha": "2026-11-23",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El QQQ cerró el viernes en 608,45 $ (−5,7 %): ese es el precio de entrada y desde él cuenta el marcador. El SPY cerró en 689,81 $ (−3,6 %) y el VIX en 35,9. Este fin de semana los futuros han rebotado con fuerza: a las 8:30, el del Nasdaq sube un 3,0 % y el del S&P 500 un 2,2 %. No hay que hacer nada: el horizonte es de 1 a 3 meses, y un rebote de un día ni confirma ni rompe la idea. Un matiz que aparece en la prensa: la mesa de Goldman Sachs opina que todavía no ha habido una venta de pánico de las que provocan un rebote fuerte. Es una opinión, no un dato, y el entrenamiento mira el VIX, no esa lectura."
+    },
+    {
+     "fecha": "2026-11-23",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Antes de abrir, el QQQ está en 628,5 $: +3,3 % sobre la entrada (608,45 $). El SPY sube un 2,5 % y el VIX baja a 31,0. Es un buen comienzo, pero un rebote de la preapertura no decide nada: el horizonte es de 1 a 3 meses. No hay que hacer nada."
     }
    ],
    "fuentes": [
@@ -261,8 +257,13 @@
     {
      "fecha": "2026-11-23",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El SMH cerró el viernes en 400,06 $: −12,9 % desde la entrada. Applied Materials (302,63 $) y Lam Research (183,27 $) caen un 14 % desde la entrada. El índice de semiconductores de Filadelfia perdió cerca de un 17 % en la semana, su peor semana desde la que siguió al 11-S. No hay condición de ruptura: la norma no se ha ampliado y Nvidia no ha recortado previsiones. Los futuros del Nasdaq suben un 3 % esta mañana. Se mantiene, con el horizonte de 2 a 3 meses."
+    },
+    {
+     "fecha": "2026-11-23",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Antes de abrir, el SMH está en 421,7 $: +5,4 % hoy, aunque sigue un 8,2 % por debajo de la entrada. Nvidia +7,2 %, Lam Research +6,4 %, Applied Materials +6,1 %, Micron +4,7 % y AMD +3,8 %. Hay dos noticias sobre Nvidia, ninguna de la norma. Trump ha pedido en público que el consejo vuelva a contratar a Jensen Huang, y la prensa dice que el consejo lo ha descartado. Y California ha abierto una investigación, con una citación que podría acabar en multas; no hay conclusiones. Ninguna es condición de ruptura. Se mantiene."
     }
    ],
    "fuentes": [
@@ -519,6 +520,17 @@
  "descartes": [
   {
    "fecha": "2026-11-23",
+   "titulo": "Comprar Nvidia por la petición de Trump de que vuelva Huang",
+   "por_que": "Es una noticia política sin efecto confirmado (el consejo lo ha descartado, según la prensa), y el rebote ya está en el precio de la preapertura. Además, Nvidia ya está dentro del SMH y del QQQ.",
+   "leccion": "«obvio» y concentración.",
+   "tipo": "obvio",
+   "valores": [
+    "NVDA"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-23",
    "titulo": "Comprar Nvidia, Arm, Marvell o Arista por su caída de más de un 10 % con el miedo alto",
    "por_que": "La combinación «grande cae un 10 % con el VIX en 28 o más» es la más fuerte del entrenamiento. Pero las nueve alertas son la misma venta de chips, y esa exposición ya está en el SMH y en el QQQ. Una cuarta apuesta por lo mismo no añade ventaja: solo añade riesgo si la venta sigue.",
    "leccion": "«miedo»: buena señal, pero una sola apuesta por sector.",
@@ -528,8 +540,7 @@
     "ARM",
     "MRVL",
     "ANET"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-23",
@@ -539,8 +550,7 @@
    "tipo": "caido",
    "valores": [
     "INTU"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-23",
@@ -551,8 +561,7 @@
    "valores": [
     "GDX",
     "KRE"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-20",
@@ -795,6 +804,10 @@
   {
    "cuando": "2026-11-23T07:41:05Z",
    "resumen": "Mañana del lunes: QQQ comprado al cierre del viernes (608,45 $); los futuros rebotan un 3 %. Chips −12,9 % desde la entrada, sin ruptura. Nueve caídas de más de un 10 % con miedo alto → descarte por concentración. Hoy no se compra nada más."
+  },
+  {
+   "cuando": "2026-11-23T12:35:26Z",
+   "resumen": "Preapertura: rebote general (S&P +2,4 %, Nasdaq +3 %; VIX 31). QQQ +3,3 % sobre la entrada; SMH +5,4 % hoy, todavía −8 % desde la entrada. Nada nuevo que comprar."
   }
  ]
 }

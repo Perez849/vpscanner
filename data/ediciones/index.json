@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-23-1235",
+  "cuando": "2026-11-23T12:35:26Z",
+  "tipo": "preapertura",
+  "titular": "Los chips lideran el rebote antes de abrir: Nvidia +7 %",
+  "hoy": "Hoy no se compra nada nuevo. Las dos ideas abiertas, el Nasdaq (QQQ) y los chips (SMH), suben con fuerza en la preapertura: el QQQ un 3,3 % sobre la entrada y el SMH un 5,4 % en el día. No hay que hacer nada con ninguna de las dos.",
+  "accion": "nada",
+  "vivas": 2
+ },
+ {
   "id": "2026-11-23-0741",
   "cuando": "2026-11-23T07:41:05Z",
   "tipo": "mañana",
