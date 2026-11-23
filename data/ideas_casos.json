@@ -429,6 +429,49 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-23-comprar-intuit-tras-caer-un-12-8",
+   "fecha": "2026-11-23",
+   "titulo": "Comprar Intuit tras caer un 12,8 %",
+   "tipo": "caido",
+   "valores": [
+    "INTU"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-23-comprar-nvidia-arm-marvell-o-arista-por-su-caida",
+   "fecha": "2026-11-23",
+   "titulo": "Comprar Nvidia, Arm, Marvell o Arista por su caída de más de un 10 % con el miedo alto",
+   "tipo": "caido",
+   "valores": [
+    "NVDA",
+    "ARM",
+    "MRVL",
+    "ANET"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-23-comprar-oro-mineras-o-bancos-por-los-movimientos",
+   "fecha": "2026-11-23",
+   "titulo": "Comprar oro, mineras o bancos por los movimientos del viernes",
+   "tipo": "obvio",
+   "valores": [
+    "GDX",
+    "KRE"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -443,5 +486,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795205482
+ "generado": 1795419673
 }
