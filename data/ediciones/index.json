@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-23-2010",
+  "cuando": "2026-11-23T20:10:46Z",
+  "tipo": "cierre",
+  "titular": "Huang vuelve a Nvidia y la bolsa vive su mejor día en años",
+  "hoy": "Al cierre de hoy no se compra ni se vende nada. El Nasdaq (QQQ) va un 6,6 % arriba desde la entrada del viernes, y los chips (SMH) han recuperado casi todo: están a un 0,9 % de la entrada. Las dos ideas siguen abiertas con sus horizontes de 1 a 3 meses. Vender ahora sería quedarse con el rebote de un día y renunciar a lo que el entrenamiento dice que viene después.",
+  "accion": "nada",
+  "vivas": 2
+ },
+ {
   "id": "2026-11-23-1235",
   "cuando": "2026-11-23T12:35:26Z",
   "tipo": "preapertura",

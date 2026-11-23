@@ -431,6 +431,33 @@
    "e60": null
   },
   {
+   "id": "2026-11-23-comprar-amd-y-broadcom-porque-se-quedan-atras-mi",
+   "fecha": "2026-11-23",
+   "titulo": "Comprar AMD y Broadcom porque se quedan atrás mientras Nvidia se dispara",
+   "tipo": "rival",
+   "valores": [
+    "AMD",
+    "AVGO"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-23-comprar-crowdstrike-tras-caer-un-10-7-con-miedo-",
+   "fecha": "2026-11-23",
+   "titulo": "Comprar CrowdStrike tras caer un 10,7 % con miedo alto",
+   "tipo": "caido",
+   "valores": [
+    "CRWD"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-23-comprar-intuit-tras-caer-un-12-8",
    "fecha": "2026-11-23",
    "titulo": "Comprar Intuit tras caer un 12,8 %",
@@ -473,6 +500,19 @@
    "e60": null
   },
   {
+   "id": "2026-11-23-comprar-nvidia-tras-la-vuelta-de-huang",
+   "fecha": "2026-11-23",
+   "titulo": "Comprar Nvidia tras la vuelta de Huang",
+   "tipo": "obvio",
+   "valores": [
+    "NVDA"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-23-comprar-oro-mineras-o-bancos-por-los-movimientos",
    "fecha": "2026-11-23",
    "titulo": "Comprar oro, mineras o bancos por los movimientos del viernes",
@@ -480,6 +520,19 @@
    "valores": [
     "GDX",
     "KRE"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-23-recoger-beneficios-en-el-nasdaq-tras-el-6-6-de-u",
+   "fecha": "2026-11-23",
+   "titulo": "Recoger beneficios en el Nasdaq tras el +6,6 % de un día",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
    ],
    "dada": false,
    "e5": null,
@@ -499,5 +552,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795437335
+ "generado": 1795464656
 }
