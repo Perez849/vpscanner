@@ -1,31 +1,40 @@
 {
- "actualizado": "2026-11-23T12:35:26Z",
+ "actualizado": "2026-11-23T20:10:46Z",
  "sesion": {
-  "cuando": "2026-11-23T12:35:26Z",
-  "tipo": "preapertura",
-  "titular": "Los chips lideran el rebote antes de abrir: *Nvidia +7 %*",
+  "cuando": "2026-11-23T20:10:46Z",
+  "tipo": "cierre",
+  "titular": "Huang vuelve a Nvidia y la bolsa vive *su mejor día en años*",
   "hoy": {
    "accion": "nada",
-   "texto": "Hoy no se compra nada nuevo. Las dos ideas abiertas, el Nasdaq (QQQ) y los chips (SMH), suben con fuerza en la preapertura: el QQQ un 3,3 % sobre la entrada y el SMH un 5,4 % en el día. No hay que hacer nada con ninguna de las dos."
+   "texto": "Al cierre de hoy no se compra ni se vende nada. El Nasdaq (QQQ) va un 6,6 % arriba desde la entrada del viernes, y los chips (SMH) han recuperado casi todo: están a un 0,9 % de la entrada. Las dos ideas siguen abiertas con sus horizontes de 1 a 3 meses. Vender ahora sería quedarse con el rebote de un día y renunciar a lo que el entrenamiento dice que viene después."
   },
   "cambios": [
-   "Pánico con miedo alto (abierta): QQQ en 628,5 $ antes de abrir, +3,3 % sobre la entrada.",
-   "Chips (abierta): SMH +5,4 % hoy (421,7 $), todavía −8,2 % desde la entrada. Las noticias de Nvidia (Trump pide que vuelva Huang; investigación en California) no son condición de ruptura.",
-   "Las alertas de pánico y miedo alto siguen siendo las de la mañana: ya están atendidas con la idea del Nasdaq y los descartes por concentración."
+   "Nvidia readmite a Jensen Huang y sube un 31 %: los chips suben un 13,8 % y el Nasdaq-100 un 6,6 %.",
+   "Pánico con miedo alto (abierta): QQQ +6,6 % sobre la entrada en el primer día. Se mantiene.",
+   "Chips (abierta): SMH 455,43 $, −0,9 % desde la entrada (venía de −12,9 %). Se mantiene.",
+   "El VIX baja a 27,4, por debajo de 28: se acaba, por ahora, la ventana de comprar caídas con miedo alto.",
+   "CrowdStrike −10,7 % con el VIX previo en 35,9: no he encontrado el motivo, así que no se puede descartar un problema propio → no."
   ],
-  "pulso": "Rebote general antes de abrir. Los futuros del S&P 500 suben un 2,4 % y los del Nasdaq un 3,0 %; el VIX baja de 35,9 a 31,0. Europa rebota menos: el Euro Stoxx 50 +0,8 %, el DAX +0,8 % y el Ibex +0,7 %. Los chips lideran: Nvidia +7,2 %, Lam Research +6,4 %, Applied Materials +6,1 %. El Brent cae a 88,6 $ y el oro está en 3.614 $.",
+  "pulso": "Rebote histórico. A las 21:10, el S&P 500 sube un 4,6 % (SPY 721,61 $), el Nasdaq-100 un 6,6 %, el Russell 2000 un 3,2 % y el Dow un 3,0 %. El VIX se desploma un 23,7 %, hasta 27,4. Los chips suben un 13,8 % con Nvidia (+31 %) y Micron (+17,6 %), aunque AMD (+4,9 %) y Broadcom (+1,7 %) se quedan atrás. El software va al revés: CrowdStrike cae un 10,7 %. El oro sube un 3,3 % y el bono a 10 años está en el 4,92 %.",
   "hechos": [
    {
-    "titulo": "Nvidia rebota con fuerza tras su peor semana desde 2008",
-    "detalle": "Sube un 7–9 % en la preapertura (134,6 $ en mi última lectura) tras caer un 14 % el viernes, hasta su mínimo de un año. Según la prensa, Trump ha pedido en público que el consejo vuelva a contratar a Jensen Huang, y el consejo lo ha descartado. California investiga a la empresa con una citación que podría acabar en multas; no hay conclusiones.",
-    "efecto": "Es bueno para las dos ideas abiertas. Las noticias políticas y legales son de Nvidia, no de la norma de exportación, y no cambian nada en la idea de chips.",
+    "titulo": "Nvidia readmite a Jensen Huang",
+    "detalle": "El consejo de Nvidia ha vuelto a nombrar consejero delegado a Jensen Huang, días después de su salida, tras la petición pública de Trump. Nvidia llegó a subir un 35 % y suma más de un billón de dólares de valor. Melius y Bernstein suben su recomendación a comprar; Melius pone un precio objetivo de 220 $.",
+    "efecto": "Quita la principal duda propia de Nvidia y arrastra a todo el sector. Es bueno para las dos ideas abiertas. Comprar Nvidia ahora es comprar lo evidente después de un +31 %.",
     "tono": "oportunidad",
     "nuevo": true
    },
    {
-    "titulo": "El VIX baja a 31",
-    "detalle": "Baja desde los 35,9 del viernes. Sigue por encima de 28.",
-    "efecto": "Con el miedo todavía alto, un nuevo golpe del −2 % seguiría contando como pánico con miedo alto. Pero la idea del Nasdaq ya está dentro y no se compra dos veces.",
+    "titulo": "El miedo vuelve por debajo de 28",
+    "detalle": "El VIX baja de 35,9 a 27,4 en un día.",
+    "efecto": "Termina, por ahora, la ventana en la que las caídas fuertes se compran. Si el miedo vuelve a subir, se reabre.",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "El dinero sale del software para entrar en chips",
+    "detalle": "CrowdStrike cae un 10,7 % sin un motivo que haya podido confirmar, y Broadcom y AMD suben mucho menos que el resto de chips.",
+    "efecto": "Es una rotación dentro de la tecnología. No da idea por sí sola.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -105,8 +114,13 @@
     {
      "fecha": "2026-11-23",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Antes de abrir, el QQQ está en 628,5 $: +3,3 % sobre la entrada (608,45 $). El SPY sube un 2,5 % y el VIX baja a 31,0. Es un buen comienzo, pero un rebote de la preapertura no decide nada: el horizonte es de 1 a 3 meses. No hay que hacer nada."
+    },
+    {
+     "fecha": "2026-11-23",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Primer día dentro, y muy bueno. A las 21:10, el QQQ está en 648,70 $: +6,6 % sobre la entrada (608,45 $) en una sola sesión. El VIX baja a 27,4. No se vende: el horizonte es de 1 a 3 meses, y en el entrenamiento la mayor parte de la ganancia llega entre la sesión 20 y la 60. Un rebote del 6 % en un día tras un pánico es típico, y también lo es que al día siguiente se devuelva una parte. Solo se saldría si la caída pasara a deberse a un problema propio de las grandes tecnológicas, y hoy ha pasado lo contrario."
     }
    ],
    "fuentes": [
@@ -262,8 +276,13 @@
     {
      "fecha": "2026-11-23",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Antes de abrir, el SMH está en 421,7 $: +5,4 % hoy, aunque sigue un 8,2 % por debajo de la entrada. Nvidia +7,2 %, Lam Research +6,4 %, Applied Materials +6,1 %, Micron +4,7 % y AMD +3,8 %. Hay dos noticias sobre Nvidia, ninguna de la norma. Trump ha pedido en público que el consejo vuelva a contratar a Jensen Huang, y la prensa dice que el consejo lo ha descartado. Y California ha abierto una investigación, con una citación que podría acabar en multas; no hay conclusiones. Ninguna es condición de ruptura. Se mantiene."
+    },
+    {
+     "fecha": "2026-11-23",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Vuelco completo. Nvidia ha readmitido a Jensen Huang como consejero delegado y sube un 31 % (164,70 $). Arrastra a todo el sector: a las 21:10, el SMH sube un 13,8 % (455,43 $) y está a solo un 0,9 % de la entrada (459,54 $). Applied Materials +13,0 % (341,96 $), Lam Research +13,3 % (207,55 $), Micron +17,6 %. Ni la norma de exportación ni las previsiones han cambiado. Se mantiene: el horizonte es de 2 a 3 meses, y lo que se busca es la recuperación de los vetos anteriores (+9 % a +17 % a 20 sesiones), no un rebote de un día."
     }
    ],
    "fuentes": [
@@ -520,14 +539,58 @@
  "descartes": [
   {
    "fecha": "2026-11-23",
+   "titulo": "Comprar Nvidia tras la vuelta de Huang",
+   "por_que": "Sube un 31 % en el día: el beneficiario evidente ya ha recogido la noticia, y además ya está dentro del SMH y del QQQ.",
+   "leccion": "«obvio».",
+   "tipo": "obvio",
+   "valores": [
+    "NVDA"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-23",
+   "titulo": "Comprar AMD y Broadcom porque se quedan atrás mientras Nvidia se dispara",
+   "por_que": "La combinación «competidoras castigadas cuando el líder se dispara, con miedo alto» exige que las competidoras caigan, y hoy suben (+4,9 % y +1,7 %). Además, lo de AMD tiene un problema propio, el informe del bajista.",
+   "leccion": "«rival» y «miedo»: no se cumple la condición.",
+   "tipo": "rival",
+   "valores": [
+    "AMD",
+    "AVGO"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-23",
+   "titulo": "Comprar CrowdStrike tras caer un 10,7 % con miedo alto",
+   "por_que": "El VIX previo estaba en 35,9, y la combinación «grande cae un 10 % con miedo alto» es fuerte. Pero no he encontrado el motivo de la caída. Sin saber si es un problema propio, no se cumple la condición que no se puede saltar.",
+   "leccion": "«miedo»: solo si la caída no es por un problema propio.",
+   "tipo": "caido",
+   "valores": [
+    "CRWD"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-23",
+   "titulo": "Recoger beneficios en el Nasdaq tras el +6,6 % de un día",
+   "por_que": "El entrenamiento mide la idea a 20 y 60 sesiones, y la mayor parte de la ganancia llega entre una y otra. Vender tras el primer día es cambiar una regla probada por una corazonada.",
+   "leccion": "«panico»: se mantiene el horizonte.",
+   "tipo": "panico",
+   "valores": [
+    "QQQ"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-23",
    "titulo": "Comprar Nvidia por la petición de Trump de que vuelva Huang",
    "por_que": "Es una noticia política sin efecto confirmado (el consejo lo ha descartado, según la prensa), y el rebote ya está en el precio de la preapertura. Además, Nvidia ya está dentro del SMH y del QQQ.",
    "leccion": "«obvio» y concentración.",
    "tipo": "obvio",
    "valores": [
     "NVDA"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-23",
@@ -808,6 +871,10 @@
   {
    "cuando": "2026-11-23T12:35:26Z",
    "resumen": "Preapertura: rebote general (S&P +2,4 %, Nasdaq +3 %; VIX 31). QQQ +3,3 % sobre la entrada; SMH +5,4 % hoy, todavía −8 % desde la entrada. Nada nuevo que comprar."
+  },
+  {
+   "cuando": "2026-11-23T20:10:46Z",
+   "resumen": "Cierre: Nvidia readmite a Huang (+31 %), chips +13,8 %, Nasdaq-100 +6,6 %, VIX 27,4. QQQ +6,6 % desde la entrada; SMH a −0,9 % de la entrada. No se compra ni se vende nada."
   }
  ]
 }
