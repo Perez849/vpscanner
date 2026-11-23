@@ -1,17 +1,16 @@
 {
- "generado": 1795205475,
+ "generado": 1795419666,
  "ideas": {
   "2026-11-19-panico-miedo": {
    "estado": "abierta",
    "desde": "2026-11-20",
-   "hasta": "2026-11-19",
+   "hasta": "2026-11-20",
    "por_valor": {
     "QQQ": {
-     "ref": 645.04,
-     "ahora": 645.04,
-     "pct": null,
+     "ref": 608.45,
+     "ahora": 608.45,
+     "pct": 0.0,
      "serie": [
-      721.11,
       716.43,
       716.76,
       707.64,
@@ -70,27 +69,27 @@
       661.75,
       656.95,
       659.51,
-      645.04
+      645.04,
+      608.45
      ],
      "i0": 59
     }
    },
-   "media": null,
-   "spy": null,
-   "pendiente": true,
+   "media": 0.0,
+   "spy": 0.0,
+   "pendiente": false,
    "hipotetica": false
   },
   "2026-11-17-veto-chips": {
    "estado": "abierta",
    "desde": "2026-11-18",
-   "hasta": "2026-11-19",
+   "hasta": "2026-11-20",
    "por_valor": {
     "SMH": {
      "ref": 459.54,
-     "ahora": 447.48,
-     "pct": -2.62,
+     "ahora": 400.06,
+     "pct": -12.94,
      "serie": [
-      573.0,
       553.11,
       556.63,
       545.22,
@@ -149,16 +148,16 @@
       461.9,
       460.1,
       459.54,
-      447.48
+      447.48,
+      400.06
      ],
-     "i0": 58
+     "i0": 57
     },
     "AMAT": {
      "ref": 352.3,
-     "ahora": 338.93,
-     "pct": -3.8,
+     "ahora": 302.63,
+     "pct": -14.1,
      "serie": [
-      482.36,
       461.67,
       458.39,
       441.85,
@@ -217,16 +216,16 @@
       350.25,
       349.23,
       352.3,
-      338.93
+      338.93,
+      302.63
      ],
-     "i0": 58
+     "i0": 57
     },
     "LRCX": {
      "ref": 211.67,
-     "ahora": 203.68,
-     "pct": -3.77,
+     "ahora": 183.27,
+     "pct": -13.42,
      "serie": [
-      318.58,
       301.9,
       301.49,
       290.2,
@@ -285,13 +284,14 @@
       210.83,
       210.69,
       211.67,
-      203.68
+      203.68,
+      183.27
      ],
-     "i0": 58
+     "i0": 57
     }
    },
-   "media": -3.4,
-   "spy": -1.96,
+   "media": -13.49,
+   "spy": -5.53,
    "pendiente": false,
    "hipotetica": false
   },
@@ -659,7 +659,22 @@
   }
  },
  "alertas": [
-  "Miedo alto (VIX 28.4): revisa los descartes de «comprar la caída», «comprar al castigado» y «competidoras castigadas» (lección «miedo»). Sigue siendo «no» si la caída es por un problema propio.",
-  "Racha de 6 días a la baja (-3.3 % en tres sesiones) con el VIX previo en 24.6: sin miedo alto la ventaja es pequeña (lección «panico»)."
+  "Miedo alto (VIX 35.9): revisa los descartes de «comprar la caída», «comprar al castigado» y «competidoras castigadas» (lección «miedo»). Sigue siendo «no» si la caída es por un problema propio.",
+  "S&P 500 -3.6 % con el VIX previo en 28.4: IDEA de pánico con miedo alto → Nasdaq-100 y, mejor aún, semiconductores (lección «panico»).",
+  "Racha de 7 días a la baja (-5.8 % en tres sesiones) con el VIX previo en 28.4: IDEA de pánico con miedo alto (lección «panico»).",
+  "Bono a 10 años -14 pb en un día: el beneficiario evidente (bancos, constructoras) ya lo ha recogido (lección «obvio»).",
+  "Oro -4.6 %: las mineras lo recogen el mismo día (lección «obvio»).",
+  "NVDA -14.0 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "AVGO -12.2 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "AMD -13.2 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "MU -13.9 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "ARM -14.1 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "AMAT -10.7 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "LRCX -10.0 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "KLAC -10.3 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "INTU -12.8 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "MRVL -11.7 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "ANET -11.6 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "SMH -10.6 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»)."
  ]
 }
