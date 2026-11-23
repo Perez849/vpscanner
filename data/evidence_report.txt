@@ -1,135 +1,135 @@
-ESTUDIO DE EVIDENCIA · 500 valores · 1,229,541 barras · 2016-11-09 → 2026-11-13 · coste 0.15 % · salida a 10 sesiones
+ESTUDIO DE EVIDENCIA · 500 valores · 1,229,695 barras · 2016-11-16 → 2026-11-20 · coste 0.15 % · salida a 10 sesiones
 
-=== Los 50 valores más negociados en cada fecha (122,900 barras) · umbral del mejor de 103: |t| ≥ 3.73 (p95) / 4.15 (p99, poco preciso) ===
+=== Los 50 valores más negociados en cada fecha (122,900 barras) · umbral del mejor de 103: |t| ≥ 3.63 (p95) / 4.14 (p99, poco preciso) ===
   patrón                            n    ganan   media  exceso      t  años+   vs año     t
-  ▼ resistance_reject             255    51.8%  +0.16%  +0.99%   +2.7   9/10   +0.93%  +2.1
-  ▼ diamond_bear                  115    39.1%  -2.61%  -1.51%   -2.4   1/8    -1.81%  -2.3
-  ▲ base_near_high                849    51.8%  -0.03%  -0.35%   -2.2   5/10   -0.67%  -2.9
-  ▲ diamond_bull                  103    46.6%  -0.64%  -1.25%   -2.1   1/7    -1.09%  -1.4
-  ▼ three_outside_dn              396    39.1%  -1.79%  -0.85%   -2.0   3/10   -0.94%  -1.7
-  ▲ bb_squeeze_up                1177    52.6%  +0.22%  -0.37%   -2.0   3/10   -0.40%  -1.4
-  ▼ sym_tri_dn                     26    46.2%  +0.34%  +1.48%   +2.0   0/0    +1.09%  +1.5
-  ▲ box_up                       1674    53.3%  +0.23%  -0.29%   -1.9   4/10   -0.34%  -1.5
-  ▼ donch55_dn                   1686    38.8%  -1.58%  -0.39%   -1.9   1/10   -0.95%  -1.3
-  ▲ cup_handle                     73    41.1%  -1.25%  -1.06%   -1.8   1/5    -1.64%  -2.7
-  ▲ three_outside_up              220    49.1%  -1.33%  -0.80%   -1.8   2/10   -1.77%  -2.4
-  ▲ marubozu_bull                 321    56.1%  +0.71%  +0.72%   +1.7   7/10   +0.26%  +0.4
-  ▲ keyrev_bull                   335    54.3%  +0.19%  -0.55%   -1.7   3/10   -0.10%  -0.1
-  ▼ bear_pennant                   76    47.4%  -1.37%  -2.09%   -1.6   0/5    -0.69%  -0.3
-  ▲ belt_bull                     254    60.6%  +1.12%  +0.54%   +1.6   7/10   +0.78%  +1.2
-  ▲ asc_triangle                   60    51.7%  -0.70%  -0.81%   -1.6   3/5    -1.36%  -2.2
-  ▲ consenso_alcista_2            591    54.3%  +0.26%  -0.41%   -1.5   3/10   -0.07%  -0.1
-  ▼ crows                          92    48.9%  -1.31%  -0.99%   -1.4   2/5    -0.61%  -0.7
-  ▼ trendline_dn:hq               117    43.6%  -2.12%  -1.27%   -1.4   3/8    -1.17%  -1.0
-  ▼ harami_cross_bear              61    50.8%  -1.09%  -1.52%   -1.4   1/4    -0.29%  -0.2
-  ▼ box_dn                       1376    42.1%  -1.33%  -0.28%   -1.4   3/10   -0.55%  -1.5
+  ▼ resistance_reject             259    51.7%  +0.16%  +1.00%   +2.7   9/10   +0.91%  +2.0
+  ▼ diamond_bear                  116    38.8%  -2.64%  -1.53%   -2.4   1/8    -1.87%  -2.4
+  ▲ diamond_bull                  103    46.6%  -0.64%  -1.25%   -2.4   1/7    -1.08%  -1.5
+  ▲ base_near_high                848    51.7%  -0.05%  -0.36%   -2.3   4/10   -0.68%  -3.1
+  ▲ bb_squeeze_up                1180    52.5%  +0.20%  -0.38%   -2.2   3/10   -0.41%  -1.5
+  ▼ three_outside_dn              396    39.1%  -1.78%  -0.87%   -2.0   2/10   -0.95%  -1.7
+  ▼ sym_tri_dn                     26    46.2%  +0.34%  +1.48%   +2.0   0/0    +1.07%  +1.2
+  ▲ box_up                       1672    53.1%  +0.22%  -0.29%   -1.9   4/10   -0.35%  -1.4
+  ▼ donch55_dn                   1702    39.2%  -1.50%  -0.38%   -1.9   1/10   -0.89%  -1.5
+  ▲ three_outside_up              220    49.1%  -1.33%  -0.80%   -1.8   2/10   -1.75%  -2.3
+  ▲ keyrev_bull                   336    54.2%  +0.13%  -0.59%   -1.8   3/10   -0.15%  -0.2
+  ▲ cup_handle                     73    41.1%  -1.25%  -1.06%   -1.8   1/5    -1.62%  -2.5
+  ▲ marubozu_bull                 320    56.2%  +0.75%  +0.76%   +1.7   7/10   +0.32%  +0.4
+  ▼ bear_pennant                   76    47.4%  -1.37%  -2.09%   -1.6   0/5    -0.70%  -0.3
+  ▲ belt_bull                     254    60.6%  +1.12%  +0.54%   +1.5   7/10   +0.79%  +1.3
+  ▼ crows                          91    49.5%  -1.29%  -1.00%   -1.5   2/5    -0.60%  -0.7
+  ▲ asc_triangle                   59    50.8%  -0.75%  -0.83%   -1.5   3/5    -1.40%  -2.3
+  ▼ trendline_dn:hq               117    43.6%  -2.12%  -1.27%   -1.5   3/8    -1.19%  -1.1
+  ▼ rising_wedge                  342    44.2%  -0.33%  +0.30%   +1.5   8/10   +0.48%  +1.4
+  ▲ bull_flag:hq                  103    59.2%  +1.69%  +1.04%   +1.5   4/7    +1.09%  +1.2
+  ▲ bull_pennant                  153    54.9%  +0.76%  +0.69%   +1.4   6/9    +0.14%  +0.3
+  ▲ hs_inverse                     55    43.6%  -0.66%  -1.12%   -1.4   0/1    -1.24%  -1.6
   ▲ outside_up                    150    57.3%  +0.77%  -0.56%   -1.4   2/8    +0.67%  +0.6
-  ▼ stick_sandwich_bear            30    33.3%  -0.07%  +1.04%   +1.4   0/0    +0.76%  +0.9
-  ▲ bull_pennant                  153    54.9%  +0.76%  +0.69%   +1.4   6/9    +0.13%  +0.2
-  ▲ hs_inverse                     55    43.6%  -0.66%  -1.12%   -1.4   0/1    -1.26%  -1.5
-  potencia: con el error estándar medio de estos patrones (mediana 0.49 %, el de los 10 más raros 1.48 %) el estudio detecta con un 80 % de probabilidad efectos de ≥ 2.23 % en un patrón típico y de ≥ 6.78 % en los más raros
+  ▲ consenso_alcista_2            593    54.3%  +0.28%  -0.37%   -1.4   3/10   -0.06%  -0.1
+  ▼ harami_cross_bear              61    50.8%  -1.09%  -1.52%   -1.4   1/4    -0.32%  -0.3
+  potencia: con el error estándar medio de estos patrones (mediana 0.47 %, el de los 10 más raros 1.51 %) el estudio detecta con un 80 % de probabilidad efectos de ≥ 2.09 % en un patrón típico y de ≥ 6.74 % en los más raros
   superan el umbral del mejor de 103: 0 (ninguno); por azar se esperarían ≈ 5.2 si se miraran sueltos
-  figuras      alcistas  15 patrones · exceso medio -0.094 % · mediano -0.082 % · positivos 47 %
-  figuras      bajistas  11 patrones · exceso medio -0.169 % · mediano +0.085 % · positivos 55 %
-  rupturas     alcistas   6 patrones · exceso medio -0.132 % · mediano -0.163 % · positivos 33 %
-  rupturas     bajistas   5 patrones · exceso medio -0.282 % · mediano -0.350 % · positivos 0 %
-  velas        alcistas  23 patrones · exceso medio +0.082 % · mediano +0.032 % · positivos 52 %
-  velas        bajistas  22 patrones · exceso medio -0.214 % · mediano -0.127 % · positivos 41 %
-  directrices  alcistas   1 patrones · exceso medio +0.084 % · mediano +0.084 % · positivos 100 %
-  directrices  bajistas   1 patrones · exceso medio -0.266 % · mediano -0.266 % · positivos 0 %
-  rebotes      alcistas   1 patrones · exceso medio -0.586 % · mediano -0.586 % · positivos 0 %
-  rebotes      bajistas   1 patrones · exceso medio +0.990 % · mediano +0.990 % · positivos 100 %
+  figuras      alcistas  15 patrones · exceso medio -0.096 % · mediano -0.082 % · positivos 47 %
+  figuras      bajistas  11 patrones · exceso medio -0.164 % · mediano +0.018 % · positivos 55 %
+  rupturas     alcistas   6 patrones · exceso medio -0.136 % · mediano -0.164 % · positivos 33 %
+  rupturas     bajistas   5 patrones · exceso medio -0.280 % · mediano -0.333 % · positivos 0 %
+  velas        alcistas  23 patrones · exceso medio +0.066 % · mediano -0.042 % · positivos 48 %
+  velas        bajistas  22 patrones · exceso medio -0.210 % · mediano -0.096 % · positivos 41 %
+  directrices  alcistas   1 patrones · exceso medio +0.081 % · mediano +0.081 % · positivos 100 %
+  directrices  bajistas   1 patrones · exceso medio -0.281 % · mediano -0.281 % · positivos 0 %
+  rebotes      alcistas   1 patrones · exceso medio -0.525 % · mediano -0.525 % · positivos 0 %
+  rebotes      bajistas   1 patrones · exceso medio +1.005 % · mediano +1.005 % · positivos 100 %
   controles positivos (anomalías documentadas medidas con el mismo método y el mismo umbral; si el método funciona deben aparecer):
-    momentum alto (10 % mejor a 120 sesiones)                n   11,935 · exceso +1.003 % ± 0.584 (t +3.4)
-    momentum bajo (10 % peor a 120 sesiones)                 n   11,935 · exceso +0.121 % ± 0.472 (t +0.5)
-    volatilidad alta (10 % superior de ATR / precio)         n   12,240 · exceso +1.055 % ± 0.627 (t +3.3)
-    sobreventa a corto (RSI 2 < 10 sobre la media de 200)    n    6,627 · exceso +0.279 % ± 0.292 (t +1.9)
-  coincidencias (cada valor-día cuenta una vez; 109,375 con señal alcista, 107,987 con señal bajista, 3,374 contradictorios, 75,891 con varias señales):
-    alcistas  solo velas                       n   3,764 · ganan 54.0 % · exceso -0.003 % (t -0.0) · vs año -0.006 % (t -0.0)
-    alcistas  solo estructura                  n   6,661 · ganan 52.8 % · exceso -0.180 % (t -2.1) · vs año -0.252 % (t -1.3)
-    alcistas  velas y estructura juntas        n     343 · ganan 47.5 % · exceso -0.158 % (t -0.4) · vs año -0.640 % (t -1.2)
-    alcistas  todas (cada valor-día una vez)   n  10,768 · ganan 53.1 % · exceso -0.117 % (t -1.7) · vs año -0.178 % (t -0.8)
-    bajistas  solo velas                       n   5,292 · ganan 44.7 % · exceso -0.246 % (t -1.9) · vs año -0.049 % (t -0.2)
-    bajistas  solo estructura                  n   4,987 · ganan 43.0 % · exceso -0.176 % (t -1.6) · vs año -0.408 % (t -1.1)
-    bajistas  velas y estructura juntas        n     258 · ganan 42.6 % · exceso -0.001 % (t -0.0) · vs año -0.240 % (t -0.4)
-    bajistas  todas (cada valor-día una vez)   n  10,537 · ganan 43.8 % · exceso -0.207 % (t -3.1) · vs año -0.224 % (t -0.8)
+    momentum alto (10 % mejor a 120 sesiones)                n   11,935 · exceso +0.990 % ± 0.557 (t +3.5)
+    momentum bajo (10 % peor a 120 sesiones)                 n   11,935 · exceso +0.123 % ± 0.466 (t +0.5)
+    volatilidad alta (10 % superior de ATR / precio)         n   12,239 · exceso +1.055 % ± 0.633 (t +3.3)
+    sobreventa a corto (RSI 2 < 10 sobre la media de 200)    n    6,652 · exceso +0.284 % ± 0.276 (t +2.0)
+  coincidencias (cada valor-día cuenta una vez; 109,190 con señal alcista, 108,142 con señal bajista, 3,370 contradictorios, 75,927 con varias señales):
+    alcistas  solo velas                       n   3,783 · ganan 53.8 % · exceso +0.002 % (t +0.0) · vs año -0.033 % (t -0.1)
+    alcistas  solo estructura                  n   6,660 · ganan 52.7 % · exceso -0.179 % (t -2.2) · vs año -0.247 % (t -1.3)
+    alcistas  velas y estructura juntas        n     344 · ganan 47.4 % · exceso -0.168 % (t -0.5) · vs año -0.627 % (t -1.3)
+    alcistas  todas (cada valor-día una vez)   n  10,787 · ganan 52.9 % · exceso -0.115 % (t -1.8) · vs año -0.184 % (t -0.8)
+    bajistas  solo velas                       n   5,294 · ganan 44.8 % · exceso -0.248 % (t -1.9) · vs año -0.054 % (t -0.2)
+    bajistas  solo estructura                  n   5,014 · ganan 43.2 % · exceso -0.169 % (t -1.4) · vs año -0.385 % (t -1.1)
+    bajistas  velas y estructura juntas        n     259 · ganan 42.9 % · exceso +0.079 % (t +0.2) · vs año -0.161 % (t -0.3)
+    bajistas  todas (cada valor-día una vez)   n  10,567 · ganan 44.0 % · exceso -0.203 % (t -2.8) · vs año -0.214 % (t -0.8)
     por familia (todas las señales de la familia, cada valor-día una vez; 10 contrastes: umbral de Bonferroni |t| ≥ 2,8):
-      figuras alcistas       15 patrones · n   1,864 · ganan 54.2 % · exceso -0.010 % ± 0.331 (t -0.1)
-      figuras bajistas       13 patrones · n   1,494 · ganan 43.3 % · exceso -0.222 % ± 0.365 (t -1.2)
-      rupturas alcistas       7 patrones · n   5,353 · ganan 52.3 % · exceso -0.130 % ± 0.214 (t -1.2)
-      rupturas bajistas       6 patrones · n   3,396 · ganan 41.2 % · exceso -0.214 % ± 0.288 (t -1.5)
-      velas alcistas         29 patrones · n   4,303 · ganan 53.5 % · exceso -0.025 % ± 0.235 (t -0.2)
-      velas bajistas         32 patrones · n   5,808 · ganan 44.7 % · exceso -0.207 % ± 0.243 (t -1.7)
-      directrices alcistas    1 patrones · n     960 · ganan 54.2 % · exceso +0.084 % ± 0.429 (t +0.4)
-      directrices bajistas    1 patrones · n   1,224 · ganan 46.4 % · exceso -0.266 % ± 0.429 (t -1.2)
-      rebotes alcistas        1 patrones · n     273 · ganan 51.3 % · exceso -0.586 % ± 0.907 (t -1.3)
-      rebotes bajistas        1 patrones · n     255 · ganan 51.8 % · exceso +0.990 % ± 0.719 (t +2.7)
+      figuras alcistas       15 patrones · n   1,863 · ganan 54.3 % · exceso +0.004 % ± 0.318 (t +0.0)
+      figuras bajistas       13 patrones · n   1,498 · ganan 43.7 % · exceso -0.204 % ± 0.368 (t -1.1)
+      rupturas alcistas       7 patrones · n   5,352 · ganan 52.2 % · exceso -0.130 % ± 0.200 (t -1.3)
+      rupturas bajistas       6 patrones · n   3,421 · ganan 41.5 % · exceso -0.200 % ± 0.284 (t -1.4)
+      velas alcistas         29 patrones · n   4,323 · ganan 53.3 % · exceso -0.022 % ± 0.202 (t -0.2)
+      velas bajistas         32 patrones · n   5,811 · ganan 44.8 % · exceso -0.206 % ± 0.239 (t -1.7)
+      directrices alcistas    1 patrones · n     958 · ganan 54.2 % · exceso +0.081 % ± 0.443 (t +0.4)
+      directrices bajistas    1 patrones · n   1,226 · ganan 46.3 % · exceso -0.281 % ± 0.417 (t -1.3)
+      rebotes alcistas        1 patrones · n     275 · ganan 51.3 % · exceso -0.525 % ± 0.874 (t -1.2)
+      rebotes bajistas        1 patrones · n     259 · ganan 51.7 % · exceso +1.005 % ± 0.717 (t +2.7)
     contradictorias, medidas en largo: n 393 · exceso -0.307 % (t -0.9)
     contradictorias, medidas en corto: n 393 · exceso +0.307 % (t +0.9)
 
-=== Los 300 valores más negociados en cada fecha (737,400 barras) · umbral del mejor de 130: |t| ≥ 3.63 (p95) / 4.3 (p99, poco preciso) ===
+=== Los 300 valores más negociados en cada fecha (737,400 barras) · umbral del mejor de 130: |t| ≥ 3.66 (p95) / 4.15 (p99, poco preciso) ===
   patrón                            n    ganan   media  exceso      t  años+   vs año     t
-  ▼ sym_tri_dn                    237    52.7%  +0.21%  +0.88%   +3.1  10/10   +0.96%  +3.0
-  ▼ rising_wedge                 2299    46.7%  -0.12%  +0.27%   +2.6   8/10   +0.59%  +3.1
-  ▼ resistance_reject            1940    45.8%  -0.43%  +0.33%   +2.3   8/10   +0.26%  +1.3
-  ▼ three_outside_dn             2246    41.9%  -1.17%  -0.37%   -2.1   1/10   -0.45%  -1.4
-  ▲ hs_inverse:hq                  95    57.9%  +1.45%  +1.25%   +2.0   5/6    +1.05%  +1.7
-  ▼ sym_tri_dn:hq                 132    50.0%  +0.24%  +0.71%   +1.7   7/8    +0.96%  +2.2
-  ▲ marubozu_bull                1842    54.8%  +0.10%  +0.51%   +1.7   8/10   -0.27%  -0.5
-  ▼ inside_break_dn              1763    43.0%  -0.80%  -0.38%   -1.7   2/10   -0.17%  -0.2
-  ▲ bb_squeeze_up                7136    52.6%  +0.14%  -0.15%   -1.7   3/10   -0.30%  -1.6
-  ▲ sym_tri_up:hq                 161    55.9%  +0.42%  +0.54%   +1.6   6/8    +0.01%  +0.0
-  ▲ bull_pennant:hq               115    59.1%  +1.54%  +1.04%   +1.6   7/10   +1.09%  +1.6
-  ▼ donch55_dn                  10726    41.5%  -0.96%  -0.22%   -1.5   2/10   -0.37%  -0.5
-  ▼ marubozu_bear                2426    43.0%  -0.45%  +0.23%   +1.5   7/10   +0.15%  +0.2
-  ▼ donch100_dn                  6975    40.7%  -1.09%  -0.29%   -1.4   3/10   -0.54%  -0.6
-  ▼ bear_flag                    1658    41.4%  -0.74%  -0.36%   -1.4   3/10   -0.15%  -0.2
-  ▲ bull_pennant                  683    53.0%  +0.21%  +0.30%   +1.4   6/10   -0.24%  -0.8
-  ▲ diamond_bull                  590    49.7%  -0.06%  -0.36%   -1.4   3/10   -0.43%  -1.1
-  ▲ bull_flag:hq                  501    55.7%  +0.87%  +0.47%   +1.4   7/10   +0.40%  +0.9
-  ▼ shooting_star                3740    45.7%  -0.41%  +0.18%   +1.4   8/10   +0.31%  +1.6
-  ▼ descending_hawk               379    49.3%  +0.23%  +0.56%   +1.3   7/10   +0.88%  +1.6
-  ▲ asc_triangle                  486    50.0%  -0.25%  -0.29%   -1.3   1/10   -0.71%  -2.8
-  ▼ double_top:hq                 444    44.4%  -1.01%  -0.41%   -1.3   3/10   -0.38%  -0.5
-  ▼ rect_dn:hq                     34    32.4%  +0.70%  +1.21%   +1.3   0/0    +1.47%  +1.1
-  ▼ kicker_bear                   102    42.2%  -0.65%  -0.86%   -1.3   3/6    +0.16%  +0.1
-  ▲ triple_bottom                 232    56.5%  +0.91%  +0.59%   +1.3   8/10   +0.51%  +0.9
-  potencia: con el error estándar medio de estos patrones (mediana 0.28 %, el de los 10 más raros 1.92 %) el estudio detecta con un 80 % de probabilidad efectos de ≥ 1.27 % en un patrón típico y de ≥ 8.58 % en los más raros
+  ▼ sym_tri_dn                    236    53.0%  +0.23%  +0.89%   +3.2  10/10   +0.96%  +3.0
+  ▼ rising_wedge                 2294    46.9%  -0.10%  +0.28%   +2.6   8/10   +0.60%  +3.1
+  ▼ three_outside_dn             2251    41.9%  -1.16%  -0.38%   -2.4   1/10   -0.45%  -1.5
+  ▼ resistance_reject            1947    46.2%  -0.39%  +0.35%   +2.3   8/10   +0.30%  +1.3
+  ▲ hs_inverse:hq                  97    56.7%  +1.32%  +1.22%   +2.1   5/6    +0.94%  +1.5
+  ▼ inside_break_dn              1772    43.2%  -0.76%  -0.36%   -1.9   2/10   -0.14%  -0.2
+  ▲ marubozu_bull                1839    54.9%  +0.11%  +0.53%   +1.8   9/10   -0.25%  -0.4
+  ▼ sym_tri_dn:hq                 131    50.4%  +0.27%  +0.73%   +1.8   7/8    +0.98%  +2.1
+  ▲ bb_squeeze_up                7132    52.6%  +0.13%  -0.16%   -1.8   3/10   -0.30%  -1.7
+  ▼ kicker_bear                   104    41.3%  -0.76%  -1.08%   -1.7   3/6    +0.03%  +0.0
+  ▲ sym_tri_up:hq                 161    55.9%  +0.42%  +0.54%   +1.6   6/8    +0.02%  +0.0
+  ▲ bull_flag:hq                  504    55.8%  +0.88%  +0.50%   +1.6   7/10   +0.42%  +1.0
+  ▲ bull_pennant:hq               116    58.6%  +1.44%  +0.99%   +1.5   7/10   +1.00%  +1.5
+  ▲ bull_pennant                  684    52.8%  +0.19%  +0.31%   +1.5   6/10   -0.25%  -0.8
+  ▲ asc_triangle                  483    49.7%  -0.28%  -0.31%   -1.5   0/10   -0.73%  -3.1
+  ▼ donch55_dn                  10771    41.6%  -0.95%  -0.23%   -1.5   2/10   -0.37%  -0.6
+  ▲ asc_triangle:hq               263    50.2%  -0.28%  -0.39%   -1.5   3/10   -0.76%  -2.6
+  ▲ hs_inverse                    347    51.3%  +0.70%  +0.50%   +1.4   6/10   +0.28%  +0.7
+  ▼ marubozu_bear                2439    43.2%  -0.42%  +0.23%   +1.4   7/10   +0.16%  +0.3
+  ▼ donch100_dn                  7013    40.9%  -1.07%  -0.29%   -1.4   3/10   -0.53%  -0.7
+  ▲ triple_bottom                 232    56.5%  +0.89%  +0.59%   +1.3   7/10   +0.50%  +0.9
+  ▼ stick_sandwich_bear           201    43.8%  -0.05%  +0.37%   +1.3   8/10   +0.67%  +1.6
+  ▼ rect_dn:hq                     34    32.4%  +0.70%  +1.21%   +1.3   0/0    +1.45%  +1.1
+  ▼ double_top:hq                 444    44.4%  -1.00%  -0.42%   -1.3   3/10   -0.38%  -0.5
+  ▼ shooting_star                3747    45.7%  -0.40%  +0.17%   +1.3   8/10   +0.30%  +1.5
+  potencia: con el error estándar medio de estos patrones (mediana 0.28 %, el de los 10 más raros 1.90 %) el estudio detecta con un 80 % de probabilidad efectos de ≥ 1.26 % en un patrón típico y de ≥ 8.55 % en los más raros
   superan el umbral del mejor de 130: 0 (ninguno); por azar se esperarían ≈ 6.5 si se miraran sueltos
-  figuras      alcistas  15 patrones · exceso medio +0.024 % · mediano -0.021 % · positivos 47 %
-  figuras      bajistas  13 patrones · exceso medio -0.024 % · mediano -0.088 % · positivos 38 %
-  rupturas     alcistas   7 patrones · exceso medio +0.231 % · mediano -0.062 % · positivos 14 %
-  rupturas     bajistas   6 patrones · exceso medio -0.714 % · mediano -0.151 % · positivos 0 %
-  velas        alcistas  29 patrones · exceso medio +0.041 % · mediano -0.016 % · positivos 45 %
-  velas        bajistas  30 patrones · exceso medio -0.171 % · mediano -0.043 % · positivos 33 %
-  directrices  alcistas   1 patrones · exceso medio +0.114 % · mediano +0.114 % · positivos 100 %
-  directrices  bajistas   1 patrones · exceso medio -0.104 % · mediano -0.104 % · positivos 0 %
-  rebotes      alcistas   1 patrones · exceso medio +0.071 % · mediano +0.071 % · positivos 100 %
-  rebotes      bajistas   1 patrones · exceso medio +0.333 % · mediano +0.333 % · positivos 100 %
+  figuras      alcistas  15 patrones · exceso medio +0.022 % · mediano -0.015 % · positivos 47 %
+  figuras      bajistas  13 patrones · exceso medio -0.026 % · mediano -0.088 % · positivos 38 %
+  rupturas     alcistas   7 patrones · exceso medio +0.244 % · mediano -0.061 % · positivos 14 %
+  rupturas     bajistas   6 patrones · exceso medio -0.714 % · mediano -0.154 % · positivos 0 %
+  velas        alcistas  29 patrones · exceso medio +0.053 % · mediano -0.036 % · positivos 41 %
+  velas        bajistas  30 patrones · exceso medio -0.181 % · mediano -0.043 % · positivos 33 %
+  directrices  alcistas   1 patrones · exceso medio +0.117 % · mediano +0.117 % · positivos 100 %
+  directrices  bajistas   1 patrones · exceso medio -0.110 % · mediano -0.110 % · positivos 0 %
+  rebotes      alcistas   1 patrones · exceso medio +0.065 % · mediano +0.065 % · positivos 100 %
+  rebotes      bajistas   1 patrones · exceso medio +0.346 % · mediano +0.346 % · positivos 100 %
   controles positivos (anomalías documentadas medidas con el mismo método y el mismo umbral; si el método funciona deben aparecer):
-    momentum alto (10 % mejor a 120 sesiones)                n   71,610 · exceso +0.501 % ± 0.347 (t +2.8)
-    momentum bajo (10 % peor a 120 sesiones)                 n   71,610 · exceso +0.142 % ± 0.316 (t +0.9)
-    volatilidad alta (10 % superior de ATR / precio)         n   73,440 · exceso +0.574 % ± 0.427 (t +2.6)
-    sobreventa a corto (RSI 2 < 10 sobre la media de 200)    n   37,212 · exceso +0.118 % ± 0.206 (t +1.1)
-  coincidencias (cada valor-día cuenta una vez; 109,375 con señal alcista, 107,987 con señal bajista, 3,374 contradictorios, 75,891 con varias señales):
-    alcistas  solo velas                       n  22,692 · ganan 53.3 % · exceso -0.068 % (t -1.0) · vs año -0.176 % (t -0.4)
-    alcistas  solo estructura                  n  39,611 · ganan 52.8 % · exceso -0.054 % (t -1.1) · vs año -0.193 % (t -1.4)
-    alcistas  velas y estructura juntas        n   2,011 · ganan 54.0 % · exceso +0.218 % (t +1.4) · vs año +0.006 % (t +0.0)
-    alcistas  todas (cada valor-día una vez)   n  64,314 · ganan 53.0 % · exceso -0.050 % (t -1.5) · vs año -0.181 % (t -0.8)
-    bajistas  solo velas                       n  30,708 · ganan 44.8 % · exceso -0.034 % (t -0.6) · vs año +0.119 % (t +0.7)
-    bajistas  solo estructura                  n  31,029 · ganan 43.4 % · exceso -0.105 % (t -1.4) · vs año -0.164 % (t -0.4)
-    bajistas  velas y estructura juntas        n   2,114 · ganan 43.4 % · exceso -0.009 % (t -0.1) · vs año +0.015 % (t +0.0)
-    bajistas  todas (cada valor-día una vez)   n  63,851 · ganan 44.0 % · exceso -0.068 % (t -1.9) · vs año -0.022 % (t -0.1)
+    momentum alto (10 % mejor a 120 sesiones)                n   71,610 · exceso +0.497 % ± 0.335 (t +2.9)
+    momentum bajo (10 % peor a 120 sesiones)                 n   71,609 · exceso +0.144 % ± 0.314 (t +0.9)
+    volatilidad alta (10 % superior de ATR / precio)         n   73,439 · exceso +0.571 % ± 0.445 (t +2.5)
+    sobreventa a corto (RSI 2 < 10 sobre la media de 200)    n   37,258 · exceso +0.119 % ± 0.198 (t +1.2)
+  coincidencias (cada valor-día cuenta una vez; 109,190 con señal alcista, 108,142 con señal bajista, 3,370 contradictorios, 75,927 con varias señales):
+    alcistas  solo velas                       n  22,733 · ganan 53.2 % · exceso -0.064 % (t -0.9) · vs año -0.178 % (t -0.4)
+    alcistas  solo estructura                  n  39,570 · ganan 52.7 % · exceso -0.054 % (t -1.0) · vs año -0.194 % (t -1.3)
+    alcistas  velas y estructura juntas        n   2,021 · ganan 53.7 % · exceso +0.211 % (t +1.3) · vs año -0.015 % (t -0.1)
+    alcistas  todas (cada valor-día una vez)   n  64,324 · ganan 52.9 % · exceso -0.049 % (t -1.4) · vs año -0.183 % (t -0.8)
+    bajistas  solo velas                       n  30,789 · ganan 44.9 % · exceso -0.038 % (t -0.6) · vs año +0.119 % (t +0.7)
+    bajistas  solo estructura                  n  31,097 · ganan 43.5 % · exceso -0.105 % (t -1.3) · vs año -0.163 % (t -0.5)
+    bajistas  velas y estructura juntas        n   2,120 · ganan 43.4 % · exceso -0.007 % (t -0.0) · vs año +0.026 % (t +0.0)
+    bajistas  todas (cada valor-día una vez)   n  64,006 · ganan 44.1 % · exceso -0.070 % (t -1.9) · vs año -0.021 % (t -0.1)
     por familia (todas las señales de la familia, cada valor-día una vez; 10 contrastes: umbral de Bonferroni |t| ≥ 2,8):
-      figuras alcistas       15 patrones · n  10,872 · ganan 52.8 % · exceso +0.020 % ± 0.139 (t +0.3)
-      figuras bajistas       13 patrones · n   8,978 · ganan 45.1 % · exceso -0.039 % ± 0.182 (t -0.4)
-      rupturas alcistas       7 patrones · n  31,768 · ganan 52.4 % · exceso -0.055 % ± 0.127 (t -0.8)
-      rupturas bajistas       6 patrones · n  21,667 · ganan 42.6 % · exceso -0.142 % ± 0.204 (t -1.4)
-      velas alcistas         29 patrones · n  25,794 · ganan 53.3 % · exceso -0.030 % ± 0.127 (t -0.5)
-      velas bajistas         32 patrones · n  34,178 · ganan 44.7 % · exceso -0.035 % ± 0.106 (t -0.6)
-      directrices alcistas    1 patrones · n   5,777 · ganan 55.9 % · exceso +0.114 % ± 0.208 (t +1.1)
-      directrices bajistas    1 patrones · n   7,632 · ganan 44.5 % · exceso -0.104 % ± 0.188 (t -1.1)
-      rebotes alcistas        1 patrones · n   1,676 · ganan 54.7 % · exceso +0.071 % ± 0.318 (t +0.4)
-      rebotes bajistas        1 patrones · n   1,940 · ganan 45.8 % · exceso +0.333 % ± 0.280 (t +2.3)
-    contradictorias, medidas en largo: n 2,135 · exceso +0.187 % (t +1.1)
-    contradictorias, medidas en corto: n 2,135 · exceso -0.187 % (t -1.1)
+      figuras alcistas       15 patrones · n  10,873 · ganan 52.7 % · exceso +0.025 % ± 0.141 (t +0.3)
+      figuras bajistas       13 patrones · n   8,986 · ganan 45.2 % · exceso -0.040 % ± 0.186 (t -0.4)
+      rupturas alcistas       7 patrones · n  31,755 · ganan 52.3 % · exceso -0.056 % ± 0.131 (t -0.8)
+      rupturas bajistas       6 patrones · n  21,724 · ganan 42.7 % · exceso -0.142 % ± 0.220 (t -1.3)
+      velas alcistas         29 patrones · n  25,848 · ganan 53.2 % · exceso -0.028 % ± 0.125 (t -0.4)
+      velas bajistas         32 patrones · n  34,272 · ganan 44.8 % · exceso -0.039 % ± 0.116 (t -0.7)
+      directrices alcistas    1 patrones · n   5,777 · ganan 55.9 % · exceso +0.117 % ± 0.218 (t +1.1)
+      directrices bajistas    1 patrones · n   7,637 · ganan 44.5 % · exceso -0.110 % ± 0.188 (t -1.1)
+      rebotes alcistas        1 patrones · n   1,671 · ganan 54.6 % · exceso +0.065 % ± 0.321 (t +0.4)
+      rebotes bajistas        1 patrones · n   1,947 · ganan 46.2 % · exceso +0.346 % ± 0.298 (t +2.3)
+    contradictorias, medidas en largo: n 2,142 · exceso +0.189 % (t +1.1)
+    contradictorias, medidas en corto: n 2,142 · exceso -0.189 % (t -1.1)
