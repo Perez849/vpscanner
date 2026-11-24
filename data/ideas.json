@@ -1,32 +1,33 @@
 {
- "actualizado": "2026-11-24T07:40:43Z",
+ "actualizado": "2026-11-24T12:35:47Z",
  "sesion": {
-  "cuando": "2026-11-24T07:40:43Z",
-  "tipo": "mañana",
-  "titular": "Asia se suma al rebote y el Nasdaq ya gana *un 7 % desde la compra*",
+  "cuando": "2026-11-24T12:35:47Z",
+  "tipo": "preapertura",
+  "titular": "Los chips devuelven parte del rebote: *Nvidia −5,6 % antes de abrir*",
   "hoy": {
    "accion": "nada",
-   "texto": "Hoy no se compra nada nuevo y no se toca nada. El Nasdaq (QQQ) va un 7,0 % arriba desde la entrada del viernes. Los chips (SMH) están ya por encima de la entrada. Las dos ideas siguen con sus horizontes de 1 a 3 meses."
+   "texto": "Hoy no se compra nada. Los chips devuelven parte de la subida de ayer: el SMH cae un 4,5 % antes de abrir y el QQQ un 1,9 %. Las dos ideas abiertas siguen dentro de la caída normal por el camino y sin ninguna condición de ruptura. No se toca nada."
   },
   "cambios": [
-   "Pánico con miedo alto (abierta): QQQ cerró en 651,03 $, +7,0 % sobre la entrada.",
-   "Chips (abierta): SMH cerró en 460,18 $, por encima de la entrada por primera vez desde el 18.",
-   "Alertas de saltos de más de un 10 % (Nvidia, Micron, Intel, Arm, Supermicro, Oracle, Qualcomm, Palantir, Tesla): sus competidoras no cayeron, también subieron, así que no hay castigo por contagio → nada.",
-   "Petróleo −4,5 % ayer (y otro −3 % esta mañana) y oro +3,9 %: sin un hecho duradero detrás que haya podido confirmar → «obvio», nada."
+   "Nasdaq (abierta): QQQ en 638,9 $ antes de abrir, +5,0 % sobre la entrada (ayer cerró en +7,0 %).",
+   "Chips (abierta): SMH 439,7 $, −4,3 % desde la entrada; sin ruptura y dentro de lo normal para su tipo.",
+   "Las alertas de ayer (saltos de Nvidia, Micron y otros; petróleo y oro) siguen atendidas: competidoras que no cayeron y beneficiarios evidentes. Nada nuevo.",
+   "Si al cierre los chips de EE. UU. terminan un 4 % peor que el S&P 500, salta el aviso de no comprar ASML ni Infineon por contagio.",
+   "Sanofi compra Insmed por unos 41.000 millones: comprar a las siguientes candidatas no es idea (lección «opa»)."
   ],
-  "pulso": "Ayer Wall Street vivió uno de sus mejores días en años. El S&P 500 cerró con un +4,7 % (SPY 722,29 $), el Nasdaq-100 con un +7,0 % y los semiconductores con un +15,0 %, tras la vuelta de Jensen Huang a Nvidia (+31,5 %). El VIX cerró en 26,6. Esta noche Asia se ha sumado: el Kospi sube un 6,3 % y vuelve por encima de 5.000, y el Nikkei un 3,9 %; el Hang Seng cae un 0,6 %. Los futuros americanos están casi planos (S&P +0,2 %, Nasdaq +0,1 %). El Brent cae otro 3 %, hasta 86,7 $; no he encontrado el motivo. El oro está en 3.618 $.",
+  "pulso": "Recogida de beneficios tras el gran rebote de ayer. Los futuros del S&P 500 caen un 1,0 % y los del Nasdaq un 1,9 %; el VIX sube a 28,9. Los chips llevan la caída: Nvidia −5,6 %, Lam Research −4,7 %, Applied Materials −4,4 %, AMD −4,3 %. Europa cae menos: el Euro Stoxx 50 un 0,7 %, el DAX un 0,8 % y el Ibex un 0,6 %. El Brent sigue bajando (86,8 $) y el oro está en 3.624 $.",
   "hechos": [
    {
-    "titulo": "Asia recupera el desplome de la semana pasada",
-    "detalle": "El Kospi sube un 6,3 % (5.006 puntos) y el Nikkei un 3,9 % (58.645), arrastrados por los chips tras la vuelta de Huang a Nvidia.",
-    "efecto": "Confirma que la venta de la semana pasada era de todo lo ligado a la inteligencia artificial, y que se está deshaciendo igual de rápido. Es bueno para las dos ideas abiertas.",
-    "tono": "oportunidad",
+    "titulo": "Nvidia devuelve parte de su subida histórica",
+    "detalle": "Cae entre un 4 % y un 5,6 % en la preapertura tras subir un 31 % ayer con la vuelta de Jensen Huang. Según la prensa, Goldman Sachs opina que la vuelta no despeja todas las dudas. Intel, Micron y Marvell caen alrededor de un 5 %.",
+    "efecto": "Es una caída normal tras un día así, y dentro de la caída por el camino que se espera en las dos ideas abiertas. No cambia nada.",
+    "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "El petróleo sigue cayendo",
-    "detalle": "El Brent cae un 4,5 % ayer y otro 3 % esta mañana, hasta 86,7 $. No he encontrado una noticia que lo explique.",
-    "efecto": "Sin un hecho duradero detrás, comprar a quien gana con el petróleo barato (aerolíneas) no ha dado nada en el entrenamiento.",
+    "titulo": "Sanofi compra Insmed por unos 41.000 millones de dólares",
+    "detalle": "La farmacéutica francesa compra la biotecnológica estadounidense, según la prensa. Insmed sube con fuerza antes de abrir.",
+    "efecto": "Insmed ya recoge la prima. Apostar por la siguiente biotecnológica que será comprada no ha funcionado (lección «opa»).",
     "tono": "neutro",
     "nuevo": true
    }
@@ -116,14 +117,18 @@
     {
      "fecha": "2026-11-24",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El QQQ cerró ayer en 651,03 $: +7,0 % sobre la entrada (608,45 $), y +2,3 % por encima del S&P 500 en el mismo tramo. Los futuros del Nasdaq suben un 0,1 % esta mañana. No hay que hacer nada."
     },
     {
      "fecha": "2026-11-24",
      "edicion": "manual",
-     "nuevo": true,
      "texto": "Cambio de horizonte, de 60 a 90 sesiones. El entrenamiento, medido ahora de 5 a 120 sesiones, dice que tras un pánico con miedo alto el Nasdaq sigue ganando hasta la sesión 90: +11,4 % sobre lo normal, frente a +8,2 % a 60, y es donde más se distingue del azar. La salida pasa de mediados de febrero a principios de abril. La tesis, la entrada y el marcador no cambian."
+    },
+    {
+     "fecha": "2026-11-24",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Antes de abrir, el QQQ está en 638,9 $: −1,9 % hoy, pero aún +5,0 % sobre la entrada (608,45 $). Es la devolución de parte del rebote de ayer, algo normal tras un día del +7 % (la caída mediana por el camino ronda el 4 %). No hay que hacer nada; el horizonte es de 90 sesiones."
     }
    ],
    "fuentes": [
@@ -290,14 +295,18 @@
     {
      "fecha": "2026-11-24",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El SMH cerró ayer en 460,18 $, ya por encima de la entrada (459,54 $): ha recuperado en un día todo lo perdido desde el 18. Applied Materials cerró en 346,87 $ (−1,5 % desde la entrada) y Lam Research en 209,76 $ (−0,9 %). El Kospi sube un 6,3 % y el Nikkei un 3,9 % con los chips asiáticos. Se mantiene con su horizonte de 2 a 3 meses."
     },
     {
      "fecha": "2026-11-24",
      "edicion": "manual",
-     "nuevo": true,
      "texto": "Revisado el horizonte con el nuevo ensayo de 5 a 120 sesiones: para un sector castigado por una norma, 60 sesiones sigue siendo lo mejor. Esta idea no cambia; sale hacia el 17 de febrero o antes si se rompe."
+    },
+    {
+     "fecha": "2026-11-24",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Antes de abrir, el SMH está en 439,7 $: −4,5 % hoy y −4,3 % desde la entrada (459,54 $). Nvidia cae un 5,6 % tras su +31 % de ayer; Goldman dice que la vuelta de Huang no despeja todas las dudas. Applied Materials −4,4 %, Lam Research −4,7 %. No hay noticias de la norma de exportación: sin ruptura. Dentro de lo normal por el camino para un sector castigado por una norma (caída mediana del 8 %). Se mantiene hasta el 17 de febrero."
     }
    ],
    "fuentes": [
@@ -555,6 +564,28 @@
  "descartes": [
   {
    "fecha": "2026-11-24",
+   "titulo": "Comprar otras biotecnológicas porque Sanofi compra Insmed",
+   "por_que": "Tras una gran compra, apostar por las siguientes candidatas no ha dado nada: +1,1 % en 60 sesiones en 16 casos.",
+   "leccion": "«opa».",
+   "tipo": "opa",
+   "valores": [
+    "XBI"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-24",
+   "titulo": "Comprar Nvidia porque cae un 5 % tras el +31 %",
+   "por_que": "No es un castigo, sino la devolución de una parte de una subida histórica, y Nvidia ya está dentro del SMH y del QQQ. El miedo previo (VIX 26,6) no es alto.",
+   "leccion": "«caido» y concentración.",
+   "tipo": "caido",
+   "valores": [
+    "NVDA"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-24",
    "titulo": "Comprar aerolíneas porque el petróleo cae un 7 % en dos días",
    "por_que": "No hay un hecho confirmado detrás de la caída, y las aerolíneas reaccionan el mismo día.",
    "leccion": "«obvio»: solo cuenta si hay un hecho duradero detrás («estructural»).",
@@ -563,8 +594,7 @@
     "DAL",
     "UAL",
     "JETS"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-24",
@@ -575,8 +605,7 @@
    "valores": [
     "AMD",
     "AVGO"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-23",
@@ -916,6 +945,10 @@
   {
    "cuando": "2026-11-24T07:40:43Z",
    "resumen": "Mañana: QQQ +7,0 % desde la entrada; SMH vuelve por encima de la entrada. Asia rebota (Kospi +6,3 %). Nada nuevo que comprar."
+  },
+  {
+   "cuando": "2026-11-24T12:35:47Z",
+   "resumen": "Preapertura: los chips devuelven parte del rebote (SMH −4,5 %, Nvidia −5,6 %). QQQ +5,0 % desde la entrada; SMH −4,3 %. Sin rupturas. Nada que comprar."
   }
  ]
 }
