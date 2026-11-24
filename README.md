@@ -6,7 +6,7 @@ La web tiene **dos partes**:
 |---|---|---|
 | Qué es | Un analista que tres veces al día (9:00, 14:00 y 21:30, hora española) lee lo que pasa en el mundo y razona quién gana y quién pierde: hecho → cadena lógica → valores → qué está ya en el precio → disparador → qué la rompe | Detecta **110 patrones chartistas**, los **dibuja** con su plan y **mide si funcionan** |
 | Web | «Ideas»: Hoy (ideas vivas, hechos en el radar, descartes y marcador) · Entrenamiento (lecciones y ensayos) | «Figuras y velas»: Radar · Gráfico · Evidencia · Guía |
-| Cómo se valida | Cada tipo de idea se ha simulado sobre hechos pasados (`python -m vp.ideas_train`) y cada idea dada queda registrada y se compara con el SPY (`python -m vp.ideas`) | Estudio de evidencia: ningún patrón bate a entrar al azar con el mismo riesgo |
+| Cómo se valida | Cada tipo de idea se ha simulado sobre hechos pasados desde 2000, en EE. UU. y en Europa, con cuánto cae por el camino y cuándo salir (`python -m vp.ideas_train`); cada idea dada queda registrada y se compara con su índice, el SPY o el europeo (`python -m vp.ideas`), y también se mide si la convicción acierta | Estudio de evidencia: ningún patrón bate a entrar al azar con el mismo riesgo |
 | Datos | `data/ideas.json`, `ideas_track.json`, `ideas_playbook.json`, `ideas_casos.json` (casos propios, con los que aprende) | `data/evidence*.json`, `plan_report`, `ml_report`, `context_report` |
 | Protocolo | [`IDEAS.md`](IDEAS.md) | secciones siguientes |
 

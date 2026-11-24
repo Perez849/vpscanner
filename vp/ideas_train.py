@@ -29,7 +29,10 @@ EXTRA = ('SPY QQQ IWM CL=F GC=F NG=F HG=F ZW=F ^TNX ^VIX BTC-USD XLU KRE GDX VNQ
          'SMH JETS ITA XHB XOP XRT IYT FXI CHKP DOCU BOX EA TTWO FANG XPO TM GDRX DLTR '
          'ROST BURL KSS M DDS BBY CVX MPC KO PFE MRK ABBV BMY AZN VZ T CMCSA CHTR UPS FDX CSX UNP NSC '
          'KC=F CC=F SB=F ZC=F LE=F SBUX HSY MDLZ TSN HRL CAG XYZ IEP RBLX CVNA APP HOOD EME DASH WSM JBL BLDR KKR GDDY DELL PLTR '
-         'BIIB ZIM MATX LUV TXN PSX HON CRM NFLX CMG HPQ MSI CL KMB').split()
+         'BIIB ZIM MATX LUV TXN PSX HON CRM NFLX CMG HPQ MSI CL KMB '
+         'TSEM CPRI ACI NXPI WTW QCOM BRK-B NUE STLD BA CAT DE RH DECK').split()
+from .europa import EURO as EU_EURO, ES as EU_ES, IDX as EU_IDX, is_eu        # una sola lista para el entrenamiento y las alertas
+EXTRA += EU_EURO + EU_ES + EU_IDX
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', default='data')
 ap.add_argument('--cache', default='.cache/ideas')
@@ -262,6 +265,7 @@ G = 'Tropiezo o salto de una empresa grande'
 subs = {}
 for s, u in uni.items():
     if s in col and u.get('sub'): subs.setdefault(u['sub'], []).append(s)
+DV.loc[:, [c_ for c_ in DV.columns if is_eu(c_)]] = np.nan                  # las europeas no compiten en el ranking de las grandes de EE. UU. (volumen en otra moneda): sus columnas quedan, vacías, para no descuadrar índices
 rank = DV.rolling(60, min_periods=30).median().rank(axis=1, ascending=False)
 Rv = R.values; rk = rank.values; spy = Rv[:, col['SPY']]
 evs = {'caida': [], 'salto': []}
@@ -643,7 +647,94 @@ combo('Bono a 10 años −30 pb en diez sesiones con miedo alto → constructora
 print(f'combinaciones probadas: {len(COMBOS)} · por azar cabe esperar que alguna salga bien en las dos mitades', flush=True)
 
 G = 'Casos con nombre'
-TIPOS = {'J': 'Cambio de consejero delegado → comprar la empresa', 'X': 'Informe de un bajista → comprar el castigo', 'P': 'Anuncio de división de acciones (split) → comprar', 'I': 'Anuncio de entrada en el S&P 500 → comprar', 'F': 'Aprobación de un fármaco clave → comprar al laboratorio', 'H': 'Huelga, bloqueo o escasez → el beneficiado o el castigado', 'W': 'Entra un inversor activista → comprar la empresa', 'E': 'Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)', 'D': 'Decisión anunciada (banco central, ley firmada, plan de empresa)', 'S': 'Susto o anuncio de un día', 'N': 'Sector castigado por una norma o sanción → comprar el castigo', 'V': 'Víctimas de la novedad de otro → comprar el castigo', 'A': 'Ataque o avería que obliga a gastar en protección', 'M': 'Gran compra de empresa → las siguientes candidatas', 'K': 'El canario avisa: comprar a las arrastradas por el aviso de otra', 'L': 'Demanda antimonopolio contra un gigante → comprar el gigante', 'C': 'Comprar al gigante caído', 'R': 'Competencia del que tropieza', 'B': 'Buena noticia que se contagia'}
+# ── Europa: las mismas preguntas con valores europeos y españoles, medidos frente a la media de su propio grupo (no frente al SPY) ──
+EUc = [s_ for s_ in EU_EURO + EU_ES if s_ in col]                     # grandes europeas con precios (incluye las del Ibex)
+ESc = [s_ for s_ in EU_ES if s_ in col]
+BANK_ES = [s_ for s_ in 'SAN.MC BBVA.MC CABK.MC SAB.MC BKT.MC UNI.MC'.split() if s_ in col]
+def win(i, syms, h):
+    """Rendimiento medio de la cesta comprando en la apertura siguiente al día i y vendiendo al cierre h sesiones después."""
+    if i + 1 + h >= len(idx): return np.nan
+    c_ = [col[s_] for s_ in syms if s_ in col]
+    with np.errstate(all='ignore'):
+        v = Av[i + h, c_] / Ov[i + 1, c_] - 1
+    return float(np.nanmean(v)) if np.isfinite(v).any() else np.nan
+def after_eu(i, syms, h, U=None):
+    """Como after(), pero el exceso es sobre la media a partes iguales de las grandes europeas (U), que cotizan en el mismo horario."""
+    return win(i, syms, h) - win(i, U or EUc, h)
+def day0_eu(i, syms, U=None):
+    with np.errstate(all='ignore'):
+        a_ = R.values[i, [col[s_] for s_ in syms if s_ in col]]; b_ = R.values[i, [col[s_] for s_ in (U or EUc)]]
+    return float(np.nanmean(a_) - np.nanmean(b_)) if np.isfinite(a_).any() and np.isfinite(b_).any() else np.nan
+_eb = {}
+def base_eu(basket, U=None):
+    k = (tuple(basket), tuple(U or EUc))
+    if k not in _eb:
+        ii = np.arange(260 + int(np.argmax(since)), len(idx) - 62, 7)
+        with np.errstate(all='ignore'):
+            _eb[k] = {h: float(np.nanmean([after_eu(i, basket, h, U) for i in ii])) for h in (5, 20, 60)}
+    return _eb[k]
+def eu_study(days, basket, U=None):
+    b_ = base_eu(basket, U)
+    return summ([(day0_eu(i, basket, U), after_eu(i, basket, 5, U) - b_[5], after_eu(i, basket, 20, U) - b_[20], after_eu(i, basket, 60, U) - b_[60]) for i in thin(days) if i + 61 < len(idx)])
+def eu_idx_rows(mask, sym, d0s=None):
+    """Índice europeo comprado en la apertura siguiente: rendimiento absoluto menos lo que hace en un tramo cualquiera de su misma mitad del periodo."""
+    out = []; j = col[sym]
+    for i in thin(idx[mask]):
+        if i + 61 >= len(idx) or not np.isfinite(Ov[i + 1, j]) or not np.isfinite(Av[i + 60, j]): continue
+        hf = 0 if i < CUT else 1
+        out.append((i, R.values[i, col[d0s or sym]], *[Av[i + h, j] / Ov[i + 1, j] - 1 - qbase(sym, h, hf) for h in (5, 20, 60)]))
+    return out
+if EUc and '^STOXX50E' in col and '^IBEX' in col:
+    print(f'Europa: {len(EUc)} grandes europeas con precios, {len(ESc)} del Ibex', flush=True)
+    rE, rI = R['^STOXX50E'].values, R['^IBEX'].values
+    with np.errstate(all='ignore'):
+        ewE = np.nanmean(R.values[:, [col[s_] for s_ in EUc]], axis=1); ewS = np.nanmean(R.values[:, [col[s_] for s_ in ESc]], axis=1)
+    G = 'Europa · pánico y miedo (validadas en dos mitades)'
+    combo('Euro Stoxx 50 −2 % con el miedo alto (VIX previo ≥ 28) → Euro Stoxx 50', 'El pánico con miedo alto, en Europa. Datos del índice desde 2007.', eu_idx_rows(since & (rE <= -0.02) & (vixp >= 28), '^STOXX50E'))
+    combo('Euro Stoxx 50 −2 % viniendo de calma (VIX < 20) → Euro Stoxx 50', 'El mismo golpe con el mercado tranquilo.', eu_idx_rows(since & (rE <= -0.02) & (vixp < 20), '^STOXX50E'))
+    combo('Ibex 35 −2 % con el miedo alto (VIX previo ≥ 28) → Ibex 35', 'El pánico con miedo alto, en España.', eu_idx_rows(since & (rI <= -0.02) & (vixp >= 28), '^IBEX'))
+    combo('Ibex 35 −2 % viniendo de calma (VIX < 20) → Ibex 35', 'El mismo golpe con el mercado tranquilo.', eu_idx_rows(since & (rI <= -0.02) & (vixp < 20), '^IBEX'))
+    combo('Wall Street −2 % con el miedo alto → Euro Stoxx 50 en la apertura siguiente', 'Europa abre después del golpe de Nueva York: ¿llega tarde o a tiempo?', eu_idx_rows(pan2 & (vixp >= 28), '^STOXX50E', d0s='SPY'))
+    combo('Wall Street −2 % con el miedo alto → Ibex 35 en la apertura siguiente', 'Lo mismo, con la bolsa española.', eu_idx_rows(pan2 & (vixp >= 28), '^IBEX', d0s='SPY'))
+    if BANK_ES:
+        bb = base_eu(BANK_ES, ESc)
+        combo('Ibex 35 −2 % con el miedo alto → bancos españoles (frente al resto del Ibex)', 'Lo que más cae en el pánico, ¿más rebota?', [(i, day0_eu(i, BANK_ES, ESc), *[after_eu(i, BANK_ES, h, ESc) - bb[h] for h in (5, 20, 60)]) for i in thin(idx[since & (rI <= -0.02) & (vixp >= 28)]) if i + 61 < len(idx)])
+    G = 'Europa · grandes valores (frente a la media de su grupo)'
+    eu_ev = {'caida': [], 'salto': []}
+    for s_ in EUc:
+        j = col[s_]; U = ESc if s_ in ESc else EUc; mk = ewS if s_ in ESc else ewE
+        for i in np.flatnonzero(since & (np.abs(R.values[:, j]) >= 0.10)):
+            r0, r1 = R.values[i, j], R.values[i + 1, j] if i + 1 < len(idx) else np.nan
+            if i < 61 or i + 61 >= len(idx) or not abs(mk[i]) <= 0.02: continue          # día del propio valor, no de todo el mercado
+            if np.isfinite(r1) and np.sign(r1) != np.sign(r0) and abs(r1) >= 0.8 * abs(r0): continue      # se deshace al día siguiente: casi siempre un error de dato de Yahoo
+            eu_ev['caida' if r0 < 0 else 'salto'].append((i, s_, U, r0, mk[i]))
+    def eu_rows(sel):
+        return [(i, r - mk, *[after_eu(i, [s_], h, U) for h in (5, 20, 60)]) for i, s_, U, r, mk in sel]
+    nt = 'exceso sobre la media a partes iguales de las grandes de su grupo (europeas, o del Ibex para las españolas)'
+    def eu_add(nombre, logica, rows):
+        r_ = summ([x[1:] for x in rows]); r_['nota'] = nt; add(G, nombre, logica, r_)
+    ce, se = eu_ev['caida'], eu_ev['salto']
+    eu_add('Una grande europea cae ≥ 10 % en un día → comprar la propia caída', 'El gigante caído, en Europa.', eu_rows(ce))
+    eu_add('Una grande española cae ≥ 10 % en un día → comprar la propia caída', 'Lo mismo, solo el Ibex.', eu_rows([e for e in ce if e[1] in ESc]))
+    eu_add('Una grande europea sube ≥ 10 % en un día → seguir comprándola', 'La buena noticia tarda en digerirse.', eu_rows(se))
+    vxe = lambda e: vixp[e[0]]
+    G = 'Europa · grandes valores (validadas en dos mitades)'
+    combo('Una grande europea cae ≥ 10 % con el miedo alto (VIX ≥ 28) → comprar la caída', 'La combinación más fuerte de EE. UU., en Europa.', eu_rows([e for e in ce if vxe(e) >= 28]))
+    combo('Una grande europea cae ≥ 10 % con el miedo bajo (VIX < 18) → comprar la caída', 'En calma: problema propio.', eu_rows([e for e in ce if vxe(e) < 18]))
+    G = 'Europa · materias primas'
+    ro_ = ro.values
+    if 'IAG.MC' in col:
+        add(G, 'Petróleo cae ≥ 4 % en un día → IAG (Iberia, British Airways)', 'El combustible es su mayor coste variable.', {**eu_study(idx[since & (ro_ <= -0.04)], ['IAG.MC']), 'nota': nt})
+    if 'REP.MC' in col:
+        add(G, 'Petróleo sube ≥ 4 % en un día → Repsol', 'Cada dólar de más va a su margen.', {**eu_study(idx[since & (ro_ >= 0.04)], ['REP.MC'], ESc), 'nota': nt})
+        add(G, 'Petróleo cae ≥ 4 % en un día → Repsol (comprar la caída)', 'Apostar a que el castigo es excesivo.', {**eu_study(idx[since & (ro_ <= -0.04)], ['REP.MC'], ESc), 'nota': nt})
+    if BANK_ES:
+        add(G, 'El bono de EE. UU. sube ≥ 12 pb en un día → bancos españoles', 'Más tipos, más margen (¿se contagia a Europa?).', {**eu_study(idx[since & (ty.values >= 0.12)], BANK_ES, ESc), 'nota': nt})
+else:
+    print('Europa: sin precios suficientes, se omite', flush=True)
+
+TIPOS = {'J': 'Cambio de consejero delegado → comprar la empresa', 'X': 'Informe de un bajista → comprar el castigo', 'P': 'Anuncio de división de acciones (split) → comprar', 'I': 'Anuncio de entrada en el S&P 500 → comprar', 'F': 'Aprobación de un fármaco clave → comprar al laboratorio', 'H': 'Huelga, bloqueo o escasez → el beneficiado o el castigado', 'W': 'Entra un inversor activista → comprar la empresa', 'E': 'Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)', 'D': 'Decisión anunciada (banco central, ley firmada, plan de empresa)', 'S': 'Susto o anuncio de un día', 'N': 'Sector castigado por una norma o sanción → comprar el castigo', 'V': 'Víctimas de la novedad de otro → comprar el castigo', 'A': 'Ataque o avería que obliga a gastar en protección', 'M': 'Gran compra de empresa → las siguientes candidatas', 'K': 'El canario avisa: comprar a las arrastradas por el aviso de otra', 'L': 'Demanda antimonopolio contra un gigante → comprar el gigante', 'C': 'Comprar al gigante caído', 'R': 'Competencia del que tropieza', 'B': 'Buena noticia que se contagia',
+         'O': 'Fusión u OPA que se rompe → comprar a la que iba a ser comprada', 'T': 'Aranceles anunciados → comprar a los castigados', 'U': 'Multa o norma de Bruselas contra un gigante → comprar el gigante', 'Y': 'Gran recompra de acciones anunciada → comprar'}
 CASES = [
  # E · cambios duraderos
  ('2014-11-28', 'La OPEP no recorta (petróleo barato durante años) → aerolíneas', 'DAL UAL AAL LUV ALK', 'D'),
@@ -1002,6 +1093,52 @@ CASES = [
  ('2010-01-27', 'Toyota para sus ventas → Ford', 'F', 'R'),
  ('2016-10-11', 'Samsung retira el Galaxy Note 7 → Apple', 'AAPL', 'R'),
  ('2022-11-08', 'Quiebra FTX → Coinbase', 'COIN', 'R'),
+ # O · fusiones u OPAs que se rompen (fecha = primer día de reacción)
+ ('2018-03-13', 'Trump bloquea la compra de Qualcomm por Broadcom → comprar Qualcomm', 'QCOM', 'O'),
+ ('2018-07-26', 'Qualcomm renuncia a comprar NXP → comprar NXP', 'NXPI', 'O'),
+ ('2021-07-26', 'Aon y Willis Towers Watson rompen su fusión → comprar Willis', 'WTW', 'O'),
+ ('2023-08-16', 'Intel renuncia a comprar Tower → comprar Tower', 'TSEM', 'O'),
+ ('2024-10-25', 'El juez bloquea la compra de Capri por Tapestry → comprar Capri', 'CPRI', 'O'),
+ ('2024-12-10', 'Los jueces bloquean la fusión de Kroger y Albertsons → comprar Albertsons', 'ACI', 'O'),
+ ('2025-10-17', 'Fracasa la OPA de BBVA sobre el Sabadell → comprar el Sabadell', 'SAB.MC', 'O'),
+ # T · aranceles → comprar a los castigados
+ ('2018-03-22', 'Trump anuncia aranceles a China (2018) → comprar a los exportadores castigados', 'BA CAT DE', 'T'),
+ ('2018-05-31', 'EE. UU. pone aranceles al acero europeo → comprar ArcelorMittal', 'MT.AS', 'T'),
+ ('2019-05-06', 'Trump sube los aranceles a China (mayo de 2019) → comprar a los castigados', 'AAPL CAT DE', 'T'),
+ ('2019-08-01', 'Trump anuncia aranceles al resto de importaciones chinas → comprar a los castigados', 'AAPL NKE BBY', 'T'),
+ ('2025-04-03', 'Aranceles del «Día de la Liberación» → comprar a los importadores castigados', 'AAPL NKE BBY RH DECK', 'T'),
+ ('2025-04-03', 'Aranceles del «Día de la Liberación» → comprar los coches alemanes castigados', 'VOW3.DE MBG.DE BMW.DE', 'T'),
+ ('2002-03-05', 'Bush pone aranceles al acero (2002) → acereras de EE. UU.', 'NUE STLD', 'S'),
+ # U · multas y normas de Bruselas contra un gigante
+ ('2004-03-24', 'Bruselas multa a Microsoft con 497 millones → comprar Microsoft', 'MSFT', 'U'),
+ ('2016-08-30', 'Bruselas obliga a Apple a pagar 13.000 millones en impuestos → comprar Apple', 'AAPL', 'U'),
+ ('2017-06-27', 'Bruselas multa a Google con 2.420 millones (Shopping) → comprar Alphabet', 'GOOGL', 'U'),
+ ('2018-07-18', 'Bruselas multa a Google con 4.340 millones (Android) → comprar Alphabet', 'GOOGL', 'U'),
+ ('2019-03-20', 'Bruselas multa a Google con 1.490 millones (AdSense) → comprar Alphabet', 'GOOGL', 'U'),
+ ('2023-05-22', 'Multa récord de 1.200 millones a Meta por los datos de los europeos → comprar Meta', 'META', 'U'),
+ ('2024-03-04', 'Bruselas multa a Apple con 1.800 millones (música) → comprar Apple', 'AAPL', 'U'),
+ ('2025-04-23', 'Primeras multas de la ley de mercados digitales a Apple y Meta → comprarlas', 'AAPL META', 'U'),
+ ('2025-09-05', 'Bruselas multa a Google con 2.950 millones (publicidad) → comprar Alphabet', 'GOOGL', 'U'),
+ # Y · grandes recompras (casi siempre llegan junto a los resultados: el primer día mezcla las dos cosas)
+ ('2018-05-02', 'Apple anuncia una recompra de 100.000 millones → comprar Apple', 'AAPL', 'Y'),
+ ('2018-07-18', 'Berkshire cambia su política para recomprar acciones → comprar Berkshire', 'BRK-B', 'Y'),
+ ('2021-04-28', 'Alphabet anuncia una recompra de 50.000 millones → comprar Alphabet', 'GOOGL', 'Y'),
+ ('2023-02-02', 'Meta amplía su recompra en 40.000 millones → comprar Meta', 'META', 'Y'),
+ ('2023-05-05', 'Apple anuncia una recompra de 90.000 millones → comprar Apple', 'AAPL', 'Y'),
+ ('2024-04-26', 'Alphabet anuncia una recompra de 70.000 millones y su primer dividendo → comprar Alphabet', 'GOOGL', 'Y'),
+ ('2024-05-03', 'Apple anuncia una recompra de 110.000 millones → comprar Apple', 'AAPL', 'Y'),
+ ('2024-08-29', 'Nvidia anuncia una recompra de 50.000 millones → comprar Nvidia', 'NVDA', 'Y'),
+ # Europa y España (se miden frente a la media de las grandes europeas)
+ ('2012-06-11', 'Rescate a la banca española → comprar los bancos españoles', 'SAN.MC BBVA.MC SAB.MC BKT.MC', 'D'),
+ ('2012-07-26', 'Draghi: «haré lo que haga falta» → bancos del sur de Europa', 'SAN.MC BBVA.MC ISP.MI UCG.MI', 'D'),
+ ('2015-01-22', 'El BCE lanza la compra masiva de deuda → bancos europeos', 'SAN.MC BBVA.MC BNP.PA ISP.MI', 'D'),
+ ('2016-06-24', 'Brexit → comprar los bancos españoles castigados', 'SAN.MC BBVA.MC SAB.MC', 'S'),
+ ('2020-11-09', 'Vacuna de Pfizer (2020) → turismo español', 'IAG.MC AMS.MC MEL.MC AENA.MC', 'E'),
+ ('2022-07-12', 'Impuesto a la banca española → comprar los bancos castigados', 'SAN.MC BBVA.MC CABK.MC SAB.MC BKT.MC', 'N'),
+ ('2022-07-12', 'Impuesto a las eléctricas y petroleras españolas → comprar el castigo', 'IBE.MC ELE.MC REP.MC NTGY.MC', 'N'),
+ ('2022-07-21', 'Primera subida de tipos del BCE en once años → bancos españoles', 'SAN.MC BBVA.MC CABK.MC SAB.MC BKT.MC', 'D'),
+ ('2023-03-20', 'UBS compra Credit Suisse → comprar los bancos europeos castigados', 'SAN.MC BBVA.MC BNP.PA INGA.AS DBK.DE', 'S'),
+ ('2024-05-09', 'OPA hostil de BBVA sobre el Sabadell → las siguientes candidatas', 'UNI.MC BKT.MC', 'M'),
 ]
 done = []
 for d, name, b, tp in CASES:
@@ -1010,6 +1147,9 @@ for d, name, b, tp in CASES:
     i = pos[d]; b = [x for x in b.split() if x in col and np.isfinite(Av[i, col[x]])]
     if not b: print('  sin datos:', name); continue
     v = lambda x: None if not np.isfinite(x) else round(100 * x, 2)
+    if all(is_eu(x) for x in b) and EUc:                                   # europeas: frente a la media de las grandes europeas, que cotizan en su mismo horario
+        done.append({'n': 1, 'd0': v(day0_eu(i, b)), 'e5': v(after_eu(i, b, 5)), 'e20': v(after_eu(i, b, 20)), 'e60': v(after_eu(i, b, 60)), 'valores': b, 'fecha': str(d.date()), 'tipo': tp, 'nombre': name, 'nota': 'frente a la media de las grandes europeas'})
+        continue
     done.append({'n': 1, 'd0': v(day0(i, b)), 'e5': v(after(i, b, 5)), 'e20': v(after(i, b, 20)), 'e60': v(after(i, b, 60)), 'valores': b, 'fecha': str(d.date()), 'tipo': tp, 'nombre': name})
 G = 'Afinar · casos con nombre según cómo fue el primer día'
 def bucket(nombre, logica, sel):
@@ -1042,8 +1182,55 @@ for tp, lab in TIPOS.items():
     h = lambda k: (lambda x: int(round(100 * np.mean([y > 0 for y in x]))) if x else None)([c[k] for c in cs if c[k] is not None])
     add(G, lab, f'{len(cs)} casos elegidos a mano', {'n': len(cs), 'd0': m('d0'), 'e5': m('e5'), 'e20': m('e20'), 'e60': m('e60'), 'hit20': h('e20'), 'hit60': h('e60'), 'tipo': tp})
 G = 'Casos con nombre'
-for c in sorted(done, key=lambda c: ('EDSNVAMKLCRBJXPIFHW'.index(c['tipo']), c['fecha'])):
+for c in sorted(done, key=lambda c: ('EDSNVAMKLCRBJXPIFHWOTUY'.index(c['tipo']), c['fecha'])):
     add(G, c['nombre'], TIPOS[c['tipo']].split(' (')[0], {k: v for k, v in c.items() if k != 'nombre'})
+# ── salidas: cuánto cae una idea buena por el camino y si salir antes (o con un stop) mejora o empeora ──
+G = 'Salidas · cuánto cae por el camino y cuándo salir'
+def camino(i, syms):
+    """Rendimiento ABSOLUTO de la cesta (a partes iguales) desde la apertura siguiente al día i hasta el cierre de cada una de las 60 sesiones."""
+    if i + 61 >= len(idx): return None
+    c_ = [col[s_] for s_ in syms if s_ in col]
+    if not c_: return None
+    w = pd.DataFrame(Av[i + 1:i + 61, c_] / Ov[i + 1, c_] - 1).ffill()          # un festivo de esa bolsa (el calendario es el de Nueva York) repite el último cierre
+    with np.errstate(all='ignore'):
+        p_ = np.nanmean(w.values, axis=1)
+    return p_ if np.isfinite(p_).all() else None
+def salida(nombre, logica, evs_):
+    P_ = [p_ for p_ in (camino(i, b_) for i, b_ in evs_) if p_ is not None]
+    if len(P_) < 5: return
+    M = np.array(P_); mae = M.min(axis=1); f5, f20, f60 = M[:, 4], M[:, 19], M[:, 59]
+    def stop(lv):                                                     # stop al cierre: se sale al cierre del primer día que la cesta está por debajo del nivel
+        out = []
+        for p_ in M:
+            k = np.flatnonzero(p_ <= lv)
+            out.append(p_[k[0]] if len(k) else p_[-1])
+        return float(np.mean(out))
+    hondo = mae <= -0.10
+    r_ = {'n': len(M), 'd0': None, 'e5': round(100 * float(f5.mean()), 2), 'e20': round(100 * float(f20.mean()), 2), 'e60': round(100 * float(f60.mean()), 2),
+          'hit20': int(round(100 * float((f20 > 0).mean()))), 'hit60': int(round(100 * float((f60 > 0).mean()))),
+          'mae_med': round(100 * float(np.median(mae)), 1), 'mae_p80': round(100 * float(np.percentile(mae, 20)), 1),
+          'stop10': round(100 * stop(-0.10), 2), 'stop15': round(100 * stop(-0.15), 2), 'mejor60': int(round(100 * float((f60 > f20).mean()))),
+          'rec10': int(round(100 * float((f60[hondo] > 0).mean()))) if hondo.any() else None, 'n_hondo': int(hondo.sum())}
+    fm = lambda x: f"{x:+.1f}".replace('.', ',') + ' %'
+    r_['nota'] = (f"en precio, no frente al índice. Por el camino cae de mediana un {fm(r_['mae_med'])} y, en el peor 20 % de los casos, más de un {fm(r_['mae_p80'])}. "
+                  f"A 60 sesiones gana de media {fm(r_['e60'])}; con un stop al −10 % (al cierre) daría {fm(r_['stop10'])} y con uno al −15 %, {fm(r_['stop15'])}. "
+                  + (f"De los {r_['n_hondo']} casos que llegaron a caer un 10 %, el {r_['rec10']} % acabó en positivo. " if r_['n_hondo'] >= 5 else '')
+                  + f"Aguantar de la sesión 20 a la 60 mejoró el resultado en el {r_['mejor60']} % de los casos.")
+    add(G, nombre, logica, r_)
+salida('Un tramo cualquiera del S&P 500 (para comparar)', 'Comprar el SPY un día cualquiera.', [(i, ['SPY']) for i in range(int(np.argmax(since)) + 1, len(idx) - 62, 10)])
+pm28 = thin(idx[pan2 & (vixp >= 28)])
+salida('Pánico con miedo alto → Nasdaq-100', 'La idea de pánico tal y como se da.', [(i, ['QQQ']) for i in pm28])
+if 'SMH' in col: salida('Pánico con miedo alto → semiconductores', 'La variante que más rebota.', [(i, ['SMH']) for i in pm28])
+salida('Una grande cae ≥ 10 % con el miedo alto → la propia caída', 'Comprar al castigado en plena tormenta.', [(e[0], [e[1]]) for e in evs['caida'] if vxs(e) >= 28])
+salida('Una grande cae ≥ 10 % con el miedo bajo → la propia caída', 'Comprar al castigado en calma (la que no funciona).', [(e[0], [e[1]]) for e in evs['caida'] if vxs(e) < 18])
+salida('El líder sube ≥ 10 % y castigan a sus competidoras con miedo → las competidoras', 'Castigo en plena tormenta.', [(e[0], e[2]) for e in evs['salto'] if e[4] <= -0.01 and vxs(e) >= 25])
+cs_ = lambda tp: [(pos[pd.Timestamp(c_['fecha'])], c_['valores']) for c_ in done if c_['tipo'] == tp and pd.Timestamp(c_['fecha']) in pos]
+salida('Sector castigado por una norma → comprar el castigo (casos con nombre)', 'Como la idea del veto de chips.', cs_('N'))
+salida('Hechos consumados → el beneficiario (casos con nombre)', 'La idea de cambio duradero.', cs_('E'))
+if EUc and '^STOXX50E' in col and '^IBEX' in col:
+    salida('Europa · Euro Stoxx 50 −2 % con el miedo alto → Euro Stoxx 50', 'El pánico en Europa.', [(i, ['^STOXX50E']) for i in thin(idx[since & (rE <= -0.02) & (vixp >= 28)])])
+    salida('Europa · Ibex 35 −2 % con el miedo alto → Ibex 35', 'El pánico en España.', [(i, ['^IBEX']) for i in thin(idx[since & (rI <= -0.02) & (vixp >= 28)])])
+
 for o in OUT:
     o['nombre'] = '↳ ' + o['nombre'].strip() if o['nombre'].startswith('   ') else o['nombre'].strip()
 pb = os.path.join(ARGS.out, 'ideas_playbook.json')
