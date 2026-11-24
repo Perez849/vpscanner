@@ -1305,7 +1305,7 @@ def test_ideas_alertas():
     assert any('XYZ' in x and '«miedo»' in x for x in a), a
     eu = {**base, 'eu_fecha': '2026-11-24', 'eu_1d': -0.025, 'ibex_1d': -0.005, 'eu_vix_prev': 30.0}
     a = ideas.reglas_europa(eu, [('SAN.MC', -11.0)])
-    assert any('IDEA de pánico con miedo alto en Europa' in x and 'Euro Stoxx 50' in x for x in a) and any('SAN.MC' in x and 'no está probado' in x for x in a), a
+    assert any('IDEA de pánico con miedo alto en Europa' in x and 'Euro Stoxx 50' in x for x in a) and any('SAN.MC' in x and 'castigo excesivo' in x for x in a), a
     a = ideas.reglas_europa({**eu, 'eu_vix_prev': 20.0}, [('SAN.MC', -11.0)])
     assert not any('IDEA' in x for x in a) and any('no es idea' in x for x in a) and any('no se compra' in x for x in a), a
     assert any('también es IDEA en Europa' in x for x in ideas.reglas_europa({**base, 'spy_1d': -0.03, 'vix_prev': 29.0}, [])) and ideas.reglas_europa(base, []) == []

@@ -897,7 +897,7 @@ function renderTrain() {
   if (!P) { $('#view').innerHTML = '<div class="empty">Sin datos de entrenamiento (data/ideas_playbook.json).</div>'; return; }
   const VD = {dar: 'Sí la doy', esperar: 'Depende: con condiciones', no: 'No la doy'};
   const E = P.estudios, types = E.filter(e => e.grupo.includes('resumen por tipo')), rest = E.filter(e => !e.grupo.includes('resumen por tipo')), named = E.filter(e => e.grupo === 'Casos con nombre').length;
-  const cnt = rest.filter(e => !e.grupo.includes('según cómo fue') && !e.grupo.startsWith('Salidas')), total = cnt.reduce((s, e) => s + e.n, 0), kinds = cnt.filter(e => e.n > 1).length;
+  const cnt = rest.filter(e => !e.grupo.includes('según cómo fue') && !e.grupo.startsWith('Salidas') && !e.grupo.includes('por tipo')), total = cnt.reduce((s, e) => s + e.n, 0), kinds = cnt.filter(e => e.n > 1).length;
   const mxT = Math.max(...types.flatMap(e => [e.d0, e.e20, e.e60].map(v => Math.abs(v || 0))), 1);
   const bar = (v, lab) => `<div class="x-bars"><small>${lab}</small><i style="--w:${(Math.abs(v || 0) / mxT * 50).toFixed(1)}%;--x:${v >= 0 ? '0' : '-100%'};--c:${v >= 0 ? 'var(--go)' : 'var(--no)'}"></i><span>${sgn(v)}</span></div>`;
   let g = '', rows = '';

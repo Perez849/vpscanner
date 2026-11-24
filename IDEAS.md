@@ -66,13 +66,13 @@ Sale de simular cada tipo de idea sobre hechos pasados desde 2000, en EE. UU. y 
 
 | Tipo (`tipo`) | Veredicto | Por qué (cifras completas en la lección del mismo nombre) |
 |---|---|---|
-| Hecho consumado que cambia el mundo: guerra, paz, pandemia, vacuna, vuelco electoral, fármaco que funciona (`estructural`) | **Sí** | 29 casos: +6,2 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 62 %. |
-| Decisión anunciada: banco central, ley firmada, plan de empresa (`decision`) | **No** | 40 casos: −1,9 % en 20 sesiones; solo sube el 40 %. Se compra antes y se vende cuando llega. |
-| Susto o anuncio de un día: huracán, atentado, ataque, estímulo prometido (`susto`) | **No** | 67 casos: −0,8 % en 20 sesiones; sube el 45 %. El beneficiario pierde (−2,5 % a 60 sesiones); el castigado apenas gana (+3,0 %). |
+| Hecho consumado que cambia el mundo: guerra, paz, pandemia, vacuna, vuelco electoral, fármaco que funciona (`estructural`) | **Sí** | 28 casos: +6,1 % sobre el S&P 500 en 20 sesiones comprando al día siguiente; sube el 61 %. |
+| Decisión anunciada: banco central, ley firmada, plan de empresa (`decision`) | **No** | 36 casos: −2,4 % en 20 sesiones; solo sube el 36 %. Se compra antes y se vende cuando llega. (En Europa, los rescates de los bancos centrales sí dieron: pista con cuatro casos, lección `europa`.) |
+| Susto o anuncio de un día: huracán, atentado, ataque, estímulo prometido (`susto`) | **No** | 65 casos: −0,7 % en 20 sesiones; sube el 45 %. El beneficiario pierde (−2,5 % a 60 sesiones); el castigado apenas gana (+3,4 %). |
 | Pánico general (`panico`) | **Solo con el miedo alto** | Con el VIX previo ≥ 28, tras un día de −2 % o una racha de tres días que sume −3 %: +10,7 % y +8,0 % en 60 sesiones. Sin ese miedo, nada: cualquier día de −2 % da +2,3 %, igual que un tramo cualquiera (+2,6 %) desde 2000. Da igual comprar al cierre que en la apertura siguiente. |
 | El miedo alto como multiplicador (`miedo`) | **Con condiciones** | Ver «Antes de descartar, cruzar con el miedo», abajo. |
-| Europa y España (`europa`) | **Sí, solo el pánico con miedo alto** | Euro Stoxx 50 o Ibex 35 tras un −2 % con el VIX previo ≥ 28: +5,2 % y +5,1 % en 60 sesiones sobre lo normal, en las dos mitades del periodo; también tras un −2 % de Wall Street, comprando en la apertura europea. En calma, nada. La grande europea que se hunde un 10 %, no. |
-| Sector castigado por una norma o sanción, comprando el castigo (`norma`) | **Con condiciones** | 9 casos: +14,5 % en 60 sesiones (78 %), pero pocos y casi todos de chips en años de subida. |
+| Europa y España (`europa`) | **Sí, solo el pánico con miedo alto** | Euro Stoxx 50 o Ibex 35 tras un −2 % con el VIX previo ≥ 28: +5,6 % y +5,1 % en 60 sesiones sobre lo normal, en las dos mitades del periodo; también tras un −2 % de Wall Street, comprando en la apertura europea. La grande europea que se hunde un 10 % con miedo alto, como en EE. UU. (+19,6 %, sin problema propio). En calma, nada. Competidoras, contagio y sector castigado no se cumplen en Europa. Son unas 12–16 crisis distintas. |
+| Sector castigado por una norma o sanción, comprando el castigo (`norma`) | **Con condiciones** | 7 casos: +16,4 % en 60 sesiones (86 %), pero pocos y casi todos de chips en años de subida. |
 | Gigante que cae desde cerca de máximos (`caido`) | **No** | 581 casos: −1,6 % en 20 sesiones; 54 caídas famosas: −6,0 %. Solo rebotan las ya muy castigadas, y esa cifra está inflada. |
 | Competencia del que tropieza (`rival`) | **Solo si suben ese día** | Si las competidoras suben ≥ 2 % el mismo día del tropiezo (113 casos): +2,7 % en 20 sesiones (t 2,1). Sin eso, nada. |
 | Ataque informático que obliga a gastar en protección (`ataque`) | **Con condiciones** | 10 casos: +5,5 % en 20 sesiones (80 %). Vale para ciberseguridad; el único caso de avería física (FAA, 2023) no funcionó. |
@@ -82,9 +82,9 @@ Sale de simular cada tipo de idea sobre hechos pasados desde 2000, en EE. UU. y 
 | Anuncio de split (`split`) o de entrada en el S&P 500 (`indice`), los dos con la lección `impulso_corto` | **Con condiciones** | Empuje de unas semanas (split: +3,2 % en 20 sesiones, sube el 67 %), que se diluye a tres meses. El día en que entra de verdad en el índice, ya tarde: −0,9 % en 5 sesiones. |
 | Informe de un fondo bajista, comprando el castigo (`bajista`) | **Con condiciones** | Sin patrón: unas veces tenía razón y otras no. Solo tras una respuesta seria (auditor, regulador, cuentas a tiempo). |
 | Café, cacao, azúcar, ganado (`agricola`) | **No** | Nada que se distinga del azar; el cacao caro sigue castigando al chocolate después. |
-| Tras una gran compra, las siguientes candidatas (`opa`) · arrastradas por el aviso de otra (`canario`, se mide con `opa`) | **No** | 17 y 11 casos: las candidatas, +1,1 % a 60 sesiones; las arrastradas, −7,9 %. |
-| Fusión u OPA que se rompe, comprando a la que iba a ser comprada (`fusion_rota`) | **No** | 7 casos: −12,3 % el día de la ruptura y −1,3 % en las 20 sesiones siguientes. Unas veces valía más sola y otras el comprador sabía algo. |
-| Aranceles anunciados, comprando a los castigados (`aranceles`) | **No** | 6 casos: −0,3 % en 20 sesiones. Depende de una pausa o un acuerdo que nadie sabe el día del anuncio. Si llegan en pleno pánico, manda `panico`. |
+| Tras una gran compra, las siguientes candidatas (`opa`) · arrastradas por el aviso de otra (`canario`, se mide con `opa`) | **No** | 16 y 11 casos: las candidatas, +1,1 % a 60 sesiones; las arrastradas, −7,9 %. |
+| Fusión u OPA que se rompe, comprando a la que iba a ser comprada (`fusion_rota`) | **No** | 6 casos: −13,3 % el día de la ruptura y −2,0 % en las 20 sesiones siguientes. Unas veces valía más sola y otras el comprador sabía algo. |
+| Aranceles anunciados, comprando a los castigados (`aranceles`) | **No** | 4 casos: +1,3 % en 20 sesiones, casi todo por la pausa del «Día de la Liberación». Depende de una pausa o un acuerdo que nadie sabe el día del anuncio. Si llegan en pleno pánico, manda `panico`. |
 | Multa o norma de Bruselas contra un gigante (`bruselas`) | **No** | 9 casos: +0,3 % el día de la multa. No hay castigo que comprar ni motivo para vender. |
 | Gran recompra de acciones (`recompra`) | **No, sola** | 8 casos, casi todos junto a los resultados; la media la sostienen dos. Suma si acompaña a un hecho que ya es idea. |
 | Beneficiario evidente de una materia prima o de los tipos (`obvio`) | **No** | Ni en un día ni en una semana: después del movimiento no queda nada. Tampoco en Europa (IAG tras un −4 % del petróleo: −0,3 %). |
@@ -96,9 +96,9 @@ Antes de dar una idea de tipo `estructural`, comprobar que no es en realidad una
 **Antes de descartar, cruzar con el miedo.** Al combinar lecciones (validando cada combinación por separado en 2000–2013 y en 2014–2026) sale un multiplicador común: el índice del miedo (VIX). Con el VIX en 28 o más:
 
 - Pánico del mercado: comprar **semiconductores (SMH)** ha dado más que el Nasdaq entero (+10,4 % frente a +8,9 % en 60 sesiones).
-- Una acción grande que cae un 10 % en un día de tormenta, **sin un problema propio** detrás: +18,6 % en 60 sesiones. En calma, lo contrario (−1,3 %). En Europa, la misma combinación sale alta pero sin distinguirse del azar: pista, no regla.
+- Una acción grande que cae un 10 % en un día de tormenta, **sin un problema propio** detrás: +18,6 % en 60 sesiones. En calma, lo contrario (−1,3 %). En Europa se repite: +19,6 % (82 casos), aunque después de 2014 solo hay 13.
 - Competidoras castigadas el día en que el líder se dispara: +9,0 %.
-- El castigado de un susto: +4,7 % (17 casos).
+- El castigado de un susto: +4,8 % (16 casos).
 
 Así que un descarte de tipo `caido`, `susto` (comprar al castigado) o `contagio` se revisa si ese día el VIX está en 28 o más. Si la caída es por un escándalo o por malos resultados propios, sigue siendo «no» aunque haya tormenta.
 
