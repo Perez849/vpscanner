@@ -292,7 +292,7 @@ def reglas_europa(m: Dict, movers: List[tuple]) -> List[str]:
         out.append('Wall Street −2 % con el miedo alto: también es IDEA en Europa, comprando el Euro Stoxx 50 o el Ibex 35 en la apertura europea siguiente (lección «europa»).')
     for sym, ch in movers:
         if ch <= -10:
-            out.append(f'Europa ({fe}): {sym} {ch:+.1f} %: ' + ('con miedo alto, en Europa no está probado que rebote (pista, no regla) y nunca si es un problema propio (lecciones «miedo» y «europa»).' if alto else 'gigante caído sin miedo alto: no se compra (lecciones «caido» y «europa»).'))
+            out.append(f'Europa ({fe}): {sym} {ch:+.1f} %: ' + ('con miedo alto, revisar como castigo excesivo si NO es un problema propio, igual que en EE. UU. (lecciones «miedo» y «europa»).' if alto else 'gigante caído sin miedo alto: no se compra (lecciones «caido» y «europa»).'))
         elif ch >= 10:
             out.append(f'Europa ({fe}): {sym} {ch:+.1f} %: no se persigue el salto (lección «europa»); mira si sus competidoras caen hoy (lección «contagio»).')
     return out

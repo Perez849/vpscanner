@@ -31,8 +31,10 @@ EXTRA = ('SPY QQQ IWM CL=F GC=F NG=F HG=F ZW=F ^TNX ^VIX BTC-USD XLU KRE GDX VNQ
          'KC=F CC=F SB=F ZC=F LE=F SBUX HSY MDLZ TSN HRL CAG XYZ IEP RBLX CVNA APP HOOD EME DASH WSM JBL BLDR KKR GDDY DELL PLTR '
          'BIIB ZIM MATX LUV TXN PSX HON CRM NFLX CMG HPQ MSI CL KMB '
          'TSEM CPRI ACI NXPI WTW QCOM BRK-B NUE STLD BA CAT DE RH DECK').split()
-from .europa import EURO as EU_EURO, ES as EU_ES, IDX as EU_IDX, is_eu        # una sola lista para el entrenamiento y las alertas
-EXTRA += EU_EURO + EU_ES + EU_IDX
+from .europa import EURO as EU_EURO, ES as EU_ES, IDX as EU_IDX, SECTOR as EU_SECTOR, MISMA as EU_MISMA, is_eu        # una sola lista para el entrenamiento y las alertas
+SIN_EU = bool(os.environ.get('VP_SIN_EUROPA'))                       # solo para comprobar que Europa no cambia nada de EE. UU.: entrena sin ningún valor europeo
+if not SIN_EU:
+    EXTRA += EU_EURO + EU_ES + EU_IDX
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', default='data')
 ap.add_argument('--cache', default='.cache/ideas')
@@ -121,18 +123,71 @@ with ThreadPoolExecutor(max_workers=6) as ex:
 print(f'precios: {got} de {len(set(list(uni) + EXTRA))}', flush=True)
 
 
+def limpia_eu(d):
+    """Valores europeos: ni el cierre ajustado ni el sin ajustar de Yahoo son fiables siempre. El ajustado se rompe a veces (negativo en Inditex, Endesa, UniCredit,
+    AB InBev, Acciona, Indra, Meliá…); el sin ajustar trae los dividendos extraordinarios como caídas (Endesa 2014, −48 %). Así que la serie se rehace día a día:
+    la variación del ajustado si es coherente; la del sin ajustar si el ajustado es negativo o se dispara él solo. Después se quitan los errores de dato:
+    los saltos con forma exacta de split no aplicado (×2, ÷2, ×3…: Deutsche Börse 2007), todo lo anterior al último salto imposible para una grande (×4 o ÷4 en un día:
+    Bankinter 2002–2005) y los tramos entre un salto de un día de ±40 % y su vuelta al nivel previo (Bankinter 2007 y 2011). Devuelve cierre, apertura y lo que se ha tocado."""
+    d = d[~((d.v.fillna(0) <= 0) & (d.c == d.c.shift(1)))]                  # sin negociación (antes de cotizar, festivos que Yahoo rellena con el cierre anterior): no es un día
+    z = (d.c.diff() == 0).astype(int).values                              # precio congelado la mitad de un mes (Sabadell antes de cotizar en abril de 2001, tramos sin datos):
+    fin = np.flatnonzero(pd.Series(z).rolling(20).sum().values >= 10)       # esas semanas no son precios de verdad y se anulan, con el día siguiente
+    quieto = np.zeros(len(d) + 1, bool)
+    for e in fin: quieto[max(0, e - 19):e + 2] = True
+    quieto = quieto[:len(d)]
+    a, c, o = d.a.values, d.c.values, d.o.values
+    with np.errstate(all='ignore'):
+        rc = c[1:] / c[:-1] - 1
+        ra = np.where((a[1:] > 0) & (a[:-1] > 0), a[1:] / a[:-1] - 1, np.nan)
+    r = np.where(np.isfinite(ra) & ~((np.abs(ra - rc) > 0.2) & (np.abs(ra) > np.abs(rc))), ra, rc)
+    r = np.where(np.isfinite(r), r, rc)
+    sp = 0
+    for k in range(len(r)):                                               # split no aplicado: el salto es casi exactamente una razón de split
+        x = 1 + r[k]
+        if x > 0 and any(abs(x / q - 1) <= 0.03 for q in (1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10, 2, 3, 4, 5, 10)):
+            r[k] = 0.0; sp += 1
+    lc = np.log(np.concatenate([[1.0], np.cumprod(1 + r)]))
+    cl = np.exp(lc - lc[-1]) * c[-1]                                      # anclado al último cierre real
+    q = o / c
+    op = cl * np.where((q > 0.67) & (q < 1.5), q, 1.0)                     # la apertura guarda su distancia con el cierre del mismo día; si es absurda (sin ajustar a un split), vale el cierre
+    rr = np.diff(lc, prepend=lc[0])
+    bad = np.zeros(len(cl), bool)
+    imp = np.flatnonzero(np.abs(rr) >= np.log(4))
+    if len(imp): bad[:imp[-1]] = True
+    k = 1
+    while k < len(lc):
+        if not bad[k] and abs(rr[k]) >= np.log(1.4):
+            for m in range(k + 1, min(k + 60, len(lc))):
+                if np.sign(rr[m]) == -np.sign(rr[k]) and abs(rr[m]) >= 0.8 * abs(rr[k]) and abs(lc[m] - lc[k - 1]) <= np.log(1.15):
+                    bad[k:m] = True; k = m; break
+        k += 1
+    bad |= quieto
+    cl, op = pd.Series(cl, index=d.index), pd.Series(op, index=d.index)
+    cl[bad] = np.nan; op[bad] = np.nan
+    return cl, op, int(bad.sum()) + sp
+LIMPIEZA = {}
+
+
 def load():
     A, O, DV = {}, {}, {}
     for f in os.listdir(PX):
-        s = f[:-5]; j = json.load(open(os.path.join(PX, f)))
+        s = f[:-5]
+        if SIN_EU and is_eu(s): continue
+        j = json.load(open(os.path.join(PX, f)))
         t = pd.to_datetime(np.array(j['t'], dtype='int64'), unit='s').normalize()
         d = pd.DataFrame({'o': j['o'], 'c': j['c'], 'a': j['a'], 'v': j['v']}, index=t).astype('float64')
         d = d[~d.index.duplicated(keep='last')]; d = d[(d.c > 0)]
+        if is_eu(s):                                                     # Europa: cierre sin ajustar y sin errores de dato (ver limpia_eu); EE. UU. no cambia
+            c_, o_, nb = limpia_eu(d)
+            if nb: LIMPIEZA[s] = nb
+            A[s] = c_; O[s] = o_; DV[s] = d.c * d.v
+            continue
         A[s] = d.a; O[s] = d.o * d.a / d.c; DV[s] = d.c * d.v
     idx = A['SPY'].index
     A = pd.DataFrame(A).reindex(idx); O = pd.DataFrame(O).reindex(idx); DV = pd.DataFrame(DV).reindex(idx)
     return A, O, DV
 A, O, DV = load(); idx = A.index; R = A.pct_change(fill_method=None)
+if LIMPIEZA: print('Europa · sesiones anuladas por errores de dato:', LIMPIEZA, flush=True)
 R = R.where((R < 4) & (R > -0.95))
 pos = {d: i for i, d in enumerate(idx)}
 Av, Ov = A.values, O.values; col = {s: i for i, s in enumerate(A.columns)}
@@ -648,7 +703,7 @@ print(f'combinaciones probadas: {len(COMBOS)} · por azar cabe esperar que algun
 
 G = 'Casos con nombre'
 # ── Europa: las mismas preguntas con valores europeos y españoles, medidos frente a la media de su propio grupo (no frente al SPY) ──
-EUc = [s_ for s_ in EU_EURO + EU_ES if s_ in col]                     # grandes europeas con precios (incluye las del Ibex)
+EUc = [s_ for s_ in EU_EURO + EU_ES if s_ in col and s_ not in EU_MISMA]   # grandes europeas con precios (incluye las del Ibex; ArcelorMittal una sola vez)
 ESc = [s_ for s_ in EU_ES if s_ in col]
 BANK_ES = [s_ for s_ in 'SAN.MC BBVA.MC CABK.MC SAB.MC BKT.MC UNI.MC'.split() if s_ in col]
 def win(i, syms, h):
@@ -718,6 +773,34 @@ if EUc and '^STOXX50E' in col and '^IBEX' in col:
     eu_add('Una grande española cae ≥ 10 % en un día → comprar la propia caída', 'Lo mismo, solo el Ibex.', eu_rows([e for e in ce if e[1] in ESc]))
     eu_add('Una grande europea sube ≥ 10 % en un día → seguir comprándola', 'La buena noticia tarda en digerirse.', eu_rows(se))
     vxe = lambda e: vixp[e[0]]
+    G = 'Europa · competidoras y contagio (sectores puestos a mano)'
+    peers_of = lambda s_: [p_ for p_ in EUc if p_ != s_ and EU_SECTOR.get(p_) == EU_SECTOR.get(s_) and EU_MISMA.get(p_) != s_ and EU_MISMA.get(s_) != p_]
+    pe = []                                                              # (i, valor, competidoras, movimiento, movimiento medio de las competidoras sobre la media europea)
+    for e in ce + se:
+        i, s_ = e[0], e[1]; pp = peers_of(s_)
+        if len(pp) < 2: continue
+        with np.errstate(all='ignore'):
+            pmv = np.nanmean(R.values[i, [col[p_] for p_ in pp]]) - ewE[i]
+        if np.isfinite(pmv): pe.append((i, s_, pp, e[3], pmv))
+    def peer_rows(sel):
+        return [(i, pmv, *[after_eu(i, pp, h) for h in (5, 20, 60)]) for i, s_, pp, r, pmv in sel]
+    def pe_add(nombre, logica, rows, nota='exceso de las competidoras sobre la media de las grandes europeas; «el mismo día» es lo que hicieron ellas'):
+        r_ = summ([x[1:] for x in rows]); r_['nota'] = nota; add(G, nombre, logica, r_)
+    pe_add('Una grande europea cae ≥ 10 % → sus competidoras', 'Lo que pierde una lo ganan las otras.', peer_rows([e for e in pe if e[3] < 0]))
+    pe_add('Una grande europea cae ≥ 10 % y sus competidoras suben ≥ 2 % ese día → sus competidoras', 'Trasvase de negocio (lección «rival»).', peer_rows([e for e in pe if e[3] < 0 and e[4] >= 0.02]))
+    pe_add('Una grande europea cae ≥ 10 % y sus competidoras caen con ella (≥ 1 %) → sus competidoras', 'Contagio del sector: ¿rebotan?', peer_rows([e for e in pe if e[3] < 0 and e[4] <= -0.01]))
+    pe_add('Una grande europea sube ≥ 10 % → sus competidoras', 'La buena noticia de una, ¿vale para el sector?', peer_rows([e for e in pe if e[3] > 0]))
+    pe_add('Una grande europea sube ≥ 10 % y sus competidoras CAEN ese día (≥ 1 %) → sus competidoras', 'El mercado decide que el líder les quita negocio (lección «contagio»).', peer_rows([e for e in pe if e[3] > 0 and e[4] <= -0.01]))
+    secs = {}
+    for s_ in EUc: secs.setdefault(EU_SECTOR.get(s_), []).append(s_)
+    rows = []
+    for sec, vv in secs.items():
+        if len(vv) < 3: continue
+        with np.errstate(all='ignore'):
+            rel = np.nanmean(R.values[:, [col[v_] for v_ in vv]], axis=1) - ewE
+        for i in thin(idx[since & (rel <= -0.03)]):
+            if i + 61 < len(idx): rows.append((i, rel[i], *[after_eu(i, vv, h) for h in (5, 20, 60)]))
+    pe_add('Un sector europeo cae ≥ 3 % más que el resto en un día → comprar ese sector', 'El castigo a un sector entero suele ser excesivo.', rows, 'exceso del sector sobre la media de las grandes europeas')
     G = 'Europa · grandes valores (validadas en dos mitades)'
     combo('Una grande europea cae ≥ 10 % con el miedo alto (VIX ≥ 28) → comprar la caída', 'La combinación más fuerte de EE. UU., en Europa.', eu_rows([e for e in ce if vxe(e) >= 28]))
     combo('Una grande europea cae ≥ 10 % con el miedo bajo (VIX < 18) → comprar la caída', 'En calma: problema propio.', eu_rows([e for e in ce if vxe(e) < 18]))
@@ -1148,12 +1231,13 @@ for d, name, b, tp in CASES:
     if not b: print('  sin datos:', name); continue
     v = lambda x: None if not np.isfinite(x) else round(100 * x, 2)
     if all(is_eu(x) for x in b) and EUc:                                   # europeas: frente a la media de las grandes europeas, que cotizan en su mismo horario
-        done.append({'n': 1, 'd0': v(day0_eu(i, b)), 'e5': v(after_eu(i, b, 5)), 'e20': v(after_eu(i, b, 20)), 'e60': v(after_eu(i, b, 60)), 'valores': b, 'fecha': str(d.date()), 'tipo': tp, 'nombre': name, 'nota': 'frente a la media de las grandes europeas'})
+        done.append({'n': 1, 'd0': v(day0_eu(i, b)), 'e5': v(after_eu(i, b, 5)), 'e20': v(after_eu(i, b, 20)), 'e60': v(after_eu(i, b, 60)), 'valores': b, 'fecha': str(d.date()), 'tipo': tp, 'nombre': name, 'nota': 'frente a la media de las grandes europeas', 'region': 'Europa'})
         continue
     done.append({'n': 1, 'd0': v(day0(i, b)), 'e5': v(after(i, b, 5)), 'e20': v(after(i, b, 20)), 'e60': v(after(i, b, 60)), 'valores': b, 'fecha': str(d.date()), 'tipo': tp, 'nombre': name})
 G = 'Afinar · casos con nombre según cómo fue el primer día'
+US_ = lambda c_: c_.get('region') != 'Europa'                           # los resúmenes de EE. UU. no mezclan casos medidos frente a otro índice
 def bucket(nombre, logica, sel):
-    x = [c_ for c_ in done if sel(c_)]
+    x = [c_ for c_ in done if US_(c_) and sel(c_)]
     m = lambda k: (lambda v: round(float(np.mean(v)), 2) if v else None)([c_[k] for c_ in x if c_[k] is not None])
     hh = lambda k: (lambda v: int(round(100 * np.mean([y > 0 for y in v]))) if v else None)([c_[k] for c_ in x if c_[k] is not None])
     add(G, nombre, logica, {'n': len(x), 'd0': m('d0'), 'e5': m('e5'), 'e20': m('e20'), 'e60': m('e60'), 'hit20': hh('e20'), 'hit60': hh('e60')})
@@ -1177,10 +1261,17 @@ bucket('Gigante caído por un escándalo, accidente o demanda', 'El negocio no h
 bucket('Gigante caído por sus propios resultados o previsiones', 'El negocio va peor de lo que se creía.', lambda c_: c_['tipo'] == 'C' and not re.search(r'SEC|coli|falsas|pasajero|datos|Analytica|Talco|accidente|puerta|Deepwater|ballena|Informe|demanda|Apagón|retira|para sus ventas', c_['nombre']))
 G = 'Casos con nombre · resumen por tipo'
 for tp, lab in TIPOS.items():
-    cs = [c for c in done if c['tipo'] == tp]
+    cs = [c for c in done if c['tipo'] == tp and US_(c)]
     m = lambda k: (lambda x: round(float(np.mean(x)), 2) if x else None)([c[k] for c in cs if c[k] is not None])
     h = lambda k: (lambda x: int(round(100 * np.mean([y > 0 for y in x]))) if x else None)([c[k] for c in cs if c[k] is not None])
     add(G, lab, f'{len(cs)} casos elegidos a mano', {'n': len(cs), 'd0': m('d0'), 'e5': m('e5'), 'e20': m('e20'), 'e60': m('e60'), 'hit20': h('e20'), 'hit60': h('e60'), 'tipo': tp})
+G = 'Europa · casos con nombre por tipo (frente a la media de las grandes europeas)'
+for tp, lab in TIPOS.items():
+    cs = [c for c in done if c['tipo'] == tp and not US_(c)]
+    if not cs: continue
+    m = lambda k: (lambda x: round(float(np.mean(x)), 2) if x else None)([c[k] for c in cs if c[k] is not None])
+    h = lambda k: (lambda x: int(round(100 * np.mean([y > 0 for y in x]))) if x else None)([c[k] for c in cs if c[k] is not None])
+    add(G, lab, f'{len(cs)} casos europeos elegidos a mano', {'n': len(cs), 'd0': m('d0'), 'e5': m('e5'), 'e20': m('e20'), 'e60': m('e60'), 'hit20': h('e20'), 'hit60': h('e60')})
 G = 'Casos con nombre'
 for c in sorted(done, key=lambda c: ('EDSNVAMKLCRBJXPIFHWOTUY'.index(c['tipo']), c['fecha'])):
     add(G, c['nombre'], TIPOS[c['tipo']].split(' (')[0], {k: v for k, v in c.items() if k != 'nombre'})
@@ -1224,7 +1315,7 @@ if 'SMH' in col: salida('Pánico con miedo alto → semiconductores', 'La varian
 salida('Una grande cae ≥ 10 % con el miedo alto → la propia caída', 'Comprar al castigado en plena tormenta.', [(e[0], [e[1]]) for e in evs['caida'] if vxs(e) >= 28])
 salida('Una grande cae ≥ 10 % con el miedo bajo → la propia caída', 'Comprar al castigado en calma (la que no funciona).', [(e[0], [e[1]]) for e in evs['caida'] if vxs(e) < 18])
 salida('El líder sube ≥ 10 % y castigan a sus competidoras con miedo → las competidoras', 'Castigo en plena tormenta.', [(e[0], e[2]) for e in evs['salto'] if e[4] <= -0.01 and vxs(e) >= 25])
-cs_ = lambda tp: [(pos[pd.Timestamp(c_['fecha'])], c_['valores']) for c_ in done if c_['tipo'] == tp and pd.Timestamp(c_['fecha']) in pos]
+cs_ = lambda tp: [(pos[pd.Timestamp(c_['fecha'])], c_['valores']) for c_ in done if c_['tipo'] == tp and US_(c_) and pd.Timestamp(c_['fecha']) in pos]
 salida('Sector castigado por una norma → comprar el castigo (casos con nombre)', 'Como la idea del veto de chips.', cs_('N'))
 salida('Hechos consumados → el beneficiario (casos con nombre)', 'La idea de cambio duradero.', cs_('E'))
 if EUc and '^STOXX50E' in col and '^IBEX' in col:
