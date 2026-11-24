@@ -1,6 +1,6 @@
 {
  "generado": "2026-11-24",
- "resumen": "He simulado 244 tipos de idea sobre más de 71.000 hechos pasados desde 2000, incluidas la burbuja puntocom y la crisis de 2008, en EE. UU. y también en Europa y España, y 401 episodios con nombre propio de 23 familias. Lo que paga: los hechos consumados que cambian el mundo, comprar el miedo solo cuando ya es alto (también en el Euro Stoxx 50 y el Ibex), el sector castigado por una norma y, al cruzar lecciones, los castigos que llegan en plena tormenta. Lo que no: lo evidente, los sustos de un día, las decisiones anunciadas, el gigante que cae desde máximos, las buenas noticias de la propia empresa y, por sí solos, los aranceles, las multas de Bruselas, las fusiones rotas y las recompras. Y cómo se sale: por un hecho o por el horizonte, no con un stop ajustado.",
+ "resumen": "He simulado 253 tipos de idea sobre más de 71.000 hechos pasados desde 2000, incluidas la burbuja puntocom y la crisis de 2008, en EE. UU. y también en Europa y España, y 412 episodios con nombre propio de 23 familias. Lo que paga: los hechos consumados que cambian el mundo, comprar el miedo solo cuando ya es alto (también en el Euro Stoxx 50 y el Ibex), el sector castigado por una norma y, al cruzar lecciones, los castigos que llegan en plena tormenta. Lo que no: lo evidente, los sustos de un día, las decisiones anunciadas, el gigante que cae desde máximos, las buenas noticias de la propia empresa y, por sí solos, los aranceles, las multas de Bruselas, las fusiones rotas y las recompras. Y cómo se sale: por un hecho o por el horizonte, no con un stop ajustado.",
  "metodo": "Para cada tipo de idea he buscado todos los días desde 2000 en que ocurrió el hecho (por ejemplo, el petróleo cayendo un 4 % o más) y he simulado comprar los valores «lógicos» en la apertura del día siguiente, que es cuando de verdad podrías actuar. Se mide lo que ganan de más sobre el S&P 500 y se resta lo que ese grupo hace en un día cualquiera. Los valores europeos se miden igual, pero frente a la media de las grandes europeas (o del Ibex), que cotizan en su mismo horario. Y en «Salidas» se sigue cada idea día a día durante sus 60 sesiones, para ver cuánto cae por el camino y qué habría hecho un stop. De ahí salen estas lecciones, que son el filtro de cada lectura.",
  "cautelas": "Cautelas: las acciones son las que hoy siguen en el S&P 1500, así que faltan las que quebraron o fueron excluidas; eso infla «comprar la caída» en valores ya hundidos, y pesa más en 2000–2008, cuando muchas de las empresas que se hundieron con la burbuja ya no están en los índices. Los casos con nombre están elegidos y clasificados a mano, a toro pasado, y varios tipos tienen menos de diez. Al revisar los «no» he probado unas cuarenta variantes: por puro azar, alguna tenía que salir bien, así que las excepciones encontradas son pistas a vigilar con los casos propios, no certezas. Y un promedio histórico no garantiza el caso siguiente. Las combinaciones se han validado en dos mitades del periodo para no quedarse con casualidades, pero las de acciones sueltas en pleno pánico son las más expuestas al sesgo de supervivencia: muchas de las que se hundieron en 2000–2002 y 2008 y no se recuperaron ya no están en los índices. En Europa, la lista es la de las grandes actuales de la zona euro y del Ibex (con el mismo sesgo de supervivencia), el Euro Stoxx 50 solo tiene datos desde 2007, los sectores se han puesto a mano y el calendario es el de Nueva York (un festivo europeo no cuenta como sesión). Los precios europeos de Yahoo traen errores que se limpian antes de usarlos (ajustes por dividendo rotos, splits sin aplicar, precios congelados, picos de un día); lo que no se ha podido limpiar con seguridad se deja fuera. Y detrás de cada regla de pánico hay menos crisis distintas que casos: unas 12 a 16, con mucho peso de 2008.",
  "lecciones": [
@@ -43,8 +43,8 @@
    "id": "europa",
    "veredicto": "dar",
    "titulo": "Europa y España: el mismo pánico, la misma regla",
-   "texto": "He repetido en Europa las mismas preguntas que en EE. UU., con las grandes de la zona euro y las del Ibex. Cada valor se mide frente a la media de su grupo, que cotiza en su mismo horario, y los índices frente a lo que hacen en un tramo cualquiera. Antes he limpiado los precios: Yahoo trae errores en los europeos (cierres ajustados negativos, splits sin aplicar, meses de precio congelado antes de empezar a cotizar). El resultado se parece mucho al de EE. UU. Funciona comprar el índice (Euro Stoxx 50 o Ibex 35) tras un día de −2 % cuando el miedo ya es alto, y también tras un −2 % de Wall Street, comprando en la apertura europea siguiente. Funciona comprar a la grande europea que se hunde un 10 % en plena tormenta, si no es por un problema propio. Y funcionan los hechos consumados: tras la invasión de Ucrania, la defensa europea ganó un 50 % más que el resto en un mes. No funciona lo mismo que tampoco funciona allí: el castigo en calma, los sustos de un día (Brexit, Grecia, Italia, las elecciones de Macron), el gigante caído (Bayer, Adyen), el informe de un bajista (Grifols) y lo evidente (petróleo → aerolíneas o petroleras, gas → BASF o eléctricas, euro → exportadoras). Tampoco se cumplen las competidoras, el contagio ni el sector castigado. Dos pistas propias de Europa, con muy pocos casos: las decisiones de rescate de los bancos centrales y de Bruselas dieron más que en EE. UU., y los impuestos a la banca (España 2022, Italia 2023) se recuperaron con creces. Cuántos casos hay de verdad: detrás de los 43 pánicos del Euro Stoxx hay unas 12 crisis distintas, y 16 detrás de los 55 del Ibex. La de 2008 pesa mucho, pero sin 2008–2009 la regla aguanta igual.",
-   "cifra": "Euro Stoxx 50 −2 % con el VIX previo ≥ 28 (43 casos, desde 2007): +5,6 % en 60 sesiones sobre lo normal (t 3,3; +4,8 % en 2007–2013 y +6,9 % en 2014–2026). Ibex 35 (55 casos): +5,1 % (t 3,2; +5,3 % y +4,4 %). Tras un −2 % de Wall Street con miedo alto: Euro Stoxx +5,4 %, Ibex +4,6 %. Viniendo de calma: −0,7 % y −0,8 %. Grande europea que cae ≥ 10 % con miedo alto (87 casos): +18,0 % (t 2,4; +20,8 % hasta 2013 y +6,1 % después, con 16 casos); en calma (131): −2,2 % en 20 sesiones. Casos con nombre, frente a las grandes europeas: hechos consumados (3) +22 % a 60 sesiones; decisiones (7) +9,1 % (suben 6 de 7); normas e impuestos (3) +9,1 %; sustos (6) −0,4 %; gigantes caídos (2) −20 % a 20 sesiones; Grifols tras Gotham −23 %. Lo evidente: petróleo −4 % → aerolíneas europeas −0,3 %; petróleo +4 % → petroleras +0,9 %; gas → BASF y eléctricas, nada; euro +1 % → exportadoras +0,1 %. Competidoras con trasvase claro: 10 casos, +1,7 %; sector castigado ≥ 3 % (608): +0,6 %. Bancos españoles en el pánico: +4,0 % hasta 2013 y −0,3 % después."
+   "texto": "He repetido en Europa las mismas preguntas que en EE. UU., con las grandes de la zona euro y las del Ibex. Cada valor se mide frente a la media de su grupo, que cotiza en su mismo horario, y los índices frente a lo que hacen en un tramo cualquiera. Antes he limpiado los precios: Yahoo trae errores en los europeos (cierres ajustados negativos, splits sin aplicar, meses de precio congelado antes de empezar a cotizar). El resultado se parece mucho al de EE. UU. Funciona comprar el índice (Euro Stoxx 50 o Ibex 35) tras un día de −2 % o una racha de tres días que sume −3 % cuando el miedo ya es alto, y también tras un −2 % de Wall Street, comprando en la apertura europea siguiente. Funciona comprar a la grande europea que se hunde un 10 % en plena tormenta, si no es por un problema propio. Y funcionan los hechos consumados: tras la invasión de Ucrania, la defensa europea ganó un 50 % más que el resto en un mes. No funciona lo mismo que tampoco funciona allí: el castigo en calma, los sustos de un día (Brexit, Grecia, Italia, las elecciones de Macron), el gigante caído (Bayer, Adyen), el informe de un bajista (Grifols) y lo evidente (petróleo → aerolíneas o petroleras, gas → BASF o eléctricas, euro → exportadoras). Tampoco se cumplen las competidoras, el contagio ni el sector castigado. Y el contagio desde Wall Street no se compra: cuando los chips de EE. UU. se hunden, ASML e Infineon siguen peor que el resto de Europa durante meses. Comprar a la europea que cae cerca de máximos sale mal, como allí; la que ya venía hundida rebota, pero esa cifra está inflada por las que quebraron y ya no están (Popular, Bankia, Wirecard). Dos pistas propias de Europa, con muy pocos casos: las decisiones de rescate de los bancos centrales y de Bruselas dieron más que en EE. UU., y los impuestos a la banca (España 2022, Italia 2023) se recuperaron con creces. Cuántos casos hay de verdad: detrás de los 43 pánicos del Euro Stoxx hay unas 12 crisis distintas, y 16 detrás de los 55 del Ibex. La de 2008 pesa mucho, pero sin 2008–2009 la regla aguanta igual.",
+   "cifra": "Euro Stoxx 50 −2 % con el VIX previo ≥ 28 (43 casos, desde 2007): +5,6 % en 60 sesiones sobre lo normal (t 3,3; +4,8 % en 2007–2013 y +6,9 % en 2014–2026). Ibex 35 (55 casos): +5,1 % (t 3,2; +5,3 % y +4,4 %). Racha de tres días −3 % con miedo alto: Euro Stoxx +6,4 % (34), Ibex +5,0 % (45), en las dos mitades. Tras un −2 % de Wall Street con miedo alto: Euro Stoxx +5,4 %, Ibex +4,6 %. Viniendo de calma: −0,7 % y −0,8 %. Grande europea que cae ≥ 10 % con miedo alto (87 casos): +18,0 % (t 2,4; +20,8 % hasta 2013 y +6,1 % después, con 16 casos); en calma (131): −2,2 % en 20 sesiones; cerca de máximos (89): −3,0 % en 60 (t −2,4); ya hundida −30 % (158): +10,9 % (inflado por la supervivencia). Chips de EE. UU. −4 % frente al S&P 500 → ASML e Infineon: −6,6 % en 60 sesiones (t −2,8); bancos de EE. UU. → bancos europeos: nada. Casos con nombre, frente a las grandes europeas, a 60 sesiones: hechos consumados (4) +16 %; decisiones (9) +6,8 % (suben 7 de 9); normas e impuestos (6) +7,1 %; sustos (7) −0,4 %; gigantes caídos (5) −13 % a 20 sesiones (Volkswagen tras el diésel −28 %); Grifols tras Gotham −23 %. Lo evidente: petróleo −4 % → aerolíneas europeas −0,3 %; petróleo +4 % → petroleras +0,9 %; gas → BASF y eléctricas, nada; euro +1 % → exportadoras +0,1 %. Competidoras con trasvase claro: 10 casos, +1,7 %; sector castigado ≥ 3 % (608): +0,6 %. Bancos españoles en el pánico: +4,0 % hasta 2013 y −0,3 % después."
   },
   {
    "id": "norma",
@@ -4339,6 +4339,224 @@
    "nota": "2000–2013: -1.5 % a 60 sesiones (51 casos) · 2014–2026: -0.4 % (80 casos)"
   },
   {
+   "grupo": "Europa · grandes valores (validadas en dos mitades)",
+   "nombre": "Una grande europea ya hundida (−30 %) cae otro 10 % → comprar la caída",
+   "logica": "Capitulación.",
+   "n": 158,
+   "d0": -13.16,
+   "e5": -0.73,
+   "t5": -0.7,
+   "hit5": 43,
+   "e20": 2.85,
+   "t20": 1.5,
+   "hit20": 48,
+   "e60": 10.87,
+   "t60": 2.4,
+   "hit60": 52,
+   "mitad1": {
+    "n": 118,
+    "e20": 3.01,
+    "e60": 11.16,
+    "t60": 1.9
+   },
+   "mitad2": {
+    "n": 40,
+    "e20": 2.37,
+    "e60": 10.02,
+    "t60": 2.2
+   },
+   "robusta": true,
+   "nota": "2000–2013: +11.2 % a 60 sesiones (118 casos) · 2014–2026: +10.0 % (40 casos) · funciona en las dos mitades"
+  },
+  {
+   "grupo": "Europa · grandes valores (validadas en dos mitades)",
+   "nombre": "Una grande europea cae ≥ 10 % estando cerca de máximos → comprar la caída",
+   "logica": "Estaba cotizada para la perfección (lección «caido»).",
+   "n": 89,
+   "d0": -13.04,
+   "e5": -1.45,
+   "t5": -2.7,
+   "hit5": 43,
+   "e20": -2.03,
+   "t20": -2.6,
+   "hit20": 38,
+   "e60": -3.03,
+   "t60": -2.4,
+   "hit60": 44,
+   "mitad1": {
+    "n": 49,
+    "e20": -1.89,
+    "e60": -1.57,
+    "t60": -1.0
+   },
+   "mitad2": {
+    "n": 40,
+    "e20": -2.2,
+    "e60": -4.91,
+    "t60": -2.5
+   },
+   "robusta": false,
+   "nota": "2000–2013: -1.6 % a 60 sesiones (49 casos) · 2014–2026: -4.9 % (40 casos)"
+  },
+  {
+   "grupo": "Europa · grandes valores (validadas en dos mitades)",
+   "nombre": "Una grande europea sube ≥ 10 % y marca máximo del año → seguir comprándola",
+   "logica": "Ruptura con noticia.",
+   "n": 44,
+   "d0": 13.12,
+   "e5": -1.47,
+   "t5": -1.0,
+   "hit5": 41,
+   "e20": -0.95,
+   "t20": -0.4,
+   "hit20": 38,
+   "e60": 6.51,
+   "t60": 1.7,
+   "hit60": 52,
+   "mitad1": {
+    "n": 16,
+    "e20": -3.6,
+    "e60": 7.18,
+    "t60": 1.1
+   },
+   "mitad2": {
+    "n": 28,
+    "e20": 0.52,
+    "e60": 6.13,
+    "t60": 1.3
+   },
+   "robusta": false,
+   "nota": "2000–2013: +7.2 % a 60 sesiones (16 casos) · 2014–2026: +6.1 % (28 casos)"
+  },
+  {
+   "grupo": "Europa · rachas con miedo (validadas en dos mitades)",
+   "nombre": "Racha de tres días (−3 %) con el miedo alto → Euro Stoxx 50",
+   "logica": "Mala semana en plena tormenta.",
+   "n": 34,
+   "d0": -2.35,
+   "e5": 1.43,
+   "t5": 1.5,
+   "hit5": 62,
+   "e20": 2.06,
+   "t20": 1.5,
+   "hit20": 61,
+   "e60": 6.39,
+   "t60": 3.4,
+   "hit60": 85,
+   "mitad1": {
+    "n": 24,
+    "e20": 2.26,
+    "e60": 6.74,
+    "t60": 2.7
+   },
+   "mitad2": {
+    "n": 10,
+    "e20": 1.53,
+    "e60": 5.55,
+    "t60": 2.2
+   },
+   "robusta": true,
+   "nota": "2000–2013: +6.7 % a 60 sesiones (24 casos) · 2014–2026: +5.5 % (10 casos) · funciona en las dos mitades"
+  },
+  {
+   "grupo": "Europa · rachas con miedo (validadas en dos mitades)",
+   "nombre": "Racha de tres días (−3 %) con el miedo alto → Ibex 35",
+   "logica": "Lo mismo, con la bolsa española.",
+   "n": 45,
+   "d0": -2.3,
+   "e5": 0.53,
+   "t5": 0.6,
+   "hit5": 62,
+   "e20": 1.42,
+   "t20": 1.1,
+   "hit20": 56,
+   "e60": 5.01,
+   "t60": 3.3,
+   "hit60": 64,
+   "mitad1": {
+    "n": 32,
+    "e20": 0.98,
+    "e60": 5.39,
+    "t60": 2.8
+   },
+   "mitad2": {
+    "n": 13,
+    "e20": 2.5,
+    "e60": 4.1,
+    "t60": 1.7
+   },
+   "robusta": true,
+   "nota": "2000–2013: +5.4 % a 60 sesiones (32 casos) · 2014–2026: +4.1 % (13 casos) · funciona en las dos mitades"
+  },
+  {
+   "grupo": "Europa · contagio desde Wall Street (comprando en la apertura europea siguiente)",
+   "nombre": "Los chips de EE. UU. caen ≥ 4 % más que el S&P 500 → ASML e Infineon",
+   "logica": "¿Se contagia el castigo al día siguiente en Europa?",
+   "n": 55,
+   "d0": -3.61,
+   "e5": -1.05,
+   "t5": -1.2,
+   "hit5": 45,
+   "e20": 0.37,
+   "t20": 0.2,
+   "hit20": 52,
+   "e60": -6.56,
+   "t60": -2.8,
+   "hit60": 36,
+   "nota": "exceso sobre la media a partes iguales de las grandes de su grupo (europeas, o del Ibex para las españolas)"
+  },
+  {
+   "grupo": "Europa · contagio desde Wall Street (comprando en la apertura europea siguiente)",
+   "nombre": "Los chips de EE. UU. suben ≥ 4 % más que el S&P 500 → ASML e Infineon",
+   "logica": "¿Se contagia la buena noticia?",
+   "n": 55,
+   "d0": 2.75,
+   "e5": 0.69,
+   "t5": 0.7,
+   "hit5": 57,
+   "e20": 0.36,
+   "t20": 0.2,
+   "hit20": 53,
+   "e60": -3.74,
+   "t60": -1.0,
+   "hit60": 39,
+   "nota": "exceso sobre la media a partes iguales de las grandes de su grupo (europeas, o del Ibex para las españolas)"
+  },
+  {
+   "grupo": "Europa · contagio desde Wall Street (comprando en la apertura europea siguiente)",
+   "nombre": "Los bancos de EE. UU. caen ≥ 3 % más que el S&P 500 → bancos europeos",
+   "logica": "¿Se contagia el miedo a la banca?",
+   "n": 30,
+   "d0": -0.25,
+   "e5": 0.45,
+   "t5": 0.4,
+   "hit5": 43,
+   "e20": 1.38,
+   "t20": 0.7,
+   "hit20": 50,
+   "e60": 4.06,
+   "t60": 1.1,
+   "hit60": 57,
+   "nota": "exceso sobre la media a partes iguales de las grandes de su grupo (europeas, o del Ibex para las españolas)"
+  },
+  {
+   "grupo": "Europa · contagio desde Wall Street (comprando en la apertura europea siguiente)",
+   "nombre": "Los bancos de EE. UU. suben ≥ 3 % más que el S&P 500 → bancos europeos",
+   "logica": "¿Se contagia la buena noticia?",
+   "n": 37,
+   "d0": 0.86,
+   "e5": 1.38,
+   "t5": 1.7,
+   "hit5": 63,
+   "e20": 1.22,
+   "t20": 0.8,
+   "hit20": 46,
+   "e60": 4.21,
+   "t60": 1.4,
+   "hit60": 66,
+   "nota": "exceso sobre la media a partes iguales de las grandes de su grupo (europeas, o del Ibex para las españolas)"
+  },
+  {
    "grupo": "Europa · materias primas",
    "nombre": "Petróleo cae ≥ 4 % en un día → aerolíneas europeas (IAG, Lufthansa, Air France-KLM)",
    "logica": "El combustible es su mayor coste variable.",
@@ -5065,49 +5283,49 @@
   {
    "grupo": "Europa · casos con nombre por tipo (frente a la media de las grandes europeas)",
    "nombre": "Hecho consumado que cambia el mundo (guerra, paz, vacuna, elecciones, fármaco)",
-   "logica": "3 casos europeos elegidos a mano",
-   "n": 3,
-   "d0": 7.95,
+   "logica": "4 casos europeos elegidos a mano",
+   "n": 4,
+   "d0": 7.4,
    "e5": 13.61,
-   "e20": 19.52,
-   "e60": 22.18,
-   "hit20": 100,
-   "hit60": 100
+   "e20": 13.94,
+   "e60": 16.3,
+   "hit20": 75,
+   "hit60": 75
   },
   {
    "grupo": "Europa · casos con nombre por tipo (frente a la media de las grandes europeas)",
    "nombre": "Decisión anunciada (banco central, ley firmada, plan de empresa)",
-   "logica": "7 casos europeos elegidos a mano",
-   "n": 7,
-   "d0": 5.15,
-   "e5": -3.6,
-   "e20": -1.22,
-   "e60": 9.1,
-   "hit20": 57,
-   "hit60": 86
+   "logica": "9 casos europeos elegidos a mano",
+   "n": 9,
+   "d0": 4.38,
+   "e5": -2.8,
+   "e20": -1.74,
+   "e60": 6.82,
+   "hit20": 44,
+   "hit60": 78
   },
   {
    "grupo": "Europa · casos con nombre por tipo (frente a la media de las grandes europeas)",
    "nombre": "Susto o anuncio de un día",
-   "logica": "6 casos europeos elegidos a mano",
-   "n": 6,
-   "d0": -4.97,
-   "e5": -1.68,
-   "e20": -0.1,
-   "e60": -0.38,
-   "hit20": 67,
-   "hit60": 33
+   "logica": "7 casos europeos elegidos a mano",
+   "n": 7,
+   "d0": -4.92,
+   "e5": -1.14,
+   "e20": -0.26,
+   "e60": -0.41,
+   "hit20": 57,
+   "hit60": 29
   },
   {
    "grupo": "Europa · casos con nombre por tipo (frente a la media de las grandes europeas)",
    "nombre": "Sector castigado por una norma o sanción → comprar el castigo",
-   "logica": "3 casos europeos elegidos a mano",
-   "n": 3,
-   "d0": -4.69,
-   "e5": -0.67,
-   "e20": -0.45,
-   "e60": 9.07,
-   "hit20": 33,
+   "logica": "6 casos europeos elegidos a mano",
+   "n": 6,
+   "d0": -3.18,
+   "e5": -0.08,
+   "e20": 0.57,
+   "e60": 7.12,
+   "hit20": 50,
    "hit60": 67
   },
   {
@@ -5125,14 +5343,26 @@
   {
    "grupo": "Europa · casos con nombre por tipo (frente a la media de las grandes europeas)",
    "nombre": "Comprar al gigante caído",
-   "logica": "2 casos europeos elegidos a mano",
-   "n": 2,
-   "d0": -23.92,
-   "e5": -10.59,
-   "e20": -19.89,
-   "e60": -4.93,
+   "logica": "5 casos europeos elegidos a mano",
+   "n": 5,
+   "d0": -17.95,
+   "e5": -8.71,
+   "e20": -13.07,
+   "e60": 6.02,
+   "hit20": 40,
+   "hit60": 60
+  },
+  {
+   "grupo": "Europa · casos con nombre por tipo (frente a la media de las grandes europeas)",
+   "nombre": "Competencia del que tropieza",
+   "logica": "1 casos europeos elegidos a mano",
+   "n": 1,
+   "d0": -1.96,
+   "e5": -5.24,
+   "e20": -0.27,
+   "e60": 6.0,
    "hit20": 0,
-   "hit60": 50
+   "hit60": 100
   },
   {
    "grupo": "Europa · casos con nombre por tipo (frente a la media de las grandes europeas)",
@@ -5341,6 +5571,25 @@
    ],
    "fecha": "2016-11-09",
    "tipo": "E"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Macron gana la primera vuelta → bancos franceses",
+   "logica": "Hecho consumado que cambia el mundo",
+   "n": 1,
+   "d0": 5.76,
+   "e5": null,
+   "e20": -2.78,
+   "e60": -1.37,
+   "valores": [
+    "BNP.PA",
+    "GLE.PA",
+    "ACA.PA"
+   ],
+   "fecha": "2017-04-24",
+   "tipo": "E",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
   },
   {
    "grupo": "Casos con nombre",
@@ -5953,6 +6202,26 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "El BCE anuncia la compra ilimitada de deuda → bancos del sur",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 2.74,
+   "e5": -0.6,
+   "e20": -6.05,
+   "e60": -3.06,
+   "valores": [
+    "SAN.MC",
+    "BBVA.MC",
+    "ISP.MI",
+    "UCG.MI"
+   ],
+   "fecha": "2012-09-06",
+   "tipo": "D",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "La Fed lanza la tercera ronda de compras → constructoras",
    "logica": "Decisión anunciada",
    "n": 1,
@@ -5984,6 +6253,26 @@
    ],
    "fecha": "2013-05-22",
    "tipo": "D"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "El BCE pone los tipos en negativo → bancos europeos",
+   "logica": "Decisión anunciada",
+   "n": 1,
+   "d0": 0.59,
+   "e5": 0.56,
+   "e20": -1.06,
+   "e60": 0.76,
+   "valores": [
+    "SAN.MC",
+    "BBVA.MC",
+    "BNP.PA",
+    "ISP.MI"
+   ],
+   "fecha": "2014-06-05",
+   "tipo": "D",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
   },
   {
    "grupo": "Casos con nombre",
@@ -6976,6 +7265,24 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Referéndum en Cataluña → comprar CaixaBank y Sabadell castigados",
+   "logica": "Susto o anuncio de un día",
+   "n": 1,
+   "d0": -4.62,
+   "e5": 2.06,
+   "e20": -1.28,
+   "e60": -0.6,
+   "valores": [
+    "CABK.MC",
+    "SAB.MC"
+   ],
+   "fecha": "2017-10-02",
+   "tipo": "S",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Estalla la apuesta contra la volatilidad → comprar el Nasdaq",
    "logica": "Susto o anuncio de un día",
    "n": 1,
@@ -7620,6 +7927,24 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Merkel frena las nucleares tras Fukushima → comprar RWE y E.ON castigadas",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -4.06,
+   "e5": 1.0,
+   "e20": 4.76,
+   "e60": -3.65,
+   "valores": [
+    "RWE.DE",
+    "EOAN.DE"
+   ],
+   "fecha": "2011-03-14",
+   "tipo": "N",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Clinton amenaza los precios de los fármacos → comprar biotecnología",
    "logica": "Sector castigado por una norma o sanción → comprar el castigo",
    "n": 1,
@@ -7688,6 +8013,25 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "El Gobierno recorta los beneficios de las eléctricas → comprar el castigo",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": -2.13,
+   "e5": -3.66,
+   "e20": -5.31,
+   "e60": 3.75,
+   "valores": [
+    "IBE.MC",
+    "ELE.MC",
+    "NTGY.MC"
+   ],
+   "fecha": "2021-09-14",
+   "tipo": "N",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Impuesto a la banca española → comprar los bancos castigados",
    "logica": "Sector castigado por una norma o sanción → comprar el castigo",
    "n": 1,
@@ -7744,6 +8088,23 @@
    ],
    "fecha": "2022-10-07",
    "tipo": "N"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Países Bajos limitan las ventas de ASML a China → comprar ASML",
+   "logica": "Sector castigado por una norma o sanción → comprar el castigo",
+   "n": 1,
+   "d0": 1.18,
+   "e5": 3.59,
+   "e20": 5.32,
+   "e60": 15.42,
+   "valores": [
+    "ASML.AS"
+   ],
+   "fecha": "2023-03-08",
+   "tipo": "N",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
   },
   {
    "grupo": "Casos con nombre",
@@ -8891,6 +9252,23 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "Escándalo del diésel → comprar Volkswagen",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -19.08,
+   "e5": -19.49,
+   "e20": -27.64,
+   "e60": -7.42,
+   "valores": [
+    "VOW3.DE"
+   ],
+   "fecha": "2015-09-21",
+   "tipo": "C",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "Informe contra Valeant → comprar Valeant",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -8948,6 +9326,23 @@
    ],
    "fecha": "2016-09-08",
    "tipo": "C"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "EE. UU. pide 14.000 millones a Deutsche Bank → comprar Deutsche Bank",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -7.25,
+   "e5": -6.51,
+   "e20": 0.58,
+   "e60": 35.75,
+   "valores": [
+    "DBK.DE"
+   ],
+   "fecha": "2016-09-16",
+   "tipo": "C",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
   },
   {
    "grupo": "Casos con nombre",
@@ -9525,6 +9920,23 @@
   },
   {
    "grupo": "Casos con nombre",
+   "nombre": "ASML se hunde por sus previsiones → comprar ASML",
+   "logica": "Comprar al gigante caído",
+   "n": 1,
+   "d0": -15.56,
+   "e5": 3.61,
+   "e20": 1.49,
+   "e60": 11.65,
+   "valores": [
+    "ASML.AS"
+   ],
+   "fecha": "2024-10-15",
+   "tipo": "C",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
+  },
+  {
+   "grupo": "Casos con nombre",
    "nombre": "DeepSeek hunde a Nvidia → comprar Nvidia",
    "logica": "Comprar al gigante caído",
    "n": 1,
@@ -9660,6 +10072,24 @@
    ],
    "fecha": "2014-01-28",
    "tipo": "R"
+  },
+  {
+   "grupo": "Casos con nombre",
+   "nombre": "Escándalo del diésel → BMW y Mercedes",
+   "logica": "Competencia del que tropieza",
+   "n": 1,
+   "d0": -1.96,
+   "e5": -5.24,
+   "e20": -0.27,
+   "e60": 6.0,
+   "valores": [
+    "BMW.DE",
+    "MBG.DE"
+   ],
+   "fecha": "2015-09-21",
+   "tipo": "R",
+   "nota": "frente a la media de las grandes europeas",
+   "region": "Europa"
   },
   {
    "grupo": "Casos con nombre",

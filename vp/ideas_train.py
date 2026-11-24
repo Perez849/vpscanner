@@ -815,6 +815,24 @@ if EUc and '^STOXX50E' in col and '^IBEX' in col:
     G = 'Europa · grandes valores (validadas en dos mitades)'
     combo('Una grande europea cae ≥ 10 % con el miedo alto (VIX ≥ 28) → comprar la caída', 'La combinación más fuerte de EE. UU., en Europa.', eu_rows([e for e in ce if vxe(e) >= 28]))
     combo('Una grande europea cae ≥ 10 % con el miedo bajo (VIX < 18) → comprar la caída', 'En calma: problema propio.', eu_rows([e for e in ce if vxe(e) < 18]))
+    offe = lambda e: OFF[e[0], col[e[1]]]
+    combo('Una grande europea ya hundida (−30 %) cae otro 10 % → comprar la caída', 'Capitulación.', eu_rows([e for e in ce if offe(e) < -0.30]))
+    combo('Una grande europea cae ≥ 10 % estando cerca de máximos → comprar la caída', 'Estaba cotizada para la perfección (lección «caido»).', eu_rows([e for e in ce if offe(e) > -0.10]))
+    combo('Una grande europea sube ≥ 10 % y marca máximo del año → seguir comprándola', 'Ruptura con noticia.', eu_rows([e for e in se if offe(e) > -0.02]))
+    dE3 = (pd.Series(rE) < 0).rolling(3).sum().values == 3; sE3 = (A['^STOXX50E'] / A['^STOXX50E'].shift(3) - 1).values
+    dI3 = (pd.Series(rI) < 0).rolling(3).sum().values == 3; sI3 = (A['^IBEX'] / A['^IBEX'].shift(3) - 1).values
+    G = 'Europa · rachas con miedo (validadas en dos mitades)'
+    combo('Racha de tres días (−3 %) con el miedo alto → Euro Stoxx 50', 'Mala semana en plena tormenta.', eu_idx_rows(since & dE3 & (sE3 <= -0.03) & (vixp >= 28), '^STOXX50E'))
+    combo('Racha de tres días (−3 %) con el miedo alto → Ibex 35', 'Lo mismo, con la bolsa española.', eu_idx_rows(since & dI3 & (sI3 <= -0.03) & (vixp >= 28), '^IBEX'))
+    G = 'Europa · contagio desde Wall Street (comprando en la apertura europea siguiente)'
+    SEMI_EU = [x for x in 'ASML.AS IFX.DE'.split() if x in col]; BANK_EU = [x for x in 'BNP.PA SAN.MC BBVA.MC ISP.MI UCG.MI INGA.AS DBK.DE'.split() if x in col]
+    rsm = R['SMH'].values - R['SPY'].values if 'SMH' in col else None; rxf = R['XLF'].values - R['SPY'].values if 'XLF' in col else None
+    if rsm is not None and SEMI_EU:
+        add(G, 'Los chips de EE. UU. caen ≥ 4 % más que el S&P 500 → ASML e Infineon', '¿Se contagia el castigo al día siguiente en Europa?', {**eu_study(idx[since & (rsm <= -0.04)], SEMI_EU), 'nota': nt})
+        add(G, 'Los chips de EE. UU. suben ≥ 4 % más que el S&P 500 → ASML e Infineon', '¿Se contagia la buena noticia?', {**eu_study(idx[since & (rsm >= 0.04)], SEMI_EU), 'nota': nt})
+    if rxf is not None and BANK_EU:
+        add(G, 'Los bancos de EE. UU. caen ≥ 3 % más que el S&P 500 → bancos europeos', '¿Se contagia el miedo a la banca?', {**eu_study(idx[since & (rxf <= -0.03)], BANK_EU), 'nota': nt})
+        add(G, 'Los bancos de EE. UU. suben ≥ 3 % más que el S&P 500 → bancos europeos', '¿Se contagia la buena noticia?', {**eu_study(idx[since & (rxf >= 0.03)], BANK_EU), 'nota': nt})
     G = 'Europa · materias primas'
     ro_ = ro.values
     AIR_EU = [x for x in 'IAG.MC LHA.DE AF.PA'.split() if x in col]; OIL_EU = [x for x in 'TTE.PA ENI.MI REP.MC'.split() if x in col]
@@ -1266,6 +1284,17 @@ CASES = [
  ('2024-01-09', 'Informe de Gotham contra Grifols → comprar el castigo', 'GRF.MC', 'X'),
  ('2023-08-17', 'Adyen se hunde un 39 % tras resultados → comprar Adyen', 'ADYEN.AS', 'C'),
  ('2018-08-13', 'Primera condena por el glifosato → comprar Bayer', 'BAYN.DE', 'C'),
+ ('2011-03-14', 'Merkel frena las nucleares tras Fukushima → comprar RWE y E.ON castigadas', 'RWE.DE EOAN.DE', 'N'),
+ ('2012-09-06', 'El BCE anuncia la compra ilimitada de deuda → bancos del sur', 'SAN.MC BBVA.MC ISP.MI UCG.MI', 'D'),
+ ('2014-06-05', 'El BCE pone los tipos en negativo → bancos europeos', 'SAN.MC BBVA.MC BNP.PA ISP.MI', 'D'),
+ ('2015-09-21', 'Escándalo del diésel → comprar Volkswagen', 'VOW3.DE', 'C'),
+ ('2015-09-21', 'Escándalo del diésel → BMW y Mercedes', 'BMW.DE MBG.DE', 'R'),
+ ('2016-09-16', 'EE. UU. pide 14.000 millones a Deutsche Bank → comprar Deutsche Bank', 'DBK.DE', 'C'),
+ ('2017-04-24', 'Macron gana la primera vuelta → bancos franceses', 'BNP.PA GLE.PA ACA.PA', 'E'),
+ ('2017-10-02', 'Referéndum en Cataluña → comprar CaixaBank y Sabadell castigados', 'CABK.MC SAB.MC', 'S'),
+ ('2021-09-14', 'El Gobierno recorta los beneficios de las eléctricas → comprar el castigo', 'IBE.MC ELE.MC NTGY.MC', 'N'),
+ ('2023-03-08', 'Países Bajos limitan las ventas de ASML a China → comprar ASML', 'ASML.AS', 'N'),
+ ('2024-10-15', 'ASML se hunde por sus previsiones → comprar ASML', 'ASML.AS', 'C'),
 ]
 done = []
 for d, name, b, tp in CASES:

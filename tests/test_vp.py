@@ -1309,10 +1309,14 @@ def test_ideas_alertas():
     a = ideas.reglas_europa({**eu, 'eu_vix_prev': 20.0}, [('SAN.MC', -11.0)])
     assert not any('IDEA' in x for x in a) and any('no es idea' in x for x in a) and any('no se compra' in x for x in a), a
     assert any('también es IDEA en Europa' in x for x in ideas.reglas_europa({**base, 'spy_1d': -0.03, 'vix_prev': 29.0}, [])) and ideas.reglas_europa(base, []) == []
+    a = ideas.reglas_europa({**eu, 'eu_1d': -0.012, 'eu_3d': -0.035, 'eu_racha3': True, 'chips_rel': -0.05}, [])
+    assert any('tres días seguidos' in x and 'IDEA' in x for x in a) and any('ASML' in x for x in a), a
     cl = {'SPY': {'2026-11-20': 100.0, '2026-11-23': 104.0}, '^VIX': {'2026-11-19': 28.4, '2026-11-20': 35.9, '2026-11-23': 26.6, '2026-11-24': 27.8},       # el VIX de hoy (madrugada) no se empareja con la sesión de ayer
           '^STOXX50E': {'2026-11-21': 1.0, '2026-11-24': 0.98}, '^IBEX': {'2026-11-21': 1.0, '2026-11-24': 0.97}}
     m = ideas.metricas(cl)
     assert m['vix'] == 26.6 and m['vix_prev'] == 35.9 and m['eu_fecha'] == '2026-11-24' and m['eu_vix_prev'] == 26.6 and abs(m['ibex_1d'] + 0.03) < 1e-9, m
+    m = ideas.metricas({**cl, 'SMH': {'2026-11-20': 100.0, '2026-11-23': 98.0}, '^STOXX50E': {'2026-11-18': 1.0, '2026-11-19': 0.99, '2026-11-20': 0.98, '2026-11-24': 0.965}})
+    assert abs(m['chips_rel'] - (-0.02 - 0.04)) < 1e-9 and m['eu_racha3'] and abs(m['eu_3d'] + 0.035) < 1e-9, m
     from datetime import datetime as _dt, timezone as _tz
     assert ideas.sesion_abierta(_dt(2026, 11, 24, 20, 10, tzinfo=_tz.utc)) and not ideas.sesion_abierta(_dt(2026, 11, 24, 12, 35, tzinfo=_tz.utc)) and not ideas.sesion_abierta(_dt(2026, 11, 28, 18, 0, tzinfo=_tz.utc))
     print('ok · ideas: alertas del día según las lecciones (pánico, miedo, rachas, caídas y saltos; Europa; VIX emparejado por fecha; sesión en vivo)')
