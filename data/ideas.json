@@ -1,33 +1,33 @@
 {
- "actualizado": "2026-11-24T12:35:47Z",
+ "actualizado": "2026-11-24T20:11:13Z",
  "sesion": {
-  "cuando": "2026-11-24T12:35:47Z",
-  "tipo": "preapertura",
-  "titular": "Los chips devuelven parte del rebote: *Nvidia −5,6 % antes de abrir*",
+  "cuando": "2026-11-24T20:11:13Z",
+  "tipo": "cierre",
+  "titular": "Los chips devuelven todo el rebote: *SMH −7,5 %*, sin ruptura en las ideas",
   "hoy": {
    "accion": "nada",
-   "texto": "Hoy no se compra nada. Los chips devuelven parte de la subida de ayer: el SMH cae un 4,5 % antes de abrir y el QQQ un 1,9 %. Las dos ideas abiertas siguen dentro de la caída normal por el camino y sin ninguna condición de ruptura. No se toca nada."
+   "texto": "Al cierre de hoy no se compra nada. Las alertas, medidas en vivo, no dan ninguna idea: Micron y Texas Instruments caen más de un 10 %, pero el miedo de ayer (VIX 26,6) no llegaba a 28 y sus competidoras también caen. Los chips de EE. UU. caen un 6,6 % más que el mercado, así que mañana no se compran ASML ni Infineon por contagio. Las dos ideas abiertas siguen sin ruptura."
   },
   "cambios": [
-   "Nasdaq (abierta): QQQ en 638,9 $ antes de abrir, +5,0 % sobre la entrada (ayer cerró en +7,0 %).",
-   "Chips (abierta): SMH 439,7 $, −4,3 % desde la entrada; sin ruptura y dentro de lo normal para su tipo.",
-   "Las alertas de ayer (saltos de Nvidia, Micron y otros; petróleo y oro) siguen atendidas: competidoras que no cayeron y beneficiarios evidentes. Nada nuevo.",
-   "Si al cierre los chips de EE. UU. terminan un 4 % peor que el S&P 500, salta el aviso de no comprar ASML ni Infineon por contagio.",
-   "Sanofi compra Insmed por unos 41.000 millones: comprar a las siguientes candidatas no es idea (lección «opa»)."
+   "Alertas en vivo: Micron −11,6 % y Texas Instruments −10,1 % sin miedo alto y con sus competidoras cayendo → descarte (lecciones «caido» y «rival»).",
+   "Chips de EE. UU. −6,6 % frente al S&P 500 → mañana no se compran ASML ni Infineon por contagio (lección «europa»).",
+   "Chips (abierta): SMH −7,4 % desde la entrada. La norma citada es la misma de la idea; no se ha ampliado.",
+   "Nasdaq (abierta): QQQ +4,4 % sobre la entrada.",
+   "Sanofi cierra con +9,8 % tras comprar Insmed: es buena noticia de la propia empresa y ya está en el precio → descarte (lección «empresa»)."
   ],
-  "pulso": "Recogida de beneficios tras el gran rebote de ayer. Los futuros del S&P 500 caen un 1,0 % y los del Nasdaq un 1,9 %; el VIX sube a 28,9. Los chips llevan la caída: Nvidia −5,6 %, Lam Research −4,7 %, Applied Materials −4,4 %, AMD −4,3 %. Europa cae menos: el Euro Stoxx 50 un 0,7 %, el DAX un 0,8 % y el Ibex un 0,6 %. El Brent sigue bajando (86,8 $) y el oro está en 3.624 $.",
+  "pulso": "A las 21:10, el S&P 500 cae un 0,9 % (SPY 716,0 $) y el Nasdaq-100 un 2,4 %; el Russell 2000, en cambio, sube un 0,4 %. Los chips devuelven el rebote del lunes: SMH −7,5 %, AMD −9,5 %, Nvidia −7,9 %, Micron −11,6 %. El VIX está en 27,3. Europa cerró a la baja: el Euro Stoxx 50 un 1,2 % y el Ibex un 0,9 %, con Sanofi +9,8 %. El oro cae un 2,6 % y el bono a 10 años está en el 4,91 %.",
   "hechos": [
    {
-    "titulo": "Nvidia devuelve parte de su subida histórica",
-    "detalle": "Cae entre un 4 % y un 5,6 % en la preapertura tras subir un 31 % ayer con la vuelta de Jensen Huang. Según la prensa, Goldman Sachs opina que la vuelta no despeja todas las dudas. Intel, Micron y Marvell caen alrededor de un 5 %.",
-    "efecto": "Es una caída normal tras un día así, y dentro de la caída por el camino que se espera en las dos ideas abiertas. No cambia nada.",
+    "titulo": "Los chips devuelven todo el rebote del lunes",
+    "detalle": "Micron cae un 11,6 % y Texas Instruments un 10,1 %, sin noticia propia según la prensa. Pesan la recogida de beneficios tras el +31 % de Nvidia, las dudas sobre la financiación de la inteligencia artificial y la norma de acceso remoto a chips avanzados (en vigor desde el 19-nov).",
+    "efecto": "Sin miedo alto, comprar estas caídas no ha funcionado. Para la idea de chips, es dolor por el camino, no una ruptura: la norma no se ha ampliado.",
     "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Sanofi compra Insmed por unos 41.000 millones de dólares",
-    "detalle": "La farmacéutica francesa compra la biotecnológica estadounidense, según la prensa. Insmed sube con fuerza antes de abrir.",
-    "efecto": "Insmed ya recoge la prima. Apostar por la siguiente biotecnológica que será comprada no ha funcionado (lección «opa»).",
+    "titulo": "Primera edición con las alertas en vivo",
+    "detalle": "Las alertas han medido con el precio de las 21:10, no con el cierre de ayer: Micron y Texas Instruments ya aparecían con más de un −10 % y los chips, con un −6,6 % frente al mercado.",
+    "efecto": "Así se decide con lo que está pasando hoy y no con lo de ayer.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -127,8 +127,13 @@
     {
      "fecha": "2026-11-24",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Antes de abrir, el QQQ está en 638,9 $: −1,9 % hoy, pero aún +5,0 % sobre la entrada (608,45 $). Es la devolución de parte del rebote de ayer, algo normal tras un día del +7 % (la caída mediana por el camino ronda el 4 %). No hay que hacer nada; el horizonte es de 90 sesiones."
+    },
+    {
+     "fecha": "2026-11-24",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "A las 21:10, el QQQ está en 635,2 $: −2,4 % hoy y +4,4 % sobre la entrada (608,45 $). Devuelve parte del rebote de ayer, dentro de lo normal por el camino. Se mantiene con su horizonte de 90 sesiones."
     }
    ],
    "fuentes": [
@@ -305,8 +310,13 @@
     {
      "fecha": "2026-11-24",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Antes de abrir, el SMH está en 439,7 $: −4,5 % hoy y −4,3 % desde la entrada (459,54 $). Nvidia cae un 5,6 % tras su +31 % de ayer; Goldman dice que la vuelta de Huang no despeja todas las dudas. Applied Materials −4,4 %, Lam Research −4,7 %. No hay noticias de la norma de exportación: sin ruptura. Dentro de lo normal por el camino para un sector castigado por una norma (caída mediana del 8 %). Se mantiene hasta el 17 de febrero."
+    },
+    {
+     "fecha": "2026-11-24",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Día malo otra vez. A las 21:10, el SMH cae un 7,5 % (425,7 $) y está un 7,4 % por debajo de la entrada. Nvidia −7,9 %, AMD −9,5 %, Micron −11,6 %, Applied Materials −6,8 %, Lam Research −6,4 %. La prensa cita la norma de acceso remoto a chips avanzados como uno de los pesos, pero es la misma que motivó la idea (publicada el 16-nov, en vigor desde el 19-nov): no se ha ampliado, así que no hay ruptura. Es la mayor caída por el camino de esta idea, cerca de la caída mediana (8 %) de su tipo. Se mantiene hasta el 17 de febrero o hasta que se cumpla la invalidación."
     }
    ],
    "fuentes": [
@@ -564,14 +574,48 @@
  "descartes": [
   {
    "fecha": "2026-11-24",
+   "titulo": "Comprar Micron o Texas Instruments tras caer más de un 10 %",
+   "por_que": "El VIX de ayer estaba en 26,6, por debajo de 28, y sus competidoras caen con ellas: no hay trasvase. Sin miedo alto, comprar la caída de una grande no ha funcionado.",
+   "leccion": "«caido» y «rival».",
+   "tipo": "caido",
+   "valores": [
+    "MU",
+    "TXN"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-24",
+   "titulo": "Comprar ASML o Infineon mañana por la caída de los chips de EE. UU.",
+   "por_que": "Cuando los chips de EE. UU. caen un 4 % o más que el mercado, ASML e Infineon han ido un 6,6 % peor que el resto de Europa en los tres meses siguientes (55 casos).",
+   "leccion": "«europa»: el contagio desde Wall Street no se compra.",
+   "tipo": "europa",
+   "valores": [
+    "ASML.AS",
+    "IFX.DE"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-24",
+   "titulo": "Subirse a Sanofi tras su +9,8 %",
+   "por_que": "Es la buena noticia de la propia empresa (la compra de Insmed) y ya está en el precio. Estas subidas se suelen devolver.",
+   "leccion": "«empresa».",
+   "tipo": "empresa",
+   "valores": [
+    "SAN.PA"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-24",
    "titulo": "Comprar otras biotecnológicas porque Sanofi compra Insmed",
    "por_que": "Tras una gran compra, apostar por las siguientes candidatas no ha dado nada: +1,1 % en 60 sesiones en 16 casos.",
    "leccion": "«opa».",
    "tipo": "opa",
    "valores": [
     "XBI"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-24",
@@ -581,8 +625,7 @@
    "tipo": "caido",
    "valores": [
     "NVDA"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-24",
@@ -949,6 +992,10 @@
   {
    "cuando": "2026-11-24T12:35:47Z",
    "resumen": "Preapertura: los chips devuelven parte del rebote (SMH −4,5 %, Nvidia −5,6 %). QQQ +5,0 % desde la entrada; SMH −4,3 %. Sin rupturas. Nada que comprar."
+  },
+  {
+   "cuando": "2026-11-24T20:11:13Z",
+   "resumen": "Cierre (alertas en vivo): los chips devuelven el rebote (SMH −7,5 %); Micron y TXN −10 % sin miedo alto → descarte; no comprar ASML ni Infineon por contagio. Ideas sin ruptura. Nada que comprar."
   }
  ]
 }

@@ -1,5 +1,5 @@
 {
- "generado": 1795523749,
+ "generado": 1795551075,
  "ideas": {
   "2026-11-19-panico-miedo": {
    "estado": "abierta",
@@ -663,23 +663,9 @@
   }
  },
  "alertas": [
-  "Petróleo -4.5 %: no comprar aerolíneas ni petroleras por el movimiento en sí (lección «obvio»); solo cuenta si hay un hecho duradero detrás (lección «estructural»).",
-  "Oro +3.9 %: las mineras lo recogen el mismo día (lección «obvio»).",
-  "NVDA +31.5 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "TSLA +11.5 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "ORCL +12.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "QCOM +10.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "INTC +16.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "MU +19.0 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "PLTR +11.1 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "SMCI +13.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "ARM +16.1 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "TXN +10.4 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "AMAT +14.6 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "LRCX +14.4 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "KLAC +15.0 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "MRVL +18.4 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "TSM +14.1 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
-  "SMH +15.0 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas."
+  "Oro -2.7 %: las mineras lo recogen el mismo día (lección «obvio»).",
+  "MU -11.3 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "TXN -10.0 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "Chips de EE. UU. -6.5 % frente al S&P 500: no comprar ASML ni Infineon por contagio; en Europa siguen peor después (lección «europa»)."
  ]
 }

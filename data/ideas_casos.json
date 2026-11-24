@@ -577,6 +577,34 @@
    "e60": null
   },
   {
+   "id": "2026-11-24-comprar-asml-o-infineon-manana-por-la-caida-de-l",
+   "fecha": "2026-11-24",
+   "titulo": "Comprar ASML o Infineon mañana por la caída de los chips de EE. UU.",
+   "tipo": "europa",
+   "valores": [
+    "ASML.AS",
+    "IFX.DE"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-24-comprar-micron-o-texas-instruments-tras-caer-mas",
+   "fecha": "2026-11-24",
+   "titulo": "Comprar Micron o Texas Instruments tras caer más de un 10 %",
+   "tipo": "caido",
+   "valores": [
+    "MU",
+    "TXN"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-24-comprar-nvidia-porque-cae-un-5-tras-el-31",
    "fecha": "2026-11-24",
    "titulo": "Comprar Nvidia porque cae un 5 % tras el +31 %",
@@ -596,6 +624,19 @@
    "tipo": "opa",
    "valores": [
     "XBI"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-24-subirse-a-sanofi-tras-su-9-8",
+   "fecha": "2026-11-24",
+   "titulo": "Subirse a Sanofi tras su +9,8 %",
+   "tipo": "empresa",
+   "valores": [
+    "SAN.PA"
    ],
    "dada": false,
    "e5": null,
@@ -630,5 +671,5 @@
    }
   }
  },
- "generado": 1795523759
+ "generado": 1795551088
 }

@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-24-2011",
+  "cuando": "2026-11-24T20:11:13Z",
+  "tipo": "cierre",
+  "titular": "Los chips devuelven todo el rebote: SMH −7,5 %, sin ruptura en las ideas",
+  "hoy": "Al cierre de hoy no se compra nada. Las alertas, medidas en vivo, no dan ninguna idea: Micron y Texas Instruments caen más de un 10 %, pero el miedo de ayer (VIX 26,6) no llegaba a 28 y sus competidoras también caen. Los chips de EE. UU. caen un 6,6 % más que el mercado, así que mañana no se compran ASML ni Infineon por contagio. Las dos ideas abiertas siguen sin ruptura.",
+  "accion": "nada",
+  "vivas": 2
+ },
+ {
   "id": "2026-11-24-1235",
   "cuando": "2026-11-24T12:35:47Z",
   "tipo": "preapertura",
