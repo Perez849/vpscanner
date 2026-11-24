@@ -31,10 +31,10 @@ EXTRA = ('SPY QQQ IWM CL=F GC=F NG=F HG=F ZW=F ^TNX ^VIX BTC-USD XLU KRE GDX VNQ
          'KC=F CC=F SB=F ZC=F LE=F SBUX HSY MDLZ TSN HRL CAG XYZ IEP RBLX CVNA APP HOOD EME DASH WSM JBL BLDR KKR GDDY DELL PLTR '
          'BIIB ZIM MATX LUV TXN PSX HON CRM NFLX CMG HPQ MSI CL KMB '
          'TSEM CPRI ACI NXPI WTW QCOM BRK-B NUE STLD BA CAT DE RH DECK').split()
-from .europa import EURO as EU_EURO, ES as EU_ES, IDX as EU_IDX, SECTOR as EU_SECTOR, MISMA as EU_MISMA, is_eu        # una sola lista para el entrenamiento y las alertas
+from .europa import EURO as EU_EURO, ES as EU_ES, IDX as EU_IDX, MACRO as EU_MACRO, SECTOR as EU_SECTOR, MISMA as EU_MISMA, is_eu        # una sola lista para el entrenamiento y las alertas
 SIN_EU = bool(os.environ.get('VP_SIN_EUROPA'))                       # solo para comprobar que Europa no cambia nada de EE. UU.: entrena sin ningún valor europeo
 if not SIN_EU:
-    EXTRA += EU_EURO + EU_ES + EU_IDX
+    EXTRA += EU_EURO + EU_ES + EU_IDX + EU_MACRO
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', default='data')
 ap.add_argument('--cache', default='.cache/ideas')
@@ -177,6 +177,9 @@ def load():
         t = pd.to_datetime(np.array(j['t'], dtype='int64'), unit='s').normalize()
         d = pd.DataFrame({'o': j['o'], 'c': j['c'], 'a': j['a'], 'v': j['v']}, index=t).astype('float64')
         d = d[~d.index.duplicated(keep='last')]; d = d[(d.c > 0)]
+        if s in EU_MACRO:                                                # gas y euro: tal cual (sus saltos grandes pueden ser reales); fuera del ranking de volumen
+            A[s] = d.c; O[s] = d.o; DV[s] = d.c * np.nan
+            continue
         if is_eu(s):                                                     # Europa: cierre sin ajustar y sin errores de dato (ver limpia_eu); EE. UU. no cambia
             c_, o_, nb = limpia_eu(d)
             if nb: LIMPIEZA[s] = nb
@@ -801,11 +804,39 @@ if EUc and '^STOXX50E' in col and '^IBEX' in col:
         for i in thin(idx[since & (rel <= -0.03)]):
             if i + 61 < len(idx): rows.append((i, rel[i], *[after_eu(i, vv, h) for h in (5, 20, 60)]))
     pe_add('Un sector europeo cae ≥ 3 % más que el resto en un día → comprar ese sector', 'El castigo a un sector entero suele ser excesivo.', rows, 'exceso del sector sobre la media de las grandes europeas')
+    rows = []
+    for sec, vv in secs.items():
+        if len(vv) < 3: continue
+        with np.errstate(all='ignore'):
+            rel = np.nanmean(R.values[:, [col[v_] for v_ in vv]], axis=1) - ewE
+        for i in thin(idx[since & (rel >= 0.03)]):
+            if i + 61 < len(idx): rows.append((i, rel[i], *[after_eu(i, vv, h) for h in (5, 20, 60)]))
+    pe_add('Un sector europeo sube ≥ 3 % más que el resto en un día → seguir comprando ese sector', 'La buena noticia de un sector tarda en digerirse.', rows, 'exceso del sector sobre la media de las grandes europeas')
     G = 'Europa · grandes valores (validadas en dos mitades)'
     combo('Una grande europea cae ≥ 10 % con el miedo alto (VIX ≥ 28) → comprar la caída', 'La combinación más fuerte de EE. UU., en Europa.', eu_rows([e for e in ce if vxe(e) >= 28]))
     combo('Una grande europea cae ≥ 10 % con el miedo bajo (VIX < 18) → comprar la caída', 'En calma: problema propio.', eu_rows([e for e in ce if vxe(e) < 18]))
     G = 'Europa · materias primas'
     ro_ = ro.values
+    AIR_EU = [x for x in 'IAG.MC LHA.DE AF.PA'.split() if x in col]; OIL_EU = [x for x in 'TTE.PA ENI.MI REP.MC'.split() if x in col]
+    UTIL_EU = [x for x in 'ENEL.MI ENGI.PA RWE.DE EOAN.DE IBE.MC ELE.MC NTGY.MC'.split() if x in col]; CHEM_EU = [x for x in 'BAS.DE'.split() if x in col]
+    EXPO_EU = [x for x in 'MBG.DE BMW.DE VOW3.DE MC.PA RMS.PA KER.PA ASML.AS SAP.DE AIR.PA RACE.MI'.split() if x in col]
+    if AIR_EU:
+        add(G, 'Petróleo cae ≥ 4 % en un día → aerolíneas europeas (IAG, Lufthansa, Air France-KLM)', 'El combustible es su mayor coste variable.', {**eu_study(idx[since & (ro_ <= -0.04)], AIR_EU), 'nota': nt})
+        add(G, 'Petróleo sube ≥ 4 % en un día → aerolíneas europeas (comprar el castigo)', 'Apostar a que el castigo es excesivo.', {**eu_study(idx[since & (ro_ >= 0.04)], AIR_EU), 'nota': nt})
+    if OIL_EU:
+        add(G, 'Petróleo sube ≥ 4 % en un día → petroleras europeas (Total, Eni, Repsol)', 'Cada dólar de más va a su margen.', {**eu_study(idx[since & (ro_ >= 0.04)], OIL_EU), 'nota': nt})
+        add(G, 'Petróleo cae ≥ 4 % en un día → petroleras europeas (comprar la caída)', 'Apostar a que el castigo es excesivo.', {**eu_study(idx[since & (ro_ <= -0.04)], OIL_EU), 'nota': nt})
+    if 'TTF=F' in col:
+        rg = R['TTF=F'].values
+        if CHEM_EU:
+            add(G, 'Gas europeo sube ≥ 10 % en un día → BASF (comprar el castigo)', 'El gas es su materia prima y su energía. Datos del gas desde 2017.', {**eu_study(idx[since & (rg >= 0.10)], CHEM_EU), 'nota': nt})
+            add(G, 'Gas europeo cae ≥ 10 % en un día → BASF', 'Alivio de costes. Datos del gas desde 2017.', {**eu_study(idx[since & (rg <= -0.10)], CHEM_EU), 'nota': nt})
+        if UTIL_EU:
+            add(G, 'Gas europeo sube ≥ 10 % en un día → eléctricas europeas', 'La luz se paga al precio del gas; quien produce con renovables gana más. Datos desde 2017.', {**eu_study(idx[since & (rg >= 0.10)], UTIL_EU), 'nota': nt})
+    if 'EURUSD=X' in col and EXPO_EU:
+        rx = R['EURUSD=X'].values
+        add(G, 'El euro sube ≥ 1 % frente al dólar en un día → exportadoras europeas (comprar el castigo)', 'Un euro caro resta a lo que venden fuera. Datos del euro desde 2003.', {**eu_study(idx[since & (rx >= 0.01)], EXPO_EU), 'nota': nt})
+        add(G, 'El euro cae ≥ 1 % frente al dólar en un día → exportadoras europeas', 'Un euro barato suma a lo que venden fuera.', {**eu_study(idx[since & (rx <= -0.01)], EXPO_EU), 'nota': nt})
     if 'IAG.MC' in col:
         add(G, 'Petróleo cae ≥ 4 % en un día → IAG (Iberia, British Airways)', 'El combustible es su mayor coste variable.', {**eu_study(idx[since & (ro_ <= -0.04)], ['IAG.MC']), 'nota': nt})
     if 'REP.MC' in col:
@@ -1222,6 +1253,19 @@ CASES = [
  ('2022-07-21', 'Primera subida de tipos del BCE en once años → bancos españoles', 'SAN.MC BBVA.MC CABK.MC SAB.MC BKT.MC', 'D'),
  ('2023-03-20', 'UBS compra Credit Suisse → comprar los bancos europeos castigados', 'SAN.MC BBVA.MC BNP.PA INGA.AS DBK.DE', 'S'),
  ('2024-05-09', 'OPA hostil de BBVA sobre el Sabadell → las siguientes candidatas', 'UNI.MC BKT.MC', 'M'),
+ ('2010-05-10', 'Europa crea el fondo de rescate de 750.000 millones → bancos del sur', 'SAN.MC BBVA.MC ISP.MI UCG.MI', 'D'),
+ ('2020-07-21', 'Acuerdo del fondo europeo de recuperación → bancos del sur', 'SAN.MC BBVA.MC ISP.MI UCG.MI', 'D'),
+ ('2025-03-03', 'Cumbre de Londres: Europa se rearma → defensa europea', 'RHM.DE LDO.MI HO.PA', 'D'),
+ ('2022-02-24', 'Rusia invade Ucrania → defensa europea', 'RHM.DE LDO.MI HO.PA', 'E'),
+ ('2022-02-24', 'Rusia invade Ucrania → petroleras europeas', 'TTE.PA ENI.MI REP.MC', 'E'),
+ ('2015-07-06', 'Grecia vota «no» en el referéndum → comprar los bancos del sur castigados', 'SAN.MC BBVA.MC ISP.MI UCG.MI', 'S'),
+ ('2018-05-29', 'Crisis política en Italia → comprar los bancos italianos castigados', 'ISP.MI UCG.MI', 'S'),
+ ('2024-06-10', 'Macron convoca elecciones anticipadas → comprar los bancos franceses castigados', 'BNP.PA GLE.PA ACA.PA', 'S'),
+ ('2021-11-26', 'Variante ómicron → comprar las aerolíneas europeas castigadas', 'IAG.MC LHA.DE AF.PA', 'S'),
+ ('2023-08-08', 'Italia anuncia un impuesto a la banca → comprar los bancos italianos castigados', 'ISP.MI UCG.MI', 'N'),
+ ('2024-01-09', 'Informe de Gotham contra Grifols → comprar el castigo', 'GRF.MC', 'X'),
+ ('2023-08-17', 'Adyen se hunde un 39 % tras resultados → comprar Adyen', 'ADYEN.AS', 'C'),
+ ('2018-08-13', 'Primera condena por el glifosato → comprar Bayer', 'BAYN.DE', 'C'),
 ]
 done = []
 for d, name, b, tp in CASES:

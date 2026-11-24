@@ -71,7 +71,7 @@ Sale de simular cada tipo de idea sobre hechos pasados desde 2000, en EE. UU. y 
 | Susto o anuncio de un día: huracán, atentado, ataque, estímulo prometido (`susto`) | **No** | 65 casos: −0,7 % en 20 sesiones; sube el 45 %. El beneficiario pierde (−2,5 % a 60 sesiones); el castigado apenas gana (+3,4 %). |
 | Pánico general (`panico`) | **Solo con el miedo alto** | Con el VIX previo ≥ 28, tras un día de −2 % o una racha de tres días que sume −3 %: +10,7 % y +8,0 % en 60 sesiones. Sin ese miedo, nada: cualquier día de −2 % da +2,3 %, igual que un tramo cualquiera (+2,6 %) desde 2000. Da igual comprar al cierre que en la apertura siguiente. |
 | El miedo alto como multiplicador (`miedo`) | **Con condiciones** | Ver «Antes de descartar, cruzar con el miedo», abajo. |
-| Europa y España (`europa`) | **Sí, solo el pánico con miedo alto** | Euro Stoxx 50 o Ibex 35 tras un −2 % con el VIX previo ≥ 28: +5,6 % y +5,1 % en 60 sesiones sobre lo normal, en las dos mitades del periodo; también tras un −2 % de Wall Street, comprando en la apertura europea. La grande europea que se hunde un 10 % con miedo alto, como en EE. UU. (+19,6 %, sin problema propio). En calma, nada. Competidoras, contagio y sector castigado no se cumplen en Europa. Son unas 12–16 crisis distintas. |
+| Europa y España (`europa`) | **Sí, solo el pánico con miedo alto** | Euro Stoxx 50 o Ibex 35 tras un −2 % con el VIX previo ≥ 28: +5,6 % y +5,1 % en 60 sesiones sobre lo normal, en las dos mitades del periodo; también tras un −2 % de Wall Street, comprando en la apertura europea. La grande europea que se hunde un 10 % con miedo alto, como en EE. UU. (+18,0 %, sin problema propio). Los hechos consumados también (Ucrania → defensa europea). En calma, los sustos, el gigante caído, lo evidente (petróleo, gas, euro), las competidoras y el contagio: nada, como en EE. UU. Son unas 12–16 crisis distintas. |
 | Sector castigado por una norma o sanción, comprando el castigo (`norma`) | **Con condiciones** | 7 casos: +16,4 % en 60 sesiones (86 %), pero pocos y casi todos de chips en años de subida. |
 | Gigante que cae desde cerca de máximos (`caido`) | **No** | 581 casos: −1,6 % en 20 sesiones; 54 caídas famosas: −6,0 %. Solo rebotan las ya muy castigadas, y esa cifra está inflada. |
 | Competencia del que tropieza (`rival`) | **Solo si suben ese día** | Si las competidoras suben ≥ 2 % el mismo día del tropiezo (113 casos): +2,7 % en 20 sesiones (t 2,1). Sin eso, nada. |
@@ -96,7 +96,7 @@ Antes de dar una idea de tipo `estructural`, comprobar que no es en realidad una
 **Antes de descartar, cruzar con el miedo.** Al combinar lecciones (validando cada combinación por separado en 2000–2013 y en 2014–2026) sale un multiplicador común: el índice del miedo (VIX). Con el VIX en 28 o más:
 
 - Pánico del mercado: comprar **semiconductores (SMH)** ha dado más que el Nasdaq entero (+10,4 % frente a +8,9 % en 60 sesiones).
-- Una acción grande que cae un 10 % en un día de tormenta, **sin un problema propio** detrás: +18,6 % en 60 sesiones. En calma, lo contrario (−1,3 %). En Europa se repite: +19,6 % (82 casos), aunque después de 2014 solo hay 13.
+- Una acción grande que cae un 10 % en un día de tormenta, **sin un problema propio** detrás: +18,6 % en 60 sesiones. En calma, lo contrario (−1,3 %). En Europa se repite: +18,0 % (87 casos), aunque después de 2014 solo hay 16.
 - Competidoras castigadas el día en que el líder se dispara: +9,0 %.
 - El castigado de un susto: +4,8 % (16 casos).
 
