@@ -8,6 +8,7 @@ Pruebas de VP Scanner (ejecutar: python tests/test_vp.py). Sin red.
 5. El estudio de evidencia: t por clústeres, ventaja plantada detectada y sin ventaja en paseos aleatorios.
 """
 import json
+import re
 import os
 import sys
 from datetime import datetime, timezone
@@ -1207,11 +1208,21 @@ def test_web_ideas():
         for k in ('id', 'fecha', 'estado', 'tipo', 'titulo', 'hecho', 'cadena', 'valores', 'en_precio', 'disparador', 'invalidacion', 'en_contra', 'horizonte', 'ref'):
             assert i.get(k), (i.get('id'), k)
         assert i['estado'] in ('vigilancia', 'abierta', 'cerrada') and (i['estado'] != 'abierta' or i.get('entrada')) and (i['estado'] != 'vigilancia' or not i.get('entrada')) and (i['estado'] != 'cerrada' or i.get('motivo_cierre')), i['id']          # una idea puede cerrarse sin haberse abierto (no saltó, retirada)
-        assert all(v['sym'] in i['ref'] for v in i['valores']) and 'SPY' in i['ref'], i['id']
+        assert all(v['sym'] in i['ref'] for v in i['valores']) and (i.get('indice') or 'SPY') in i['ref'], i['id']
         assert i['estado'] != 'vigilancia' or i.get('caduca'), i['id']          # toda idea en vigilancia lleva fecha de caducidad
+        assert i['estado'] == 'cerrada' or i.get('camino'), i['id']              # toda idea viva dice qué caída es normal por el camino (lección «salidas»)
     assert D['sesion'].get('titular') and D['sesion'].get('hoy', {}).get('accion') in ('nada', 'vigilar', 'comprar', 'vender') and D['sesion']['hoy'].get('texto') and isinstance(D['sesion'].get('cambios'), list)
     P = json.load(open(os.path.join(root, 'ideas_playbook.json'), encoding='utf-8'))
     assert P['lecciones'] and P['estudios'] and all(l['veredicto'] in ('dar', 'esperar', 'no') for l in P['lecciones'])
+    ids = [l['id'] for l in P['lecciones']]
+    assert len(ids) == len(set(ids)) and all(l.get('titulo') and l.get('texto') and l.get('cifra') for l in P['lecciones']), ids
+    nom = re.search(r'const NOM = \{(.*?)\};', html).group(1)
+    alias = set(re.findall(r'(?:^|[ ,{])([a-z_]+): ', nom))                    # tipos con nombre en la web (las lecciones y sus variantes: jefe, split…)
+    assert all(x.get('tipo') in set(ids) | alias for x in D['ideas'] + D['descartes']), sorted({x.get('tipo') for x in D['ideas'] + D['descartes']} - set(ids) - alias)     # cada tipo usado tiene su lección o su nombre
+    tipos = [k for k in ids if k != 'salidas']                                # «salidas» es una lección sobre cuándo salir, no un tipo de idea
+    assert all(re.search(r'(^|[ ,{])' + k + r': ', nom) for k in tipos), [k for k in tipos if not re.search(r'(^|[ ,{])' + k + r': ', nom)]   # y su nombre en la web
+    protocolo = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'IDEAS.md'), encoding='utf-8').read()
+    assert all(f'`{k}`' in protocolo for k in ids), [k for k in ids if f'`{k}`' not in protocolo]                   # y su sitio en el protocolo
     print('ok · web: ideas por coyuntura como parte principal, chartismo como secundaria; fichas de ideas y lecciones completas')
 
 
@@ -1230,6 +1241,10 @@ def test_ideas_score():
     assert r['pendiente'] and r['media'] is None and r['spy'] is None, r
     r = ideas.score({**base, 'estado': 'cerrada', 'entrada': None, 'salida': '2026-01-05'}, cl)   # cerrada sin comprarse
     assert r['hipotetica'] and r['media'] == 5.0, r
+    assert ideas.score({**base, 'estado': 'abierta', 'entrada': '2026-01-05'}, cl)['indice'] == 'SPY'
+    cle = {**cl, '^IBEX': {'2026-01-02': 10.0, '2026-01-05': 10.0, '2026-01-06': 10.5}}
+    r = ideas.score({**base, 'estado': 'abierta', 'entrada': '2026-01-05', 'indice': '^IBEX', 'ref': {**base['ref'], '^IBEX': 10.0}}, cle)   # una idea europea se compara con su índice
+    assert r['indice'] == '^IBEX' and r['spy'] == 5.0 and '^IBEX' not in r['por_valor'], r
     print('ok · ideas: marcador frente al SPY desde la referencia, la entrada y hasta la salida')
 
 
@@ -1246,6 +1261,13 @@ def test_ideas_casos():
     assert [c['id'] for c in R['casos']] == ['2026-01-01-descarte-n', 'i1'] and R['resumen'] == {'dadas': {'n': 1, 'e20': 42.0, 'aciertos': 1}, 'descartadas': {'n': 1, 'e20': -10.5, 'aciertos': 1}}, R
     R2 = ideas.registro({'ideas': [], 'descartes': []}, R, {'SPY': B['SPY']})   # ya no están en ideas.json ni hay precios: siguen apuntados con su resultado
     assert len(R2['casos']) == 2 and R2['casos'][1]['e20'] == 42.0, R2
+    assert R['calibracion'] == {}, R['calibracion']                          # i1 no llegó a comprarse: no cuenta para medir la convicción
+    D3 = {'ideas': [{**D['ideas'][0], 'conviccion': 3, 'entrada': '2026-01-01'}, {'id': 'i2', 'fecha': '2026-01-01', 'titulo': 'Otra', 'tipo': 'panico', 'conviccion': 2, 'entrada': '2026-01-01', 'valores': [{'sym': 'BBB'}]}], 'descartes': []}
+    K = ideas.registro(D3, {}, B)['calibracion']
+    assert K['3']['e20'] == {'n': 1, 'media': 42.0, 'aciertos': 1} and K['2']['e20'] == {'n': 1, 'media': -10.5, 'aciertos': 0} and K['3']['e60']['n'] == 0, K
+    BE = {'^STOXX50E': {d: (100.0, 100.0) for d in days}, 'SAN.MC': {d: (10.0, 10.0 + 0.1 * k) for k, d in enumerate(days)}, 'SPY': {d: (100.0, 100.0 + k) for k, d in enumerate(days)}}
+    RE = ideas.registro({'ideas': [], 'descartes': [{'fecha': '2026-01-01', 'titulo': 'Banca', 'tipo': 'europa', 'valores': ['SAN.MC']}]}, {}, BE)
+    assert RE['casos'][0]['e5'] == 6.0, RE                                   # todos europeos: se miden frente al Euro Stoxx 50, no frente al SPY
     print('ok · ideas: registro de casos propios (dadas y descartadas) con su resultado a 5, 20 y 60 sesiones')
 
 
@@ -1281,7 +1303,19 @@ def test_ideas_alertas():
     assert any('Racha de 3' in x and 'ventaja es pequeña' in x for x in a) and any('XYZ' in x and '«caido»' in x for x in a) and any('ABC' in x and '«contagio»' in x for x in a), a
     a = ideas.reglas({**base, 'vix_prev': 29.0}, [('XYZ', -12.0)])
     assert any('XYZ' in x and '«miedo»' in x for x in a), a
-    print('ok · ideas: alertas del día según las lecciones (pánico, miedo, rachas, caídas y saltos)')
+    eu = {**base, 'eu_fecha': '2026-11-24', 'eu_1d': -0.025, 'ibex_1d': -0.005, 'eu_vix_prev': 30.0}
+    a = ideas.reglas_europa(eu, [('SAN.MC', -11.0)])
+    assert any('IDEA de pánico con miedo alto en Europa' in x and 'Euro Stoxx 50' in x for x in a) and any('SAN.MC' in x and 'no está probado' in x for x in a), a
+    a = ideas.reglas_europa({**eu, 'eu_vix_prev': 20.0}, [('SAN.MC', -11.0)])
+    assert not any('IDEA' in x for x in a) and any('no es idea' in x for x in a) and any('no se compra' in x for x in a), a
+    assert any('también es IDEA en Europa' in x for x in ideas.reglas_europa({**base, 'spy_1d': -0.03, 'vix_prev': 29.0}, [])) and ideas.reglas_europa(base, []) == []
+    cl = {'SPY': {'2026-11-20': 100.0, '2026-11-23': 104.0}, '^VIX': {'2026-11-19': 28.4, '2026-11-20': 35.9, '2026-11-23': 26.6, '2026-11-24': 27.8},       # el VIX de hoy (madrugada) no se empareja con la sesión de ayer
+          '^STOXX50E': {'2026-11-21': 1.0, '2026-11-24': 0.98}, '^IBEX': {'2026-11-21': 1.0, '2026-11-24': 0.97}}
+    m = ideas.metricas(cl)
+    assert m['vix'] == 26.6 and m['vix_prev'] == 35.9 and m['eu_fecha'] == '2026-11-24' and m['eu_vix_prev'] == 26.6 and abs(m['ibex_1d'] + 0.03) < 1e-9, m
+    from datetime import datetime as _dt, timezone as _tz
+    assert ideas.sesion_abierta(_dt(2026, 11, 24, 20, 10, tzinfo=_tz.utc)) and not ideas.sesion_abierta(_dt(2026, 11, 24, 12, 35, tzinfo=_tz.utc)) and not ideas.sesion_abierta(_dt(2026, 11, 28, 18, 0, tzinfo=_tz.utc))
+    print('ok · ideas: alertas del día según las lecciones (pánico, miedo, rachas, caídas y saltos; Europa; VIX emparejado por fecha; sesión en vivo)')
 
 
 ALL = [test_causality, test_candles_planted, test_breakouts_planted, test_figures_planted, test_forming_figures, test_spent_target_and_first_break, test_watchlist, test_catalog, test_plan, test_plan_rules, test_min_stop_and_forming, test_shapes_geometry,

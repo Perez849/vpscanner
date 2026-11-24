@@ -356,6 +356,7 @@ table.x-tr tr.sig td:first-child{box-shadow:inset 4px 0 0 var(--go);padding-left
 .x-contra{margin:0;padding:22px clamp(18px,3vw,44px) 26px;border-top:1.5px solid var(--ink);background:repeating-linear-gradient(135deg,transparent 0 9px,#1111100a 9px 10px)}
 .x-contra h4{margin:0 0 10px;font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;display:inline-block;padding:4px 9px;color:var(--ink);border:1.5px solid var(--ink);background:var(--card)}
 .x-contra p{margin:0;font-size:18px;line-height:1.48;color:#2a2925;max-width:92ch}
+.x-camino{background:var(--card)}
 .x-mini{width:104px;height:30px;display:block}
 .x-val{grid-template-columns:92px minmax(0,1fr) 104px auto}
 .x-day{font-family:var(--fh);font-weight:900;font-size:26px;letter-spacing:-.02em;margin:34px 0 0;padding-bottom:8px;border-bottom:3px solid var(--ink)}
@@ -770,6 +771,8 @@ function mini(a, i0) {                                                        //
   const up = a[a.length - 1] >= a[Math.min(i0, a.length - 1)], c = up ? 'var(--go)' : 'var(--no)';
   return `<svg class="x-mini" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cierres recientes; la raya marca el día del hecho"><line x1="${X(i0).toFixed(1)}" x2="${X(i0).toFixed(1)}" y1="1" y2="${H - 1}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 2"/><polyline points="${a.slice(0, i0 + 1).map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ')}" fill="none" stroke="var(--dim)" stroke-width="1.4" stroke-linejoin="round"/><polyline points="${a.slice(i0).map((v, i) => X(i + i0).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ')}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/><circle cx="${X(a.length - 1).toFixed(1)}" cy="${Y(a[a.length - 1]).toFixed(1)}" r="2.6" fill="${c}"/></svg>`;
 }
+const BNAME = {SPY: 'S&amp;P 500', '^STOXX50E': 'Euro Stoxx 50', '^IBEX': 'Ibex 35'};      // índice con el que se compara cada idea (las europeas, con el suyo)
+const bname = t => BNAME[(t && t.indice) || 'SPY'] || esc(t.indice);
 function ideaCard(I, k) {
   const T = (S.idt && S.idt.ideas && S.idt.ideas[I.id]) || null, conv = Math.max(1, Math.min(5, I.conviccion || 3)), steps = I.cadena || [];
   const vals = (I.valores || []).map(v => { const t = T && T.por_valor && T.por_valor[v.sym], link = S.idx && S.idx.symbols.some(s => s.sym === v.sym);
@@ -785,8 +788,9 @@ function ideaCard(I, k) {
     <div class="x-body"><div>
         <div class="x-blk"><div class="x-mono">El hecho</div><p>${esc(I.hecho)}</p></div>
         ${I.precedentes && I.precedentes.length ? `<div class="x-blk"><div class="x-mono">Qué pasó otras veces</div><div class="x-prec">${I.precedentes.map(p => `<div><b>${esc(p.caso)}.</b> ${esc(p.que_paso.charAt(0).toUpperCase() + p.que_paso.slice(1))}</div>`).join('')}</div></div>` : ''}
-      </div><div class="x-blk"><div class="x-mono">Los valores${T && T.media != null ? ` · la idea ${num(T.media)} · S&amp;P 500 ${num(T.spy)}` : ''}</div><div class="x-vals">${vals}</div></div></div>
+      </div><div class="x-blk"><div class="x-mono">Los valores${T && T.media != null ? ` · la idea ${num(T.media)} · ${bname(T)} ${num(T.spy)}` : ''}</div><div class="x-vals">${vals}</div></div></div>
     ${I.en_contra ? `<div class="x-contra"><h4>El argumento en contra</h4><p>${esc(I.en_contra)}</p></div>` : ''}
+    ${I.camino ? `<div class="x-contra x-camino"><h4>Por el camino</h4><p>${esc(I.camino)}</p></div>` : ''}
     <div class="x-dec">
       <div class="x-cell go"><h4>Se entra si</h4><p>${esc(I.disparador)}</p></div>
       <div class="x-cell no"><h4>Se rompe si</h4><p>${esc(I.invalidacion)}</p></div>
@@ -804,8 +808,8 @@ function scRow(i) {
     : i.estado === 'abierta' ? `abierta · comprada el ${fdate(i.entrada)}${pend ? ' · empieza a contar con el cierre de ese día' : t && t.hasta ? ' · hasta el ' + fdate(t.hasta) : ''}`
     : i.estado === 'cerrada' ? `cerrada · ${esc(i.motivo_cierre || '')} · ${fdate(i.entrada)} → ${fdate(i.salida || '')}`
     : `en vigilancia · desde el ${fdate(i.fecha)}, solo como referencia`;
-  const v = (x, lab) => pend ? `<div class="v pend">pendiente<small>${lab}</small></div>` : `<div class="v${hip ? ' hip' : ''}">${x != null ? (hip ? num(x) : sgn(x)) : '—'}<small>${hip ? (lab === 'la idea' ? 'habría hecho' : 'S&amp;P 500 igual') : lab}</small></div>`;
-  return `<div class="x-sc x-rv${hip ? ' hip' : ''}"><div><h4>${esc(i.titulo)}</h4><span class="x-mono">${sub}</span></div>${v(t && t.media, 'la idea')}${v(t && t.spy, 'S&amp;P 500').replace('class="v', 'class="v spy')}</div>`;
+  const v = (x, lab) => pend ? `<div class="v pend">pendiente<small>${lab}</small></div>` : `<div class="v${hip ? ' hip' : ''}">${x != null ? (hip ? num(x) : sgn(x)) : '—'}<small>${hip ? (lab === 'la idea' ? 'habría hecho' : lab + ' igual') : lab}</small></div>`;
+  return `<div class="x-sc x-rv${hip ? ' hip' : ''}"><div><h4>${esc(i.titulo)}</h4><span class="x-mono">${sub}</span></div>${v(t && t.media, 'la idea')}${v(t && t.spy, bname(t)).replace('class="v', 'class="v spy')}</div>`;
 }
 function renderIdeas() {
   const D = S.ideas;
@@ -877,20 +881,23 @@ function renderArch() {
 
 function casosSec() {                                                         // lo que el propio diario ha dicho y lo que pasó después: es con lo que aprende
   const C = S.idc; if (!C || !C.casos || !C.casos.length) return '';
-  const NOM = {estructural: 'Hecho consumado', decision: 'Decisión anunciada', norma: 'Sector castigado por una norma', ataque: 'Ataque que obliga a gastar', demanda: 'Demanda contra un gigante', jefe: 'Cambio de jefe', bajista: 'Informe de un bajista', split: 'Split', indice: 'Entrada en el S&P 500', farmaco: 'Fármaco aprobado', huelga: 'Huelga o bloqueo', activista: 'Entra un activista', agricola: 'Materia prima agrícola', opa: 'Tras una compra', canario: 'Aviso de otra empresa', victima: 'Víctima de una novedad', susto: 'Susto de un día', obvio: 'Beneficiario evidente', panico: 'Pánico general', rival: 'Competencia del que tropieza', caido: 'Gigante caído', segundo: 'Segundo efecto', contagio: 'Buena noticia'};
+  const NOM = {estructural: 'Hecho consumado', decision: 'Decisión anunciada', norma: 'Sector castigado por una norma', ataque: 'Ataque que obliga a gastar', demanda: 'Demanda contra un gigante', jefe: 'Cambio de jefe', bajista: 'Informe de un bajista', split: 'Split', indice: 'Entrada en el S&P 500', farmaco: 'Fármaco aprobado', huelga: 'Huelga o bloqueo', activista: 'Entra un activista', agricola: 'Materia prima agrícola', opa: 'Tras una compra', canario: 'Aviso de otra empresa', victima: 'Víctima de una novedad', susto: 'Susto de un día', obvio: 'Beneficiario evidente', panico: 'Pánico general', rival: 'Competencia del que tropieza', caido: 'Gigante caído', segundo: 'Segundo efecto', contagio: 'Buena noticia', empresa: 'Noticia de la propia empresa', miedo: 'Con el miedo alto', impulso_corto: 'Split o entrada en un índice', europa: 'Europa y España', fusion_rota: 'Fusión u OPA rota', aranceles: 'Aranceles', bruselas: 'Multa de Bruselas', recompra: 'Recompra de acciones'};
   const cell = v => v == null ? '<small class="t">pendiente</small>' : sgn(v);
   const rows = C.casos.slice().reverse().map(c => `<tr><td>${esc(c.titulo)}<small>${fdate(c.fecha)} · ${esc(NOM[c.tipo] || c.tipo || '')} · ${esc((c.valores || []).join(' '))}</small></td><td>${c.dada ? '<b style="color:var(--go)">dada</b>' : '<b style="color:var(--no)">descartada</b>'}</td><td>${cell(c.e5)}</td><td>${cell(c.e20)}</td><td>${cell(c.e60)}</td></tr>`).join('');
+  const K = C.calibracion || {}, ks = Object.keys(K).sort(), med = ks.filter(k => K[k].e20 && K[k].e20.n);
+  const cal = med.length ? 'Por convicción, solo ideas que llegaron a comprarse, a 20 sesiones sobre su índice: ' + ks.map(k => `convicción ${k}: ${K[k].e20 && K[k].e20.n ? `${num(K[k].e20.media)} (${K[k].e20.n} idea${K[k].e20.n === 1 ? '' : 's'})` : 'sin resultado aún'}`).join(' · ') + '. Si las de más convicción no rinden más, la convicción se recalibra.'
+    : `Convicción: ${ks.reduce((a, k) => a + K[k].ideas, 0)} idea${ks.reduce((a, k) => a + K[k].ideas, 0) === 1 ? '' : 's'} comprada${ks.reduce((a, k) => a + K[k].ideas, 0) === 1 ? '' : 's'}, todavía sin resultado a 20 sesiones para saber si la convicción acierta.`;
   const r = C.resumen || {}, line = k => r[k] && r[k].n ? `${r[k].n} con resultado a 20 sesiones: ${num(r[k].e20)} de media sobre el S&P 500, ${r[k].aciertos} de ${r[k].n} en el sentido esperado.` : 'todavía sin resultado a 20 sesiones.';
   return `<section class="x-sec">${secHead('<b>Fe de erratas</b> · Casos propios', 'Lo que dije <em>y lo que pasó después</em>', 'Cada idea dada y cada idea descartada queda apuntada aquí con su fecha. Con el paso de las sesiones se mide lo que hicieron sus valores frente al S&P 500, y con eso se revisan las lecciones: si lo que descarto acaba subiendo, o lo que doy no funciona, el filtro cambia.')}
     <div class="x-tw x-rv"><table class="x-tr"><thead><tr><th>Caso</th><th>decisión</th><th>5 sesiones</th><th>20 sesiones</th><th>60 sesiones</th></tr></thead><tbody>${rows}</tbody></table>
-    <p style="margin:14px 0 4px;font-style:italic;color:var(--sub);font-size:16px">Ideas dadas: ${line('dadas')} Ideas descartadas: ${line('descartadas')}</p></div></section>`;
+    <p style="margin:14px 0 4px;font-style:italic;color:var(--sub);font-size:16px">Ideas dadas: ${line('dadas')} Ideas descartadas: ${line('descartadas')}</p><p style="margin:6px 0 4px;font-style:italic;color:var(--sub);font-size:16px">${cal}</p></div></section>`;
 }
 function renderTrain() {
   const P = S.idp;
   if (!P) { $('#view').innerHTML = '<div class="empty">Sin datos de entrenamiento (data/ideas_playbook.json).</div>'; return; }
   const VD = {dar: 'Sí la doy', esperar: 'Depende: con condiciones', no: 'No la doy'};
   const E = P.estudios, types = E.filter(e => e.grupo.includes('resumen por tipo')), rest = E.filter(e => !e.grupo.includes('resumen por tipo')), named = E.filter(e => e.grupo === 'Casos con nombre').length;
-  const cnt = rest.filter(e => !e.grupo.includes('según cómo fue')), total = cnt.reduce((s, e) => s + e.n, 0), kinds = cnt.filter(e => e.n > 1).length;
+  const cnt = rest.filter(e => !e.grupo.includes('según cómo fue') && !e.grupo.startsWith('Salidas')), total = cnt.reduce((s, e) => s + e.n, 0), kinds = cnt.filter(e => e.n > 1).length;
   const mxT = Math.max(...types.flatMap(e => [e.d0, e.e20, e.e60].map(v => Math.abs(v || 0))), 1);
   const bar = (v, lab) => `<div class="x-bars"><small>${lab}</small><i style="--w:${(Math.abs(v || 0) / mxT * 50).toFixed(1)}%;--x:${v >= 0 ? '0' : '-100%'};--c:${v >= 0 ? 'var(--go)' : 'var(--no)'}"></i><span>${sgn(v)}</span></div>`;
   let g = '', rows = '';
@@ -912,7 +919,7 @@ function renderTrain() {
   ${types.length ? `<section class="x-sec">${secHead('<b>Hemeroteca</b> · Casos con nombre', `${named} episodios, <em>${['dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez'][types.length - 2] || types.length} tipos</em>`, 'Los episodios que todo el mundo recuerda, agrupados por el tipo de hecho. Lo que hizo el grupo de valores «lógico» el mismo día y, comprando al día siguiente, lo que ganó de más sobre el S&P 500. Están elegidos y clasificados a mano, a toro pasado: sirven de orientación, no de prueba.')}
     <div class="x-types">${types.map(e => `<div class="x-type x-rv"><h4>${esc(e.nombre.split(' (')[0])}<small>${e.n} casos · suben a 20 sesiones el ${e.hit20} %</small></h4>${bar(e.d0, 'el mismo día')}${bar(e.e20, '20 sesiones después')}${bar(e.e60, '60 sesiones después')}</div>`).join('')}</div></section>` : ''}
   ${casosSec()}
-  <section class="x-sec">${secHead('<b>Datos</b> · Los ensayos', 'Cada tipo de idea, <em>simulado</em>', '«El mismo día» es lo que se mueve el grupo el día de la noticia: eso ya no se puede comprar. Las otras columnas son lo que se gana de más sobre el S&P 500 comprando en la apertura del día siguiente y manteniendo 5, 20 o 60 sesiones. La t mide si se distingue del azar: hace falta 2 o más. La marca verde señala los que lo consiguen.')}
+  <section class="x-sec">${secHead('<b>Datos</b> · Los ensayos', 'Cada tipo de idea, <em>simulado</em>', '«El mismo día» es lo que se mueve el grupo el día de la noticia: eso ya no se puede comprar. Las otras columnas son lo que se gana de más sobre el S&P 500 comprando en la apertura del día siguiente y manteniendo 5, 20 o 60 sesiones (en los ensayos de Europa, sobre la media de las grandes europeas; en «Salidas» y cuando la nota lo dice, en precio). La t mide si se distingue del azar: hace falta 2 o más. La marca verde señala los que lo consiguen.')}
     <div class="x-tw x-rv"><table class="x-tr"><thead><tr><th>Idea</th><th>casos</th><th>el mismo día</th><th>5 sesiones</th><th>20 sesiones</th><th>60 sesiones</th></tr></thead><tbody>${rows}</tbody></table></div></section>
   <p class="x-end">${esc(P.cautelas)} Generado con <code>python -m vp.ideas_train</code>.</p></div>`;
   aiStart('');
