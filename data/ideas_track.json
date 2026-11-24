@@ -1,17 +1,16 @@
 {
- "generado": 1795464647,
+ "generado": 1795506045,
  "ideas": {
   "2026-11-19-panico-miedo": {
    "estado": "abierta",
    "desde": "2026-11-20",
-   "hasta": "2026-11-20",
+   "hasta": "2026-11-23",
    "por_valor": {
     "QQQ": {
      "ref": 608.45,
-     "ahora": 608.45,
-     "pct": 0.0,
+     "ahora": 651.03,
+     "pct": 7.0,
      "serie": [
-      716.43,
       716.76,
       707.64,
       709.24,
@@ -70,27 +69,27 @@
       656.95,
       659.51,
       645.04,
-      608.45
+      608.45,
+      651.03
      ],
-     "i0": 59
+     "i0": 58
     }
    },
-   "media": 0.0,
-   "spy": 0.0,
+   "media": 7.0,
+   "spy": 4.71,
    "pendiente": false,
    "hipotetica": false
   },
   "2026-11-17-veto-chips": {
    "estado": "abierta",
    "desde": "2026-11-18",
-   "hasta": "2026-11-20",
+   "hasta": "2026-11-23",
    "por_valor": {
     "SMH": {
      "ref": 459.54,
-     "ahora": 400.06,
-     "pct": -12.94,
+     "ahora": 460.18,
+     "pct": 0.14,
      "serie": [
-      553.11,
       556.63,
       545.22,
       550.48,
@@ -149,16 +148,16 @@
       460.1,
       459.54,
       447.48,
-      400.06
+      400.06,
+      460.18
      ],
-     "i0": 57
+     "i0": 56
     },
     "AMAT": {
      "ref": 352.3,
-     "ahora": 302.63,
-     "pct": -14.1,
+     "ahora": 346.87,
+     "pct": -1.54,
      "serie": [
-      461.67,
       458.39,
       441.85,
       438.46,
@@ -217,16 +216,16 @@
       349.23,
       352.3,
       338.93,
-      302.63
+      302.63,
+      346.87
      ],
-     "i0": 57
+     "i0": 56
     },
     "LRCX": {
      "ref": 211.67,
-     "ahora": 183.27,
-     "pct": -13.42,
+     "ahora": 209.76,
+     "pct": -0.9,
      "serie": [
-      301.9,
       301.49,
       290.2,
       288.32,
@@ -285,13 +284,14 @@
       210.69,
       211.67,
       203.68,
-      183.27
+      183.27,
+      209.76
      ],
-     "i0": 57
+     "i0": 56
     }
    },
-   "media": -13.49,
-   "spy": -5.53,
+   "media": -0.77,
+   "spy": -1.08,
    "pendiente": false,
    "hipotetica": false
   },
@@ -659,22 +659,23 @@
   }
  },
  "alertas": [
-  "Miedo alto (VIX 35.9): revisa los descartes de «comprar la caída», «comprar al castigado» y «competidoras castigadas» (lección «miedo»). Sigue siendo «no» si la caída es por un problema propio.",
-  "S&P 500 -3.6 % con el VIX previo en 28.4: IDEA de pánico con miedo alto → Nasdaq-100 y, mejor aún, semiconductores (lección «panico»).",
-  "Racha de 7 días a la baja (-5.8 % en tres sesiones) con el VIX previo en 28.4: IDEA de pánico con miedo alto (lección «panico»).",
-  "Bono a 10 años -14 pb en un día: el beneficiario evidente (bancos, constructoras) ya lo ha recogido (lección «obvio»).",
-  "Oro -4.6 %: las mineras lo recogen el mismo día (lección «obvio»).",
-  "NVDA -14.0 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "AVGO -12.2 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "AMD -13.2 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "MU -13.9 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "ARM -14.1 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "AMAT -10.7 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "LRCX -10.0 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "KLAC -10.3 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "INTU -12.8 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "MRVL -11.7 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "ANET -11.6 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "SMH -10.6 %: con miedo alto, revisar como castigo excesivo si NO es un problema propio (lección «miedo»); mira también si sus competidoras suben ≥ 2 % hoy (lección «rival»)."
+  "Petróleo -4.5 %: no comprar aerolíneas ni petroleras por el movimiento en sí (lección «obvio»); solo cuenta si hay un hecho duradero detrás (lección «estructural»).",
+  "Oro +3.9 %: las mineras lo recogen el mismo día (lección «obvio»).",
+  "NVDA +31.5 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "TSLA +11.5 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "ORCL +12.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "QCOM +10.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "INTC +16.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "MU +19.0 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "PLTR +11.1 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "SMCI +13.3 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "ARM +16.1 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "TXN +10.4 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "AMAT +14.6 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "LRCX +14.4 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "KLAC +15.0 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "MRVL +18.4 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "TSM +14.1 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas.",
+  "SMH +15.0 %: si sus competidoras caen hoy, posible castigo excesivo (lección «contagio»); no comprarlas por contagio si están quietas."
  ]
 }

@@ -538,6 +538,35 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-24-comprar-a-las-rezagadas-del-rebote-de-ayer-amd-b",
+   "fecha": "2026-11-24",
+   "titulo": "Comprar a las rezagadas del rebote de ayer (AMD, Broadcom)",
+   "tipo": "contagio",
+   "valores": [
+    "AMD",
+    "AVGO"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-24-comprar-aerolineas-porque-el-petroleo-cae-un-7-e",
+   "fecha": "2026-11-24",
+   "titulo": "Comprar aerolíneas porque el petróleo cae un 7 % en dos días",
+   "tipo": "obvio",
+   "valores": [
+    "DAL",
+    "UAL",
+    "JETS"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -552,5 +581,5 @@
    "aciertos": 0
   }
  },
- "generado": 1795464656
+ "generado": 1795506051
 }
