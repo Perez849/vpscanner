@@ -5,10 +5,12 @@ import re
 
 EURO = ('SAP.DE SIE.DE ALV.DE DTE.DE MUV2.DE MBG.DE BMW.DE VOW3.DE BAS.DE BAYN.DE IFX.DE ADS.DE DB1.DE DHL.DE RWE.DE EOAN.DE DBK.DE RHM.DE MRK.DE HEN3.DE CBK.DE '
         'MC.PA OR.PA RMS.PA TTE.PA SAN.PA AI.PA SU.PA BNP.PA CS.PA SAF.PA EL.PA DG.PA KER.PA BN.PA GLE.PA ACA.PA ENGI.PA CAP.PA RI.PA ORA.PA AIR.PA '
-        'ASML.AS INGA.AS AD.AS PRX.AS HEIA.AS PHIA.AS WKL.AS ADYEN.AS MT.AS ENEL.MI ENI.MI ISP.MI UCG.MI RACE.MI G.MI STLAM.MI ABI.BR KBC.BR NOKIA.HE NDA-FI.HE').split()
+        'ASML.AS INGA.AS AD.AS PRX.AS HEIA.AS PHIA.AS WKL.AS ADYEN.AS MT.AS ENEL.MI ENI.MI ISP.MI UCG.MI RACE.MI G.MI STLAM.MI ABI.BR KBC.BR NOKIA.HE NDA-FI.HE '
+        'LDO.MI HO.PA LHA.DE AF.PA').split()
 ES = ('ACS.MC ACX.MC AENA.MC AMS.MC ANA.MC ANE.MC BBVA.MC BKT.MC CABK.MC CLNX.MC COL.MC ELE.MC ENG.MC FDR.MC FER.MC GRF.MC IAG.MC IBE.MC IDR.MC ITX.MC '
       'LOG.MC MAP.MC MRL.MC MTS.MC NTGY.MC PUIG.MC RED.MC REP.MC ROVI.MC SAB.MC SAN.MC SCYR.MC SLR.MC TEF.MC UNI.MC MEL.MC').split()
 IDX = ['^STOXX50E', '^IBEX']
+MACRO = ['TTF=F', 'EURUSD=X']                       # gas europeo (desde 2017) y euro frente al dólar: solo para el entrenamiento
 
 # Sector de cada valor (a mano), para las preguntas de competidoras y contagio, como la subindustria GICS en EE. UU.
 SECTOR = {}
@@ -22,11 +24,12 @@ for _sec, _vals in {
     'lujo y moda': 'MC.PA RMS.PA KER.PA EL.PA OR.PA ADS.DE ITX.MC PUIG.MC',
     'telecomunicaciones': 'DTE.DE ORA.PA TEF.MC CLNX.MC NOKIA.HE',
     'tecnología y chips': 'SAP.DE ASML.AS IFX.DE CAP.PA ADYEN.AS PRX.AS WKL.AS IDR.MC',
-    'industria y defensa': 'SIE.DE SU.PA AIR.PA SAF.PA RHM.DE DHL.DE PHIA.AS FDR.MC',
+    'industria': 'SIE.DE SU.PA AIR.PA SAF.PA DHL.DE PHIA.AS FDR.MC',
+    'defensa': 'RHM.DE LDO.MI HO.PA',
     'construcción e infraestructuras': 'DG.PA ACS.MC FER.MC SCYR.MC AENA.MC ANA.MC',
     'farmacia y química': 'SAN.PA BAYN.DE MRK.DE BAS.DE AI.PA HEN3.DE GRF.MC ROVI.MC',
     'alimentación y bebidas': 'BN.PA RI.PA HEIA.AS ABI.BR AD.AS',
-    'turismo y viajes': 'IAG.MC MEL.MC AMS.MC',
+    'turismo y viajes': 'IAG.MC LHA.DE AF.PA MEL.MC AMS.MC',
     'acero': 'MT.AS ACX.MC MTS.MC',
     'inmobiliario': 'COL.MC MRL.MC',
     'distribución': 'LOG.MC',
@@ -37,4 +40,4 @@ for _sec, _vals in {
 
 
 def is_eu(sym: str) -> bool:
-    return sym in IDX or bool(re.search(r'\.(DE|PA|AS|MI|MC|BR|HE|LS|IR)$', sym))
+    return sym in IDX or sym in MACRO or bool(re.search(r'\.(DE|PA|AS|MI|MC|BR|HE|LS|IR)$', sym))
