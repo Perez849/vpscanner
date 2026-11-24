@@ -62,7 +62,7 @@
    "disparador": "Cumplido el 20-nov. El VIX cerró el jueves en 28,44 (28 o más) y el viernes el S&P 500 cae un 3,0 % (SPY 694,1 $ a las 21:10), muy por debajo del umbral de 710,5 $ y del −2 %. Se compra QQQ al cierre del viernes (o en la apertura del lunes, que en el entrenamiento da lo mismo).",
    "invalidacion": "Que el VIX vuelva por debajo de 24 sin que haya saltado el disparador: el susto se habrá pasado sin llegar a pánico. Si ya se está dentro: que la caída pase a ser por un problema propio de las grandes tecnológicas (unos resultados que recortan previsiones) y no por venta generalizada.",
    "no_hacer": "Comprar hoy: el VIX de ayer estaba en 24,6, y con ese nivel de miedo un día de −2 % no ha dado nada (+0,7 % viniendo de calma). Tampoco comprar AMD por su caída: es el informe de un bajista, y hasta que haya una respuesta seria no se toca.",
-   "horizonte": "De 1 a 3 meses desde la entrada. El grueso llega entre la sesión 20 y la 60.",
+   "horizonte": "Unas 90 sesiones desde la entrada (hasta principios de abril). El grueso llega entre la sesión 20 y la 90.",
    "en_contra": "El mercado está en tendencia bajista, con la Fed subiendo tipos y una venta concentrada en la inteligencia artificial, que es casi la mitad del Nasdaq. Ese tipo de entorno, en 2000–2002 y en 2008, dio rebotes que duraron poco antes de una caída mayor, y el resultado medio esconde esas rachas. Además, el golpe de hoy coincide con el vencimiento mensual de opciones, que exagera los movimientos en ambos sentidos. Y se suma a la idea de chips, que ya está dentro: si la venta de la inteligencia artificial sigue, las dos pierden a la vez.",
    "precedentes": [
     {
@@ -118,6 +118,12 @@
      "edicion": "mañana",
      "nuevo": true,
      "texto": "El QQQ cerró ayer en 651,03 $: +7,0 % sobre la entrada (608,45 $), y +2,3 % por encima del S&P 500 en el mismo tramo. Los futuros del Nasdaq suben un 0,1 % esta mañana. No hay que hacer nada."
+    },
+    {
+     "fecha": "2026-11-24",
+     "edicion": "manual",
+     "nuevo": true,
+     "texto": "Cambio de horizonte, de 60 a 90 sesiones. El entrenamiento, medido ahora de 5 a 120 sesiones, dice que tras un pánico con miedo alto el Nasdaq sigue ganando hasta la sesión 90: +11,4 % sobre lo normal, frente a +8,2 % a 60, y es donde más se distingue del azar. La salida pasa de mediados de febrero a principios de abril. La tesis, la entrada y el marcador no cambian."
     }
    ],
    "fuentes": [
@@ -135,7 +141,7 @@
     }
    ],
    "entrada": "2026-11-20",
-   "camino": "Comprar el Nasdaq en un pánico con miedo alto ha caído de mediana un 4 % por el camino antes de subir, y una de cada cinco veces más de un 13 % (57 casos). Una caída así no rompe la idea. No hay stop de precio: con uno al −10 %, el resultado medio habría bajado de +10,7 % a +7,4 %. Se sale por la invalidación o al cumplirse las 60 sesiones (hacia mediados de febrero). De la sesión 20 a la 60, la idea ha mejorado siete de cada diez veces."
+   "camino": "Comprar el Nasdaq en un pánico con miedo alto ha caído de mediana un 4 % por el camino antes de subir, y una de cada cinco veces más de un 13 % (57 casos). Una caída así no rompe la idea. No hay stop de precio: con uno al −10 %, el resultado medio habría bajado de +10,7 % a +7,4 %. Se sale por la invalidación o al cumplirse las 90 sesiones (hacia el 5 de abril), que es donde esta idea ha rendido más y donde más se distingue del azar."
   },
   {
    "id": "2026-11-17-veto-chips",
@@ -286,6 +292,12 @@
      "edicion": "mañana",
      "nuevo": true,
      "texto": "El SMH cerró ayer en 460,18 $, ya por encima de la entrada (459,54 $): ha recuperado en un día todo lo perdido desde el 18. Applied Materials cerró en 346,87 $ (−1,5 % desde la entrada) y Lam Research en 209,76 $ (−0,9 %). El Kospi sube un 6,3 % y el Nikkei un 3,9 % con los chips asiáticos. Se mantiene con su horizonte de 2 a 3 meses."
+    },
+    {
+     "fecha": "2026-11-24",
+     "edicion": "manual",
+     "nuevo": true,
+     "texto": "Revisado el horizonte con el nuevo ensayo de 5 a 120 sesiones: para un sector castigado por una norma, 60 sesiones sigue siendo lo mejor. Esta idea no cambia; sale hacia el 17 de febrero o antes si se rompe."
     }
    ],
    "fuentes": [
