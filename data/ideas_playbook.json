@@ -9,7 +9,7 @@
    "veredicto": "dar",
    "titulo": "Hechos consumados que cambian el mundo",
    "texto": "Una guerra, una paz, una pandemia, una vacuna, un vuelco electoral, un fármaco que funciona: algo que ya ha ocurrido y que cambia lo que muchas empresas ganarán durante trimestres. Los beneficiarios siguieron subiendo semanas después. Es la lección que mejor aguanta al ampliar los casos. Y que el primer día ya haya sido fuerte no significa que se llegue tarde: al contrario, una reacción grande el primer día suele indicar que el cambio es de verdad.",
-   "cifra": "28 casos: +6,1 % sobre el S&P 500 en 20 sesiones (suben el 61 %) y +7,7 % en 60 (61 %), comprando al día siguiente. 11-S → defensa +5 %; Ucrania → fertilizantes +26 % a 20 sesiones. Con un primer día de +3 % o más (16 casos): +8,4 % en 20 sesiones (suben el 81 %); con un primer día pequeño (12): +3,0 %. Lo mejor llega pronto: +6,1 % a 20 sesiones (t 2,9) y +8,7 % a 40; a 60 ya no añade."
+   "cifra": "28 casos: +6,1 % sobre el S&P 500 en 20 sesiones (suben el 61 %) y +7,7 % en 60 (61 %), comprando al día siguiente. 11-S → defensa +5 %; Ucrania → fertilizantes +26 % a 20 sesiones. Con un primer día de +3 % o más (16 casos): +8,4 % en 20 sesiones (suben el 81 %); con un primer día pequeño (12): +3,0 %. Lo mejor llega pronto: a 40 sesiones, +8,7 %; a 60 ya no añade."
   },
   {
    "id": "decision",
@@ -29,15 +29,15 @@
    "id": "panico",
    "veredicto": "dar",
    "titulo": "El pánico se compra solo cuando el miedo ya es alto",
-   "texto": "Al incluir la burbuja puntocom y la crisis de 2008, la regla general desaparece: comprar el Nasdaq tras un día de −2 % da lo mismo que un tramo cualquiera. Lo que sí funciona, y con más fuerza que antes, es comprar cuando el mercado ya venía asustado (índice del miedo de 28 o más), tras un día de −2 % o tras una racha de tres días que sume −3 %. Viniendo de calma o en plena tendencia bajista, no hay ventaja. Comprar al cierre o en la apertura siguiente da lo mismo. Y dentro del pánico con miedo alto, lo que más se castiga es lo que más rebota: los semiconductores han ganado más que el Nasdaq entero, en las dos mitades del periodo.",
-   "cifra": "Día de −2 % con el VIX previo ≥ 28: +10,7 % en 60 sesiones (57 casos, gana el 77 %, t 5,9). Racha de tres días con miedo alto: +8,0 % (44 casos). Cualquier día de −2 %: +2,3 %; viniendo de calma: +0,7 %; en tendencia bajista: +1,3 %. Un tramo cualquiera de 60 sesiones da +2,6 %. Con miedo alto, semiconductores: +10,4 % (+8,0 % en 2000–2013 y +15,8 % en 2014–2026); hueco de apertura ≥ 1,5 % a la baja: +6,6 % comprando al cierre. Midiendo más lejos: el Nasdaq tras un pánico con miedo alto sigue subiendo hasta las 90 sesiones (+11,4 % sobre lo normal, frente a +8,2 % a 60; lección «salidas»)."
+   "texto": "Al incluir la burbuja puntocom y la crisis de 2008, la regla general desaparece: comprar el Nasdaq tras un día de −2 % da lo mismo que un tramo cualquiera. Lo que sí funciona, y con más fuerza que antes, es comprar cuando el mercado ya venía asustado (índice del miedo de 28 o más), tras un día de −2 % o tras una racha de tres días que sume −3 %. Sin ese miedo no hay ventaja, ni viniendo de calma ni en plena tendencia bajista; con él, funciona también en tendencia bajista. Comprar al cierre o en la apertura siguiente da lo mismo. Y dentro del pánico con miedo alto, lo que más se castiga es lo que más rebota: los semiconductores han ganado más que el Nasdaq entero, en las dos mitades del periodo.",
+   "cifra": "Día de −2 % con el VIX previo ≥ 28: +10,7 % en precio en 60 sesiones (57 casos, gana el 77 %, t 5,9). Racha de tres días con miedo alto: +8,0 % (44 casos). Cualquier día de −2 %: +2,3 %; viniendo de calma: +0,7 %; en tendencia bajista: +1,3 %. Un tramo cualquiera de 60 sesiones da +2,6 %. Con miedo alto, semiconductores: +10,4 % (+8,0 % en 2000–2013 y +15,8 % en 2014–2026); hueco de apertura ≥ 1,5 % a la baja: +6,6 % comprando al cierre. Midiendo más lejos, y restando lo que hace el Nasdaq en un tramo cualquiera: +8,2 % a 60 sesiones y +11,4 % a 90 (lección «salidas»)."
   },
   {
    "id": "miedo",
    "veredicto": "esperar",
    "titulo": "El miedo alto convierte castigos normales en oportunidades",
    "texto": "Al cruzar las lecciones sale un hilo común: muchas ideas que por sí solas son un «no» funcionan cuando llegan en plena tormenta (índice del miedo de 28 o más). En calma, si una acción grande se hunde un 10 % es porque tiene un problema y suele seguir cayendo. En pánico, la misma caída es en buena parte venta indiscriminada, y se ha recuperado con creces. Lo mismo pasa con las competidoras castigadas cuando el líder se dispara, o con el castigado de un susto. Cada combinación se ha comprobado por separado en 2000–2013 y en 2014–2026. La condición que no se puede saltar: que la caída no sea por un problema propio, porque los escándalos y los malos resultados famosos no rebotaron ni en plena tormenta.",
-   "cifra": "Una grande cae ≥ 10 % con VIX ≥ 28 (635 casos): +18,6 % en 60 sesiones (t 7,3; +19,5 % en 2000–2013 y +12,3 % en 2014–2026). La misma caída en calma (VIX < 18): −1,3 %. Competidoras castigadas cuando el líder se dispara, con miedo alto: +9,0 % (126 casos). Castigado de un susto con miedo alto: +4,8 % (16 casos), frente a +1,9 % en calma (15). Caídas famosas por un problema propio con miedo alto: −7,7 % en 20 sesiones. En Europa se repite: +18,0 % (87 casos; lección «europa»). Ojo, por el camino: la grande castigada en plena tormenta cae de mediana otro 18 % antes de recuperarse (lección «salidas»). A 90 sesiones, la grande castigada con miedo alto llega a +21,1 % (t 8,0)."
+   "cifra": "Una grande cae ≥ 10 % con VIX ≥ 28 (635 casos): +18,6 % en 60 sesiones (t 7,3; +19,5 % en 2000–2013 y +12,3 % en 2014–2026). La misma caída en calma (VIX < 18): −1,3 %. Competidoras castigadas cuando el líder se dispara, con miedo alto: +8,9 % (126 casos). Castigado de un susto con miedo alto: +4,8 % (16 casos), frente a +1,9 % en calma (15). Caídas famosas por un problema propio con miedo alto: −7,7 % en 20 sesiones. En Europa se repite: +18,0 % (87 casos; lección «europa»). Ojo, por el camino: la grande castigada en plena tormenta cae de mediana otro 18 % antes de recuperarse (lección «salidas»). A 90 sesiones, la grande castigada con miedo alto llega a +21,1 % (t 8,0)."
   },
   {
    "id": "europa",
@@ -71,7 +71,7 @@
    "id": "rival",
    "veredicto": "esperar",
    "titulo": "La competencia del que tropieza",
-   "texto": "En general no da nada, pero hay un caso en que sí: cuando el mismo día del tropiezo las competidoras suben con fuerza (un 2 % o más). Ahí el mercado está viendo un trasvase real de negocio, que sigue unas semanas. Al incluir 2000–2007 el efecto se acorta: es más claro a un mes que a tres.",
+   "texto": "En general no da nada, pero hay un caso en que sí: cuando el mismo día del tropiezo las competidoras suben con fuerza (un 2 % o más). Ahí el mercado está viendo un trasvase real de negocio. Es lento: a uno y a tres meses se ve poco, pero a unos cuatro meses (90 sesiones) se distingue con claridad del azar.",
    "cifra": "Competidoras que suben ≥ 2 % el día de la caída (113 casos): +2,7 % en 20 sesiones (t 2,1) y +3,6 % en 60 (t 1,7). 30 casos con nombre, sin filtrar: −0,9 % en 20. Midiendo más lejos, el trasvase cobra a 90 sesiones: +6,9 % (t 2,9)."
   },
   {
