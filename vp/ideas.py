@@ -228,13 +228,20 @@ def metricas(cl: Dict[str, Dict[str, float]]) -> Dict[str, Optional[float]]:
         m['racha'] = n
     for s, k in (('CL=F', 'oil_1d'), ('ZW=F', 'trigo_1d'), ('ZC=F', 'maiz_1d'), ('GC=F', 'oro_1d')):
         m[k] = r(serie(s))
+    sm = cl.get('SMH', {})
+    sms = [sm[k] for k in sorted(sm) if k <= sd]
+    m['chips_rel'] = (r(sms) - m['spy_1d']) if len(sms) > 1 and m['spy_1d'] is not None and max(sm) == sd else None     # chips de EE. UU. frente al S&P 500, misma sesión
     eu = cl.get('^STOXX50E', {})
     if eu:                                                                # Europa: último día de su sesión y el VIX del cierre de Wall Street ANTERIOR a ese día (el miedo que había al abrir Europa)
         fe = max(eu)
         m['eu_fecha'] = fe
         m['eu_1d'] = r(serie('^STOXX50E'))
         ib = cl.get('^IBEX', {})
-        m['ibex_1d'] = r([ib[k] for k in sorted(ib) if k <= fe]) if ib else None
+        ibs = [ib[k] for k in sorted(ib) if k <= fe] if ib else []
+        m['ibex_1d'] = r(ibs) if ibs else None
+        for k, x in (('eu', serie('^STOXX50E')), ('ibex', ibs)):                # racha de tres días a la baja y lo que suma
+            m[k + '_3d'] = r(x, 3) if len(x) > 3 else None
+            m[k + '_racha3'] = len(x) > 3 and all(x[-j] < x[-j - 1] for j in (1, 2, 3))
         vx = cl.get('^VIX', {})
         prev = [k for k in sorted(vx) if k < fe]
         m['eu_vix_prev'] = vx[prev[-1]] if prev else None
@@ -287,6 +294,13 @@ def reglas_europa(m: Dict, movers: List[tuple]) -> List[str]:
         x = m.get(k)
         if x is not None and x <= -0.02:
             out.append(f'Europa ({fe}): {nom} {100 * x:+.1f} % con el VIX previo en {"—" if vp_ is None else f"{vp_:.1f}"}: ' + (f'IDEA de pánico con miedo alto en Europa: comprar el {nom} (lección «europa»).' if alto else 'caída del 2 % sin miedo alto: no es idea (lección «europa»).'))
+    for k, nom in (('eu', 'Euro Stoxx 50'), ('ibex', 'Ibex 35')):
+        x3 = m.get(k + '_3d')
+        if m.get(k + '_racha3') and x3 is not None and x3 <= -0.03 and (m.get(k + '_1d') or 0) > -0.02:
+            out.append(f'Europa ({fe}): {nom}, tres días seguidos a la baja ({100 * x3:+.1f} %) con el VIX previo en {"—" if vp_ is None else f"{vp_:.1f}"}: ' + (f'IDEA de pánico con miedo alto en Europa: comprar el {nom} (lección «europa»).' if alto else 'sin miedo alto no es idea (lección «europa»).'))
+    cr = m.get('chips_rel')
+    if cr is not None and cr <= -0.04:
+        out.append(f'Chips de EE. UU. {100 * cr:+.1f} % frente al S&P 500: no comprar ASML ni Infineon por contagio; en Europa siguen peor después (lección «europa»).')
     s1, us_alto = m.get('spy_1d'), m.get('vix_prev') is not None and m['vix_prev'] >= 28
     if s1 is not None and s1 <= -0.02 and us_alto:
         out.append('Wall Street −2 % con el miedo alto: también es IDEA en Europa, comprando el Euro Stoxx 50 o el Ibex 35 en la apertura europea siguiente (lección «europa»).')
