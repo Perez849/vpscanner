@@ -112,7 +112,16 @@ Sale de seguir día a día cada tipo de idea que funciona durante sus 60 sesione
 
 - **Las ideas buenas caen por el camino antes de dar fruto.** Comprar el Nasdaq en un pánico con miedo alto ha caído de mediana un 4 % antes de subir (una de cada cinco veces, más de un 13 %); los semiconductores, un 5 % (más de un 16 %); la grande castigada en plena tormenta, un 18 %.
 - **Un stop de precio las estropea:** con un stop al −10 %, el pánico con miedo alto pasa de +10,7 % a +7,4 %, y la grande castigada en plena tormenta, de +23,6 % a +7,1 %. Por eso **se sale por un hecho (la invalidación) o por el horizonte, no por el precio**.
-- **El horizonte importa:** en los pánicos con miedo alto, de la sesión 20 a la 60 la idea mejora en siete de cada diez casos. No se recogen beneficios por un buen primer día.
+- **El horizonte importa y depende del tipo** (grupo «Horizontes» de los ensayos, medido de 5 a 120 sesiones). No se recogen beneficios por un buen primer día.
+
+  | Tipo | Horizonte | Por qué |
+  |---|---|---|
+  | `panico`, `miedo` (y la grande europea castigada con miedo) | **90 sesiones** (unos 4 meses) | El Nasdaq pasa de +8,2 % a 60 a +11,4 % a 90, y es donde más se distingue del azar; la grande castigada, de +18,6 % a +21,1 %. |
+  | `rival` (competidoras con trasvase) | **90 sesiones** | +3,6 % a 60 y +6,9 % a 90. |
+  | `norma` | **60 sesiones** | Es donde mejor se distingue del azar (+16,4 %, siete casos). |
+  | `europa`: Ibex 35 tras un pánico | **60 sesiones** | +4,7 % a 60; después devuelve algo. El Euro Stoxx 50 da lo más fiable la primera semana y sigue despacio hasta 90. |
+  | `estructural` | **20 a 40 sesiones** | +6,1 % a 20 y +8,7 % a 40; a 60 ya no añade. |
+  | `impulso_corto` (split, entrada en el índice) | **De 2 a 4 semanas** | El split da lo suyo en 10–20 sesiones y lo devuelve a 40. |
 - **La señal de alarma es la caída en calma:** de las grandes castigadas que caen otro 10 % después de comprarlas, en calma solo acaba en positivo una de cada cuatro; en plena tormenta, la mitad.
 
 Cada idea viva lleva en **`camino`** la caída que es normal esperar según su tipo (de la lección `salidas`), para que una caída de ese tamaño no se confunda con una idea rota.
@@ -123,7 +132,7 @@ Cada idea viva lleva en **`camino`** la caída que es normal esperar según su t
 
 Reglas del registro:
 
-- Una idea **no se borra ni se retoca** aunque salga mal: solo cambia de estado y gana notas. (Única excepción hasta hoy: el 16-nov-2026 se retiraron a petición del usuario las dos ideas de arranque, que eran sus ejemplos y no temas del día.)
+- Una idea **no se borra ni se retoca** aunque salga mal: solo cambia de estado y gana notas. (Excepciones: el 16-nov-2026 se retiraron a petición del usuario las dos ideas de arranque, que eran sus ejemplos y no temas del día; y el horizonte puede cambiar si el entrenamiento demuestra otro mejor, siempre con una nota que lo diga y sin tocar el marcador.)
 - La invalidación es un **hecho**, no un stop de precio. No hay tope de ganancia.
 - El marcador (`data/ideas_track.json`) compara cada idea con su índice (el SPY, o el Euro Stoxx 50 o el Ibex 35 si la ficha lleva `indice`): abierta, desde el cierre del día de entrada; en vigilancia, desde la referencia (solo orientativo).
 - Cada descarte: `fecha`, `titulo`, `por_que`, `leccion`, `tipo` y `valores` (lista de tickers).
