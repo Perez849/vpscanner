@@ -1395,6 +1395,63 @@ if EUc and '^STOXX50E' in col and '^IBEX' in col:
     salida('Europa · Euro Stoxx 50 −2 % con el miedo alto → Euro Stoxx 50', 'El pánico en Europa.', [(i, ['^STOXX50E']) for i in thin(idx[since & (rE <= -0.02) & (vixp >= 28)])])
     salida('Europa · Ibex 35 −2 % con el miedo alto → Ibex 35', 'El pánico en España.', [(i, ['^IBEX']) for i in thin(idx[since & (rI <= -0.02) & (vixp >= 28)])])
 
+# ── horizontes: las mismas ideas medidas a 5, 10, 20, 40, 60, 90 y 120 sesiones, para saber cuándo se cobra cada una (no cambia ningún otro ensayo) ──
+G = 'Horizontes · cuándo se cobra cada idea'
+HZ = (5, 10, 20, 40, 60, 90, 120)
+_ab = {}
+def abase(sym, h):
+    """Lo que hace el valor en un tramo cualquiera de h sesiones (para medir un índice comprado tras un hecho)."""
+    if (sym, h) not in _ab:
+        j = col[sym]; ii = np.arange(int(np.argmax(since)) + 1, len(idx) - h - 2, 3)
+        with np.errstate(all='ignore'):
+            _ab[(sym, h)] = float(np.nanmean(Av[ii + h, j] / Ov[ii + 1, j] - 1))
+    return _ab[(sym, h)]
+def horiz(nombre, logica, evs_, medida, nota):
+    """evs_: lista de eventos; medida(e, h) → resultado del evento a h sesiones (ya restado lo normal). Solo cuentan los que tienen las 120 sesiones."""
+    E_ = [e for e in evs_ if e[0] + 1 + max(HZ) < len(idx)]
+    M = np.array([[medida(e, h) for h in HZ] for e in E_], dtype=float) if E_ else np.zeros((0, len(HZ)))
+    M = M[np.isfinite(M).all(axis=1)] if len(M) else M
+    if len(M) < 5: return
+    mu = M.mean(axis=0); sd = M.std(axis=0, ddof=1); t = mu / sd * np.sqrt(len(M))
+    k = int(np.argmax(mu)); kt = int(np.argmax(t)); ritmo = mu / np.array(HZ)
+    fm = lambda x: f"{100 * x:+.1f}".replace('.', ',') + ' %'
+    r_ = {'n': int(len(M)), 'd0': None, 'e5': round(100 * mu[0], 2), 'e20': round(100 * mu[2], 2), 'e60': round(100 * mu[4], 2), 't5': round(float(t[0]), 1), 't20': round(float(t[2]), 1), 't60': round(float(t[4]), 1),
+          'curva': {str(h): round(100 * float(v), 2) for h, v in zip(HZ, mu)}, 'tcurva': {str(h): round(float(v), 1) for h, v in zip(HZ, t)}, 'mejor_h': HZ[k], 'mejor_t_h': HZ[kt]}
+    r_['nota'] = (nota + '. ' + ' · '.join(f'{h} s: {fm(v)} (t {tt:.1f})'.replace('.', ',') for h, v, tt in zip(HZ, mu, t))
+                  + f'. Máximo a las {HZ[k]} sesiones; donde más se distingue del azar, a las {HZ[kt]}. Ritmo por sesión: {fm(ritmo[0])} en la primera semana, {fm(ritmo[2])} hasta la 20, {fm(ritmo[4])} hasta la 60')
+    add(G, nombre, logica, r_)
+_ub2 = {}
+def ubase2(h):
+    """Como ubase(), pero válida hasta 120 sesiones: lo que gana de más sobre el SPY una grande cualquiera en h sesiones (mismas fechas para todos los horizontes)."""
+    if h not in _ub2:
+        ii = np.arange(int(np.argmax(since)) + 61, len(idx) - max(HZ) - 2, 5); v = []
+        for i in ii:
+            c_ = np.flatnonzero(rk[i - 1] <= 300)
+            with np.errstate(all='ignore'):
+                v.append(np.nanmean(Av[i + h, c_] / Ov[i + 1, c_] - 1) - (Av[i + h, col['SPY']] / Ov[i + 1, col['SPY']] - 1))
+        _ub2[h] = float(np.nanmean(v))
+    return _ub2[h]
+idx_m = lambda sym: (lambda e, h: (Av[e[0] + h, col[sym]] / Ov[e[0] + 1, col[sym]] - 1) - abase(sym, h))
+st_self = lambda e, h: after(e[0], [e[1]], h) - ubase2(h)
+st_peer = lambda e, h: after(e[0], e[2], h) - ubase2(h)
+nm = lambda e, h: after(e[0], e[1], h)
+pm28_ = [(i,) for i in thin(idx[pan2 & (vixp >= 28)])]
+horiz('Pánico con miedo alto → Nasdaq-100', 'La idea de pánico.', pm28_, idx_m('QQQ'), 'Rendimiento del QQQ menos lo que hace en un tramo cualquiera')
+if 'SMH' in col: horiz('Pánico con miedo alto → semiconductores', 'La variante que más rebota.', pm28_, idx_m('SMH'), 'Rendimiento del SMH menos lo que hace en un tramo cualquiera')
+horiz('Una grande cae ≥ 10 % con el miedo alto → comprar la caída', 'El castigo en plena tormenta.', [e for e in evs['caida'] if vxs(e) >= 28], st_self, 'Exceso sobre el SPY menos el de una grande cualquiera')
+horiz('Una grande cae ≥ 10 % con el miedo bajo → comprar la caída', 'El mismo castigo en calma (para comparar).', [e for e in evs['caida'] if vxs(e) < 18], st_self, 'Exceso sobre el SPY menos el de una grande cualquiera')
+horiz('El líder sube ≥ 10 % y castigan a sus competidoras con miedo → las competidoras', 'Castigo en plena tormenta.', [e for e in evs['salto'] if e[4] <= -0.01 and vxs(e) >= 25], st_peer, 'Exceso sobre el SPY menos el de una grande cualquiera')
+horiz('Una grande cae ≥ 10 % y sus competidoras suben ≥ 2 % ese día → las competidoras', 'Trasvase de negocio.', [e for e in evs['caida'] if e[4] >= 0.02], st_peer, 'Exceso sobre el SPY menos el de una grande cualquiera')
+csh = lambda tp: [(pos[pd.Timestamp(c_['fecha'])], c_['valores']) for c_ in done if c_['tipo'] == tp and US_(c_) and pd.Timestamp(c_['fecha']) in pos]
+horiz('Hechos consumados → el beneficiario (casos con nombre)', 'Cambio duradero.', csh('E'), nm, 'Exceso sobre el SPY')
+horiz('Sector castigado por una norma → comprar el castigo (casos con nombre)', 'Como la idea del veto de chips.', csh('N'), nm, 'Exceso sobre el SPY')
+horiz('Anuncio de split → comprar (casos con nombre)', 'Empuje de pequeños inversores.', csh('P'), nm, 'Exceso sobre el SPY')
+horiz('Anuncio de entrada en el S&P 500 → comprar (casos con nombre)', 'Empuje de los fondos indexados.', csh('I'), nm, 'Exceso sobre el SPY')
+if EUc and '^STOXX50E' in col and '^IBEX' in col:
+    horiz('Europa · Euro Stoxx 50 −2 % con el miedo alto → Euro Stoxx 50', 'El pánico en Europa.', [(i,) for i in thin(idx[since & (rE <= -0.02) & (vixp >= 28)])], idx_m('^STOXX50E'), 'Rendimiento del índice menos lo que hace en un tramo cualquiera')
+    horiz('Europa · Ibex 35 −2 % con el miedo alto → Ibex 35', 'El pánico en España.', [(i,) for i in thin(idx[since & (rI <= -0.02) & (vixp >= 28)])], idx_m('^IBEX'), 'Rendimiento del índice menos lo que hace en un tramo cualquiera')
+    horiz('Europa · una grande cae ≥ 10 % con el miedo alto → comprar la caída', 'El castigo en plena tormenta, en Europa.', [e for e in eu_ev['caida'] if vixp[e[0]] >= 28], lambda e, h: after_eu(e[0], [e[1]], h, e[2]), 'Exceso sobre la media de su grupo europeo')
+
 for o in OUT:
     o['nombre'] = '↳ ' + o['nombre'].strip() if o['nombre'].startswith('   ') else o['nombre'].strip()
 pb = os.path.join(ARGS.out, 'ideas_playbook.json')
