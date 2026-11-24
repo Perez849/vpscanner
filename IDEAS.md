@@ -74,7 +74,7 @@ Sale de simular cada tipo de idea sobre hechos pasados desde 2000, en EE. UU. y 
 | Europa y España (`europa`) | **Sí, solo el pánico con miedo alto** | Euro Stoxx 50 o Ibex 35 tras un −2 % con el VIX previo ≥ 28: +5,6 % y +5,1 % en 60 sesiones sobre lo normal, en las dos mitades del periodo; también tras un −2 % de Wall Street, comprando en la apertura europea. La grande europea que se hunde un 10 % con miedo alto, como en EE. UU. (+18,0 %, sin problema propio). Los hechos consumados también (Ucrania → defensa europea), y la racha de tres días con miedo alto. En calma, los sustos, el gigante caído, lo evidente (petróleo, gas, euro), las competidoras y el contagio: nada, como en EE. UU. El contagio desde Wall Street no se compra (chips de EE. UU. hundidos → ASML e Infineon, −6,6 % en 60 sesiones). Son unas 12–16 crisis distintas. |
 | Sector castigado por una norma o sanción, comprando el castigo (`norma`) | **Con condiciones** | 7 casos: +16,4 % en 60 sesiones (86 %), pero pocos y casi todos de chips en años de subida. |
 | Gigante que cae desde cerca de máximos (`caido`) | **No** | 581 casos: −1,6 % en 20 sesiones; 54 caídas famosas: −6,0 %. Solo rebotan las ya muy castigadas, y esa cifra está inflada. |
-| Competencia del que tropieza (`rival`) | **Solo si suben ese día** | Si las competidoras suben ≥ 2 % el mismo día del tropiezo (113 casos): +2,7 % en 20 sesiones (t 2,1). Sin eso, nada. |
+| Competencia del que tropieza (`rival`) | **Solo si suben ese día** | Si las competidoras suben ≥ 2 % el mismo día del tropiezo (113 casos): +2,7 % en 20 sesiones (t 2,1) y +6,9 % a 90, donde más se distingue del azar. Sin eso, nada. |
 | Ataque informático que obliga a gastar en protección (`ataque`) | **Con condiciones** | 10 casos: +5,5 % en 20 sesiones (80 %). Vale para ciberseguridad; el único caso de avería física (FAA, 2023) no funcionó. |
 | Demanda antimonopolio contra un gigante, comprando al gigante (`demanda`) | **Con condiciones** | 8 casos: −1,2 % a 20 sesiones, +3,6 % a 60. Pista con muy pocos casos. |
 | Víctimas de la novedad de otro, comprando el castigo (`victima`, se mide con `norma`) | **Con condiciones** | 12 casos: +3,4 % en 60 sesiones, sube el 58 % a 20. |
@@ -97,7 +97,7 @@ Antes de dar una idea de tipo `estructural`, comprobar que no es en realidad una
 
 - Pánico del mercado: comprar **semiconductores (SMH)** ha dado más que el Nasdaq entero (+10,4 % frente a +8,9 % en 60 sesiones).
 - Una acción grande que cae un 10 % en un día de tormenta, **sin un problema propio** detrás: +18,6 % en 60 sesiones. En calma, lo contrario (−1,3 %). En Europa se repite: +18,0 % (87 casos), aunque después de 2014 solo hay 16.
-- Competidoras castigadas el día en que el líder se dispara: +9,0 %.
+- Competidoras castigadas el día en que el líder se dispara: +8,9 %.
 - El castigado de un susto: +4,8 % (16 casos).
 
 Así que un descarte de tipo `caido`, `susto` (comprar al castigado) o `contagio` se revisa si ese día el VIX está en 28 o más. Si la caída es por un escándalo o por malos resultados propios, sigue siendo «no» aunque haya tormenta.
@@ -116,7 +116,7 @@ Sale de seguir día a día cada tipo de idea que funciona durante sus 60 sesione
 
   | Tipo | Horizonte | Por qué |
   |---|---|---|
-  | `panico`, `miedo` (y la grande europea castigada con miedo) | **90 sesiones** (unos 4 meses) | El Nasdaq pasa de +8,2 % a 60 a +11,4 % a 90, y es donde más se distingue del azar; la grande castigada, de +18,6 % a +21,1 %. |
+  | `panico`, `miedo` (y la grande europea castigada con miedo) | **90 sesiones** (unos 4 meses) | Sobre lo normal, el Nasdaq pasa de +8,2 % a 60 sesiones a +11,4 % a 90, y es donde más se distingue del azar; la grande castigada, de +18,6 % a +21,1 %. |
   | `rival` (competidoras con trasvase) | **90 sesiones** | +3,6 % a 60 y +6,9 % a 90. |
   | `norma` | **60 sesiones** | Es donde mejor se distingue del azar (+16,4 %, siete casos). |
   | `europa`: Ibex 35 tras un pánico | **60 sesiones** | +4,7 % a 60; después devuelve algo. El Euro Stoxx 50 da lo más fiable la primera semana y sigue despacio hasta 90. |
