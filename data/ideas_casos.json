@@ -29,7 +29,9 @@
    "dada": true,
    "e5": null,
    "e20": null,
-   "e60": null
+   "e60": null,
+   "conviccion": 2,
+   "comprada": false
   },
   {
    "id": "2026-11-16-aseguradoras-y-gestoras-de-nominas-que-ganan-con",
@@ -102,7 +104,9 @@
    "dada": true,
    "e5": null,
    "e20": null,
-   "e60": null
+   "e60": null,
+   "conviccion": 2,
+   "comprada": false
   },
   {
    "id": "2026-11-17-comprar-el-nasdaq-al-cierre-por-el-segundo-dia-d",
@@ -156,7 +160,9 @@
    "dada": true,
    "e5": null,
    "e20": null,
-   "e60": null
+   "e60": null,
+   "conviccion": 3,
+   "comprada": true
   },
   {
    "id": "2026-11-18-comprar-a-las-competidoras-de-tjx-y-target",
@@ -344,7 +350,9 @@
    "dada": true,
    "e5": null,
    "e20": null,
-   "e60": null
+   "e60": null,
+   "conviccion": 3,
+   "comprada": true
   },
   {
    "id": "2026-11-19-subirse-a-palo-alto-y-la-ciberseguridad-tras-su-",
@@ -581,5 +589,20 @@
    "aciertos": 0
   }
  },
- "generado": 1795506051
+ "calibracion": {
+  "3": {
+   "ideas": 2,
+   "e20": {
+    "n": 0,
+    "media": null,
+    "aciertos": 0
+   },
+   "e60": {
+    "n": 0,
+    "media": null,
+    "aciertos": 0
+   }
+  }
+ },
+ "generado": 1795517247
 }
