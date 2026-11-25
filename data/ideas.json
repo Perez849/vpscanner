@@ -1,33 +1,41 @@
 {
- "actualizado": "2026-11-25T12:35:59Z",
+ "actualizado": "2026-11-25T20:11:18Z",
  "sesion": {
-  "cuando": "2026-11-25T12:35:59Z",
-  "tipo": "preapertura",
-  "titular": "El miedo vuelve a 30 antes de abrir: *Europa, en vigilancia*",
+  "cuando": "2026-11-25T20:11:18Z",
+  "tipo": "cierre",
+  "titular": "Nuevos aranceles de hasta el 20 % y el VIX *en el filo de 28*",
   "hoy": {
    "accion": "vigilar",
-   "texto": "Hoy no se compra nada: el VIX de ayer (26,4) no llegaba a 28. Pero el VIX cotiza ya en 30,9. Si cierra hoy en 28 o más, a partir de mañana un −2 % del Euro Stoxx 50 o del Ibex (Europa abre aunque Wall Street cierre por Acción de Gracias) sería idea de compra: queda en vigilancia hasta el 2 de diciembre. Las dos ideas abiertas siguen sin ruptura."
+   "texto": "Al cierre de hoy no se compra nada: Wall Street recupera (S&P 500 −0,4 %) y el miedo de ayer no era alto. Lo que hay que mirar es el cierre del VIX, que está en 27,7. Si cierra en 28 o más, mañana Europa (abierta en Acción de Gracias) puede activar la idea de pánico con miedo alto con solo otro día a la baja: se compraría el Euro Stoxx 50 o el Ibex al cierre de mañana. La edición de mañana lo dirá."
   },
   "cambios": [
-   "Nueva en vigilancia: pánico con miedo alto en Europa (Euro Stoxx 50 o Ibex 35), si el VIX cierra hoy en 28 o más y llega otro golpe antes del 2 de diciembre.",
-   "Chips (abierta): SMH −11,3 % desde la entrada antes de abrir; en la parte mala de lo normal para su tipo, sin ruptura.",
-   "Nasdaq (abierta): QQQ +1,9 % sobre la entrada antes de abrir.",
-   "Alertas: chips de EE. UU. −6,8 % ayer frente al mercado → no ASML ni Infineon; oro −2,5 % → nada."
+   "EE. UU. propone aranceles de hasta el 20 % a China, la UE y otros 12 socios (desde enero, como pronto) → comprar a los castigados no es idea (lección «aranceles»).",
+   "Pánico en Europa (vigilancia): el Ibex cae un 2,0 % y el Euro Stoxx un 1,8 %, sin miedo previo alto. Si el VIX cierra hoy en 28 o más, mañana basta otro día a la baja.",
+   "Alerta del maíz (+5,1 %): los fertilizantes ya lo han recogido hoy (Mosaic +4 %) → descarte («segundo» y «obvio»).",
+   "Chips (abierta): SMH −8,8 % desde la entrada, mejor que el −11 % de la preapertura; los aranceles excluyen los chips.",
+   "Nasdaq (abierta): QQQ +3,9 % sobre la entrada."
   ],
-  "pulso": "Antes de abrir, el S&P 500 cae un 2,1 % (SPY 703,9 $) y el Nasdaq-100 un 2,8 %; el VIX sube a 30,9. Los chips siguen cayendo: Applied Materials y Lam Research −6 %, Nvidia −5 %, SMH −4,5 %. Europa cae menos: el Euro Stoxx 50 un 0,6 %, el DAX un 0,4 % y el Ibex un 0,8 %. A las 14:30 sale la inflación PCE de octubre (se espera el 3,8 % general y el 3,2 % subyacente) junto al PIB del tercer trimestre; el mercado da un 97 % de probabilidad a una subida de tipos en diciembre. El Brent está en 89 $ y el oro en 3.546 $.",
+  "pulso": "Wall Street recupera casi toda la caída de primera hora. A las 21:10, el S&P 500 cae un 0,4 % (SPY 715,9 $) y el Nasdaq-100 un 0,9 %; el Russell 2000 sube un 0,7 %. Los fabricantes de equipos de chips siguen cayendo (Lam Research −7,1 %, Applied Materials −5,7 %) y Nvidia cede un 4,8 %. La inflación PCE de octubre subió al 3,8 %, como se esperaba, y la subyacente al 3,3 %, una décima más; casi asegura la subida de tipos de diciembre. El bono a 10 años baja al 4,85 %. El VIX está en 27,7. Europa cerró a la baja por los aranceles: el Euro Stoxx 50 un 1,8 % y el Ibex un 2,0 %. El maíz sube un 5,1 % y el trigo un 2,9 %.",
   "hechos": [
    {
-    "titulo": "El VIX vuelve por encima de 30",
-    "detalle": "Sube de 26,4 a 30,9 antes de la apertura, con los futuros del Nasdaq cayendo más de un 2 %.",
-    "efecto": "Si cierra hoy en 28 o más, se reabre la ventana del pánico con miedo alto para los próximos días, también en Europa.",
-    "tono": "oportunidad",
+    "titulo": "EE. UU. propone aranceles de hasta el 20 % a 14 socios",
+    "detalle": "El 20 % para China y Vietnam y el 15 % (hasta el 20 %) para la UE, Japón, Corea y otros, con tipos de castigo del 20 % al 40 % si no se cumplen los acuerdos. Son propuestas (artículo 301), con periodo de comentarios: entrarían en vigor en enero como pronto. Quedan fuera los semiconductores, los automóviles, el acero y el aluminio.",
+    "efecto": "Comprar a los castigados por un anuncio de aranceles no ha funcionado (lección «aranceles»). Lo que importa es si este golpe hace subir el miedo por encima de 28.",
+    "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Inflación PCE y PIB a las 14:30",
-    "detalle": "Se espera una inflación general del 3,8 % interanual y una subyacente del 3,2 %, frente al 3,1 % de septiembre. Es el último gran dato antes de la Fed de diciembre.",
-    "efecto": "Un dato peor de lo esperado ampliaría la caída de hoy; uno mejor podría frenarla.",
+    "titulo": "La inflación PCE sube al 3,8 %",
+    "detalle": "La general se queda en lo esperado (3,8 %) y la subyacente sube al 3,3 %, una décima más de lo previsto.",
+    "efecto": "Casi asegura la subida de tipos de diciembre. Ya estaba en el precio: el bono baja.",
     "tono": "riesgo",
+    "nuevo": true
+   },
+   {
+    "titulo": "El maíz se dispara un 5 %",
+    "detalle": "Sube un 5,1 % y el trigo un 2,9 %. Mosaic sube un 4 %, CF un 1,4 % y Nutrien un 1,1 %.",
+    "efecto": "Es la pista de los fertilizantes (lección «segundo»), pero Mosaic ya lo ha recogido el mismo día.",
+    "tono": "neutro",
     "nuevo": true
    }
   ]
@@ -40,7 +48,6 @@
    "conviccion": 2,
    "tipo": "europa",
    "caduca": "2026-12-02",
-   "nuevo": true,
    "titulo": "Si el miedo cierra hoy por encima de 28, el próximo golpe en Europa se compra",
    "resumen": "El VIX cotiza por encima de 30 antes de abrir. Si cierra hoy en 28 o más, a partir de mañana un día de −2 % en el Euro Stoxx 50 o en el Ibex 35 (o tres días a la baja que sumen −3 %) llegaría ya con el miedo alto. Es la regla más sólida que tenemos en Europa.",
    "hecho": "Ayer los chips devolvieron todo el rebote del lunes y hoy la venta sigue: el Kospi cayó cerca de un 6 %, el futuro del S&P 500 cae un 2 % y el VIX sube a 30,9 antes de abrir. A las 14:30 se publica la inflación PCE, la última gran cifra antes de la reunión de la Fed de diciembre, para la que el mercado da casi por segura una subida. Mañana Wall Street cierra por Acción de Gracias, pero las bolsas europeas abren.",
@@ -91,7 +98,14 @@
     "^IBEX": 18866.0,
     "SPY": 718.78
    },
-   "notas": [],
+   "notas": [
+    {
+     "fecha": "2026-11-25",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Europa ha cerrado mal: el Euro Stoxx 50 −1,8 % y el Ibex −2,0 %, tras los nuevos aranceles propuestos por EE. UU. Hoy no cuenta, porque el VIX de ayer (26,4) no llegaba a 28. Todo depende ahora del cierre del VIX de hoy: a las 21:10 está en 27,7, en el filo. Si cierra en 28 o más, mañana (Wall Street cerrado, Europa abierta) basta un día a la baja para completar la racha de tres días que suma −3 %: el Ibex ya suma −2,8 % desde el lunes y el Euro Stoxx −3,0 %. Entonces se compraría al cierre de mañana. Si el VIX cierra por debajo de 28, sigue en vigilancia hasta el 2 de diciembre."
+    }
+   ],
    "fuentes": [
     {
      "t": "Invezz: futuros del Nasdaq antes del PCE",
@@ -211,8 +225,13 @@
     {
      "fecha": "2026-11-25",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Antes de abrir, el QQQ está en 620,0 $: −2,8 % hoy y +1,9 % sobre la entrada. Sigue en positivo. Sin ruptura; horizonte de 90 sesiones."
+    },
+    {
+     "fecha": "2026-11-25",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "A las 21:10, el QQQ está en 632,1 $: −0,9 % hoy y +3,9 % sobre la entrada. Wall Street ha recuperado casi toda la caída de la preapertura. Sin ruptura."
     }
    ],
    "fuentes": [
@@ -404,8 +423,13 @@
     {
      "fecha": "2026-11-25",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Antes de abrir, el SMH está en 407,6 $: −4,5 % hoy y −11,3 % desde la entrada. Lo digo claro: ya está en la parte mala de lo que se ha visto por el camino en su tipo (en el peor 20 % de los casos de norma se llegó a −9 %), aunque todavía dentro de lo que caen los semiconductores en un pánico (peor 20 %: −16 %). No hay ruptura: la norma no se ha ampliado y Nvidia no ha recortado previsiones. La salida es por un hecho o por el horizonte, no por el precio. Se mantiene."
+    },
+    {
+     "fecha": "2026-11-25",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "A las 21:10, el SMH está en 418,9 $: −1,8 % hoy y −8,8 % desde la entrada; ha recuperado parte de lo que perdía antes de abrir (−11 %). Los equipos siguen pesando: Lam Research −7,1 %, Applied Materials −5,7 %. Los nuevos aranceles propuestos excluyen los semiconductores. La norma de exportación no ha cambiado: sin ruptura."
     }
    ],
    "fuentes": [
@@ -663,6 +687,43 @@
  "descartes": [
   {
    "fecha": "2026-11-25",
+   "titulo": "Comprar a los castigados por los nuevos aranceles (importadores, exportadores europeos)",
+   "por_que": "Es un anuncio de aranceles propuestos, sin fecha firme y con periodo de comentarios. Comprar el castigo de un anuncio así no ha dado nada (4 casos en EE. UU.: +1,3 % en 20 sesiones; en Europa, −3,4 %).",
+   "leccion": "«aranceles».",
+   "tipo": "aranceles",
+   "valores": [
+    "VOW3.DE",
+    "MBG.DE",
+    "BMW.DE"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-25",
+   "titulo": "Comprar fertilizantes porque el maíz sube un 5 %",
+   "por_que": "Mosaic ya ha subido un 4 % hoy, y la pista del maíz es débil (+2,4 % en 20 sesiones). El beneficiario evidente ya lo ha recogido.",
+   "leccion": "«segundo» y «obvio».",
+   "tipo": "segundo",
+   "valores": [
+    "MOS",
+    "CF",
+    "NTR"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-25",
+   "titulo": "Comprar el Ibex hoy porque cae un 2 %",
+   "por_que": "El VIX de ayer cerró en 26,4. Sin miedo alto previo, un −2 % del Ibex no ha dado nada (−0,8 %). Queda pendiente del cierre del VIX de hoy, en la idea en vigilancia.",
+   "leccion": "«europa».",
+   "tipo": "europa",
+   "valores": [
+    "^IBEX"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-25",
    "titulo": "Comprar el Euro Stoxx o el Ibex ya, porque Wall Street va a abrir con −2 %",
    "por_que": "El VIX de ayer cerró en 26,4. Sin miedo alto previo, un golpe así no ha dado nada en Europa (−0,7 % y −0,8 % viniendo de calma). Queda en vigilancia por si el miedo se instala hoy.",
    "leccion": "«europa»: solo con el miedo alto.",
@@ -670,8 +731,7 @@
    "valores": [
     "^STOXX50E",
     "^IBEX"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-25",
@@ -1113,6 +1173,10 @@
   {
    "cuando": "2026-11-25T12:35:59Z",
    "resumen": "Preapertura: S&P −2,1 %, Nasdaq −2,8 %, VIX 30,9 antes del PCE. Nueva en vigilancia: pánico con miedo alto en Europa (si el VIX cierra ≥ 28). SMH −11,3 % desde la entrada, sin ruptura. Nada que comprar hoy."
+  },
+  {
+   "cuando": "2026-11-25T20:11:18Z",
+   "resumen": "Cierre: aranceles propuestos de hasta el 20 %; Wall Street recupera (S&P −0,4 %); Europa −1,8 % / −2,0 %. VIX 27,7, en el filo: si cierra ≥ 28, mañana Europa puede activar el pánico con miedo alto. Nada que comprar hoy."
   }
  ]
 }

@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-25-2011",
+  "cuando": "2026-11-25T20:11:18Z",
+  "tipo": "cierre",
+  "titular": "Nuevos aranceles de hasta el 20 % y el VIX en el filo de 28",
+  "hoy": "Al cierre de hoy no se compra nada: Wall Street recupera (S&P 500 −0,4 %) y el miedo de ayer no era alto. Lo que hay que mirar es el cierre del VIX, que está en 27,7. Si cierra en 28 o más, mañana Europa (abierta en Acción de Gracias) puede activar la idea de pánico con miedo alto con solo otro día a la baja: se compraría el Euro Stoxx 50 o el Ibex al cierre de mañana. La edición de mañana lo dirá.",
+  "accion": "vigilar",
+  "vivas": 3
+ },
+ {
   "id": "2026-11-25-1235",
   "cuando": "2026-11-25T12:35:59Z",
   "tipo": "preapertura",
