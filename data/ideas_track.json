@@ -1,17 +1,16 @@
 {
- "generado": 1795551075,
+ "generado": 1795592446,
  "ideas": {
   "2026-11-19-panico-miedo": {
    "estado": "abierta",
    "desde": "2026-11-20",
-   "hasta": "2026-11-23",
+   "hasta": "2026-11-24",
    "por_valor": {
     "QQQ": {
      "ref": 608.45,
-     "ahora": 651.03,
-     "pct": 7.0,
+     "ahora": 638.1,
+     "pct": 4.87,
      "serie": [
-      716.76,
       707.64,
       709.24,
       717.67,
@@ -70,13 +69,14 @@
       659.51,
       645.04,
       608.45,
-      651.03
+      651.03,
+      638.1
      ],
-     "i0": 58
+     "i0": 57
     }
    },
-   "media": 7.0,
-   "spy": 4.71,
+   "media": 4.87,
+   "spy": 4.2,
    "indice": "SPY",
    "pendiente": false,
    "hipotetica": false
@@ -84,14 +84,13 @@
   "2026-11-17-veto-chips": {
    "estado": "abierta",
    "desde": "2026-11-18",
-   "hasta": "2026-11-23",
+   "hasta": "2026-11-24",
    "por_valor": {
     "SMH": {
      "ref": 459.54,
-     "ahora": 460.18,
-     "pct": 0.14,
+     "ahora": 426.75,
+     "pct": -7.14,
      "serie": [
-      556.63,
       545.22,
       550.48,
       552.6,
@@ -150,16 +149,16 @@
       459.54,
       447.48,
       400.06,
-      460.18
+      460.18,
+      426.75
      ],
-     "i0": 56
+     "i0": 55
     },
     "AMAT": {
      "ref": 352.3,
-     "ahora": 346.87,
-     "pct": -1.54,
+     "ahora": 323.76,
+     "pct": -8.1,
      "serie": [
-      458.39,
       441.85,
       438.46,
       435.91,
@@ -218,16 +217,16 @@
       352.3,
       338.93,
       302.63,
-      346.87
+      346.87,
+      323.76
      ],
-     "i0": 56
+     "i0": 55
     },
     "LRCX": {
      "ref": 211.67,
-     "ahora": 209.76,
-     "pct": -0.9,
+     "ahora": 196.16,
+     "pct": -7.33,
      "serie": [
-      301.49,
       290.2,
       288.32,
       292.66,
@@ -286,13 +285,14 @@
       211.67,
       203.68,
       183.27,
-      209.76
+      209.76,
+      196.16
      ],
-     "i0": 56
+     "i0": 55
     }
    },
-   "media": -0.77,
-   "spy": -1.08,
+   "media": -7.52,
+   "spy": -1.56,
    "indice": "SPY",
    "pendiente": false,
    "hipotetica": false
@@ -663,9 +663,9 @@
   }
  },
  "alertas": [
-  "Oro -2.7 %: las mineras lo recogen el mismo día (lección «obvio»).",
-  "MU -11.3 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "TXN -10.0 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
-  "Chips de EE. UU. -6.5 % frente al S&P 500: no comprar ASML ni Infineon por contagio; en Europa siguen peor después (lección «europa»)."
+  "Oro -2.5 %: las mineras lo recogen el mismo día (lección «obvio»).",
+  "MU -11.0 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "TXN -11.2 %: gigante caído: no se compra (lección «caido»); mira si sus competidoras suben ≥ 2 % hoy (lección «rival»).",
+  "Chips de EE. UU. -6.8 % frente al S&P 500: no comprar ASML ni Infineon por contagio; en Europa siguen peor después (lección «europa»)."
  ]
 }

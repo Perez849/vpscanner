@@ -1,33 +1,40 @@
 {
- "actualizado": "2026-11-24T20:11:13Z",
+ "actualizado": "2026-11-25T07:40:44Z",
  "sesion": {
-  "cuando": "2026-11-24T20:11:13Z",
-  "tipo": "cierre",
-  "titular": "Los chips devuelven todo el rebote: *SMH −7,5 %*, sin ruptura en las ideas",
+  "cuando": "2026-11-25T07:40:44Z",
+  "tipo": "mañana",
+  "titular": "Asia vuelve a vender la inteligencia artificial: *el Kospi se hunde un 6 %*",
   "hoy": {
    "accion": "nada",
-   "texto": "Al cierre de hoy no se compra nada. Las alertas, medidas en vivo, no dan ninguna idea: Micron y Texas Instruments caen más de un 10 %, pero el miedo de ayer (VIX 26,6) no llegaba a 28 y sus competidoras también caen. Los chips de EE. UU. caen un 6,6 % más que el mercado, así que mañana no se compran ASML ni Infineon por contagio. Las dos ideas abiertas siguen sin ruptura."
+   "texto": "Hoy no se compra nada. Asia y los futuros vuelven a caer por las dudas sobre la inteligencia artificial, pero el miedo de ayer (VIX 26,4) no llega a 28: un mal día hoy no sería todavía idea de pánico, ni en EE. UU. ni en Europa. Las dos ideas abiertas se mantienen sin ruptura. Mañana Wall Street cierra por Acción de Gracias."
   },
   "cambios": [
-   "Alertas en vivo: Micron −11,6 % y Texas Instruments −10,1 % sin miedo alto y con sus competidoras cayendo → descarte (lecciones «caido» y «rival»).",
-   "Chips de EE. UU. −6,6 % frente al S&P 500 → mañana no se compran ASML ni Infineon por contagio (lección «europa»).",
-   "Chips (abierta): SMH −7,4 % desde la entrada. La norma citada es la misma de la idea; no se ha ampliado.",
-   "Nasdaq (abierta): QQQ +4,4 % sobre la entrada.",
-   "Sanofi cierra con +9,8 % tras comprar Insmed: es buena noticia de la propia empresa y ya está en el precio → descarte (lección «empresa»)."
+   "Alertas: Micron y Texas Instruments −11 % ayer sin miedo alto → siguen descartadas («caido» y «rival»).",
+   "Chips de EE. UU. −6,8 % frente al mercado ayer → hoy no se compran ASML ni Infineon («europa»).",
+   "Oro −2,5 %: beneficiario evidente, nada («obvio»).",
+   "Chips (abierta): SMH −7,1 % desde la entrada; con la caída de Asia puede acercarse a −10 %. Sin ruptura.",
+   "Nasdaq (abierta): QQQ +4,9 % sobre la entrada al cierre de ayer."
   ],
-  "pulso": "A las 21:10, el S&P 500 cae un 0,9 % (SPY 716,0 $) y el Nasdaq-100 un 2,4 %; el Russell 2000, en cambio, sube un 0,4 %. Los chips devuelven el rebote del lunes: SMH −7,5 %, AMD −9,5 %, Nvidia −7,9 %, Micron −11,6 %. El VIX está en 27,3. Europa cerró a la baja: el Euro Stoxx 50 un 1,2 % y el Ibex un 0,9 %, con Sanofi +9,8 %. El oro cae un 2,6 % y el bono a 10 años está en el 4,91 %.",
+  "pulso": "Ayer el S&P 500 cayó un 0,5 % (SPY 718,78 $) y el Nasdaq-100 un 2,0 %, con los chips devolviendo todo el rebote del lunes (SMH −7,3 %). El VIX cerró en 26,4. Esta noche Asia ha vuelto a vender: el Kospi cae cerca de un 6 % y activa sus frenos de venta, el Nikkei un 2,8 % y el Hang Seng un 1,0 %. Los futuros americanos caen un 1,2 % (S&P) y un 2,1 % (Nasdaq). Según la prensa, pesan las palabras de John Williams (Fed de Nueva York) a favor de seguir endureciendo, que Anthropic cotiza ya por debajo de su precio de salida y la espera del dato de inflación de hoy. El Brent está en 87,3 $ y el oro cae a 3.520 $.",
   "hechos": [
    {
-    "titulo": "Los chips devuelven todo el rebote del lunes",
-    "detalle": "Micron cae un 11,6 % y Texas Instruments un 10,1 %, sin noticia propia según la prensa. Pesan la recogida de beneficios tras el +31 % de Nvidia, las dudas sobre la financiación de la inteligencia artificial y la norma de acceso remoto a chips avanzados (en vigor desde el 19-nov).",
-    "efecto": "Sin miedo alto, comprar estas caídas no ha funcionado. Para la idea de chips, es dolor por el camino, no una ruptura: la norma no se ha ampliado.",
+    "titulo": "Asia se hunde otra vez por los chips",
+    "detalle": "El Kospi cae cerca de un 6 % y la bolsa coreana activa sus frenos de venta; Samsung y SK Hynix caen más de un 8 %. El Nikkei cae alrededor de un 3 %.",
+    "efecto": "Es la misma venta de todo lo ligado a la inteligencia artificial. Si llega a Wall Street con fuerza, el VIX puede volver a 28 y reabrir la ventana del pánico con miedo alto. Hoy todavía no.",
     "tono": "riesgo",
     "nuevo": true
    },
    {
-    "titulo": "Primera edición con las alertas en vivo",
-    "detalle": "Las alertas han medido con el precio de las 21:10, no con el cierre de ayer: Micron y Texas Instruments ya aparecían con más de un −10 % y los chips, con un −6,6 % frente al mercado.",
-    "efecto": "Así se decide con lo que está pasando hoy y no con lo de ayer.",
+    "titulo": "La Fed de Nueva York, a favor de endurecer",
+    "detalle": "John Williams dijo que la inflación persistente apunta a una política más dura. Hoy se publica un dato clave de inflación.",
+    "efecto": "Es un viento en contra para las valoraciones altas. Un dato malo podría ampliar la caída de hoy.",
+    "tono": "riesgo",
+    "nuevo": true
+   },
+   {
+    "titulo": "Investigación comercial de EE. UU. a 16 socios",
+    "detalle": "El mercado espera las conclusiones de una investigación de EE. UU. que afecta a 16 grandes socios comerciales. No hay medidas anunciadas.",
+    "efecto": "Si llegan aranceles, el entrenamiento dice que comprar a los castigados no da nada por sí solo (lección «aranceles»), salvo que llegue en pleno pánico.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -132,8 +139,13 @@
     {
      "fecha": "2026-11-24",
      "edicion": "cierre",
-     "nuevo": true,
      "texto": "A las 21:10, el QQQ está en 635,2 $: −2,4 % hoy y +4,4 % sobre la entrada (608,45 $). Devuelve parte del rebote de ayer, dentro de lo normal por el camino. Se mantiene con su horizonte de 90 sesiones."
+    },
+    {
+     "fecha": "2026-11-25",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "El QQQ cerró ayer en 638,10 $: +4,9 % sobre la entrada. Esta mañana el futuro del Nasdaq cae un 2,1 %. Si se confirma, la idea quedaría cerca de un +2,5 % desde la entrada, todavía en positivo y dentro de lo normal por el camino. No hay que hacer nada."
     }
    ],
    "fuentes": [
@@ -315,8 +327,13 @@
     {
      "fecha": "2026-11-24",
      "edicion": "cierre",
-     "nuevo": true,
      "texto": "Día malo otra vez. A las 21:10, el SMH cae un 7,5 % (425,7 $) y está un 7,4 % por debajo de la entrada. Nvidia −7,9 %, AMD −9,5 %, Micron −11,6 %, Applied Materials −6,8 %, Lam Research −6,4 %. La prensa cita la norma de acceso remoto a chips avanzados como uno de los pesos, pero es la misma que motivó la idea (publicada el 16-nov, en vigor desde el 19-nov): no se ha ampliado, así que no hay ruptura. Es la mayor caída por el camino de esta idea, cerca de la caída mediana (8 %) de su tipo. Se mantiene hasta el 17 de febrero o hasta que se cumpla la invalidación."
+    },
+    {
+     "fecha": "2026-11-25",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "El SMH cerró ayer en 426,75 $: −7,1 % desde la entrada. Esta noche Asia vende chips con fuerza: Samsung y SK Hynix caen más de un 8 % y el Kospi activa sus frenos de venta. Si hoy el SMH cae otro 3 %, la idea irá cerca de un −10 %, en la parte mala de lo que se ha visto por el camino en su tipo (peor 20 %: −9 %; en semiconductores en pánico, −16 %). Sigue sin haber ruptura: la norma no se ha ampliado y Nvidia no ha recortado previsiones. Se mantiene. Una caída así es lo que el entrenamiento dice que no hay que vender con un stop."
     }
    ],
    "fuentes": [
@@ -573,6 +590,18 @@
  ],
  "descartes": [
   {
+   "fecha": "2026-11-25",
+   "titulo": "Comprar Samsung o SK Hynix tras caer un 8 % en Corea",
+   "por_que": "No hay miedo alto previo (VIX 26,4) y no son valores que se puedan medir con el entrenamiento. La exposición a chips ya está en el SMH.",
+   "leccion": "«panico» (solo con miedo alto) y concentración.",
+   "tipo": "panico",
+   "valores": [
+    "005930.KS",
+    "000660.KS"
+   ],
+   "nuevo": true
+  },
+  {
    "fecha": "2026-11-24",
    "titulo": "Comprar Micron o Texas Instruments tras caer más de un 10 %",
    "por_que": "El VIX de ayer estaba en 26,6, por debajo de 28, y sus competidoras caen con ellas: no hay trasvase. Sin miedo alto, comprar la caída de una grande no ha funcionado.",
@@ -581,8 +610,7 @@
    "valores": [
     "MU",
     "TXN"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-24",
@@ -593,8 +621,7 @@
    "valores": [
     "ASML.AS",
     "IFX.DE"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-24",
@@ -604,8 +631,7 @@
    "tipo": "empresa",
    "valores": [
     "SAN.PA"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-24",
@@ -996,6 +1022,10 @@
   {
    "cuando": "2026-11-24T20:11:13Z",
    "resumen": "Cierre (alertas en vivo): los chips devuelven el rebote (SMH −7,5 %); Micron y TXN −10 % sin miedo alto → descarte; no comprar ASML ni Infineon por contagio. Ideas sin ruptura. Nada que comprar."
+  },
+  {
+   "cuando": "2026-11-25T07:40:44Z",
+   "resumen": "Mañana: Asia vende la IA (Kospi −6 %), futuros del Nasdaq −2,1 %. VIX previo 26,4: no es pánico con miedo alto. Ideas sin ruptura (SMH −7,1 %, QQQ +4,9 % desde la entrada). Nada que comprar."
   }
  ]
 }
