@@ -644,6 +644,21 @@
    "e60": null
   },
   {
+   "id": "2026-11-25-comprar-a-los-castigados-por-los-nuevos-arancele",
+   "fecha": "2026-11-25",
+   "titulo": "Comprar a los castigados por los nuevos aranceles (importadores, exportadores europeos)",
+   "tipo": "aranceles",
+   "valores": [
+    "VOW3.DE",
+    "MBG.DE",
+    "BMW.DE"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-25-comprar-el-euro-stoxx-o-el-ibex-ya-porque-wall-s",
    "fecha": "2026-11-25",
    "titulo": "Comprar el Euro Stoxx o el Ibex ya, porque Wall Street va a abrir con −2 %",
@@ -651,6 +666,34 @@
    "valores": [
     "^STOXX50E",
     "^IBEX"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-25-comprar-el-ibex-hoy-porque-cae-un-2",
+   "fecha": "2026-11-25",
+   "titulo": "Comprar el Ibex hoy porque cae un 2 %",
+   "tipo": "europa",
+   "valores": [
+    "^IBEX"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
+   "id": "2026-11-25-comprar-fertilizantes-porque-el-maiz-sube-un-5",
+   "fecha": "2026-11-25",
+   "titulo": "Comprar fertilizantes porque el maíz sube un 5 %",
+   "tipo": "segundo",
+   "valores": [
+    "MOS",
+    "CF",
+    "NTR"
    ],
    "dada": false,
    "e5": null,
@@ -715,5 +758,5 @@
    }
   }
  },
- "generado": 1795610192
+ "generado": 1795637494
 }
