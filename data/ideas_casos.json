@@ -644,6 +644,20 @@
    "e60": null
   },
   {
+   "id": "2026-11-25-comprar-el-euro-stoxx-o-el-ibex-ya-porque-wall-s",
+   "fecha": "2026-11-25",
+   "titulo": "Comprar el Euro Stoxx o el Ibex ya, porque Wall Street va a abrir con −2 %",
+   "tipo": "europa",
+   "valores": [
+    "^STOXX50E",
+    "^IBEX"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
+  },
+  {
    "id": "2026-11-25-comprar-samsung-o-sk-hynix-tras-caer-un-8-en-cor",
    "fecha": "2026-11-25",
    "titulo": "Comprar Samsung o SK Hynix tras caer un 8 % en Corea",
@@ -656,6 +670,22 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-25-panico-europa",
+   "fecha": "2026-11-25",
+   "titulo": "Si el miedo cierra hoy por encima de 28, el próximo golpe en Europa se compra",
+   "tipo": "europa",
+   "valores": [
+    "^STOXX50E",
+    "^IBEX"
+   ],
+   "dada": true,
+   "e5": null,
+   "e20": null,
+   "e60": null,
+   "conviccion": 2,
+   "comprada": false
   }
  ],
  "resumen": {
@@ -685,5 +715,5 @@
    }
   }
  },
- "generado": 1795592456
+ "generado": 1795610172
 }

@@ -1,6 +1,17 @@
 {
- "generado": 1795592446,
+ "generado": 1795610161,
  "ideas": {
+  "2026-11-25-panico-europa": {
+   "estado": "vigilancia",
+   "desde": "2026-11-25",
+   "hasta": null,
+   "por_valor": {},
+   "media": null,
+   "spy": null,
+   "indice": "SPY",
+   "pendiente": false,
+   "hipotetica": false
+  },
   "2026-11-19-panico-miedo": {
    "estado": "abierta",
    "desde": "2026-11-20",
