@@ -1,46 +1,108 @@
 {
- "actualizado": "2026-11-25T07:40:44Z",
+ "actualizado": "2026-11-25T12:35:59Z",
  "sesion": {
-  "cuando": "2026-11-25T07:40:44Z",
-  "tipo": "mañana",
-  "titular": "Asia vuelve a vender la inteligencia artificial: *el Kospi se hunde un 6 %*",
+  "cuando": "2026-11-25T12:35:59Z",
+  "tipo": "preapertura",
+  "titular": "El miedo vuelve a 30 antes de abrir: *Europa, en vigilancia*",
   "hoy": {
-   "accion": "nada",
-   "texto": "Hoy no se compra nada. Asia y los futuros vuelven a caer por las dudas sobre la inteligencia artificial, pero el miedo de ayer (VIX 26,4) no llega a 28: un mal día hoy no sería todavía idea de pánico, ni en EE. UU. ni en Europa. Las dos ideas abiertas se mantienen sin ruptura. Mañana Wall Street cierra por Acción de Gracias."
+   "accion": "vigilar",
+   "texto": "Hoy no se compra nada: el VIX de ayer (26,4) no llegaba a 28. Pero el VIX cotiza ya en 30,9. Si cierra hoy en 28 o más, a partir de mañana un −2 % del Euro Stoxx 50 o del Ibex (Europa abre aunque Wall Street cierre por Acción de Gracias) sería idea de compra: queda en vigilancia hasta el 2 de diciembre. Las dos ideas abiertas siguen sin ruptura."
   },
   "cambios": [
-   "Alertas: Micron y Texas Instruments −11 % ayer sin miedo alto → siguen descartadas («caido» y «rival»).",
-   "Chips de EE. UU. −6,8 % frente al mercado ayer → hoy no se compran ASML ni Infineon («europa»).",
-   "Oro −2,5 %: beneficiario evidente, nada («obvio»).",
-   "Chips (abierta): SMH −7,1 % desde la entrada; con la caída de Asia puede acercarse a −10 %. Sin ruptura.",
-   "Nasdaq (abierta): QQQ +4,9 % sobre la entrada al cierre de ayer."
+   "Nueva en vigilancia: pánico con miedo alto en Europa (Euro Stoxx 50 o Ibex 35), si el VIX cierra hoy en 28 o más y llega otro golpe antes del 2 de diciembre.",
+   "Chips (abierta): SMH −11,3 % desde la entrada antes de abrir; en la parte mala de lo normal para su tipo, sin ruptura.",
+   "Nasdaq (abierta): QQQ +1,9 % sobre la entrada antes de abrir.",
+   "Alertas: chips de EE. UU. −6,8 % ayer frente al mercado → no ASML ni Infineon; oro −2,5 % → nada."
   ],
-  "pulso": "Ayer el S&P 500 cayó un 0,5 % (SPY 718,78 $) y el Nasdaq-100 un 2,0 %, con los chips devolviendo todo el rebote del lunes (SMH −7,3 %). El VIX cerró en 26,4. Esta noche Asia ha vuelto a vender: el Kospi cae cerca de un 6 % y activa sus frenos de venta, el Nikkei un 2,8 % y el Hang Seng un 1,0 %. Los futuros americanos caen un 1,2 % (S&P) y un 2,1 % (Nasdaq). Según la prensa, pesan las palabras de John Williams (Fed de Nueva York) a favor de seguir endureciendo, que Anthropic cotiza ya por debajo de su precio de salida y la espera del dato de inflación de hoy. El Brent está en 87,3 $ y el oro cae a 3.520 $.",
+  "pulso": "Antes de abrir, el S&P 500 cae un 2,1 % (SPY 703,9 $) y el Nasdaq-100 un 2,8 %; el VIX sube a 30,9. Los chips siguen cayendo: Applied Materials y Lam Research −6 %, Nvidia −5 %, SMH −4,5 %. Europa cae menos: el Euro Stoxx 50 un 0,6 %, el DAX un 0,4 % y el Ibex un 0,8 %. A las 14:30 sale la inflación PCE de octubre (se espera el 3,8 % general y el 3,2 % subyacente) junto al PIB del tercer trimestre; el mercado da un 97 % de probabilidad a una subida de tipos en diciembre. El Brent está en 89 $ y el oro en 3.546 $.",
   "hechos": [
    {
-    "titulo": "Asia se hunde otra vez por los chips",
-    "detalle": "El Kospi cae cerca de un 6 % y la bolsa coreana activa sus frenos de venta; Samsung y SK Hynix caen más de un 8 %. El Nikkei cae alrededor de un 3 %.",
-    "efecto": "Es la misma venta de todo lo ligado a la inteligencia artificial. Si llega a Wall Street con fuerza, el VIX puede volver a 28 y reabrir la ventana del pánico con miedo alto. Hoy todavía no.",
-    "tono": "riesgo",
+    "titulo": "El VIX vuelve por encima de 30",
+    "detalle": "Sube de 26,4 a 30,9 antes de la apertura, con los futuros del Nasdaq cayendo más de un 2 %.",
+    "efecto": "Si cierra hoy en 28 o más, se reabre la ventana del pánico con miedo alto para los próximos días, también en Europa.",
+    "tono": "oportunidad",
     "nuevo": true
    },
    {
-    "titulo": "La Fed de Nueva York, a favor de endurecer",
-    "detalle": "John Williams dijo que la inflación persistente apunta a una política más dura. Hoy se publica un dato clave de inflación.",
-    "efecto": "Es un viento en contra para las valoraciones altas. Un dato malo podría ampliar la caída de hoy.",
+    "titulo": "Inflación PCE y PIB a las 14:30",
+    "detalle": "Se espera una inflación general del 3,8 % interanual y una subyacente del 3,2 %, frente al 3,1 % de septiembre. Es el último gran dato antes de la Fed de diciembre.",
+    "efecto": "Un dato peor de lo esperado ampliaría la caída de hoy; uno mejor podría frenarla.",
     "tono": "riesgo",
-    "nuevo": true
-   },
-   {
-    "titulo": "Investigación comercial de EE. UU. a 16 socios",
-    "detalle": "El mercado espera las conclusiones de una investigación de EE. UU. que afecta a 16 grandes socios comerciales. No hay medidas anunciadas.",
-    "efecto": "Si llegan aranceles, el entrenamiento dice que comprar a los castigados no da nada por sí solo (lección «aranceles»), salvo que llegue en pleno pánico.",
-    "tono": "neutro",
     "nuevo": true
    }
   ]
  },
  "ideas": [
+  {
+   "id": "2026-11-25-panico-europa",
+   "fecha": "2026-11-25",
+   "estado": "vigilancia",
+   "conviccion": 2,
+   "tipo": "europa",
+   "caduca": "2026-12-02",
+   "nuevo": true,
+   "titulo": "Si el miedo cierra hoy por encima de 28, el próximo golpe en Europa se compra",
+   "resumen": "El VIX cotiza por encima de 30 antes de abrir. Si cierra hoy en 28 o más, a partir de mañana un día de −2 % en el Euro Stoxx 50 o en el Ibex 35 (o tres días a la baja que sumen −3 %) llegaría ya con el miedo alto. Es la regla más sólida que tenemos en Europa.",
+   "hecho": "Ayer los chips devolvieron todo el rebote del lunes y hoy la venta sigue: el Kospi cayó cerca de un 6 %, el futuro del S&P 500 cae un 2 % y el VIX sube a 30,9 antes de abrir. A las 14:30 se publica la inflación PCE, la última gran cifra antes de la reunión de la Fed de diciembre, para la que el mercado da casi por segura una subida. Mañana Wall Street cierra por Acción de Gracias, pero las bolsas europeas abren.",
+   "cadena": [
+    "La venta de todo lo ligado a la inteligencia artificial se está extendiendo de Asia a EE. UU. y Europa.",
+    "El VIX de ayer cerró en 26,4: un mal día hoy todavía no es pánico con miedo alto.",
+    "Si hoy el VIX cierra en 28 o más, el siguiente golpe en Europa llega con el miedo ya alto. Mañana, además, Europa cotiza sola, sin Wall Street.",
+    "En el entrenamiento, comprar el Euro Stoxx 50 o el Ibex tras un −2 % con el miedo alto ha dado un +5,6 % y un +5,1 % en 60 sesiones sobre lo normal, en las dos mitades del periodo.",
+    "Se compra el índice, no valores sueltos: los bancos españoles no rebotan más que el Ibex desde 2014."
+   ],
+   "valores": [
+    {
+     "sym": "^STOXX50E",
+     "nombre": "Euro Stoxx 50",
+     "papel": "Europa",
+     "por_que": "Se compra con un fondo que lo replique. +5,6 % en 60 sesiones sobre lo normal tras un pánico con miedo alto (43 casos desde 2007)."
+    },
+    {
+     "sym": "^IBEX",
+     "nombre": "Ibex 35",
+     "papel": "España",
+     "por_que": "+5,1 % en 60 sesiones sobre lo normal (55 casos desde 2000), en las dos mitades del periodo."
+    }
+   ],
+   "en_precio": "La caída de hoy, sí. Lo que se compra es el siguiente golpe con el miedo ya instalado, que según el entrenamiento suele marcar el exceso.",
+   "disparador": "Las dos cosas: (1) que el VIX cierre hoy, miércoles, en 28 o más (se sabe después de las 22:15); y (2) que cualquier día hasta el 2 de diciembre el Euro Stoxx 50 o el Ibex 35 cierre con −2 % o peor, o complete tres días seguidos a la baja que sumen −3 %. Se compra ese índice al cierre de ese día o en la apertura siguiente. También salta si Wall Street cae un 2 % con el VIX del día anterior en 28 o más: entonces se compra en la apertura europea siguiente.",
+   "invalidacion": "Que el VIX cierre hoy por debajo de 28 y no vuelva a superarlo antes del 2 de diciembre. Si ya se está dentro: que la caída pase a ser por un problema propio de Europa (una crisis bancaria o de deuda europea), no por el contagio de la venta de la inteligencia artificial.",
+   "no_hacer": "Comprar hoy: el miedo previo no es alto todavía. Comprar bancos españoles en vez del índice. Comprar ASML o Infineon por contagio de los chips.",
+   "horizonte": "60 sesiones para el Ibex; de 60 a 90 para el Euro Stoxx 50 (lección «salidas»).",
+   "camino": "Tras un pánico con miedo alto, el Ibex ha caído de mediana un 4,3 % por el camino (una de cada cinco veces, más de un 13 %), y el Euro Stoxx un 4,5 % (más de un 14 %). Ojo: en el Euro Stoxx, de las veces que llegó a caer un 10 % tras la compra, pocas acabaron en positivo; una caída así sería una señal seria. No hay stop de precio. Se sale por la invalidación o al cumplirse el horizonte: 60 sesiones en el Ibex, 60–90 en el Euro Stoxx.",
+   "en_contra": "Detrás de la regla europea hay unas 12–16 crisis distintas, no cientos. La Fed está subiendo tipos y la venta de la inteligencia artificial puede ser el principio de algo más largo. Y la semana de Acción de Gracias tiene poco volumen: los movimientos de estos días exageran en los dos sentidos.",
+   "precedentes": [
+    {
+     "caso": "Euro Stoxx 50 −2 % con el VIX previo ≥ 28 (43 casos desde 2007)",
+     "que_paso": "+5,6 % en 60 sesiones sobre lo normal; +4,8 % en 2007–2013 y +6,9 % en 2014–2026."
+    },
+    {
+     "caso": "Ibex 35 −2 % con el VIX previo ≥ 28 (55 casos desde 2000)",
+     "que_paso": "+5,1 % en 60 sesiones; +5,3 % hasta 2013 y +4,4 % después."
+    },
+    {
+     "caso": "El mismo golpe viniendo de calma (VIX < 20)",
+     "que_paso": "−0,7 % y −0,8 %: nada. Por eso se espera al miedo alto."
+    }
+   ],
+   "ref": {
+    "^STOXX50E": 5964.86,
+    "^IBEX": 18866.0,
+    "SPY": 718.78
+   },
+   "notas": [],
+   "fuentes": [
+    {
+     "t": "Invezz: futuros del Nasdaq antes del PCE",
+     "u": "https://invezz.com/news/2026/11/25/nasdaq-futures-today-pce-trump-tariffs-dell-november-25/"
+    },
+    {
+     "t": "TipRanks: Wall Street ante la inflación",
+     "u": "https://www.tipranks.com/news/stock-market-today-nov-25-wall-street-braces-for-inflation-data-after-tech-led-selloff"
+    }
+   ]
+  },
   {
    "id": "2026-11-19-panico-miedo",
    "fecha": "2026-11-19",
@@ -144,8 +206,13 @@
     {
      "fecha": "2026-11-25",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El QQQ cerró ayer en 638,10 $: +4,9 % sobre la entrada. Esta mañana el futuro del Nasdaq cae un 2,1 %. Si se confirma, la idea quedaría cerca de un +2,5 % desde la entrada, todavía en positivo y dentro de lo normal por el camino. No hay que hacer nada."
+    },
+    {
+     "fecha": "2026-11-25",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Antes de abrir, el QQQ está en 620,0 $: −2,8 % hoy y +1,9 % sobre la entrada. Sigue en positivo. Sin ruptura; horizonte de 90 sesiones."
     }
    ],
    "fuentes": [
@@ -332,8 +399,13 @@
     {
      "fecha": "2026-11-25",
      "edicion": "mañana",
-     "nuevo": true,
      "texto": "El SMH cerró ayer en 426,75 $: −7,1 % desde la entrada. Esta noche Asia vende chips con fuerza: Samsung y SK Hynix caen más de un 8 % y el Kospi activa sus frenos de venta. Si hoy el SMH cae otro 3 %, la idea irá cerca de un −10 %, en la parte mala de lo que se ha visto por el camino en su tipo (peor 20 %: −9 %; en semiconductores en pánico, −16 %). Sigue sin haber ruptura: la norma no se ha ampliado y Nvidia no ha recortado previsiones. Se mantiene. Una caída así es lo que el entrenamiento dice que no hay que vender con un stop."
+    },
+    {
+     "fecha": "2026-11-25",
+     "edicion": "preapertura",
+     "nuevo": true,
+     "texto": "Antes de abrir, el SMH está en 407,6 $: −4,5 % hoy y −11,3 % desde la entrada. Lo digo claro: ya está en la parte mala de lo que se ha visto por el camino en su tipo (en el peor 20 % de los casos de norma se llegó a −9 %), aunque todavía dentro de lo que caen los semiconductores en un pánico (peor 20 %: −16 %). No hay ruptura: la norma no se ha ampliado y Nvidia no ha recortado previsiones. La salida es por un hecho o por el horizonte, no por el precio. Se mantiene."
     }
    ],
    "fuentes": [
@@ -591,6 +663,18 @@
  "descartes": [
   {
    "fecha": "2026-11-25",
+   "titulo": "Comprar el Euro Stoxx o el Ibex ya, porque Wall Street va a abrir con −2 %",
+   "por_que": "El VIX de ayer cerró en 26,4. Sin miedo alto previo, un golpe así no ha dado nada en Europa (−0,7 % y −0,8 % viniendo de calma). Queda en vigilancia por si el miedo se instala hoy.",
+   "leccion": "«europa»: solo con el miedo alto.",
+   "tipo": "europa",
+   "valores": [
+    "^STOXX50E",
+    "^IBEX"
+   ],
+   "nuevo": true
+  },
+  {
+   "fecha": "2026-11-25",
    "titulo": "Comprar Samsung o SK Hynix tras caer un 8 % en Corea",
    "por_que": "No hay miedo alto previo (VIX 26,4) y no son valores que se puedan medir con el entrenamiento. La exposición a chips ya está en el SMH.",
    "leccion": "«panico» (solo con miedo alto) y concentración.",
@@ -598,8 +682,7 @@
    "valores": [
     "005930.KS",
     "000660.KS"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-24",
@@ -1026,6 +1109,10 @@
   {
    "cuando": "2026-11-25T07:40:44Z",
    "resumen": "Mañana: Asia vende la IA (Kospi −6 %), futuros del Nasdaq −2,1 %. VIX previo 26,4: no es pánico con miedo alto. Ideas sin ruptura (SMH −7,1 %, QQQ +4,9 % desde la entrada). Nada que comprar."
+  },
+  {
+   "cuando": "2026-11-25T12:35:59Z",
+   "resumen": "Preapertura: S&P −2,1 %, Nasdaq −2,8 %, VIX 30,9 antes del PCE. Nueva en vigilancia: pánico con miedo alto en Europa (si el VIX cierra ≥ 28). SMH −11,3 % desde la entrada, sin ruptura. Nada que comprar hoy."
   }
  ]
 }

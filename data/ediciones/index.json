@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-25-1235",
+  "cuando": "2026-11-25T12:35:59Z",
+  "tipo": "preapertura",
+  "titular": "El miedo vuelve a 30 antes de abrir: Europa, en vigilancia",
+  "hoy": "Hoy no se compra nada: el VIX de ayer (26,4) no llegaba a 28. Pero el VIX cotiza ya en 30,9. Si cierra hoy en 28 o más, a partir de mañana un −2 % del Euro Stoxx 50 o del Ibex (Europa abre aunque Wall Street cierre por Acción de Gracias) sería idea de compra: queda en vigilancia hasta el 2 de diciembre. Las dos ideas abiertas siguen sin ruptura.",
+  "accion": "vigilar",
+  "vivas": 3
+ },
+ {
   "id": "2026-11-25-0740",
   "cuando": "2026-11-25T07:40:44Z",
   "tipo": "mañana",
