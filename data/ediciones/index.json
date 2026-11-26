@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-26-0740",
+  "cuando": "2026-11-26T07:40:59Z",
+  "tipo": "mañana",
+  "titular": "El VIX cierra en 28,3: Europa, a un paso de la compra",
+  "hoy": "El miedo ya es alto: el VIX cerró ayer en 28,29. Hoy Wall Street cierra por Acción de Gracias, pero Europa cotiza. Si el Euro Stoxx 50 cierra hoy por debajo de 5.892 puntos o el Ibex por debajo de 18.606 (un tercer día a la baja que completa el −3 %), salta la compra del índice. La edición de las 21:30 lo confirmará; comprar en la apertura del viernes da lo mismo. Las ideas abiertas no cambian.",
+  "accion": "vigilar",
+  "vivas": 3
+ },
+ {
   "id": "2026-11-25-2011",
   "cuando": "2026-11-25T20:11:18Z",
   "tipo": "cierre",
