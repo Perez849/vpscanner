@@ -117,7 +117,7 @@
     "QQQ"
    ],
    "dada": false,
-   "e5": null,
+   "e5": -1.83,
    "e20": null,
    "e60": null
   },
@@ -130,7 +130,7 @@
     "QQQ"
    ],
    "dada": false,
-   "e5": null,
+   "e5": -1.83,
    "e20": null,
    "e60": null
   },
@@ -143,7 +143,7 @@
     "NVDA"
    ],
    "dada": false,
-   "e5": null,
+   "e5": -3.94,
    "e20": null,
    "e60": null
   },
@@ -158,7 +158,7 @@
     "LRCX"
    ],
    "dada": true,
-   "e5": null,
+   "e5": -9.53,
    "e20": null,
    "e60": null,
    "conviccion": 3,
@@ -758,5 +758,5 @@
    }
   }
  },
- "generado": 1795637494
+ "generado": 1795678871
 }
