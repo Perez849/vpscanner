@@ -1,24 +1,24 @@
 {
- "actualizado": "2026-11-26T12:35:33Z",
+ "actualizado": "2026-11-26T20:10:47Z",
  "sesion": {
-  "cuando": "2026-11-26T12:35:33Z",
-  "tipo": "preapertura",
-  "titular": "Europa rebota un 2 % en Acción de Gracias: *la compra no salta hoy*",
+  "cuando": "2026-11-26T20:10:47Z",
+  "tipo": "cierre",
+  "titular": "Europa cierra con un +2 % en Acción de Gracias: *nada que comprar*",
   "hoy": {
    "accion": "vigilar",
-   "texto": "Hoy no se compra nada. Europa rebota (Euro Stoxx 50 +1,9 %, Ibex +1,8 %), así que la idea de pánico en Europa no salta. Sigue en vigilancia hasta el 2 de diciembre con el miedo ya alto: saltaría con un día de −2 % o tres días a la baja que sumen −3 %. Wall Street está cerrado; mañana abre media sesión."
+   "texto": "Al cierre de hoy no se compra nada. Wall Street ha estado cerrado y Europa ha subido un 2 %, así que la idea europea no salta. Sigue en vigilancia hasta el 2 de diciembre. Mañana Wall Street abre media sesión (cierra a las 19:00, hora española)."
   },
   "cambios": [
-   "Pánico en Europa (vigilancia): no salta hoy por el rebote; sigue hasta el 2 de diciembre con el miedo alto.",
-   "Alerta de miedo alto (VIX 28,3): sin sesión americana hoy; en Europa no hay ninguna gran caída que revisar.",
+   "Pánico en Europa (vigilancia): Europa cierra con +2,0 % (Euro Stoxx) y +2,3 % (Ibex); no salta.",
+   "Alerta de miedo alto (VIX 28,3, del miércoles): sin sesión americana hoy; nada que revisar.",
    "Ideas abiertas sin cambios: Wall Street cerrado."
   ],
-  "pulso": "Wall Street está cerrado por Acción de Gracias. Europa rebota de las caídas del martes y el miércoles: a las 13:20, el Euro Stoxx 50 sube un 1,9 %, el DAX un 1,9 %, el CAC un 1,7 % y el Ibex un 1,8 %. ASML recupera un 3,2 %, el Santander un 2,9 % e Inditex un 1,6 %. No he encontrado una noticia concreta que explique el rebote: parece la recuperación de los dos días de caída, con poco volumen por el festivo americano. Los futuros americanos suben un 0,3 % y un 0,2 %. El Brent está en 91,1 $ y el oro en 3.591 $.",
+  "pulso": "Wall Street ha estado cerrado por Acción de Gracias; los futuros suben un 0,2 % (S&P) y un 0,5 % (Nasdaq) sobre el cierre del miércoles. Europa cerró al alza, con poco volumen: el Euro Stoxx 50 +2,0 % (6.014,74), el DAX +2,1 % y el Ibex +2,3 % (19.057,9). El Brent está en 91,7 $ y el oro sube un 1,6 % (3.593 $). Mañana Wall Street abre media sesión.",
   "hechos": [
    {
-    "titulo": "Rebote europeo sin una noticia clara",
-    "detalle": "Euro Stoxx 50 +1,9 %, Ibex +1,8 %, DAX +1,9 % a media sesión. No he encontrado una noticia que lo explique; coincide con el festivo americano, con poco volumen.",
-    "efecto": "Aleja por hoy la compra europea. Un rebote con poco volumen no confirma nada: la ventana sigue abierta hasta el 2 de diciembre.",
+    "titulo": "Europa recupera las caídas de la semana",
+    "detalle": "El Euro Stoxx 50 y el Ibex suben un 2 % y vuelven a los niveles del lunes. No he encontrado una noticia concreta detrás; ha sido un día de poco volumen por el festivo americano.",
+    "efecto": "Aleja la compra europea por ahora. La ventana sigue abierta hasta el 2 de diciembre.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -96,8 +96,13 @@
     {
      "fecha": "2026-11-26",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Europa rebota con fuerza: a las 13:20, el Euro Stoxx 50 sube un 1,9 % (6.008) y el Ibex un 1,8 % (18.965). Hoy no salta: hacía falta un día a la baja. La idea sigue en vigilancia hasta el 2 de diciembre con el miedo ya alto (el último VIX, el del miércoles, es 28,29; hoy no se calcula por el festivo). La racha empieza de cero: ahora hace falta un día de −2 %, o tres días seguidos a la baja que sumen −3 %."
+    },
+    {
+     "fecha": "2026-11-26",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Europa cerró al alza: el Euro Stoxx 50 en 6.014,74 (+2,0 %) y el Ibex en 19.057,9 (+2,3 %). No salta. Sigue en vigilancia hasta el 2 de diciembre: hace falta un día de −2 % o tres días seguidos a la baja que sumen −3 %, con el VIX previo en 28 o más (el último, el del miércoles, 28,29; mañana se volverá a calcular con la media sesión americana)."
     }
    ],
    "fuentes": [
@@ -696,8 +701,7 @@
    "valores": [
     "^STOXX50E",
     "^IBEX"
-   ],
-   "nuevo": true
+   ]
   },
   {
    "fecha": "2026-11-25",
@@ -1196,6 +1200,10 @@
   {
    "cuando": "2026-11-26T12:35:33Z",
    "resumen": "Preapertura (Acción de Gracias): Europa rebota un 2 %; la idea europea no salta hoy y sigue en vigilancia hasta el 2-dic con el miedo alto. Wall Street cerrado."
+  },
+  {
+   "cuando": "2026-11-26T20:10:47Z",
+   "resumen": "Cierre (Acción de Gracias): Wall Street cerrado; Europa +2 %. La idea europea no salta y sigue en vigilancia hasta el 2-dic. Nada que comprar."
   }
  ]
 }

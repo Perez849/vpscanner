@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-26-2010",
+  "cuando": "2026-11-26T20:10:47Z",
+  "tipo": "cierre",
+  "titular": "Europa cierra con un +2 % en Acción de Gracias: nada que comprar",
+  "hoy": "Al cierre de hoy no se compra nada. Wall Street ha estado cerrado y Europa ha subido un 2 %, así que la idea europea no salta. Sigue en vigilancia hasta el 2 de diciembre. Mañana Wall Street abre media sesión (cierra a las 19:00, hora española).",
+  "accion": "vigilar",
+  "vivas": 3
+ },
+ {
   "id": "2026-11-26-1235",
   "cuando": "2026-11-26T12:35:33Z",
   "tipo": "preapertura",
