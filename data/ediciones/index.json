@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-26-1235",
+  "cuando": "2026-11-26T12:35:33Z",
+  "tipo": "preapertura",
+  "titular": "Europa rebota un 2 % en Acción de Gracias: la compra no salta hoy",
+  "hoy": "Hoy no se compra nada. Europa rebota (Euro Stoxx 50 +1,9 %, Ibex +1,8 %), así que la idea de pánico en Europa no salta. Sigue en vigilancia hasta el 2 de diciembre con el miedo ya alto: saltaría con un día de −2 % o tres días a la baja que sumen −3 %. Wall Street está cerrado; mañana abre media sesión.",
+  "accion": "vigilar",
+  "vivas": 3
+ },
+ {
   "id": "2026-11-26-0740",
   "cuando": "2026-11-26T07:40:59Z",
   "tipo": "mañana",
