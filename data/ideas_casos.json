@@ -729,6 +729,20 @@
    "e60": null,
    "conviccion": 2,
    "comprada": false
+  },
+  {
+   "id": "2026-11-26-comprar-el-euro-stoxx-o-el-ibex-hoy-con-el-miedo",
+   "fecha": "2026-11-26",
+   "titulo": "Comprar el Euro Stoxx o el Ibex hoy, con el miedo alto pero sin caída",
+   "tipo": "europa",
+   "valores": [
+    "^STOXX50E",
+    "^IBEX"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -758,5 +772,5 @@
    }
   }
  },
- "generado": 1795678871
+ "generado": 1795696546
 }
