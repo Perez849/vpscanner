@@ -1,24 +1,32 @@
 {
- "actualizado": "2026-11-27T12:35:48Z",
+ "actualizado": "2026-11-27T20:10:31Z",
  "sesion": {
-  "cuando": "2026-11-27T12:35:48Z",
-  "tipo": "preapertura",
-  "titular": "Media sesión en Wall Street con los futuros *al alza*: nada que hacer",
+  "cuando": "2026-11-27T20:10:31Z",
+  "tipo": "cierre",
+  "titular": "El miedo se desinfla y el Nasdaq sube un 2,7 %: *sin compras al cierre*",
   "hoy": {
    "accion": "nada",
-   "texto": "Hoy no se compra nada. Los futuros suben (S&P +1,6 %, Nasdaq +2,2 % sobre el cierre del miércoles) y Europa también (Euro Stoxx +1,0 %, Ibex +1,4 %): la idea europea no salta. Wall Street abre media sesión y cierra a las 19:00. Las ideas abiertas recuperan."
+   "texto": "Al cierre de hoy no se compra nada. Wall Street sube con fuerza en la media sesión (S&P 500 +1,6 %, Nasdaq-100 +2,7 %) y el VIX baja a 23,8. El trigo y el maíz se disparan, pero comprar fertilizantes por eso no ha funcionado desde 2014. Las ideas abiertas mejoran: Nasdaq +7,0 % y chips −4,2 % desde la entrada."
   },
   "cambios": [
-   "Pánico en Europa (vigilancia): Europa sube; no salta hoy.",
-   "Ideas abiertas: los futuros apuntan a recuperación; sin cambios.",
-   "Alerta de miedo alto (VIX del miércoles): no hay caídas que revisar."
+   "Nasdaq (abierta): QQQ +7,0 % sobre la entrada.",
+   "Chips (abierta): SMH −4,2 % desde la entrada (venía de −8,1 %).",
+   "Pánico en Europa (vigilancia): el VIX baja a 23,8; ya no se cumple el miedo alto.",
+   "Alertas: trigo +4,5 % y maíz +5,3 % → la combinación con fertilizantes no aguanta desde 2014 → descarte. Oro +3,8 % → nada («obvio»)."
   ],
-  "pulso": "Europa amplía el rebote del jueves: a las 13:20, el Euro Stoxx 50 sube un 1,0 % y el Ibex un 1,4 %. Los futuros americanos suben un 1,6 % (S&P) y un 2,2 % (Nasdaq) sobre el cierre del miércoles, antes de una media sesión que acaba a las 19:00. El oro sube a 3.695 $ y el Brent está en 92,1 $. No hay datos ni resultados relevantes antes de la apertura.",
+  "pulso": "Media sesión alcista tras Acción de Gracias: el S&P 500 cerró con un +1,6 % (SPY 728,32 $), el Nasdaq-100 con un +2,7 % y el Russell 2000 con un +1,8 %. Los chips suben un 4,2 % (SMH). El VIX baja un 11 %, hasta 23,8. Europa cerró al alza por segundo día: el Euro Stoxx 50 +1,2 % y el Ibex +1,7 %. El trigo sube un 4,5 % y el maíz un 5,3 %; el oro un 3,8 %. El bono a 10 años sube al 4,94 %.",
   "hechos": [
    {
-    "titulo": "Media sesión tras Acción de Gracias",
-    "detalle": "Wall Street abre de 15:30 a 19:00 (hora española), con poco volumen. Los futuros recogen el rebote de Asia y Europa de estos dos días.",
-    "efecto": "Con poco volumen, los movimientos pueden exagerarse. No cambia nada en las ideas.",
+    "titulo": "El grano se dispara por segundo día",
+    "detalle": "El trigo sube un 4,5 % y el maíz un 5,3 % (en tres días, +2,4 % y +6,6 %). Mosaic sube un 3,4 %, CF un 1,7 % y Nutrien un 1,6 %. No he encontrado la causa confirmada.",
+    "efecto": "La combinación «trigo +4 % y maíz +2 % → fertilizantes» ganó un 10,5 % en 2000–2013, pero ha perdido un 2,1 % desde 2014 (40 casos): no aguanta. No es idea.",
+    "tono": "neutro",
+    "nuevo": true
+   },
+   {
+    "titulo": "El VIX baja a 23,8",
+    "detalle": "Cae un 11 % en la media sesión, por debajo de 28 por primera vez desde el miércoles.",
+    "efecto": "Se cierra, por ahora, la ventana del pánico con miedo alto.",
     "tono": "neutro",
     "nuevo": true
    }
@@ -111,8 +119,13 @@
     {
      "fecha": "2026-11-27",
      "edicion": "preapertura",
-     "nuevo": true,
      "texto": "Europa sigue subiendo: a las 13:20, el Euro Stoxx 50 +1,0 % (6.077) y el Ibex +1,4 % (19.320). Hoy no salta. Sigue en vigilancia hasta el 2 de diciembre."
+    },
+    {
+     "fecha": "2026-11-27",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "El miedo se desinfla: el VIX cierra en 23,8 (−11 %) y Europa sube de nuevo (Euro Stoxx +1,2 %, Ibex +1,7 %). La condición del miedo alto ya no se cumple: harían falta un nuevo cierre del VIX en 28 o más y luego el golpe en Europa. Sigue en vigilancia hasta el 2 de diciembre; si no pasa, se cerrará como «no saltó»."
     }
    ],
    "fuentes": [
@@ -250,6 +263,12 @@
      "fecha": "2026-11-27",
      "edicion": "mañana",
      "texto": "Los futuros del Nasdaq suben cerca de un 2,3 % sobre el cierre del miércoles: si se mantiene en la media sesión de hoy, el QQQ volvería a acercarse a un +6 % sobre la entrada. Sin cambios en la idea."
+    },
+    {
+     "fecha": "2026-11-27",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "Media sesión muy buena: el QQQ cierra en 650,99 $ (+2,7 %), un 7,0 % por encima de la entrada. Primera semana completa dentro: +7,0 % frente al +5,6 % del S&P 500 en el mismo tramo. Se mantiene hasta las 90 sesiones."
     }
    ],
    "fuentes": [
@@ -457,6 +476,12 @@
      "fecha": "2026-11-27",
      "edicion": "mañana",
      "texto": "En Asia vuelven las compras de chips: el Kospi sube con fuerza de la mano de SK Hynix y Samsung, según la prensa. Si los futuros se mantienen, el SMH recuperaría parte de lo perdido (cerró el miércoles un 8,1 % por debajo de la entrada). Sin ruptura."
+    },
+    {
+     "fecha": "2026-11-27",
+     "edicion": "cierre",
+     "nuevo": true,
+     "texto": "El SMH cierra en 440,06 $ (+4,2 %): −4,2 % desde la entrada, lejos del −11 % del miércoles antes de abrir. Lam Research +4,2 %, Applied Materials +3,5 %. Sin ruptura."
     }
    ],
    "fuentes": [
@@ -712,6 +737,19 @@
   }
  ],
  "descartes": [
+  {
+   "fecha": "2026-11-27",
+   "titulo": "Comprar fertilizantes porque el trigo y el maíz se disparan",
+   "por_que": "La combinación ganó un 10,5 % en 2000–2013 pero ha perdido un 2,1 % desde 2014 (40 casos): no se sostiene en las dos mitades. Y Mosaic ya ha subido un 3,4 % hoy.",
+   "leccion": "«segundo» y «agricola».",
+   "tipo": "segundo",
+   "valores": [
+    "MOS",
+    "CF",
+    "NTR"
+   ],
+   "nuevo": true
+  },
   {
    "fecha": "2026-11-26",
    "titulo": "Comprar el Euro Stoxx o el Ibex hoy, con el miedo alto pero sin caída",
@@ -1232,6 +1270,10 @@
   {
    "cuando": "2026-11-27T12:35:48Z",
    "resumen": "Preapertura (media sesión): futuros +1,6 % / +2,2 %, Europa al alza. La idea europea no salta. Nada que comprar."
+  },
+  {
+   "cuando": "2026-11-27T20:10:31Z",
+   "resumen": "Cierre (media sesión): S&P +1,6 %, Nasdaq +2,7 %, VIX 23,8. QQQ +7,0 %, SMH −4,2 % desde la entrada. Grano disparado → descarte. Nada que comprar."
   }
  ]
 }

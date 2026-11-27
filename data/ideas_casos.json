@@ -743,6 +743,21 @@
    "e5": null,
    "e20": null,
    "e60": null
+  },
+  {
+   "id": "2026-11-27-comprar-fertilizantes-porque-el-trigo-y-el-maiz-",
+   "fecha": "2026-11-27",
+   "titulo": "Comprar fertilizantes porque el trigo y el maíz se disparan",
+   "tipo": "segundo",
+   "valores": [
+    "MOS",
+    "CF",
+    "NTR"
+   ],
+   "dada": false,
+   "e5": null,
+   "e20": null,
+   "e60": null
   }
  ],
  "resumen": {
@@ -772,5 +787,5 @@
    }
   }
  },
- "generado": 1795782961
+ "generado": 1795810246
 }
