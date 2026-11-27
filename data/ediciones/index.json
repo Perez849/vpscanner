@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-27-1235",
+  "cuando": "2026-11-27T12:35:48Z",
+  "tipo": "preapertura",
+  "titular": "Media sesión en Wall Street con los futuros al alza: nada que hacer",
+  "hoy": "Hoy no se compra nada. Los futuros suben (S&P +1,6 %, Nasdaq +2,2 % sobre el cierre del miércoles) y Europa también (Euro Stoxx +1,0 %, Ibex +1,4 %): la idea europea no salta. Wall Street abre media sesión y cierra a las 19:00. Las ideas abiertas recuperan.",
+  "accion": "nada",
+  "vivas": 3
+ },
+ {
   "id": "2026-11-27-0740",
   "cuando": "2026-11-27T07:40:42Z",
   "tipo": "mañana",
