@@ -1,5 +1,14 @@
 [
  {
+  "id": "2026-11-27-2010",
+  "cuando": "2026-11-27T20:10:31Z",
+  "tipo": "cierre",
+  "titular": "El miedo se desinfla y el Nasdaq sube un 2,7 %: sin compras al cierre",
+  "hoy": "Al cierre de hoy no se compra nada. Wall Street sube con fuerza en la media sesión (S&P 500 +1,6 %, Nasdaq-100 +2,7 %) y el VIX baja a 23,8. El trigo y el maíz se disparan, pero comprar fertilizantes por eso no ha funcionado desde 2014. Las ideas abiertas mejoran: Nasdaq +7,0 % y chips −4,2 % desde la entrada.",
+  "accion": "nada",
+  "vivas": 3
+ },
+ {
   "id": "2026-11-27-1235",
   "cuando": "2026-11-27T12:35:48Z",
   "tipo": "preapertura",
