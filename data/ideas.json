@@ -1,25 +1,25 @@
 {
- "actualizado": "2026-11-26T20:10:47Z",
+ "actualizado": "2026-11-27T07:40:42Z",
  "sesion": {
-  "cuando": "2026-11-26T20:10:47Z",
-  "tipo": "cierre",
-  "titular": "Europa cierra con un +2 % en Acción de Gracias: *nada que comprar*",
+  "cuando": "2026-11-27T07:40:42Z",
+  "tipo": "mañana",
+  "titular": "Vuelve el apetito por la inteligencia artificial: *futuros del Nasdaq +2,3 %*",
   "hoy": {
-   "accion": "vigilar",
-   "texto": "Al cierre de hoy no se compra nada. Wall Street ha estado cerrado y Europa ha subido un 2 %, así que la idea europea no salta. Sigue en vigilancia hasta el 2 de diciembre. Mañana Wall Street abre media sesión (cierra a las 19:00, hora española)."
+   "accion": "nada",
+   "texto": "Hoy no se compra nada. Asia rebota y los futuros suben con fuerza (Nasdaq +2,3 %, S&P +1,6 %), así que la idea europea, que necesita un día de caída, no parece que vaya a saltar. Wall Street abre media sesión y cierra a las 19:00. Las dos ideas abiertas recuperan terreno."
   },
   "cambios": [
-   "Pánico en Europa (vigilancia): Europa cierra con +2,0 % (Euro Stoxx) y +2,3 % (Ibex); no salta.",
-   "Alerta de miedo alto (VIX 28,3, del miércoles): sin sesión americana hoy; nada que revisar.",
-   "Ideas abiertas sin cambios: Wall Street cerrado."
+   "Nasdaq y chips (abiertas): los futuros apuntan a una recuperación; sin cambios en las ideas.",
+   "Pánico en Europa (vigilancia): el miedo afloja (VIX 26,8); con Europa al alza, no parece que salte hoy.",
+   "Alerta de miedo alto (VIX 28,3, del miércoles): no hay caídas que revisar; los mercados suben."
   ],
-  "pulso": "Wall Street ha estado cerrado por Acción de Gracias; los futuros suben un 0,2 % (S&P) y un 0,5 % (Nasdaq) sobre el cierre del miércoles. Europa cerró al alza, con poco volumen: el Euro Stoxx 50 +2,0 % (6.014,74), el DAX +2,1 % y el Ibex +2,3 % (19.057,9). El Brent está en 91,7 $ y el oro sube un 1,6 % (3.593 $). Mañana Wall Street abre media sesión.",
+  "pulso": "Wall Street cerró el jueves por Acción de Gracias y hoy abre media sesión. Los futuros suben con fuerza sobre el cierre del miércoles: S&P 500 +1,6 % y Nasdaq +2,3 %. Asia rebota: el Nikkei +2,1 %, el Hang Seng +1,9 % y el Kospi, según la prensa, más de un 4 % con SK Hynix y Samsung (otras fuentes dan una subida mucho menor; la cifra no está clara). Europa cerró ayer con un +2 %. El oro sube un 2,6 % (3.688 $) y el Brent está en 92,5 $. El último VIX disponible baja a 26,8.",
   "hechos": [
    {
-    "titulo": "Europa recupera las caídas de la semana",
-    "detalle": "El Euro Stoxx 50 y el Ibex suben un 2 % y vuelven a los niveles del lunes. No he encontrado una noticia concreta detrás; ha sido un día de poco volumen por el festivo americano.",
-    "efecto": "Aleja la compra europea por ahora. La ventana sigue abierta hasta el 2 de diciembre.",
-    "tono": "neutro",
+    "titulo": "Vuelven las compras de inteligencia artificial",
+    "detalle": "Según la prensa, la venta de las últimas semanas se calma: los futuros del Nasdaq suben cerca de un 2,8 % en algunos momentos de la mañana y los chips coreanos lideran Asia. Las cifras del Kospi no coinciden entre fuentes.",
+    "efecto": "Es bueno para las dos ideas abiertas. Para la idea europea, aleja el golpe que haría falta para comprar.",
+    "tono": "oportunidad",
     "nuevo": true
    }
   ]
@@ -101,8 +101,13 @@
     {
      "fecha": "2026-11-26",
      "edicion": "cierre",
-     "nuevo": true,
      "texto": "Europa cerró al alza: el Euro Stoxx 50 en 6.014,74 (+2,0 %) y el Ibex en 19.057,9 (+2,3 %). No salta. Sigue en vigilancia hasta el 2 de diciembre: hace falta un día de −2 % o tres días seguidos a la baja que sumen −3 %, con el VIX previo en 28 o más (el último, el del miércoles, 28,29; mañana se volverá a calcular con la media sesión americana)."
+    },
+    {
+     "fecha": "2026-11-27",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "El miedo afloja: el último VIX disponible baja a 26,8 y los futuros suben con fuerza. Para hoy, el miedo previo cuenta como alto (28,29, el último cierre completo del miércoles), pero con Europa al alza no parece que vaya a saltar. Sigue en vigilancia hasta el 2 de diciembre; si el VIX cierra hoy por debajo de 28, la compra dejaría de ser posible mientras no vuelva a subir."
     }
    ],
    "fuentes": [
@@ -235,6 +240,12 @@
      "fecha": "2026-11-26",
      "edicion": "mañana",
      "texto": "El QQQ cerró ayer en 633,93 $: +4,2 % sobre la entrada. Hoy Wall Street está cerrado. Sin cambios."
+    },
+    {
+     "fecha": "2026-11-27",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "Los futuros del Nasdaq suben cerca de un 2,3 % sobre el cierre del miércoles: si se mantiene en la media sesión de hoy, el QQQ volvería a acercarse a un +6 % sobre la entrada. Sin cambios en la idea."
     }
    ],
    "fuentes": [
@@ -437,6 +448,12 @@
      "fecha": "2026-11-26",
      "edicion": "mañana",
      "texto": "El SMH cerró ayer en 422,46 $: −8,1 % desde la entrada; recuperó gran parte de la caída de la preapertura. Sin ruptura."
+    },
+    {
+     "fecha": "2026-11-27",
+     "edicion": "mañana",
+     "nuevo": true,
+     "texto": "En Asia vuelven las compras de chips: el Kospi sube con fuerza de la mano de SK Hynix y Samsung, según la prensa. Si los futuros se mantienen, el SMH recuperaría parte de lo perdido (cerró el miércoles un 8,1 % por debajo de la entrada). Sin ruptura."
     }
    ],
    "fuentes": [
@@ -1204,6 +1221,10 @@
   {
    "cuando": "2026-11-26T20:10:47Z",
    "resumen": "Cierre (Acción de Gracias): Wall Street cerrado; Europa +2 %. La idea europea no salta y sigue en vigilancia hasta el 2-dic. Nada que comprar."
+  },
+  {
+   "cuando": "2026-11-27T07:40:42Z",
+   "resumen": "Mañana (viernes, media sesión): rebote de la IA, futuros del Nasdaq +2,3 %. Ideas abiertas recuperan; la europea no parece que salte. Nada que comprar."
   }
  ]
 }
